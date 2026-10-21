@@ -1,0 +1,1232 @@
+{
+  "store": {
+    "name": "Cloud Nine Vapor",
+    "defaultCurrencyCode": "USD",
+    "homepageTitle": "Vape devices, e-liquids and accessories",
+    "homepageDescription": "Adults 21+ only. Shop devices, e-liquids and accessories.",
+    "metadata": {},
+    "swapLinkTemplate": "https://cloudninevapor.com/swap/{id}",
+    "paymentLinkTemplate": "https://cloudninevapor.com/pay/{id}",
+    "inviteLinkTemplate": "https://cloudninevapor.com/invite/{id}"
+  },
+  "regions": [
+    {
+      "code": "us",
+      "name": "United States",
+      "currencyCode": "usd",
+      "currencySymbol": "$",
+      "currencyName": "US Dollar",
+      "taxRate": 0,
+      "paymentProviders": {
+        "connect": [
+          {
+            "code": "pp_system_default"
+          }
+        ]
+      },
+      "fulfillmentProviders": {
+        "connect": [
+          {
+            "code": "fp_manual"
+          }
+        ]
+      },
+      "countries": [
+        {
+          "iso2": "us",
+          "iso3": "usa",
+          "numCode": 840,
+          "name": "United States",
+          "displayName": "United States"
+        }
+      ]
+    }
+  ],
+  "currencies": [
+    {
+      "code": "usd",
+      "symbol": "$",
+      "symbolNative": "$",
+      "name": "US Dollar"
+    }
+  ],
+  "countries": [
+    {
+      "iso2": "us",
+      "iso3": "usa",
+      "numCode": 840,
+      "name": "United States",
+      "displayName": "United States"
+    }
+  ],
+  "shipping_options": [
+    {
+      "name": "Standard Shipping",
+      "regionCode": "all",
+      "providerCode": "fp_manual",
+      "data": {
+        "id": "manual-fulfillment"
+      },
+      "priceType": "flat_rate",
+      "amount": 1000
+    },
+    {
+      "name": "Express Shipping",
+      "regionCode": "all",
+      "providerCode": "fp_manual",
+      "data": {
+        "id": "manual-fulfillment"
+      },
+      "priceType": "flat_rate",
+      "amount": 2000
+    },
+    {
+      "name": "Return Shipping",
+      "regionCode": "all",
+      "providerCode": "fp_manual",
+      "data": {
+        "id": "manual-fulfillment"
+      },
+      "priceType": "flat_rate",
+      "isReturn": true,
+      "amount": 1000
+    }
+  ],
+  "categories": [
+    {
+      "name": "Devices",
+      "handle": "devices",
+      "isActive": true
+    },
+    {
+      "name": "E-Liquids",
+      "handle": "e-liquids",
+      "isActive": true
+    },
+    {
+      "name": "Pods & Coils",
+      "handle": "pods-coils",
+      "isActive": true
+    },
+    {
+      "name": "Accessories",
+      "handle": "accessories",
+      "isActive": true
+    }
+  ],
+  "collections": [
+    {
+      "title": "Starter Kits",
+      "handle": "starter-kits"
+    },
+    {
+      "title": "New Arrivals",
+      "handle": "new-arrivals"
+    },
+    {
+      "title": "Best Sellers",
+      "handle": "best-sellers"
+    }
+  ],
+  "products": [
+    {
+      "title": "Nova Pod Kit",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Compact refillable pod system with a 1000 mAh battery, USB-C charging and draw activation. Includes one 0.8 ohm pod."
+            }
+          ]
+        }
+      ],
+      "handle": "nova-pod-kit",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "devices"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "starter-kits"
+          },
+          {
+            "handle": "best-sellers"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Color",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "Black"
+                },
+                {
+                  "value": "Silver"
+                },
+                {
+                  "value": "Ocean Blue"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "Black",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 2999,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "Black"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "Silver",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 2999,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "Silver"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "Ocean Blue",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 2999,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "Ocean Blue"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    },
+    {
+      "title": "Stratus Starter Kit",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "An easy first device: 1500 mAh battery, adjustable airflow and a 2 ml top-fill pod. Includes two pods."
+            }
+          ]
+        }
+      ],
+      "handle": "stratus-starter-kit",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "devices"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "starter-kits"
+          },
+          {
+            "handle": "new-arrivals"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Color",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "Black"
+                },
+                {
+                  "value": "White"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "Black",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 3499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "Black"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "White",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 3499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "White"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    },
+    {
+      "title": "Apex 80W Box Mod",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Single 18650 box mod with 5–80 W output, temperature control and a 0.96 inch display. Battery sold separately."
+            }
+          ]
+        }
+      ],
+      "handle": "apex-80w-box-mod",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "devices"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "new-arrivals"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Color",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "Black"
+                },
+                {
+                  "value": "Gunmetal"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "Black",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 5999,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "Black"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "Gunmetal",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 5999,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "Gunmetal"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    },
+    {
+      "title": "Classic Tobacco E-Liquid",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "A smooth, rich tobacco blend in a 70VG/30PG base. WARNING: This product contains nicotine. Nicotine is an addictive chemical."
+            }
+          ]
+        }
+      ],
+      "handle": "classic-tobacco-e-liquid",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "e-liquids"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "best-sellers"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Nicotine Strength",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "3 mg"
+                },
+                {
+                  "value": "6 mg"
+                },
+                {
+                  "value": "12 mg"
+                }
+              ]
+            }
+          },
+          {
+            "title": "Bottle Size",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "30 ml"
+                },
+                {
+                  "value": "60 ml"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "3 mg / 30 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1599,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "3 mg"
+            },
+            {
+              "value": "30 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "3 mg / 60 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 2499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "3 mg"
+            },
+            {
+              "value": "60 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "6 mg / 30 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1599,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "6 mg"
+            },
+            {
+              "value": "30 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "6 mg / 60 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 2499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "6 mg"
+            },
+            {
+              "value": "60 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "12 mg / 30 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1599,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "12 mg"
+            },
+            {
+              "value": "30 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "12 mg / 60 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 2499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "12 mg"
+            },
+            {
+              "value": "60 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    },
+    {
+      "title": "Cool Menthol E-Liquid",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Crisp, clean menthol in a 70VG/30PG base. WARNING: This product contains nicotine. Nicotine is an addictive chemical."
+            }
+          ]
+        }
+      ],
+      "handle": "cool-menthol-e-liquid",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "e-liquids"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "best-sellers"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Nicotine Strength",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "3 mg"
+                },
+                {
+                  "value": "6 mg"
+                },
+                {
+                  "value": "12 mg"
+                }
+              ]
+            }
+          },
+          {
+            "title": "Bottle Size",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "30 ml"
+                },
+                {
+                  "value": "60 ml"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "3 mg / 30 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1599,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "3 mg"
+            },
+            {
+              "value": "30 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "3 mg / 60 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 2499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "3 mg"
+            },
+            {
+              "value": "60 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "6 mg / 30 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1599,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "6 mg"
+            },
+            {
+              "value": "30 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "6 mg / 60 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 2499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "6 mg"
+            },
+            {
+              "value": "60 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "12 mg / 30 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1599,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "12 mg"
+            },
+            {
+              "value": "30 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "12 mg / 60 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 2499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "12 mg"
+            },
+            {
+              "value": "60 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    },
+    {
+      "title": "Tobacco Reserve Nicotine Salt",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Nicotine salt e-liquid for pod systems in a 50VG/50PG base. WARNING: This product contains nicotine. Nicotine is an addictive chemical."
+            }
+          ]
+        }
+      ],
+      "handle": "tobacco-reserve-nicotine-salt",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "e-liquids"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "new-arrivals"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Nicotine Strength",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "25 mg"
+                },
+                {
+                  "value": "50 mg"
+                }
+              ]
+            }
+          },
+          {
+            "title": "Bottle Size",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "30 ml"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "25 mg / 30 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1799,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "25 mg"
+            },
+            {
+              "value": "30 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "50 mg / 30 ml",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1799,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "50 mg"
+            },
+            {
+              "value": "30 ml"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    },
+    {
+      "title": "Nova Replacement Pods (2-Pack)",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Refillable 2 ml replacement pods for the Nova Pod Kit."
+            }
+          ]
+        }
+      ],
+      "handle": "nova-replacement-pods",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "pods-coils"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "best-sellers"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Resistance",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "0.8 ohm"
+                },
+                {
+                  "value": "1.2 ohm"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "0.8 ohm",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 999,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "0.8 ohm"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "1.2 ohm",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 999,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "1.2 ohm"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    },
+    {
+      "title": "Apex Mesh Coils (5-Pack)",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Mesh replacement coils for sub-ohm tanks used with the Apex 80W Box Mod."
+            }
+          ]
+        }
+      ],
+      "handle": "apex-mesh-coils",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "pods-coils"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "new-arrivals"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Resistance",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "0.15 ohm"
+                },
+                {
+                  "value": "0.2 ohm"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "0.15 ohm",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "0.15 ohm"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "0.2 ohm",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1499,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "0.2 ohm"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    },
+    {
+      "title": "Device Carry Case",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Zippered hard-shell case with room for a device, two bottles and spare pods."
+            }
+          ]
+        }
+      ],
+      "handle": "device-carry-case",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "accessories"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "new-arrivals"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Color",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "Black"
+                },
+                {
+                  "value": "Grey"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "Black",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1299,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "Black"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "Grey",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 1299,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "Grey"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    },
+    {
+      "title": "USB-C Charging Cable",
+      "subtitle": null,
+      "description": [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Braided USB-C charging cable for pod kits and box mods."
+            }
+          ]
+        }
+      ],
+      "handle": "usb-c-charging-cable",
+      "isGiftcard": false,
+      "status": "draft",
+      "productCategories": {
+        "connect": [
+          {
+            "handle": "accessories"
+          }
+        ]
+      },
+      "productCollections": {
+        "connect": [
+          {
+            "handle": "starter-kits"
+          }
+        ]
+      },
+      "productOptions": {
+        "create": [
+          {
+            "title": "Length",
+            "productOptionValues": {
+              "create": [
+                {
+                  "value": "1 m"
+                },
+                {
+                  "value": "2 m"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "variants": [
+        {
+          "title": "1 m",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 799,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "1 m"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        },
+        {
+          "title": "2 m",
+          "prices": [
+            {
+              "currencyCode": "usd",
+              "amount": 999,
+              "regionCode": "us"
+            }
+          ],
+          "options": [
+            {
+              "value": "2 m"
+            }
+          ],
+          "inventoryQuantity": 100,
+          "manageInventory": true
+        }
+      ]
+    }
+  ],
+  "paymentProviders": [
+    {
+      "name": "Manual Payment",
+      "code": "pp_system_default",
+      "isInstalled": true,
+      "createPaymentFunction": "manual",
+      "capturePaymentFunction": "manual",
+      "refundPaymentFunction": "manual",
+      "getPaymentStatusFunction": "manual",
+      "generatePaymentLinkFunction": "manual",
+      "handleWebhookFunction": "manual"
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+import type { PaymentSessionSelection } from '../models/commerce-projections';
+import type { KeystoneContext } from "@keystone-6/core/types";
+import { assertInvoiceAccess } from "../security/invoice-access";
+import { isPaymentProviderConfigured } from "../utils/paymentProviderConfig";
+
+async function createInvoicePaymentSessions(root: unknown, { invoiceId }: { invoiceId: string }, context: KeystoneContext<any>) {
+  await assertInvoiceAccess(context, invoiceId);
+  const sudoContext = context.sudo();
+
+  // Get invoice with payment provider info from region
+  const invoice = await sudoContext.query.Invoice.findOne({
+    where: { id: invoiceId },
+    query: `
+      id
+      totalAmount
+      currency {
+        id
+        code
+      }
+      account {
+        id
+        user {
+          id
+        }
+      }
+      paymentCollection {
+        id
+        paymentSessions {
+          id
+          paymentProvider {
+            id
+          }
+        }
+      }
+    `
+  });
+
+  if (!invoice) {
+    throw new Error("Invoice not found");
+  }
+
+  // Get available payment providers from the invoice line item region (same as checkout)
+  const invoiceLineItems = await sudoContext.query.InvoiceLineItem.findMany({
+    where: { invoice: { id: { equals: invoiceId } } },
+    query: `
+      accountLineItem {
+        region {
+          id
+          paymentProviders {
+            id
+            code
+            isInstalled
+          }
+        }
+      }
+    `
+  });
+  
+  const invoiceLineItem = invoiceLineItems[0]; // Get first line item for region info
+  
+  // Allow all installed payment providers for invoice payments (same as checkout)
+  const availableProviders = invoiceLineItem?.accountLineItem?.region?.paymentProviders?.filter(
+    (provider: any) => provider.isInstalled && isPaymentProviderConfigured(provider.code || '')
+  ) || [];
+  
+  if (availableProviders.length === 0) {
+    throw new Error("No payment providers are available for this region");
+  }
+
+  // Create payment collection if it doesn't exist
+  let paymentCollection = invoice.paymentCollection;
+  
+  if (!paymentCollection) {
+    paymentCollection = await sudoContext.query.PaymentCollection.createOne({
+      data: {
+        description: "default",
+        amount: invoice.totalAmount || 0,
+      },
+      query: "id"
+    });
+    await sudoContext.query.Invoice.updateOne({
+      where: { id: invoiceId },
+      data: { paymentCollection: { connect: { id: paymentCollection.id } } },
+      query: "id",
+    });
+  }
+
+  // Create payment sessions for each available provider
+  for (let i = 0; i < availableProviders.length; i++) {
+    const provider = availableProviders[i];
+    // Skip if session already exists for this provider
+    const existingSession = invoice.paymentCollection?.paymentSessions?.find(
+      (s: PaymentSessionSelection) => s.paymentProvider.id === provider.id
+    );
+    
+    if (!existingSession) {
+      const newSession = await sudoContext.query.PaymentSession.createOne({
+        data: {
+          paymentCollection: { connect: { id: paymentCollection.id } },
+          paymentProvider: { connect: { id: provider.id } },
+          amount: invoice.totalAmount || 0,
+          data: {}, // Initialize with empty data object
+          isSelected: i === 0, // Only select the first provider by default
+          isInitiated: false,
+        },
+        query: "id"
+      });
+    }
+  }
+
+  // Custom list-returning mutations must return the raw list item. Keystone's
+  // field resolvers load paymentCollection and paymentSessions from this ID.
+  return sudoContext.prisma.invoice.findUnique({ where: { id: invoiceId } });
+}
+
+export default createInvoicePaymentSessions;
