@@ -1,15 +1,9 @@
-import { Badge } from "@/components/ui/badge" // Shadcn Badge
-import { Button } from "@/components/ui/button" // Shadcn Button
-import {
-  Collapsible,
-  CollapsibleContent,
-} from "@/components/ui/collapsible"
-import { cn } from "@/lib/utils"
 import { useEffect } from "react"
+import { useFormStatus } from "react-dom"
+import { RiLoader2Fill } from "@remixicon/react"
 
 import useToggleState from "@/features/storefront/lib/hooks/use-toggle-state"
-import { useFormStatus } from "react-dom";
-import { RiLoader2Fill } from "@remixicon/react"
+import { primaryButtonClass, rowPillClass } from "@/features/storefront/modules/account/components/account-ui"
 
 type AccountInfoProps = {
   label: string
@@ -22,13 +16,15 @@ type AccountInfoProps = {
   'data-testid'?: string
 }
 
+// One setting row inside the profile band: label, current value, Edit pill,
+// and the edit fields underneath when open.
 const AccountInfo = ({
   label,
   currentInfo,
   isSuccess,
   isError,
   clearState,
-  errorMessage = "An error occurred, please try again",
+  errorMessage = "Couldn't save. Try again.",
   children,
   'data-testid': dataTestid
 }: AccountInfoProps) => {
@@ -48,90 +44,56 @@ const AccountInfo = ({
   }, [isSuccess, close])
 
   return (
-    <div className="text-xs font-normal" data-testid={dataTestid}> 
-      <div className="flex items-end justify-between">
-        <div className="flex flex-col">
-          <span className="uppercase text-foreground">{label}</span> 
-          <div className="flex items-center flex-1 basis-0 justify-end gap-x-4">
-            {typeof currentInfo === "string" ? (
-              <span className="font-semibold" data-testid="current-info">{currentInfo}</span>
-            ) : (
-              currentInfo
-            )}
-          </div>
+    <div className="px-4 py-4 sm:px-5" data-testid={dataTestid}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="text-[13px] font-medium text-vp-ink-2">{label}</span>
+          {typeof currentInfo === "string" ? (
+            <span className="break-words text-[15px] text-vp-ink" data-testid="current-info">{currentInfo}</span>
+          ) : (
+            <div className="text-[15px] text-vp-ink">{currentInfo}</div>
+          )}
         </div>
-        <div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 px-2 text-xs"
-            onClick={handleToggle}
-            type={state ? "reset" : "button"}
-            data-testid="edit-button"
-            data-active={state}
-          >
-            {state ? "Cancel" : "Edit"}
-          </Button>
-        </div>
+        <button
+          className={rowPillClass}
+          onClick={handleToggle}
+          type={state ? "reset" : "button"}
+          data-testid="edit-button"
+          data-active={state}
+          aria-expanded={state}
+        >
+          {state ? "Cancel" : "Edit"}
+        </button>
       </div>
 
-      {isSuccess && <div role="status" 
-        className={cn( 
-          "transition-all duration-300 ease-in-out overflow-hidden",
-          {
-            "max-h-[1000px] opacity-100": isSuccess,
-            "max-h-0 opacity-0": !isSuccess,
-          }
-        )}
-        data-testid="success-message"
-      >
-        <Badge className="p-2 my-4" variant="default"> 
-          <span>{label} updated successfully</span>
-        </Badge>
-      </div>}
+      {isSuccess && (
+        <p role="status" className="mt-2 text-[13px] text-vp-ok" data-testid="success-message">
+          {label} saved
+        </p>
+      )}
 
-      {isError && <div role="alert"
-        className={cn( 
-          "transition-all duration-300 ease-in-out overflow-hidden",
-          {
-            "max-h-[1000px] opacity-100": isError,
-            "max-h-0 opacity-0": !isError,
-          }
-        )}
-        data-testid="error-message"
-      >
-        <Badge className="p-2 my-4" variant="destructive">
-          <span>{errorMessage}</span>
-        </Badge>
-      </div>}
+      {isError && (
+        <p role="alert" className="mt-2 text-[13px] text-vp-danger" data-testid="error-message">
+          {errorMessage}
+        </p>
+      )}
 
-      {/* Proper Collapsible component for the edit form */}
-      <Collapsible open={state}>
-        <CollapsibleContent
-          className={cn( 
-            "transition-all duration-300 ease-in-out overflow-visible",
-            {
-              "max-h-[1000px] opacity-100": state,
-              "max-h-0 opacity-0": !state,
-            }
-          )}
-        >
-          <div className="flex flex-col gap-y-2 py-4">
-            <div>{children}</div>
-            <div className="flex items-center justify-end mt-2">
-              <Button
-                disabled={pending} // Disable button when pending
-                className="w-full sm:max-w-[140px]"
-                type="submit"
-                data-testid="save-button"
-              >
-                {pending && <RiLoader2Fill className="animate-spin"/>}
-                Save
-              </Button>
-            </div>
+      {state && (
+        <div className="mt-4 flex flex-col gap-4">
+          {children}
+          <div className="flex justify-end">
+            <button
+              disabled={pending}
+              className={`${primaryButtonClass} w-full sm:w-auto sm:min-w-[140px]`}
+              type="submit"
+              data-testid="save-button"
+            >
+              {pending && <RiLoader2Fill className="size-4 animate-spin" />}
+              Save
+            </button>
           </div>
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,8 +1,7 @@
 "use client"
 
 import { acceptTransferRequest, declineTransferRequest } from "@/features/storefront/lib/data/orders"
-import { Button } from "@/components/ui/button" // Use Shadcn Button
-// Removed Text import
+import { vpPrimaryButton, vpSecondaryButton } from "@/features/storefront/modules/common/components/vp-classes"
 import { useState } from "react"
 
 type TransferStatus = "pending" | "success" | "error"
@@ -40,39 +39,40 @@ const TransferActions = ({ id, token }: { id: string; token: string }) => {
   return (
     <div className="flex flex-col gap-y-4">
       {status?.accept === "success" && (
-        <p className="text-emerald-500">
+        <p role="status" className="text-[14px] text-vp-ok">
           Order transferred successfully!
         </p>
       )}
       {status?.decline === "success" && (
-        <p className="text-emerald-500">
+        <p role="status" className="text-[14px] text-vp-ok">
           Order transfer declined successfully!
         </p>
       )}
       {status?.accept !== "success" && status?.decline !== "success" && (
-        <div className="flex gap-x-4">
-          <Button
-            size="lg" // Use Shadcn size 'lg'
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            className={vpPrimaryButton}
             onClick={acceptTransfer}
             disabled={
               status?.accept === "pending" || status?.decline === "pending"
             }
           >
             {status?.accept === "pending" ? "Accepting..." : "Accept transfer"}
-          </Button>
-          <Button
-            size="lg" // Use Shadcn size 'lg'
-            variant="outline" // Use Shadcn outline variant
+          </button>
+          <button
+            type="button"
+            className={`${vpSecondaryButton} h-12 px-6`}
             onClick={declineTransfer}
             disabled={
               status?.accept === "pending" || status?.decline === "pending"
             }
           >
             {status?.decline === "pending" ? "Declining..." : "Decline transfer"}
-          </Button>
+          </button>
         </div>
       )}
-      {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+      {errorMessage && <p role="alert" className="text-[13px] text-vp-danger">{errorMessage}</p>}
     </div>
   )
 }

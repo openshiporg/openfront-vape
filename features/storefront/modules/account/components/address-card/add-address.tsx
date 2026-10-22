@@ -1,24 +1,18 @@
 "use client"
 
 import { Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
 import { useEffect, useState, useActionState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 
 import useToggleState from "@/features/storefront/lib/hooks/use-toggle-state"
-import CountrySelect from "@/features/storefront/modules/checkout/components/country-select"
 import { SubmitButton } from "@/features/storefront/modules/checkout/components/submit-button"
 import { createCustomerAddress } from "@/features/storefront/lib/data/user"
-import { Input } from "@/components/ui/input"
+import {
+  InlineError,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/features/storefront/modules/account/components/account-ui"
+import { AddressDialogContent, AddressFields } from "./address-fields"
 
 const AddAddress = ({
   region,
@@ -28,8 +22,7 @@ const AddAddress = ({
   const [successState, setSuccessState] = useState(false)
   const { state, open, close: closeModal } = useToggleState(false)
 
-  const [formState, formAction] = useActionState(createCustomerAddress, { // Updated function name
-    // isDefaultShipping: addresses.length === 0, // Removed, handled by is_billing form field
+  const [formState, formAction] = useActionState(createCustomerAddress, {
     success: false,
     error: null,
   })
@@ -52,143 +45,55 @@ const AddAddress = ({
     }
   }, [formState])
 
+  const f = formState.fields
+
   return (
     <Dialog open={state} onOpenChange={(isOpen) => isOpen ? open() : close()}>
       <DialogTrigger asChild>
         <button
-          className="border rounded-lg p-5 min-h-[220px] h-full w-full flex flex-col justify-between bg-muted/40"
+          type="button"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-ink px-5 text-[15px] font-medium text-white"
           onClick={open}
           data-testid="add-address-button"
         >
-          <span className="text-sm leading-6 font-semibold">New address</span>
-          <Plus />
+          <Plus size={18} aria-hidden="true" />
+          Add address
         </button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-xl" data-testid="add-address-modal">
-        <DialogHeader>
-          <DialogTitle>Add address</DialogTitle>
-        </DialogHeader>
-
-        <form action={formAction}>
-          <div className="flex flex-col gap-y-2">
-            <div className="grid grid-cols-2 gap-x-2">
-              <Input
-                placeholder="First name"
-                name="first_name"
-                defaultValue={formState.fields?.first_name ?? ""}
-                required
-                autoComplete="given-name"
-                data-testid="first-name-input"
-              />
-              <Input
-                placeholder="Last name"
-                name="last_name"
-                defaultValue={formState.fields?.last_name ?? ""}
-                required
-                autoComplete="family-name"
-                data-testid="last-name-input"
-              />
-            </div>
-            <Input
-              placeholder="Company"
-              name="company"
-                defaultValue={formState.fields?.company ?? ""}
-              autoComplete="organization"
-              data-testid="company-input"
-            />
-            <Input
-              placeholder="Address"
-              name="address_1"
-                defaultValue={formState.fields?.address_1 ?? ""}
-              required
-              autoComplete="address-line1"
-              data-testid="address-1-input"
-            />
-            <Input
-              placeholder="Apartment, suite, etc."
-              name="address_2"
-                defaultValue={formState.fields?.address_2 ?? ""}
-              autoComplete="address-line2"
-              data-testid="address-2-input"
-            />
-            <Input
-              placeholder="City"
-              name="city"
-                defaultValue={formState.fields?.city ?? ""}
-              required
-              autoComplete="locality"
-              data-testid="city-input"
-            />
-            <div className="grid grid-cols-2 gap-x-2">
-              <Input
-                placeholder="State / Province"
-                name="province"
-                defaultValue={formState.fields?.province ?? ""}
-                autoComplete="address-level1"
-                data-testid="state-input"
-              />
-              <Input
-                placeholder="ZIP / Postal code"
-                name="postal_code"
-                defaultValue={formState.fields?.postal_code ?? ""}
-                required
-                autoComplete="postal-code"
-                data-testid="postal-code-input"
-              />
-            </div>
-            <CountrySelect
-              region={region}
-              name="country_code"
-              required
-              autoComplete="country"
-              data-testid="country-select"
-            />
-            <div className="flex items-center gap-x-2 mt-2">
-              <Checkbox
-                id="is_billing"
-                name="is_billing"
-                value="true"
-                data-testid="billing-checkbox"
-              />
-              <Label
-                htmlFor="is_billing"
-                className="!text-[0.8125rem] leading-5 font-normal text-foreground"
-                data-testid="billing-label"
-              >
-                Set as default billing address
-              </Label>
-            </div>
-            <Input
-              placeholder="Phone"
-              name="phone"
-                defaultValue={formState.fields?.phone ?? ""}
-              autoComplete="phone"
-              data-testid="phone-input"
-            />
-          </div>
-          {formState.error && (
-            <div
-              className="text-rose-500 text-xs leading-5 font-normal py-2"
-              data-testid="address-error"
-            >
-              {formState.error}
-            </div>
-          )}
-
-          <DialogFooter className="mt-6">
-            <Button
+      <AddressDialogContent title="Add address" data-testid="add-address-modal">
+        <form action={formAction} className="flex flex-col gap-5">
+          <AddressFields
+            region={region}
+            idPrefix="add-address"
+            defaults={{
+              first_name: f?.first_name ?? "",
+              last_name: f?.last_name ?? "",
+              company: f?.company ?? "",
+              address_1: f?.address_1 ?? "",
+              address_2: f?.address_2 ?? "",
+              city: f?.city ?? "",
+              province: f?.province ?? "",
+              postal_code: f?.postal_code ?? "",
+              phone: f?.phone ?? "",
+            }}
+          />
+          {formState.error && <InlineError data-testid="address-error">{formState.error}</InlineError>}
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button
               type="reset"
-              variant="outline"
               onClick={close}
+              className={secondaryButtonClass}
               data-testid="cancel-button"
             >
               Cancel
-            </Button>
-            <SubmitButton data-testid="save-button">Save</SubmitButton>
-          </DialogFooter>
+            </button>
+            <SubmitButton data-testid="save-button" className={primaryButtonClass}>
+              Save
+            </SubmitButton>
+          </div>
         </form>
-      </DialogContent>
+      </AddressDialogContent>
     </Dialog>
   )
 }

@@ -1,8 +1,7 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-
 import PaymentButton from "../payment-button"
+import StepHeader from "../step-header"
 import { useSearchParams } from "next/navigation"
 
 const Review = ({ cart }: { cart: any }) => {
@@ -14,41 +13,34 @@ const Review = ({ cart }: { cart: any }) => {
     cart?.giftCard && cart?.giftCard?.length > 0 && cart?.total === 0
 
   const previousStepsCompleted =
-    cart?.shippingAddress && // Check shippingAddress
-    cart?.shippingMethods?.length > 0 && // Check shippingMethods
-    (cart?.paymentCollection || paidByGiftcard) // Check paymentCollection
+    cart?.shippingAddress &&
+    cart?.shippingMethods?.length > 0 &&
+    (cart?.paymentCollection || paidByGiftcard)
+
+  const active = isOpen && previousStepsCompleted
 
   return (
-    <div className="bg-background">
-      <div className="flex flex-row items-center justify-between mb-6">
-        <h2 // Use h2
-          className={cn(
-            "flex flex-row text-3xl font-medium gap-x-2 items-baseline", // Use Tailwind class
-            {
-              // Disable if not open OR previous steps not completed
-              "opacity-50 pointer-events-none select-none": !isOpen || !previousStepsCompleted,
-            }
-          )}
-        >
-          Review
-        </h2>
-      </div>
-      {isOpen && previousStepsCompleted && (
-        <>
-          <div className="flex items-start gap-x-1 w-full mb-6">
-            <div className="w-full">
-              <p className="text-sm text-foreground mb-1">
-                By clicking the Place Order button, you confirm that you have
-                read, understand and accept our Terms of Use, Terms of Sale and
-                Returns Policy and acknowledge that you have read Openfront
-                Store&apos;s Privacy Policy.
-              </p>
+    <section className="flex flex-col gap-5 border-t border-vp-line pt-5" aria-label="Review">
+      <StepHeader index={4} title="Review" state={active ? "open" : "todo"} />
+      {active && (
+        <div className="flex flex-col gap-4 pb-2">
+          <dl className="vp-band divide-y divide-vp-line text-[14px] leading-[20px]">
+            <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+              <dt className="text-vp-ink-2">Total</dt>
+              <dd className="font-vp-mono text-[16px] font-medium text-vp-ink">{cart?.total}</dd>
             </div>
-          </div>
+            <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+              <dt className="text-vp-ink-2">Delivery</dt>
+              <dd className="text-right text-vp-ink">Adult signature may be required</dd>
+            </div>
+          </dl>
+          <p className="text-[13px] leading-[18px] text-vp-ink-3">
+            By placing this order you accept the Terms of Use, Terms of Sale, Returns Policy and Privacy Policy.
+          </p>
           <PaymentButton cart={cart} data-testid="submit-order-button" />
-        </>
+        </div>
       )}
-    </div>
+    </section>
   )
 }
 

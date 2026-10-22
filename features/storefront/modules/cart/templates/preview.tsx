@@ -1,5 +1,4 @@
 "use client";
-import { Table, TableBody } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 import Item from "@/features/storefront/modules/cart/components/item";
@@ -15,33 +14,28 @@ const ItemsPreviewTemplate = ({ items, region }: ItemsPreviewTemplateProps) => {
 
   return (
     <div
-      className={cn({
-        "pl-[1px] overflow-y-scroll overflow-x-hidden no-scrollbar max-h-[420px]":
-          hasOverflow,
+      className={cn("vp-band divide-y divide-vp-line", {
+        "no-scrollbar max-h-[360px] overflow-x-hidden overflow-y-auto": hasOverflow,
       })}
     >
-      <Table>
-        <TableBody>
-          {items && region
-            ? items
-                .sort((a, b) => {
-                  return a.createdAt > b.createdAt ? -1 : 1;
-                })
-                .map((item) => {
-                  return (
-                    <Item
-                      key={item.id}
-                      item={item}
-                      region={region}
-                      type="preview"
-                    />
-                  );
-                })
-            : Array.from(Array(5).keys()).map((i) => {
-                return <SkeletonLineItem key={i} />;
-              })}
-        </TableBody>
-      </Table>
+      {items && region
+        ? items
+            .sort((a, b) => {
+              return a.createdAt > b.createdAt ? -1 : 1;
+            })
+            .map((item) => {
+              return (
+                <Item
+                  key={item.id}
+                  item={item}
+                  region={region}
+                  type="preview"
+                />
+              );
+            })
+        : Array.from(Array(3).keys()).map((i) => {
+            return <SkeletonLineItem key={i} compact />;
+          })}
     </div>
   );
 };

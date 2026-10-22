@@ -1,14 +1,13 @@
 "use client"
 
-import dynamic from 'next/dynamic'
 import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 import {
   Sheet,
+  SheetClose,
   SheetContent,
-  SheetHeader,
   SheetTitle,
-  SheetDescription,
   SheetTrigger,
 } from "@/components/ui/sheet";
 
@@ -16,76 +15,115 @@ import LocalizedClientLink from "@/features/storefront/modules/common/components
 import CountrySelect from "../country-select"
 import type { StoreRegion } from "@/features/storefront/types/storefront"
 
-const SideMenuItems = {
-  Home: "/",
-  Store: "/store",
-  Account: "/account",
-  Cart: "/cart",
-}
+type Link = { id: string; title: string; handle: string }
 
-const SideMenu = ({ regions }: { regions: StoreRegion[] | null }) => {
+const SideMenu = ({
+  regions,
+  categories = [],
+  collections = [],
+}: {
+  regions: StoreRegion[] | null
+  categories?: Link[]
+  collections?: Link[]
+}) => {
   const [open, setOpen] = useState(false);
+
+  const linkClass =
+    "flex min-h-12 items-center justify-between border-b border-vp-line text-[20px] font-medium tracking-[-0.01em] text-vp-ink"
 
   return (
     // TODO: Remove suppressHydrationWarning when React 19.2.0 useId bug is fixed upstream
     // Known issue: https://github.com/radix-ui/primitives/issues/3700
-    // Radix UI generates different IDs on server vs client in React 19.2.0 (Next.js 16+)
-    <div className="h-full" suppressHydrationWarning>
-      <div className="flex items-center h-full">
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <button
-              data-testid="nav-menu-button"
-              className="relative min-h-11 min-w-11 h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-foreground cursor-pointer"
-              suppressHydrationWarning
-            >
-              Menu
-            </button>
-          </SheetTrigger>
-          <SheetContent
-            side="left"
-            className="w-full sm:max-w-md border-0 bg-background/95 backdrop-blur-md flex flex-col h-full"
-            data-testid="nav-menu-popup"
+    <div suppressHydrationWarning>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <button
+            data-testid="nav-menu-button"
+            aria-label="Open menu"
+            className="inline-flex size-11 items-center justify-center rounded-full text-vp-ink hover:bg-vp-well"
+            suppressHydrationWarning
           >
-            <SheetHeader>
-              <SheetTitle className="text-xl font-bold">Menu</SheetTitle>
-              <SheetDescription>
-                Browse our store and find what you need
-              </SheetDescription>
-            </SheetHeader>
+            <Menu className="size-5" />
+          </button>
+        </SheetTrigger>
+        <SheetContent
+          side="left"
+          className="vape-sf w-full sm:max-w-sm border-0 bg-vp-bg p-0 flex flex-col h-full [&>button]:hidden"
+          data-testid="nav-menu-popup"
+        >
+          <div className="flex h-16 items-center justify-between px-4 border-b border-vp-line">
+            <SheetTitle className="text-[15px] font-semibold text-vp-ink">Menu</SheetTitle>
+            <SheetClose asChild>
+              <button aria-label="Close menu" className="inline-flex size-11 items-center justify-center rounded-full hover:bg-vp-well">
+                <X className="size-5" />
+              </button>
+            </SheetClose>
+          </div>
 
-            <div className="flex flex-col justify-between flex-1 py-6 overflow-y-auto">
-              <ul className="flex flex-col gap-6 items-start justify-start">
-                {Object.entries(SideMenuItems).map(([name, href]) => {
-                  return (
-                    <li key={name}>
+          <div className="flex-1 overflow-y-auto px-4 pb-6">
+            <p className="mt-6 mb-1 font-vp-mono text-[11px] uppercase tracking-[0.14em] text-vp-ink-3">Shop</p>
+            <ul>
+              <li>
+                <LocalizedClientLink href="/store" className={linkClass} onClick={() => setOpen(false)} data-testid="store-link">
+                  Shop all
+                </LocalizedClientLink>
+              </li>
+              {categories.map((c, i) => (
+                <li key={c.id}>
+                  <LocalizedClientLink href={`/categories/${c.handle}`} className={linkClass} onClick={() => setOpen(false)}>
+                    {c.title}
+                    <span className="font-vp-mono text-[12px] text-vp-ink-3">{String(i + 1).padStart(2, "0")}</span>
+                  </LocalizedClientLink>
+                </li>
+              ))}
+            </ul>
+
+            {collections.length > 0 && (
+              <>
+                <p className="mt-8 mb-1 font-vp-mono text-[11px] uppercase tracking-[0.14em] text-vp-ink-3">Collections</p>
+                <ul>
+                  {collections.map((c) => (
+                    <li key={c.id}>
                       <LocalizedClientLink
-                        href={href}
-                        className="inline-flex min-h-11 items-center text-2xl leading-10 hover:text-muted-foreground cursor-pointer"
-                        data-testid={`${name.toLowerCase()}-link`}
+                        href={`/collections/${c.handle}`}
+                        className="flex min-h-11 items-center border-b border-vp-line text-[16px] text-vp-ink"
                         onClick={() => setOpen(false)}
                       >
-                        {name}
+                        {c.title}
                       </LocalizedClientLink>
                     </li>
-                  )
-                })}
-              </ul>
+                  ))}
+                </ul>
+              </>
+            )}
 
-              <div className="flex flex-col gap-y-6 mt-auto pt-6">
-                {regions && (
-                  <div className="flex justify-between">
-                    <CountrySelect regions={regions} />
-                  </div>
-                )}
-                <p className="flex justify-between text-[0.8125rem] leading-5 font-normal text-muted-foreground" suppressHydrationWarning>
-                  © {new Date().getFullYear()} Openfront. All rights reserved.
-                </p>
-              </div>
+            <div className="mt-8 grid grid-cols-2 gap-2">
+              <LocalizedClientLink
+                href="/account"
+                onClick={() => setOpen(false)}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-well text-[15px] font-medium text-vp-ink"
+                data-testid="account-link"
+              >
+                Account
+              </LocalizedClientLink>
+              <LocalizedClientLink
+                href="/cart"
+                onClick={() => setOpen(false)}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink text-[15px] font-medium text-white"
+                data-testid="cart-link"
+              >
+                Bag
+              </LocalizedClientLink>
             </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+          </div>
+
+          {regions && (
+            <div className="border-t border-vp-line px-4 py-4">
+              <CountrySelect regions={regions} />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

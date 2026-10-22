@@ -16,31 +16,19 @@ const LineItemUnitPrice = ({
   const hasReducedPrice = item.percentageOff > 0
 
   return (
-    <div className="flex flex-col text-muted-foreground justify-center h-full">
+    <span className="inline-flex items-baseline gap-1.5 font-vp-mono">
       {hasReducedPrice && (
         <>
-          <p>
-            {style === "default" && (
-              <span className="text-muted-foreground">Original: </span>
-            )}
-            <span className="line-through">
-              {item.originalPrice}
-            </span>
-          </p>
           {style === "default" && (
-            <span className="text-primary">
-              -{item.percentageOff}%
-            </span>
+            <span className="text-vp-accent">-{item.percentageOff}%</span>
           )}
+          <span className="text-vp-ink-3 line-through">{item.originalPrice}</span>
         </>
       )}
-      <span
-        className={cn("text-base-regular", {
-          "text-primary": hasReducedPrice,
-        })}>
+      <span className={cn({ "text-vp-accent": hasReducedPrice })}>
         {item.unitPrice}
       </span>
-    </div>
+    </span>
   );
 }
 

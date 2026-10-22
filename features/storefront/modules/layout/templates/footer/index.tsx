@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { getCategoriesList } from "@/features/storefront/lib/data/categories"
 import { getCollectionsList } from "@/features/storefront/lib/data/collections"
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
@@ -6,124 +5,71 @@ import Logo from "@/features/storefront/modules/layout/components/logo"
 import { getStore } from "@/features/storefront/lib/data/store"
 
 export default async function Footer() {
-  const { collections } = await getCollectionsList(0, 6)
-  const { productCategories } = await getCategoriesList(0, 6)
-  const store = await getStore()
-  const storeName = store?.name || "Openfront Store"
+  const [{ collections }, { productCategories }, store] = await Promise.all([
+    getCollectionsList(0, 6),
+    getCategoriesList(0, 8),
+    getStore(),
+  ])
+  const storeName = store?.name || "Store"
+  const categories = (productCategories || []).filter(
+    (c: any) => !c.parentCategory && !c.isInternal && c.isActive !== false
+  )
+
+  const heading = "mb-3 font-vp-mono text-[11px] uppercase tracking-[0.14em] text-vp-ink-3"
+  const link = "inline-flex min-h-9 items-center text-[14px] text-vp-ink-2 hover:text-vp-ink"
 
   return (
-    <footer className="border-t border-border w-full">
-      <div className="max-w-[1440px] mx-auto px-6 flex flex-col">
-        <div className="flex flex-col gap-y-6 sm:flex-row items-start justify-between py-40">
-          <div>
+    <footer className="mt-24 border-t border-vp-line bg-vp-bg">
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
+        <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div className="flex flex-col gap-4">
             <Logo />
+            <p className="max-w-xs text-[14px] text-vp-ink-2">{store?.homepageDescription}</p>
           </div>
-          <div className="text-xs leading-5 font-normal gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3">
-            {productCategories && productCategories?.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="text-[0.8125rem] leading-[1.375rem] font-medium text-foreground">
-                  Categories
-                </span>
-                <ul className="grid grid-cols-1 gap-2">
-                  {productCategories?.slice(0, 6).map((c: any) => {
-                    if (c.parentCategory) {
-                      return
-                    }
-
-                    const children =
-                      c.categoryChildren?.map((child: any) => ({
-                        title: child.title,
-                        handle: child.handle,
-                        id: child.id,
-                      })) || null
-
-                    return (
-                      <li className="flex flex-col text-muted-foreground text-[0.8125rem] leading-[1.375rem] font-normal" key={c.id}>
-                        <LocalizedClientLink
-                          className={cn("hover:text-foreground")}
-                          href={`/categories/${c.handle}`}>
-                          {c.title}
-                        </LocalizedClientLink>
-                        {children && (
-                          <ul className="grid grid-cols-1 ml-3 gap-2">
-                            {children &&
-                              children.map((child: any) => (
-                                <li key={child.id}>
-                                  <LocalizedClientLink className="hover:text-foreground" href={`/categories/${child.handle}`}>
-                                    {child.title}
-                                  </LocalizedClientLink>
-                                </li>
-                              ))}
-                          </ul>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-            {collections && collections.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="text-[0.8125rem] leading-[1.375rem] font-medium text-foreground">
-                  Collections
-                </span>
-                <ul
-                  className={cn("grid grid-cols-1 gap-2 text-muted-foreground text-[0.8125rem] leading-[1.375rem] font-normal", {
-                    "grid-cols-2": (collections?.length || 0) > 3,
-                  })}>
-                  {collections?.slice(0, 6).map((c: any) => (
-                    <li key={c.id}>
-                      <LocalizedClientLink className="hover:text-foreground" href={`/collections/${c.handle}`}>
-                        {c.title}
-                      </LocalizedClientLink>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="flex flex-col gap-y-2">
-              <span className="text-[0.8125rem] leading-[1.375rem] font-medium text-foreground">Openfront</span>
-              <ul className="grid grid-cols-1 gap-y-2 text-muted-foreground text-[0.8125rem] leading-[1.375rem] font-normal">
-                <li>
-                  <a
-                    href="https://github.com/openshiporg"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-foreground">
-                    GitHub
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://docs.openship.org"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-foreground">
-                    Documentation
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://github.com/openshiporg/openfront"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-foreground">
-                    Source code
-                  </a>
-                </li>
+          {categories.length > 0 && (
+            <div>
+              <p className={heading}>Shop</p>
+              <ul>
+                {categories.slice(0, 6).map((c: any) => (
+                  <li key={c.id}>
+                    <LocalizedClientLink className={link} href={`/categories/${c.handle}`}>
+                      {c.title}
+                    </LocalizedClientLink>
+                  </li>
+                ))}
               </ul>
             </div>
+          )}
+          {collections && collections.length > 0 && (
+            <div>
+              <p className={heading}>Collections</p>
+              <ul>
+                {collections.slice(0, 6).map((c: any) => (
+                  <li key={c.id}>
+                    <LocalizedClientLink className={link} href={`/collections/${c.handle}`}>
+                      {c.title}
+                    </LocalizedClientLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div>
+            <p className={heading}>Account</p>
+            <ul>
+              <li><LocalizedClientLink className={link} href="/account">Sign in</LocalizedClientLink></li>
+              <li><LocalizedClientLink className={link} href="/account/orders">Orders</LocalizedClientLink></li>
+              <li><LocalizedClientLink className={link} href="/cart">Bag</LocalizedClientLink></li>
+            </ul>
           </div>
         </div>
-        <div className="flex w-full mb-16 flex-col items-center gap-y-1 text-muted-foreground">
-          <p className="text-[0.8125rem] leading-5 font-normal">Adults 21+ only.</p>
-          <p className="text-[0.8125rem] leading-5 font-normal">
-            <span suppressHydrationWarning>
-              © {new Date().getFullYear()} {storeName}. All rights reserved.
-            </span>
+        <div className="flex flex-col gap-2 border-t border-vp-line py-6 text-[12px] text-vp-ink-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-vp-mono uppercase tracking-[0.08em]">Adults 21+ only</p>
+          <p suppressHydrationWarning>
+            © {new Date().getFullYear()} {storeName}
           </p>
         </div>
       </div>
     </footer>
-  );
+  )
 }

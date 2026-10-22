@@ -95,26 +95,21 @@ export function FullJsonEditor({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label className="text-sm font-medium">
+        <Label className="text-sm font-semibold">
           {templateName} Setup Configuration
         </Label>
-        {templateName === 'Custom' && (
-          <p className="text-xs text-muted-foreground">
-            Start with our template or bring your own. Copy this configuration, customize it with AI, and paste it back to create your perfect store setup in seconds.
-          </p>
-        )}
       </div>
 
       <div className="relative">
-        <div className="bg-muted rounded-lg border">
-          <div className="flex items-center justify-between p-3 border-b border-border">
-            <span className="text-xs font-medium text-muted-foreground">JSON Configuration</span>
+        <div className="overflow-hidden rounded-xl bg-muted/40 ring-1 ring-inset ring-border/60">
+          <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
+            <span className="text-xs font-semibold text-foreground">JSON Configuration</span>
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={copyToClipboard}
-                className="h-7 px-2"
+                className="h-8 rounded-full px-3"
               >
                 {copied ? (
                   <>
@@ -133,7 +128,7 @@ export function FullJsonEditor({
                   size="sm"
                   variant="ghost"
                   onClick={isEditing ? cancelEditing : startEditing}
-                  className="h-7 px-2"
+                  className="h-8 rounded-full px-3"
                 >
                   <Edit3 className="h-3 w-3 mr-1" />
                   {isEditing ? 'Cancel' : 'Edit'}
@@ -158,7 +153,7 @@ export function FullJsonEditor({
           </div>
           
           {isEditing && error && (
-            <div className="mx-3 mb-3 bg-destructive/10 border border-destructive/20 rounded-md p-2">
+            <div role="alert" className="mx-3 mb-3 rounded-lg bg-destructive/10 p-2 ring-1 ring-inset ring-destructive/20">
               <p className="text-xs text-destructive">{error}</p>
             </div>
           )}
@@ -166,6 +161,7 @@ export function FullJsonEditor({
           <div className="flex items-center gap-2 justify-end p-3 pt-0">
             <Button
               size="sm"
+              className="h-10 rounded-full px-4 sm:h-8"
               onClick={validateAndApply}
               disabled={!isEditing}
             >

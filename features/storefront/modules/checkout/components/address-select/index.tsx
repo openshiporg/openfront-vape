@@ -96,8 +96,8 @@ const AddressSelect = ({
   };
 
   return (
-    <div className="space-y-2">
-      {label && <Label htmlFor={id}>{label}</Label>}
+    <div className="flex flex-col gap-2">
+      {label && <Label htmlFor={id} className="text-[13px] leading-[18px] font-medium text-vp-ink-2">{label}</Label>}
       <Select
         value={selectedAddress?.id}
         onValueChange={handleSelect}
@@ -105,7 +105,7 @@ const AddressSelect = ({
       >
         <SelectTrigger
           id={id}
-          className="bg-muted/40 h-auto ps-3 text-left [&>span]:flex [&>span]:items-center [&>span]:gap-2"
+          className="h-auto min-h-14 rounded-[14px] border-vp-line bg-vp-surface px-4 py-3 text-left text-vp-ink shadow-none hover:border-vp-ink-3 focus:border-vp-accent focus:ring-2 focus:ring-vp-tint [&>span]:flex [&>span]:items-center [&>span]:gap-2"
         >
           <SelectValue
             placeholder="Choose an address"
@@ -116,15 +116,15 @@ const AddressSelect = ({
                  {selectedAddress.firstName} {selectedAddress.lastName}
                </span>
                {selectedAddress.company && (
-                 <span className="text-muted-foreground text-xs">
+                 <span className="text-vp-ink-2 text-xs">
                    {selectedAddress.company}
                  </span>
                )}
-               <span className="text-sm text-muted-foreground">
+               <span className="text-sm text-vp-ink-2">
                  {formatAddressLine(selectedAddress)}
                </span>
                {selectedAddress.phone && (
-                 <span className="text-xs text-muted-foreground">
+                 <span className="text-xs text-vp-ink-2">
                    {selectedAddress.phone}
                  </span>
                )}
@@ -132,14 +132,14 @@ const AddressSelect = ({
             )}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="[&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2">
+        <SelectContent className="rounded-[18px] border-vp-line bg-vp-surface text-vp-ink [&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2">
           {addresses.map((address) => (
             <SelectItem
               key={address.id}
               value={address.id}
               className={cn(
-                "py-3 cursor-pointer",
-                selectedAddress?.id === address.id && "bg-accent"
+                "cursor-pointer rounded-[12px] py-3",
+                selectedAddress?.id === address.id && "bg-vp-well"
               )}
             >
               <span className="flex flex-col gap-1">
@@ -147,15 +147,15 @@ const AddressSelect = ({
                   {address.firstName} {address.lastName}
                 </span>
                 {address.company && (
-                  <span className="text-muted-foreground text-xs">
+                  <span className="text-vp-ink-2 text-xs">
                     {address.company}
                   </span>
                 )}
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-vp-ink-2">
                   {formatAddressLine(address)}
                 </span>
                 {address.phone && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-vp-ink-2">
                     {address.phone}
                   </span>
                 )}

@@ -1,27 +1,19 @@
 const SkeletonCartTotals = ({ header = true }) => {
   return (
-    <div className="flex flex-col">
-      {header && <div className="w-32 h-4 bg-gray-100 mb-4"></div>}
-      <div className="flex items-center justify-between">
-        <div className="w-32 h-3 bg-gray-100"></div>
-        <div className="w-32 h-3 bg-gray-100"></div>
+    <div className="flex flex-col animate-pulse">
+      {header && <div className="mb-5 h-5 w-28 rounded-full bg-vp-well"></div>}
+      <div className="flex flex-col gap-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-center justify-between">
+            <div className="h-3 w-24 rounded-full bg-vp-well"></div>
+            <div className="h-3 w-16 rounded-full bg-vp-well"></div>
+          </div>
+        ))}
       </div>
-
-      <div className="flex items-center justify-between my-4">
-        <div className="w-24 h-3 bg-gray-100"></div>
-        <div className="w-24 h-3 bg-gray-100"></div>
-      </div>
-
+      <div className="my-4 h-px w-full bg-vp-line"></div>
       <div className="flex items-center justify-between">
-        <div className="w-28 h-3 bg-gray-100 "></div>
-        <div className="w-20 h-3 bg-gray-100"></div>
-      </div>
-
-      <div className="w-full border-b border-gray-200 border-dashed my-4"></div>
-
-      <div className="flex items-center justify-between">
-        <div className="w-32 h-6 bg-gray-100 mb-4"></div>
-        <div className="w-24 h-6 bg-gray-100 mb-4"></div>
+        <div className="h-4 w-16 rounded-full bg-vp-well"></div>
+        <div className="h-6 w-24 rounded-full bg-vp-well"></div>
       </div>
     </div>
   )

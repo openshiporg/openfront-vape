@@ -1,13 +1,13 @@
 "use client"
 
 import { useActionState } from "react"
-import { createTransferRequest } from "@/features/storefront/lib/data/orders";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Toaster } from "@/components/ui/sonner";
-import { SubmitButton } from "@/features/storefront/modules/checkout/components/submit-button";
-import { CheckCircle, XCircle } from "lucide-react"; 
+import { X } from "lucide-react"
 import { useEffect, useState } from "react"
+
+import { createTransferRequest } from "@/features/storefront/lib/data/orders";
+import { SubmitButton } from "@/features/storefront/modules/checkout/components/submit-button";
+import StatusDot from "@/features/storefront/modules/common/components/vape/status-dot"
+import { Field, InlineError, secondaryButtonClass } from "@/features/storefront/modules/account/components/account-ui"
 
 export default function TransferRequestForm() {
   const [showSuccess, setShowSuccess] = useState(false)
@@ -25,60 +25,38 @@ export default function TransferRequestForm() {
   }, [state.success, state.order])
 
   return (
-    <div className="flex flex-col gap-y-4 w-full">
-      <div className="grid sm:grid-cols-2 items-center gap-x-8 gap-y-4 w-full">
-        <div className="flex flex-col gap-y-1">
-          <h3 className="text-lg text-foreground font-semibold">
-            Order transfers
-          </h3>
-          <p className="text-sm font-normal text-muted-foreground">
-            Can&apos;t find the order you are looking for?
-            <br /> Connect an order to your account.
-          </p>
+    <section className="flex w-full flex-col gap-4">
+      <h3 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Order transfer</h3>
+      <form action={formAction} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="min-w-0 flex-1">
+          <Field label="Order ID" id="transfer-order-id" name="order_id" required={false} />
         </div>
-        <form
-          action={formAction}
-          className="flex flex-col gap-y-1 sm:items-end"
-        >
-          <div className="flex flex-col gap-y-2 w-full">
-            <Input className="w-full" name="order_id" placeholder="Order ID" />
-            <SubmitButton
-              variant="secondary"
-              className="w-fit whitespace-nowrap self-end"
-            >
-              Request transfer
-            </SubmitButton>
-          </div>
-        </form>
-      </div>
-      {!state.success && state.error && (
-        <p className="text-sm font-normal text-destructive text-right">
-          {state.error}
-        </p>
-      )}
+        <SubmitButton className={`${secondaryButtonClass} whitespace-nowrap`}>
+          Request transfer
+        </SubmitButton>
+      </form>
+      {!state.success && state.error && <InlineError>{state.error}</InlineError>}
       {showSuccess && (
-        <div className="flex justify-between p-4 bg-muted shadow-sm w-full self-stretch items-center rounded-md border">
-          <div className="flex gap-x-2 items-center">
-            <CheckCircle className="w-4 h-4 text-emerald-500" />
-            <div className="flex flex-col gap-y-1">
-              <p className="text-sm font-medium text-foreground">
-                Transfer for order {state.order?.id} requested
-              </p>
-              <p className="text-sm font-normal text-muted-foreground">
-                Transfer request email sent to {state.order?.email}
-              </p>
-            </div>
+        <div className="vp-band flex items-start justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <p className="flex items-baseline gap-2 text-[14px] font-medium text-vp-ink">
+              <StatusDot tone="ok" />
+              <span>
+                Transfer requested for <span className="font-vp-mono">{state.order?.id}</span>
+              </span>
+            </p>
+            <p className="break-all text-[13px] text-vp-ink-2">Email sent to {state.order?.email}</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-fit text-muted-foreground hover:bg-transparent"
+          <button
+            type="button"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-vp-ink-3 hover:text-vp-ink"
             onClick={() => setShowSuccess(false)}
+            aria-label="Dismiss"
           >
-            <XCircle className="w-4 h-4" />
-          </Button>
+            <X size={16} aria-hidden="true" />
+          </button>
         </div>
       )}
-    </div>
+    </section>
   )
 }

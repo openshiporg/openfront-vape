@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge"
 import { FlaskConical } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface PaymentTestProps {
   className?: string
@@ -8,20 +8,23 @@ interface PaymentTestProps {
 
 const PaymentTest = ({ className, provider = "general" }: PaymentTestProps) => {
   const providerText = provider === "stripe"
-    ? "Stripe Test Mode"
+    ? "Stripe test mode"
     : provider === "paypal"
-    ? "PayPal Sandbox"
-    : "Test Mode"
+    ? "PayPal sandbox"
+    : "Test mode"
 
   return (
-    <Badge
-      variant="outline"
-      className={`bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800 ${className}`}
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full bg-[#f6ead9] px-2.5 py-1 font-vp-mono text-[11px] leading-[14px] text-vp-warn",
+        className
+      )}
     >
-      <FlaskConical className="w-3 h-3 mr-1" />
-      <span className="font-medium">{providerText}</span>
-      <span className="ml-1 font-normal">– Do not enter real payment info</span>
-    </Badge>
+      <FlaskConical className="h-3 w-3 flex-none" />
+      <span>{providerText}</span>
+      <span aria-hidden="true">·</span>
+      <span>Do not enter real payment info</span>
+    </span>
   )
 }
 

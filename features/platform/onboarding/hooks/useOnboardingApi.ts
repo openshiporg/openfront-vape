@@ -2,10 +2,7 @@ import { GraphQLClient, gql } from 'graphql-request';
 import { startOnboarding, completeOnboarding } from '../actions/onboarding';
 import { SECTION_DEFINITIONS } from '../config/templates';
 import { TemplateType, OnboardingStep } from './useOnboardingState';
-import {
-  DEFAULT_STORE_LOGO_COLOR,
-  DEFAULT_STORE_LOGO_ICON,
-} from '../../store-settings/lib/store-logo';
+import { VAPE_LOGO_COLOR, VAPE_LOGO_ICON } from '@/features/storefront/lib/vape-brand';
 
 const GRAPHQL_ENDPOINT = '/api/graphql';
 
@@ -95,8 +92,8 @@ export function useOnboardingApi({
       defaultCurrencyCode: 'usd',
       homepageTitle: 'Vape devices, e-liquids and accessories',
       homepageDescription: 'Adults 21+ only. Shop devices, e-liquids and accessories.',
-      logoIcon: DEFAULT_STORE_LOGO_ICON,
-      logoColor: DEFAULT_STORE_LOGO_COLOR,
+      logoIcon: VAPE_LOGO_ICON,
+      logoColor: VAPE_LOGO_COLOR,
       ...(data.store || {}),
     };
 

@@ -246,31 +246,16 @@ After I tell you what to change, modify the JSON and provide the complete update
       title: "Chat with AI",
       description:
         "The AI will ask you questions about your business and products, what regions you want to sell in, and help you customize your setup",
-      content: (
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            The AI will ask you questions about your business such as:
-          </p>
-          <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-            <li>• What products do you want to sell?</li>
-            <li>• Which regions/countries do you want to target?</li>
-            <li>• What product categories do you need?</li>
-            <li>• What payment methods do you prefer?</li>
-          </ul>
-          <p className="text-sm text-muted-foreground">
-            Answer the AI's questions to get your custom JSON configuration.
-          </p>
-        </div>
-      ),
+      content: null,
     },
     {
       number: 4,
       title: "Paste Your Custom JSON",
       description: "Paste the AI-generated configuration here",
       content: (
-        <div className="rounded-lg border overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2 bg-muted border-b">
-            <span className="text-sm font-medium text-muted-foreground">
+        <div className="overflow-hidden rounded-xl bg-muted/40 ring-1 ring-inset ring-border/60">
+          <div className="flex items-center justify-between border-b border-border px-4 py-1.5">
+            <span className="text-xs font-semibold text-foreground">
               Custom Onboarding Data
             </span>
             <Button
@@ -285,12 +270,13 @@ After I tell you what to change, modify the JSON and provide the complete update
                   console.error("Failed to paste:", err);
                 }
               }}
-              className="h-6 w-6 p-0 hover:bg-background/80"
+              aria-label="Paste"
+              className="size-8 rounded-full p-0 hover:bg-background/80"
             >
               <Clipboard className="h-3 w-3 text-muted-foreground" />
             </Button>
           </div>
-          <div className="bg-background">
+          <div className="bg-background/60">
             <Textarea
               placeholder="Paste your customized JSON configuration here..."
               value={customJson}
@@ -303,14 +289,15 @@ After I tell you what to change, modify the JSON and provide the complete update
           </div>
           {jsonError && (
             <div className="px-4 pb-4">
-              <div className="bg-destructive/10 border border-destructive/20 rounded-md p-2">
+              <div role="alert" className="rounded-lg bg-destructive/10 p-2 ring-1 ring-inset ring-destructive/20">
                 <p className="text-xs text-destructive">{jsonError}</p>
               </div>
             </div>
           )}
-          <div className="flex items-center justify-end px-4 py-2 bg-muted border-t">
+          <div className="flex items-center justify-end border-t border-border px-3 py-2">
             <Button
               size="sm"
+              className="h-10 rounded-full px-4 sm:h-8"
               onClick={validateAndApplyJson}
               disabled={!customJson.trim()}
             >
@@ -333,7 +320,7 @@ After I tell you what to change, modify the JSON and provide the complete update
               setJsonApplied(false);
               onBack();
             }}
-            className="h-8 px-2"
+            className="h-10 rounded-full px-3"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Custom Setup
@@ -341,15 +328,9 @@ After I tell you what to change, modify the JSON and provide the complete update
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">
-          Custom Setup Configuration
-        </Label>
-        <p className="text-xs text-muted-foreground">
-          Follow these steps to create a personalized store setup using AI
-          assistance.
-        </p>
-      </div>
+      <Label className="text-sm font-semibold">
+        Custom Setup Configuration
+      </Label>
 
       <div className="space-y-0">
         {steps.map((step, index) => (
@@ -361,10 +342,10 @@ After I tell you what to change, modify the JSON and provide the complete update
 
             {/* Section header with number badge */}
             <div className="flex items-center space-x-3 mb-2 relative">
-              <div className="inline-flex size-6 items-center justify-center rounded-sm border border-border bg-background text-sm text-foreground shadow-sm z-10">
-                {step.number}
+              <div className="z-10 inline-flex size-6 items-center justify-center rounded-full bg-muted font-mono text-[11px] tabular-nums text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] ring-1 ring-inset ring-border/60">
+                {String(step.number).padStart(2, '0')}
               </div>
-              <Label className="text-sm font-medium text-foreground">
+              <Label className="text-sm font-semibold text-foreground">
                 {step.title}
               </Label>
             </div>
@@ -372,7 +353,7 @@ After I tell you what to change, modify the JSON and provide the complete update
             {/* Section items */}
             <div className="pl-9">
               <div className="pb-6">
-                <p className="text-xs text-muted-foreground mb-3">
+                <p className={`text-xs text-muted-foreground ${step.content ? 'mb-3' : ''}`}>
                   {step.description}
                 </p>
                 {step.content}

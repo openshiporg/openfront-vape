@@ -1,12 +1,5 @@
-"use client";
-import { Info } from "lucide-react";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
 import React from "react";
+import { cn } from "@/lib/utils";
 
 interface CartTotalsProps {
   data: {
@@ -20,6 +13,15 @@ interface CartTotalsProps {
   } | null;
 }
 
+const Row = ({ label, value, tone }: { label: React.ReactNode; value: React.ReactNode; tone?: "accent" }) => (
+  <div className="flex items-baseline justify-between gap-4">
+    <dt className="text-[14px] leading-[20px] text-vp-ink-2">{label}</dt>
+    <dd className={cn("text-right font-vp-mono text-[14px] leading-[20px] text-vp-ink", tone === "accent" && "text-vp-accent")}>
+      {value}
+    </dd>
+  </div>
+);
+
 const CartTotals = ({ data }: CartTotalsProps) => {
   if (!data) {
     return null;
@@ -27,59 +29,30 @@ const CartTotals = ({ data }: CartTotalsProps) => {
 
   return (
     <div>
-      <div className="flex flex-col gap-y-2 text-base font-medium text-muted-foreground">
-        <div className="flex items-center justify-between">
-          <span className="flex gap-x-2 items-center">
-            Subtotal
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-4 h-4 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  Cart total excluding shipping and taxes.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </span>
-          <span>{data.subtotal}</span>
-        </div>
+      <dl className="flex flex-col gap-2.5">
+        <Row label={<>Subtotal <span className="text-vp-ink-3">excl. shipping and tax</span></>} value={data.subtotal} />
 
         {data.discount && data.discount !== "0" && (
-          <div className="flex justify-between">
-            <span>Discount</span>
-            <span className="text-blue-600">- {data.discount}</span>
-          </div>
+          <Row label="Discount" value={<>-{data.discount}</>} tone="accent" />
         )}
 
         {data.giftCardTotal && data.giftCardTotal !== "0" && (
-          <div className="flex justify-between">
-            <span>Gift card</span>
-            <span className="text-blue-600">- {data.giftCardTotal}</span>
-          </div>
+          <Row label="Gift card" value={<>-{data.giftCardTotal}</>} tone="accent" />
         )}
-        <div className="flex items-center justify-between">
-          <span>Shipping</span>
-          <span>{data.shipping}</span>
-        </div>
 
-        <div className="flex justify-between">
-          <span className="flex gap-x-1 items-center">Taxes</span>
-          <span>{data.tax}</span>
-        </div>
+        <Row label="Shipping" value={data.shipping} />
+        <Row label="Taxes" value={data.tax} />
+
         {data.regulatedTax && (
-          <div className="flex justify-between gap-4">
-            <span>Regulated sales, excise & local taxes</span>
-            <span className="text-right">{data.regulatedTax}</span>
-          </div>
+          <Row label="Regulated sales, excise and local taxes" value={data.regulatedTax} />
         )}
+      </dl>
+      <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-vp-line pt-4">
+        <span className="text-[15px] font-semibold text-vp-ink">Total</span>
+        <span className="font-vp-mono text-[22px] leading-[28px] font-medium text-vp-ink">
+          {data.total}
+        </span>
       </div>
-      <div className="h-px w-full border-b my-4" />
-      <div className="flex items-center justify-between mb-2 text-base font-medium">
-        <span>Total</span>
-        <span className="text-2xl font-semibold">{data.total}</span>
-      </div>
-      <div className="h-px w-full border-b mt-4" />
     </div>
   );
 };

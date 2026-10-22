@@ -1,45 +1,33 @@
-import { cn } from "@/lib/utils";
-
 interface PreviewPriceProps {
   price: any;
   region: any;
+  from?: boolean;
 }
 
-export default function PreviewPrice({ price, region }: PreviewPriceProps) {
+export default function PreviewPrice({ price, region, from }: PreviewPriceProps) {
   if (!price || !price.calculatedAmount) {
-    return <span>Price not available</span>;
+    return <span className="text-[13px] text-vp-ink-3">Unavailable</span>;
   }
 
-  const formattedPrice = new Intl.NumberFormat(region.locale, {
-    style: "currency",
-    currency: price.currencyCode,
-  }).format(price.calculatedAmount / 100);
-
-  const formattedOriginalPrice = new Intl.NumberFormat(region.locale, {
-    style: "currency",
-    currency: price.currencyCode,
-  }).format(price.originalAmount / 100);
+  const format = (amount: number) =>
+    new Intl.NumberFormat(region.locale, {
+      style: "currency",
+      currency: price.currencyCode,
+    }).format(amount / 100);
 
   const isOnSale = price.calculatedAmount < price.originalAmount;
 
   return (
-    <div className="flex flex-col items-end gap-0.5">
+    <span className="inline-flex items-baseline gap-1.5 font-vp-mono text-[14px] text-vp-ink">
+      {from && <span className="font-vp text-[12px] text-vp-ink-3">From</span>}
+      <span className={isOnSale ? "text-vp-accent font-medium" : undefined} data-testid="price">
+        {format(price.calculatedAmount)}
+      </span>
       {isOnSale && (
-        <span
-          className="text-xs line-through text-muted-foreground/60"
-          data-testid="original-price"
-        >
-          {formattedOriginalPrice}
+        <span className="text-[12px] text-vp-ink-3 line-through" data-testid="original-price">
+          {format(price.originalAmount)}
         </span>
       )}
-      <span
-        className={cn("text-base font-semibold text-foreground/70 whitespace-nowrap", {
-          "text-primary": isOnSale,
-        })}
-        data-testid="price"
-      >
-        {formattedPrice}
-      </span>
-    </div>
+    </span>
   );
 }

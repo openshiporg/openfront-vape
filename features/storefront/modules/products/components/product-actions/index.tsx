@@ -1,5 +1,4 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import { isEqual } from "lodash";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -8,7 +7,8 @@ import { useIntersection } from "../../../../lib/hooks/use-in-view";
 import { addToCart } from "@/features/storefront/lib/data/cart";
 // Removed HttpTypes import
 import { getProductPrice } from "@/features/storefront/lib/util/get-product-price";
-import Divider from "../../../common/components/divider";
+import LocalizedClientLink from "../../../common/components/localized-client-link";
+import StatusDot from "../../../common/components/vape/status-dot";
 import OptionSelect from "./option-select";
 import ProductPrice from "../product-price";
 import MobileActions from "./mobile-actions";
@@ -65,9 +65,10 @@ type ProductActionsProps = {
   region: any;
   disabled?: boolean;
   onVariantChange?: (variant: any) => void;
+  category?: { title?: string | null; handle?: string | null } | null;
 };
 
-export default function ProductActions({ product, region, disabled, onVariantChange }: ProductActionsProps) {
+export default function ProductActions({ product, region, disabled, onVariantChange, category }: ProductActionsProps) {
   const [options, setOptions] = useState<any>({});
   const [isAdding, setIsAdding] = useState(false);
 
@@ -167,40 +168,79 @@ export default function ProductActions({ product, region, disabled, onVariantCha
     });
   }, [variants, options, hasOnlyOneVariant]);
 
+  const chosen = !!variant || hasOnlyOneVariant;
+  const firstMissing = (product.productOptions || []).find((o: any) => !options[o.id]);
+  const quantity = typeof variant?.inventoryQuantity === "number" ? variant.inventoryQuantity : null;
+  const stock = !chosen
+    ? { tone: "muted" as const, label: "Choose options" }
+    : !isValidVariant && !hasOnlyOneVariant
+    ? { tone: "muted" as const, label: "Unavailable" }
+    : !inStock
+    ? { tone: "danger" as const, label: "Out of stock" }
+    : quantity !== null && quantity <= 5
+    ? { tone: "warn" as const, label: `${quantity} left` }
+    : { tone: "ok" as const, label: "In stock" };
+
+  const buttonLabel = isAdding
+    ? "Adding"
+    : !variant && !hasOnlyOneVariant
+    ? `Choose ${(firstMissing?.title || "an option").toLowerCase()}`
+    : !inStock
+    ? "Out of stock"
+    : "Add to bag";
+
   return (
     <>
-      <div className="flex flex-col gap-y-2" ref={actionsRef}>
-        <div>
-          {variants?.length > 1 && (
-            <div className="flex flex-col gap-y-4">
-              {(product.productOptions || []).map((option: any) => (
-                <div key={option.id}>
-                  <OptionSelect
-                    option={option}
-                    current={options[option.id]}
-                    updateOption={updateOptions}
-                    title={option.title}
-                  />
-                </div>
-              ))}
-              <Divider />
-            </div>
+      <div className="flex flex-col gap-6" ref={actionsRef}>
+        <div className="flex flex-col gap-3">
+          {category?.title && (
+            <LocalizedClientLink
+              href={category.handle ? `/categories/${category.handle}` : "/store"}
+              className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3 hover:text-vp-ink"
+            >
+              {category.title}
+            </LocalizedClientLink>
           )}
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <h1
+              className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink sm:text-[40px] sm:leading-[44px]"
+              data-testid="product-title"
+            >
+              {product.title}
+            </h1>
+            <span className="inline-flex items-baseline gap-1.5 text-[13px] text-vp-ink-2" data-testid="product-stock">
+              <StatusDot tone={stock.tone} />
+              {stock.label}
+            </span>
+          </div>
+          <ProductPrice product={product} variant={variant} region={region} />
         </div>
 
-        <ProductPrice product={product} variant={variant} region={region} />
-        <Button
+        {variants?.length > 1 && (
+          <div className="flex flex-col gap-5">
+            {(product.productOptions || []).map((option: any) => (
+              <OptionSelect
+                key={option.id}
+                option={option}
+                current={options[option.id]}
+                updateOption={updateOptions}
+                title={option.title}
+                disabled={!!disabled || isAdding}
+              />
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
           onClick={handleAddToCart}
-          disabled={isAdding || ((!inStock || !variant || !isValidVariant) && !hasOnlyOneVariant)}
-          className="w-full h-10"
+          disabled={disabled || isAdding || ((!inStock || !variant || !isValidVariant) && !hasOnlyOneVariant)}
+          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-vp-ink text-[16px] font-medium text-white transition-opacity disabled:bg-vp-well disabled:text-vp-ink-3"
+          data-testid="add-product-button"
         >
-          {isAdding && <RiLoader2Fill className="animate-spin" />}
-          {!variant && !hasOnlyOneVariant
-            ? "Select variant"
-            : !inStock
-            ? "Out of stock"
-            : "Add to cart"}
-        </Button>
+          {isAdding && <RiLoader2Fill className="size-4 animate-spin" />}
+          {buttonLabel}
+        </button>
         <MobileActions
           product={product}
           variant={variant}

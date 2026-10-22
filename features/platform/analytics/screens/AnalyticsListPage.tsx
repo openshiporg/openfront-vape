@@ -27,6 +27,7 @@ import {
   Region,
 } from "../lib/analyticsHelpers";
 import { PageBreadcrumbs } from "@/features/dashboard/components/PageBreadcrumbs";
+import { Dot, ListBand, PageTitle } from "@/features/platform/components/vape-ui";
 import { StatsCards } from "../components/StatsCards";
 import { DateRangePickerWrapper } from "../components/DateRangePickerWrapper";
 import { RegionalTabs } from "../components/RegionalTabs";
@@ -417,49 +418,41 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
           ]}
         />
 
-        <div className="flex flex-col flex-1 min-h-0">
-          <div className="px-4 md:px-6 pt-4 md:pt-6 pb-4 flex items-center justify-between border-gray-200 dark:border-gray-800">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
-                Analytics
-              </h1>
-              <p className="text-muted-foreground">
-                Track your e-commerce performance and key metrics
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <DateRangePickerWrapper />
-            </div>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex flex-wrap items-end justify-between gap-4 px-4 pb-4 pt-4 md:px-6 md:pt-6">
+            <PageTitle
+              title="Analytics"
+              meta={
+                <span className="font-mono tabular-nums">
+                  {startDate.slice(0, 10)} to {endDate.slice(0, 10)}
+                </span>
+              }
+            />
+            <DateRangePickerWrapper />
           </div>
 
-          {/* Regional Tabs */}
-          <div className="px-6 pb-4">
+          <div className="flex flex-wrap items-center gap-3 px-4 pb-6 md:px-6">
             {regions.length > 0 && (
               <>
                 <RegionalSelector
                   regions={regions}
                   selectedRegion={selectedRegion}
-                  className="md:hidden w-full"
+                  className="w-full md:hidden"
                 />
                 <RegionalTabs regions={regions} selectedRegion={selectedRegion} className="hidden md:flex" />
               </>
             )}
-          </div>
-
-          {/* Convert To Tabs */}
-          <div className="px-6 pb-4">
             <ConvertToTabs />
           </div>
 
-          {/* Stats Cards */}
-          <div className="px-6">
+          <div className="px-4 md:px-6">
             <StatsCards
               data={statsData}
               loading={!salesMetrics && !cartMetrics}
             />
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="space-y-6 px-4 py-8 md:px-6">
             <AnalyticsClientWrapper
               salesMetrics={salesMetrics}
               customerMetrics={customerMetrics}
@@ -481,13 +474,14 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
   } catch (error) {
     console.error("Error loading analytics:", error);
     return (
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold tracking-tight text-red-600">
-          Analytics Error
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Failed to load analytics data. Please try again later.
-        </p>
+      <div className="space-y-4 px-4 py-6 md:px-6">
+        <PageTitle title="Analytics" tone="danger" state="Error" />
+        <ListBand>
+          <p className="flex items-baseline gap-2.5 px-4 py-3 text-sm text-foreground">
+            <Dot tone="danger" />
+            Failed to load analytics data. Please try again later.
+          </p>
+        </ListBand>
       </div>
     );
   }

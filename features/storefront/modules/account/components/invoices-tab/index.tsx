@@ -1,42 +1,32 @@
 "use client"
 
 import type { StorefrontAccountCustomer as User } from "@/features/storefront/types"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Receipt, Calendar, CreditCard } from "lucide-react"
+import { ArrowUpRight } from "lucide-react"
 import { format } from "date-fns"
+
+import StatusDot from "@/features/storefront/modules/common/components/vape/status-dot"
+import { AccountPageHeader } from "@/features/storefront/modules/account/components/account-ui"
 
 type InvoicesTabProps = {
   customer: User
   invoices: any[]
 }
 
-const InvoicesTab = ({ customer, invoices }: InvoicesTabProps) => {
+const InvoicesTab = ({ customer: _customer, invoices }: InvoicesTabProps) => {
   return (
-    <div className="w-full p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight">Paid Invoices</h2>
-        <p className="text-muted-foreground">
-          View your payment history and invoice details
-        </p>
-      </div>
+    <div className="w-full">
+      <AccountPageHeader title="Invoices" count={invoices.length} />
 
       {invoices.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Receipt className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No paid invoices</h3>
-            <p className="text-muted-foreground text-center">
-              Your paid invoices will appear here once you complete payments through the Business Account page.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="vp-band px-4 py-8 text-[15px] text-vp-ink-2 sm:px-5">No paid invoices</div>
       ) : (
-        <div className="divide-y">
+        <ul className="vp-band divide-y divide-vp-line">
           {invoices.map((invoice: any) => (
-            <InvoiceCard key={invoice.id} invoice={invoice} />
+            <li key={invoice.id}>
+              <InvoiceCard invoice={invoice} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   )
@@ -47,73 +37,72 @@ type InvoiceCardProps = {
 }
 
 const InvoiceCard = ({ invoice }: InvoiceCardProps) => {
+  const orders: any[] = invoice.lineItems || []
+
   return (
-    <div className="py-6 first:pt-0 last:pb-0">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <Receipt className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-medium">
-            Invoice {invoice.invoiceNumber}
-          </h3>
-        </div>
-        <span className="size-max flex items-center whitespace-nowrap rounded-full ring-1 ring-inset bg-white text-gray-900 ring-gray-200 shadow-xs gap-1.5 py-0.5 px-2 text-sm font-medium">
-          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-emerald-400">
-            <circle cx="4" cy="4" r="2.5" fill="currentColor" stroke="currentColor"></circle>
-          </svg>
-          Paid
-        </span>
-      </div>
-      <div>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-2xl font-bold">{invoice.formattedTotal}</p>
-            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-              {invoice.paidAt && (
-                <div className="flex items-center space-x-1">
-                  <CreditCard className="h-3 w-3" />
-                  <span>Paid {format(new Date(invoice.paidAt), "MMM d, yyyy")}</span>
-                </div>
-              )}
-              <div className="flex items-center space-x-1">
-                <Calendar className="h-3 w-3" />
-                <span>Created {format(new Date(invoice.createdAt), "MMM d, yyyy")}</span>
+    <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <StatusDot tone="ok" label="Paid" />
+            <h3 className="text-[15px] font-medium text-vp-ink">
+              Invoice <span className="font-vp-mono">{invoice.invoiceNumber}</span>
+            </h3>
+          </div>
+          <dl className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[13px] text-vp-ink-2">
+            {invoice.paidAt && (
+              <div className="flex gap-1.5">
+                <dt>Paid</dt>
+                <dd className="font-vp-mono text-vp-ink">{format(new Date(invoice.paidAt), "MMM d, yyyy")}</dd>
               </div>
+            )}
+            <div className="flex gap-1.5">
+              <dt>Created</dt>
+              <dd className="font-vp-mono text-vp-ink">{format(new Date(invoice.createdAt), "MMM d, yyyy")}</dd>
             </div>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground mb-1">Account</p>
-            <p className="font-medium text-sm">{invoice.account?.accountNumber}</p>
-          </div>
+            {invoice.account?.accountNumber && (
+              <div className="flex gap-1.5">
+                <dt>Account</dt>
+                <dd className="font-vp-mono text-vp-ink">{invoice.account.accountNumber}</dd>
+              </div>
+            )}
+          </dl>
         </div>
-        {invoice.lineItems && invoice.lineItems.length > 0 && (
-          <div className="mt-4">
-            <p className="text-sm text-muted-foreground mb-2">
-              {invoice.lineItems.length} order{invoice.lineItems.length !== 1 ? 's' : ''} included
-            </p>
-            <div className="space-y-2">
-              {invoice.lineItems?.map((lineItem: any) => (
-                <div 
-                  key={lineItem.id} 
-                  className="bg-muted/40 border rounded-md flex justify-between items-center p-3 cursor-pointer hover:bg-muted/60"
-                  onClick={() => window.open(`/account/orders/details/${lineItem.accountLineItem?.order?.id}`, '_blank')}
-                >
-                  <div className="grid grid-cols-3 text-xs leading-4 font-normal gap-x-3 flex-1">
-                    <span className="font-semibold text-gray-700">Date placed</span>
-                    <span className="font-semibold text-gray-700">Order number</span>
-                    <span className="font-semibold text-gray-700">Total amount</span>
-                    <span>{lineItem.orderDetails?.createdAt ? new Date(lineItem.orderDetails.createdAt).toLocaleDateString() : 'N/A'}</span>
-                    <span>#{lineItem.orderDetails?.displayId || lineItem.orderDisplayId}</span>
-                    <span>{lineItem.orderDetails?.total || lineItem.formattedAmount}</span>
-                  </div>
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <span className="shrink-0 font-vp-mono text-[15px] text-vp-ink">{invoice.formattedTotal}</span>
       </div>
+
+      {orders.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="font-vp-mono text-[12px] uppercase tracking-[0.12em] text-vp-ink-3">
+            {orders.length} {orders.length === 1 ? "order" : "orders"}
+          </p>
+          <ul className="flex flex-col divide-y divide-vp-line overflow-hidden rounded-[14px] bg-vp-surface">
+            {orders.map((lineItem: any) => (
+              <li key={lineItem.id}>
+                <button
+                  type="button"
+                  className="grid min-h-12 w-full grid-cols-[1fr_auto_18px] items-center gap-x-3 px-3 py-2.5 text-left hover:bg-vp-bg"
+                  onClick={() => window.open(`/account/orders/details/${lineItem.accountLineItem?.order?.id}`, '_blank')}
+                  aria-label={`Open order #${lineItem.orderDetails?.displayId || lineItem.orderDisplayId} in a new tab`}
+                >
+                  <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                    <span className="font-vp-mono text-[13px] text-vp-ink">
+                      #{lineItem.orderDetails?.displayId || lineItem.orderDisplayId}
+                    </span>
+                    <span className="font-vp-mono text-[12px] text-vp-ink-2">
+                      {lineItem.orderDetails?.createdAt ? new Date(lineItem.orderDetails.createdAt).toLocaleDateString() : 'N/A'}
+                    </span>
+                  </span>
+                  <span className="font-vp-mono text-[13px] text-vp-ink">
+                    {lineItem.orderDetails?.total || lineItem.formattedAmount}
+                  </span>
+                  <ArrowUpRight size={16} aria-hidden="true" className="text-vp-ink-3" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }

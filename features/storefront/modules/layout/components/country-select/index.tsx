@@ -91,7 +91,7 @@ const CountrySelect = ({ regions }: CountrySelectProps) => {
       >
         <SelectTrigger
           id={id}
-          className="w-full py-1 [&>span_svg]:text-muted-foreground/80 [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0"
+          className="w-full h-11 rounded-full bg-vp-surface border-vp-line px-4 [&>span_svg]:text-muted-foreground/80 [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0"
         >
           <SelectValue placeholder="Select country">
             {current && (

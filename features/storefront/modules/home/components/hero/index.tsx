@@ -1,55 +1,74 @@
-"use client";
+import { ArrowUpRight } from "lucide-react"
 
-import { DotsShader } from "../dots-shader";
+import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
+
+type Link = { id: string; title: string; handle: string }
 
 interface HeroProps {
-  title?: string;
-  description?: string;
-  logoColor?: string;
+  storeName?: string
+  title?: string
+  description?: string
+  categories: Link[]
+  collections: Link[]
 }
 
-const Hero = ({ title, description, logoColor }: HeroProps) => {
-  const hueRotation = logoColor || "0";
+const Hero = ({ storeName, title, description, categories, collections }: HeroProps) => {
+  const firstCollection = collections[0]
 
   return (
-    <div className="h-[75vh] w-full border-b border-border relative bg-slate-950 overflow-hidden">
-      <div
-        className="absolute inset-0 opacity-20"
-        style={{
-          background: `radial-gradient(circle at center, rgb(59, 130, 246) 0%, transparent 70%)`,
-          filter: `hue-rotate(${hueRotation}deg)`,
-        }}
-      />
-
-      <div
-        style={{ filter: `hue-rotate(${hueRotation}deg)` }}
-        className="absolute inset-0"
-      >
-        <DotsShader
-          className="absolute inset-0"
-          squareSize={3}
-          gridGap={3}
-          color="rgb(59, 130, 246)"
-          maxOpacity={0.5}
-          flickerChance={0.3}
-        />
-      </div>
-
-      <div className="absolute inset-0 z-10 flex flex-col justify-center items-center text-center sm:p-32 gap-6">
-        <span>
-          <h1 className="text-4xl leading-10 text-white font-bold tracking-tight">
-            {title || "E-commerce Starter Template"}
+    <section className="mx-auto max-w-[1320px] px-4 pt-10 pb-6 sm:px-6 sm:pt-16 lg:pt-20">
+      <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+        <div className="flex flex-col">
+          {storeName && (
+            <p className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3">{storeName}</p>
+          )}
+          <h1 className="mt-4 max-w-[14ch] text-[42px] leading-[44px] font-semibold tracking-[-0.03em] text-vp-ink sm:text-[64px] sm:leading-[64px]">
+            {title || storeName}
           </h1>
-          <h2
-            className="mt-2 uppercase tracking-wider text-xl leading-10 text-blue-200 font-bold"
-            style={{ filter: `hue-rotate(${hueRotation}deg)` }}
-          >
-            {description || "Powered by Openfront and Next.js"}
-          </h2>
-        </span>
-      </div>
-    </div>
-  );
-};
+          {description && (
+            <p className="mt-5 max-w-md text-[16px] leading-[24px] text-vp-ink-2 sm:text-[17px] sm:leading-[26px]">{description}</p>
+          )}
+          <div className="mt-8 flex flex-wrap gap-2">
+            <LocalizedClientLink
+              href="/store"
+              className="inline-flex h-12 items-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white"
+            >
+              Shop all
+            </LocalizedClientLink>
+            {firstCollection && (
+              <LocalizedClientLink
+                href={`/collections/${firstCollection.handle}`}
+                className="inline-flex h-12 items-center rounded-full bg-vp-well px-6 text-[15px] font-medium text-vp-ink"
+              >
+                {firstCollection.title}
+              </LocalizedClientLink>
+            )}
+          </div>
+        </div>
 
-export default Hero;
+        {categories.length > 0 && (
+          <nav aria-label="Categories" className="vp-band self-start p-1.5">
+            <ul className="divide-y divide-vp-line">
+              {categories.map((c, i) => (
+                <li key={c.id}>
+                  <LocalizedClientLink
+                    href={`/categories/${c.handle}`}
+                    className="group flex min-h-[68px] items-center gap-4 rounded-[14px] px-4 transition-colors hover:bg-vp-surface sm:min-h-[80px] sm:px-5"
+                  >
+                    <span className="font-vp-mono text-[12px] text-vp-ink-3">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="text-[22px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink sm:text-[26px] sm:leading-[30px]">
+                      {c.title}
+                    </span>
+                    <ArrowUpRight className="ml-auto size-5 text-vp-ink-3 transition-colors group-hover:text-vp-accent" />
+                  </LocalizedClientLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+      </div>
+    </section>
+  )
+}
+
+export default Hero

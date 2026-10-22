@@ -10,8 +10,10 @@ import React from "react"
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
 import ChevronDown from "@/features/storefront/modules/common/icons/chevron-down"
 import OpenfrontCTA from "@/features/storefront/modules/layout/components/openfront-cta"
+import VapeShell from "@/features/storefront/modules/layout/components/vape-shell"
 import Logo from "@/features/storefront/modules/layout/components/logo"
 import InteractiveLink from "@/features/storefront/modules/common/components/interactive-link"
+import StatusDot from "@/features/storefront/modules/common/components/vape/status-dot"
 import { Metadata } from "next"
 
 export const metadata = {
@@ -30,22 +32,37 @@ const fetchCart = async () => {
 
 export async function CheckoutPage() {
   if ((await releaseBlockers(keystoneContext)).length) return (
-    <main className="mx-auto max-w-2xl space-y-5 px-6 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight">Checkout isn&apos;t available right now.</h1>
-      <LocalizedClientLink href="/cart" className="inline-flex min-h-11 items-center underline underline-offset-4">
-        Back to cart
-      </LocalizedClientLink>
+    <main className="mx-auto flex min-h-[50vh] w-full max-w-[1320px] flex-col justify-center gap-5 px-4 py-16 sm:px-6 sm:py-24">
+      <div className="flex items-baseline gap-3">
+        <StatusDot tone="danger" />
+        <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink sm:text-[40px] sm:leading-[44px]">
+          Checkout isn&apos;t available right now.
+        </h1>
+      </div>
+      <div>
+        <LocalizedClientLink
+          href="/cart"
+          className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+        >
+          Back to bag
+        </LocalizedClientLink>
+      </div>
     </main>
   );
   const cart = await fetchCart();
   const customer = await getUser();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_416px] max-w-[1440px] w-full mx-auto px-6 gap-y-8 sm:gap-x-12 xl:gap-x-40 py-12">
-      <Wrapper cart={cart}>
-        <CheckoutForm cart={cart} customer={customer} />
-      </Wrapper>
+    <div className="mx-auto grid w-full max-w-[1320px] grid-cols-1 gap-6 px-4 pt-6 pb-16 sm:px-6 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-12 lg:gap-y-8 xl:gap-x-16">
+      <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink sm:text-[40px] sm:leading-[44px] lg:col-span-2">
+        Checkout
+      </h1>
       <CheckoutSummary cart={cart} />
+      <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+        <Wrapper cart={cart}>
+          <CheckoutForm cart={cart} customer={customer} />
+        </Wrapper>
+      </div>
     </div>
   );
 }
@@ -56,50 +73,48 @@ export function CheckoutLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="w-full bg-background relative">
-      <div className="h-16 bg-background border-b ">
-        <nav className="flex h-full items-center max-w-[1440px] w-full mx-auto px-6 justify-between">
-          <LocalizedClientLink
-            href="/cart"
-            aria-label="Back to cart"
-            className="text-muted-foreground hover:text-foreground text-xs font-semibold flex min-h-11 min-w-11 items-center gap-x-2 uppercase flex-1 basis-0"
-            data-testid="back-to-cart-link"
-          >
-            <ChevronDown className="rotate-90 shrink-0" size={16} />
-            <span className="mt-px hidden lg:block text-xs font-medium leading-5 truncate">
-              Back to shopping cart
-            </span>
-            <span className="mt-px hidden sm:block lg:hidden text-xs font-medium leading-5 truncate">
-              Back
-            </span>
-          </LocalizedClientLink>
-          <div>
-            <Logo />
-          </div>
-          <div className="flex-1 basis-0" />
-        </nav>
+    <VapeShell>
+      <div className="relative w-full">
+        <div className="border-b border-vp-line bg-vp-bg">
+          <nav className="mx-auto flex h-16 w-full max-w-[1320px] items-center justify-between px-4 sm:px-6">
+            <LocalizedClientLink
+              href="/cart"
+              aria-label="Back to bag"
+              className="flex min-h-11 min-w-11 flex-1 basis-0 items-center gap-x-2 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink"
+              data-testid="back-to-cart-link"
+            >
+              <ChevronDown className="rotate-90 shrink-0" size={16} />
+              <span className="hidden sm:block">Back to bag</span>
+            </LocalizedClientLink>
+            <div>
+              <Logo />
+            </div>
+            <div className="flex flex-1 basis-0 justify-end">
+              <span className="font-vp-mono text-[12px] uppercase tracking-[0.12em] text-vp-ink-3">21+ only</span>
+            </div>
+          </nav>
+        </div>
+        <div className="relative" data-testid="checkout-container">{children}</div>
+        <div className="flex w-full items-center justify-center py-4">
+          <OpenfrontCTA />
+        </div>
       </div>
-      <div className="relative" data-testid="checkout-container">{children}</div>
-      <div className="py-4 w-full flex items-center justify-center">
-        <OpenfrontCTA />
-      </div>
-    </div>
+    </VapeShell>
   )
 }
 
 export const NotFoundMetadata: Metadata = {
-  title: "404",
-  description: "Something went wrong",
+  title: "Page not found",
 }
 
 export function CheckoutNotFound() {
   return (
-    <div className="flex flex-col gap-4 items-center justify-center min-h-[calc(100vh-64px)]">
-      <h1 className="text-2xl font-semibold text-foreground">Page not found</h1>
-      <p className="text-xs font-normal text-foreground">
-        The page you tried to access does not exist.
-      </p>
-      <InteractiveLink href="/">Go to frontpage</InteractiveLink>
+    <div className="mx-auto flex min-h-[60vh] max-w-[1320px] flex-col justify-center gap-4 px-4 py-24 sm:px-6">
+      <span className="font-vp-mono text-[13px] text-vp-ink-3">404</span>
+      <h1 className="text-[40px] leading-[44px] font-semibold tracking-[-0.02em] text-vp-ink">Page not found</h1>
+      <div className="mt-4">
+        <InteractiveLink href="/cart">Back to bag</InteractiveLink>
+      </div>
     </div>
   )
 }

@@ -54,13 +54,13 @@ const Modal = ({
       <DialogContent
         data-testid={dataTestId}
         className={cn( 
-          "flex flex-col justify-start w-full transform p-5 text-left align-middle transition-all max-h-[75vh] h-fit",
+          "[&>button:last-child]:hidden flex h-fit max-h-[85vh] w-[calc(100%-32px)] transform flex-col justify-start overflow-y-auto p-5 text-left align-middle text-vp-ink transition-all sm:p-6",
           {
             "max-w-md": size === "small",
             "max-w-xl": size === "medium",
             "max-w-3xl": size === "large",
             "bg-transparent shadow-none border-none": search,
-            "bg-background shadow-xl border rounded-rounded": !search,
+            "rounded-[22px] border border-vp-line bg-vp-bg shadow-[0_18px_60px_rgb(20_24_22/0.18)]": !search,
           }
         )}
       >
@@ -74,9 +74,15 @@ const Title: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { close } = useModal()
 
   return (
-    <DialogHeader className="flex flex-row items-center justify-between pb-4">
-      <DialogTitle className="text-base font-semibold">{children}</DialogTitle> 
-      <button onClick={close} data-testid="close-modal-button" className="ml-auto">
+    <DialogHeader className="flex flex-row items-center justify-between gap-4 pb-4 text-left">
+      <DialogTitle className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">{children}</DialogTitle>
+      <button
+        type="button"
+        onClick={close}
+        data-testid="close-modal-button"
+        aria-label="Close"
+        className="ml-auto inline-flex h-11 w-11 flex-none items-center justify-center rounded-full bg-vp-well text-vp-ink transition-colors hover:bg-vp-line"
+      >
         <X size={20} />
       </button>
     </DialogHeader>
@@ -85,18 +91,18 @@ const Title: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const Description: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <DialogDescription className="flex text-xs font-normal text-foreground items-center justify-center pt-2 pb-4 h-full"> 
+    <DialogDescription className="flex h-full items-center justify-center pt-2 pb-4 text-[14px] text-vp-ink-2">
       {children}
     </DialogDescription>
   )
 }
 
 const Body: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex justify-center">{children}</div>
+  return <div className="flex flex-col">{children}</div>
 }
 
 const Footer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex items-center justify-end gap-x-4">{children}</div>
+  return <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:items-center sm:justify-end">{children}</div>
 }
 
 Modal.Title = Title

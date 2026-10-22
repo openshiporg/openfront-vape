@@ -1,5 +1,4 @@
 "use client";
-import { TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 import CartItemSelect from "@/features/storefront/modules/cart/components/cart-item-select";
@@ -13,7 +12,6 @@ import { useState } from "react";
 import ErrorMessage from "@/features/storefront/modules/checkout/components/error-message";
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link";
 import { RiLoader2Fill } from "@remixicon/react";
-import { Button } from "@/components/ui/button";
 
 interface CartItemProps {
   item: any;
@@ -52,78 +50,83 @@ const Item = ({ item, region, type = "full" }: CartItemProps) => {
     message && setError(message);
   };
 
-  return (
-    <TableRow className="w-full">
-      <TableCell className="!pl-0 p-4 w-24">
-        <LocalizedClientLink
-          href={`/products/${handle}`}
-          className={cn("flex", {
-            "w-16": type === "preview",
-            "sm:w-24 w-12": type === "full",
-          })}
-        >
-          <Thumbnail
-            thumbnail={item.productVariant.product.thumbnail}
-            size="square"
-          />
+  const thumbnail = item.productVariant?.product?.thumbnail || item.thumbnail;
+
+  if (type === "preview") {
+    return (
+      <div className="grid grid-cols-[56px_minmax(0,1fr)] items-start gap-x-3 p-3">
+        <LocalizedClientLink href={`/products/${handle}`} className="block w-14">
+          <Thumbnail thumbnail={thumbnail} size="square" title={item.title} />
         </LocalizedClientLink>
-      </TableCell>
-
-      <TableCell className="text-left">
-        <p className="text-base font-semibold">
-          {item.title}
-        </p>
-        <LineItemOptions
-          variant={{ sku: item.productVariant?.sku || "" }}
-          variantTitle={item.productVariant?.title}
-        />
-      </TableCell>
-
-      {type === "full" && (
-        <TableCell>
-          <div className="flex gap-2 items-center w-28">
-            <CartItemSelect
-              value={item.quantity}
-              onChange={(e) => changeQuantity(parseInt(e.target.value))}
-              min={1}
-              max={maxQuantity}
-              step={1}
-              className="w-20 h-10"
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-[14px] leading-[20px] font-medium text-vp-ink">{item.title}</p>
+            <LineItemOptions
+              variant={{ sku: item.productVariant?.sku || "" }}
+              variantTitle={item.productVariant?.title}
             />
+            <p className="mt-1 flex items-baseline gap-1 font-vp-mono text-[12px] leading-[16px] text-vp-ink-3">
+              <span>{item.quantity} ×</span>
+              <LineItemUnitPrice item={item} style="tight" />
+            </p>
+          </div>
+          <div className="text-[14px] leading-[20px]">
+            <LineItemPrice item={item} style="tight" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-[72px_minmax(0,1fr)] gap-x-3 p-3 sm:grid-cols-[96px_minmax(0,1fr)] sm:gap-x-4 sm:p-4">
+      <LocalizedClientLink
+        href={`/products/${handle}`}
+        className="block w-[72px] sm:w-24"
+      >
+        <Thumbnail thumbnail={thumbnail} size="square" title={item.title} />
+      </LocalizedClientLink>
+
+      <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-[15px] leading-[20px] font-medium text-vp-ink">
+              <LocalizedClientLink href={`/products/${handle}`} className="hover:underline hover:underline-offset-2">
+                {item.title}
+              </LocalizedClientLink>
+            </h3>
+            <LineItemOptions
+              variant={{ sku: item.productVariant?.sku || "" }}
+              variantTitle={item.productVariant?.title}
+            />
+            <p className="mt-1 hidden font-vp-mono text-[12px] leading-[16px] text-vp-ink-3 sm:block">
+              <LineItemUnitPrice item={item} style="tight" /> each
+            </p>
+          </div>
+          <div className="text-[15px] leading-[20px]">
+            <LineItemPrice item={item} style="tight" />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          <CartItemSelect
+            value={item.quantity}
+            onChange={(e) => changeQuantity(parseInt(e.target.value))}
+            min={1}
+            max={maxQuantity}
+            step={1}
+          />
+          <div className={cn("flex items-center", updating && "pr-3")}>
             {updating ? (
-              <Button size="icon" variant="outline" disabled>
-                <RiLoader2Fill className="animate-spin" />
-              </Button>
+              <RiLoader2Fill className="size-4 animate-spin text-vp-ink-3" aria-label="Updating" />
             ) : (
               <DeleteButton id={item.id} />
             )}
           </div>
-          <ErrorMessage error={error} />
-        </TableCell>
-      )}
-
-      {type === "full" && (
-        <TableCell className="hidden sm:table-cell">
-          <LineItemUnitPrice item={item} style="tight" />
-        </TableCell>
-      )}
-
-      <TableCell className="!pr-0">
-        <span
-          className={cn("!pr-0", {
-            "flex flex-col items-end h-full justify-center": type === "preview",
-          })}
-        >
-          {type === "preview" && (
-            <span className="flex gap-x-1 text-sm">
-              <span className="text-gray-400">{item.quantity}x </span>
-              <LineItemUnitPrice item={item} style="tight" />
-            </span>
-          )}
-          <LineItemPrice item={item} style="tight" />
-        </span>
-      </TableCell>
-    </TableRow>
+        </div>
+        <ErrorMessage error={error} />
+      </div>
+    </div>
   );
 };
 

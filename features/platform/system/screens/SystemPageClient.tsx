@@ -2,6 +2,7 @@
 
 import { PageContainer } from "../../../dashboard/components/PageContainer";
 import { SystemTabs, TabType } from "../components/SystemTabs";
+import { PageTitle } from "../../components/vape-ui";
 
 interface SystemPageClientProps {
   list: any;
@@ -15,10 +16,7 @@ export function SystemPageClient({
 
   return (
     <PageContainer
-      header={<>
-        <h1 className="text-2xl font-semibold">System Configuration</h1>
-        <p className="text-sm text-muted-foreground">Manage system settings, store configuration, and payment providers</p>
-      </>}
+      header={<PageTitle title="System Configuration" />}
     >
       <SystemTabs
         initialTab={initialTab}

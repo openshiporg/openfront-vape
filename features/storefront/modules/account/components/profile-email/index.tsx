@@ -2,7 +2,7 @@
 
 import React, { useEffect, useActionState } from "react";
 
-import Input from "@/features/storefront/modules/common/components/input" 
+import { Field } from "@/features/storefront/modules/account/components/account-ui"
 
 import AccountInfo from "../account-info"
 import { updateCustomerEmail } from "@/features/storefront/lib/data/user" // Added import
@@ -40,10 +40,12 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
         clearState={clearState}
         data-testid="account-email-editor"
       >
-        <div className="grid grid-cols-1 gap-y-2">
-          <Input
+        <div className="grid grid-cols-1 gap-4">
+          <Field
             label="Email"
+            id="profile-email"
             name="email"
+            inputMode="email"
             type="email"
             autoComplete="email"
             required

@@ -5,6 +5,7 @@ import ProfilePhone from "@/features/storefront/modules/account/components/profi
 import ProfileBillingAddress from "@/features/storefront/modules/account/components/profile-billing-address"
 import ProfileEmail from "@/features/storefront/modules/account/components/profile-email"
 import ProfileName from "@/features/storefront/modules/account/components/profile-name"
+import { AccountPageHeader } from "@/features/storefront/modules/account/components/account-ui"
 
 import { notFound } from "next/navigation"
 import { listRegions } from "@/features/storefront/lib/data/regions"
@@ -12,7 +13,7 @@ import { getUser } from "@/features/storefront/lib/data/user"
 
 export const metadata: Metadata = {
   title: "Profile",
-  description: "View and edit your store profile.",
+  description: "Name, email, phone and billing address.",
 }
 
 export async function AccountProfilePage() {
@@ -25,29 +26,14 @@ export async function AccountProfilePage() {
 
   return (
     <div className="w-full" data-testid="profile-page-wrapper">
-      <div className="mb-8 flex flex-col gap-y-4">
-        <h1 className="text-2xl font-semibold">Profile</h1>
-        <p className="text-sm font-normal">
-          View and update your profile information, including your name, email,
-          and phone number. You can also update your billing address, or change
-          your password.
-        </p>
-      </div>
-      <div className="flex flex-col gap-y-8 w-full">
+      <AccountPageHeader title="Profile" />
+      <div className="vp-band flex w-full flex-col divide-y divide-vp-line">
         <ProfileName customer={customer} />
-        <Divider />
         <ProfileEmail customer={customer} />
-        <Divider />
         <ProfilePhone customer={customer} />
-        <Divider />
-        {/* <ProfilePassword customer={customer} />
-        <Divider /> */}
+        {/* <ProfilePassword customer={customer} /> */}
         <ProfileBillingAddress customer={customer} regions={regions} />
       </div>
     </div>
   )
-}
-
-const Divider = () => {
-  return <div className="w-full h-px bg-gray-200" />
 }

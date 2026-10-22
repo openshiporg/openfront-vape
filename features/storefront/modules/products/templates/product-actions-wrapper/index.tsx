@@ -7,9 +7,11 @@ import ProductActions from "../../components/product-actions"
 export default async function ProductActionsWrapper({
   handle,
   region,
+  category,
 }: {
   handle: string
   region: any
+  category?: { title?: string | null; handle?: string | null } | null
 }) {
   const { product } = await retrievePricedProductByHandle({ handle, regionId: region.id })
 
@@ -17,5 +19,5 @@ export default async function ProductActionsWrapper({
     return null
   }
 
-  return <ProductActions product={product} region={region} />
+  return <ProductActions product={product} region={region} category={category} />
 }

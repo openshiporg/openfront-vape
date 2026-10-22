@@ -1,5 +1,3 @@
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
-
 import LineItemOptions from "@/features/storefront/modules/common/components/line-item-options"
 import Thumbnail from "@/features/storefront/modules/products/components/thumbnail"
 
@@ -13,31 +11,26 @@ type ItemProps = {
 
 const Item = ({ item, region }: ItemProps) => {
   return (
-    <TableRow className="w-full">
-      <TableCell className="!pl-0 p-4 w-24">
-        <div className="flex w-16">
-          <Thumbnail thumbnail={item.thumbnail} size="square" />
+    <div className="grid grid-cols-[56px_minmax(0,1fr)] items-start gap-x-3 p-3 sm:grid-cols-[72px_minmax(0,1fr)] sm:gap-x-4 sm:p-4" role="listitem">
+      <div className="w-14 sm:w-[72px]">
+        <Thumbnail thumbnail={item.thumbnail} size="square" title={item.title} />
+      </div>
+
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[15px] leading-[20px] font-medium text-vp-ink">{item.title}</p>
+          {item.variantTitle && (
+            <LineItemOptions variant={item.productVariant} variantTitle={item.variantTitle} />
+          )}
+          <p className="mt-1 font-vp-mono text-[12px] leading-[16px] text-vp-ink-3">
+            {item.quantity} × {item.formattedUnitPrice}
+          </p>
         </div>
-      </TableCell>
-
-      <TableCell className="text-left">
-        <p className="font-medium">{item.title}</p>
-        {item.variantTitle && (
-        <LineItemOptions variant={item.productVariant} variantTitle={item.variantTitle} />
-        )}
-      </TableCell>
-
-      <TableCell className="!pr-0">
-        <span className="!pr-0 flex flex-col items-end h-full justify-center">
-          <span className="flex gap-x-1 text-sm">
-            <span className="text-muted-foreground">{item.quantity}x </span>
-            <span>{item.formattedUnitPrice}</span>
-          </span>
-
-          <span>{item.formattedTotal}</span>
+        <span className="flex-none text-right font-vp-mono text-[15px] leading-[20px] text-vp-ink">
+          {item.formattedTotal}
         </span>
-      </TableCell>
-    </TableRow>
+      </div>
+    </div>
   );
 };
 

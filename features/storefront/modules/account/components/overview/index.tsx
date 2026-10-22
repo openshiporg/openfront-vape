@@ -1,134 +1,149 @@
-import ChevronDown from "@/features/storefront/modules/common/icons/chevron-down" 
-import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link" 
-import { formatAmount } from "@/features/storefront/lib/util/prices" // Added formatAmount
-import { CustomerProfile, OrderSummary, OrdersList } from "@/features/storefront/types/account" // Import new types
- 
+import { ChevronRight } from "lucide-react"
+
+import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
+import {
+  AccountPageHeader,
+  OrderStatusDot,
+  formatAccountDate,
+  orderStatus,
+} from "@/features/storefront/modules/account/components/account-ui"
+import { CustomerProfile, OrderSummary, OrdersList } from "@/features/storefront/types/account"
+
 type OverviewProps = {
   user: CustomerProfile
   orders: OrdersList
 }
 
 const Overview = ({ user, orders }: OverviewProps) => {
+  const recent = (orders || []).slice(0, 5)
+  const completion = getProfileCompletion(user)
+  const addressCount = user?.addresses?.length || 0
+
   return (
-    <div data-testid="overview-page-wrapper">
-      <div className="hidden sm:block">
-        <div className="text-2xl leading-[36px] font-semibold flex justify-between items-center mb-4">
-          <span data-testid="welcome-message" data-value={user?.firstName}>
-            Hello {user?.firstName}
-          </span>
-          <span className="text-xs leading-5 font-normal text-foreground">
-            Signed in as:{" "}
-            <span
-              className="font-semibold"
-              data-testid="customer-email"
-              data-value={user?.email}
-            >
+    <div className="flex flex-col gap-12" data-testid="overview-page-wrapper">
+      <section aria-labelledby="recent-orders-title">
+        <AccountPageHeader
+          id="recent-orders-title"
+          title="Recent orders"
+          action={
+            recent.length > 0 ? (
+              <LocalizedClientLink
+                href="/account/orders"
+                className="inline-flex min-h-11 items-center rounded-full bg-vp-well px-4 text-[13px] font-medium text-vp-ink"
+              >
+                All orders
+              </LocalizedClientLink>
+            ) : undefined
+          }
+        />
+        <ul className="vp-band divide-y divide-vp-line" data-testid="orders-wrapper">
+          {recent.length > 0 ? (
+            recent.map((order: OrderSummary) => {
+              const status = (order as OrderSummary & { status?: string }).status
+              const items = order.lineItems?.reduce((n, i) => n + (i.quantity || 0), 0) ?? 0
+              return (
+                <li key={order.id} data-testid="order-wrapper" data-value={order.id}>
+                  <LocalizedClientLink
+                    href={`/account/orders/details/${order.id}`}
+                    className="grid min-h-[72px] grid-cols-[1fr_auto_20px] items-center gap-x-3 px-4 py-3.5 transition-colors hover:bg-vp-line/40 sm:px-5"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-baseline gap-2">
+                        <OrderStatusDot status={status} />
+                        <span className="text-[15px] font-medium text-vp-ink">
+                          Order{" "}
+                          <span className="font-vp-mono" data-testid="order-id" data-value={order.displayId}>
+                            #{order.displayId}
+                          </span>
+                        </span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-baseline gap-x-2 text-[13px] text-vp-ink-2">
+                        <span className="font-vp-mono" data-testid="order-created-date">
+                          {formatAccountDate(order.createdAt)}
+                        </span>
+                        {orderStatus(status) && (
+                          <>
+                            <span aria-hidden="true" className="text-vp-ink-3">·</span>
+                            <span>{orderStatus(status)!.label}</span>
+                          </>
+                        )}
+                        <span aria-hidden="true" className="text-vp-ink-3">·</span>
+                        <span className="font-vp-mono">
+                          {items} {items === 1 ? "item" : "items"}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="font-vp-mono text-[15px] text-vp-ink" data-testid="order-amount">
+                      {order.total}
+                    </span>
+                    <span data-testid="open-order-button" className="text-vp-ink-3">
+                      <span className="sr-only">Go to order #{order.displayId}</span>
+                      <ChevronRight size={18} aria-hidden="true" />
+                    </span>
+                  </LocalizedClientLink>
+                </li>
+              )
+            })
+          ) : (
+            <li className="flex flex-col items-start gap-4 px-4 py-8 sm:px-5">
+              <span className="text-[15px] text-vp-ink-2" data-testid="no-orders-message">No orders yet</span>
+              <LocalizedClientLink
+                href="/store"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white"
+              >
+                Shop all
+              </LocalizedClientLink>
+            </li>
+          )}
+        </ul>
+      </section>
+
+      <section aria-labelledby="account-details-title">
+        <h2 id="account-details-title" className="mb-5 text-[24px] leading-[30px] font-semibold tracking-[-0.02em] text-vp-ink">
+          Details
+        </h2>
+        <dl className="vp-band divide-y divide-vp-line">
+          <DetailRow label="Name" href="/account/profile">
+            <span data-testid="welcome-message" data-value={user?.firstName}>
+              {[user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Not set"}
+            </span>
+          </DetailRow>
+          <DetailRow label="Email" href="/account/profile">
+            <span className="break-all" data-testid="customer-email" data-value={user?.email}>
               {user?.email}
             </span>
-          </span>
-        </div>
-        <div className="flex flex-col py-8 border-t border-gray-200">
-          <div className="flex flex-col gap-y-4 h-full col-span-1 row-span-2 flex-1">
-            <div className="flex items-start gap-x-16 mb-6">
-              <div className="flex flex-col gap-y-4">
-                <h3 className="text-base leading-6 font-semibold">Profile</h3>
-                <div className="flex items-end gap-x-2">
-                  <span
-                    className="text-3xl font-semibold leading-none"
-                    data-testid="customer-profile-completion"
-                    data-value={getProfileCompletion(user)}
-                  >
-                    {getProfileCompletion(user)}%
-                  </span>
-                  <span className="uppercase text-sm leading-6 font-normal text-muted-foreground">
-                    Completed
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-y-4">
-                <h3 className="text-base leading-6 font-semibold">Addresses</h3>
-                <div className="flex items-end gap-x-2">
-                  <span
-                    className="text-3xl font-semibold leading-none"
-                    data-testid="addresses-count"
-                    data-value={user?.addresses?.length || 0}
-                  >
-                    {user?.addresses?.length || 0}
-                  </span>
-                  <span className="uppercase text-sm leading-6 font-normal text-muted-foreground">
-                    Saved
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-y-4">
-              <div className="flex items-center gap-x-2">
-                <h3 className="text-base leading-6 font-semibold">Recent orders</h3>
-              </div>
-              <ul
-                className="flex flex-col gap-y-4"
-                data-testid="orders-wrapper"
-              >
-                {orders && orders.length > 0 ? (
-                  orders.slice(0, 5).map((order: OrderSummary) => {
-                    return (
-                      <li
-                        key={order.id}
-                        data-testid="order-wrapper"
-                        data-value={order.id}
-                      >
-                        <LocalizedClientLink
-                          href={`/account/orders/details/${order.id}`}
-                        >
-                          <div className="bg-muted/40 border rounded-md shadow-xs flex justify-between items-center p-4">
-                            <div className="grid grid-cols-3 grid-rows-2 text-xs leading-5 font-normal gap-x-4 flex-1">
-                              <span className="font-semibold">Date placed</span>
-                              <span className="font-semibold">
-                                Order number
-                              </span>
-                              <span className="font-semibold">
-                                Total amount
-                              </span>
-                              <span data-testid="order-created-date">
-                                {new Date(order.createdAt).toDateString()}
-                              </span>
-                              <span
-                                data-testid="order-id"
-                                data-value={order.displayId}
-                              >
-                                #{order.displayId}
-                              </span>
-                              <span data-testid="order-amount">
-                              <span>{order.total}</span>
-                              </span>
-                            </div>
-                            <button
-                              className="flex items-center justify-between"
-                              data-testid="open-order-button"
-                            >
-                              <span className="sr-only">
-                                Go to order #{order.displayId}
-                              </span>
-                              <ChevronDown className="-rotate-90" />
-                            </button>
-                          </div>
-                        </LocalizedClientLink>
-                      </li>
-                    )
-                  })
-                ) : (
-                  <span data-testid="no-orders-message">No recent orders</span>
-                )}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+          </DetailRow>
+          <DetailRow label="Profile" href="/account/profile">
+            <span className="font-vp-mono" data-testid="customer-profile-completion" data-value={completion}>
+              {completion}%
+            </span>{" "}
+            <span className="text-vp-ink-2">complete</span>
+          </DetailRow>
+          <DetailRow label="Addresses" href="/account/addresses">
+            <span className="font-vp-mono" data-testid="addresses-count" data-value={addressCount}>
+              {addressCount}
+            </span>{" "}
+            <span className="text-vp-ink-2">saved</span>
+          </DetailRow>
+        </dl>
+      </section>
     </div>
   )
 }
+
+const DetailRow = ({ label, href, children }: { label: string; href: string; children: React.ReactNode }) => (
+  <div className="grid min-h-14 grid-cols-[96px_1fr_auto] items-center gap-x-3 px-4 py-3 sm:grid-cols-[160px_1fr_auto] sm:px-5">
+    <dt className="text-[13px] font-medium text-vp-ink-2">{label}</dt>
+    <dd className="min-w-0 text-[15px] text-vp-ink">{children}</dd>
+    <LocalizedClientLink
+      href={href}
+      className="inline-flex min-h-11 items-center rounded-full bg-vp-surface px-4 text-[13px] font-medium text-vp-ink shadow-[0_1px_2px_rgb(20_24_22/0.12)] hover:text-vp-accent"
+      aria-label={`Edit ${label.toLowerCase()}`}
+    >
+      Edit
+    </LocalizedClientLink>
+  </div>
+)
 
 const getProfileCompletion = (user: CustomerProfile) => {
   let count = 0

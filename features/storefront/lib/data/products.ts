@@ -124,6 +124,19 @@ export const retrievePricedProductById = cache(async function ({
         title
         handle
         thumbnail
+        productCategories {
+          id
+          title
+          handle
+        }
+        productOptions {
+          id
+          title
+          productOptionValues {
+            id
+            value
+          }
+        }
         productVariants {
           id
           title
@@ -175,6 +188,11 @@ export const getProductByHandle = cache(async function ({
           document
         }
         productCollections {
+          id
+          title
+          handle
+        }
+        productCategories {
           id
           title
           handle

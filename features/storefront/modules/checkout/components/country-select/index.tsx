@@ -140,9 +140,10 @@ const CountrySelect = forwardRef<
       >
         <SelectTrigger
           id={id}
-          className="w-full py-1 [&>span_svg]:text-muted-foreground/80 [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0 data-[placeholder]:text-muted-foreground"
+          aria-label={placeholder}
+          className="h-12 w-full rounded-[14px] border-vp-line bg-vp-surface px-4 text-left text-[16px] text-vp-ink shadow-none transition-colors hover:border-vp-ink-3 focus:border-vp-accent focus:ring-2 focus:ring-vp-tint data-[placeholder]:text-vp-ink-3 sm:text-[15px] [&>span]:flex [&>span]:min-w-0 [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0"
         >
-          <SelectValue placeholder={placeholder} className="text-muted-foreground data-[state=closed]:text-muted-foreground">
+          <SelectValue placeholder={placeholder}>
             {selectedValue && (
               <span className="flex items-center gap-2">
                 <span className="text-lg leading-none">
@@ -156,11 +157,11 @@ const CountrySelect = forwardRef<
           </SelectValue>
         </SelectTrigger>
         <SelectContent
-          className="max-h-[442px] z-[900] [&_*[role=option]>span>svg]:text-muted-foreground/80 [&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2 [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2 [&_*[role=option]>span>svg]:shrink-0"
+          className="z-[900] max-h-[442px] rounded-[18px] border-vp-line bg-vp-surface text-vp-ink [&_*[role=option]]:min-h-11 [&_*[role=option]>span>svg]:text-muted-foreground/80 [&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2 [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2 [&_*[role=option]>span>svg]:shrink-0"
         >
           {Object.entries(groupedOptions).map(([continent, countries]) => (
             <SelectGroup key={continent}>
-              <SelectLabel className="ps-2">{continent}</SelectLabel>
+              <SelectLabel className="ps-2 font-vp-mono text-[11px] font-normal uppercase tracking-[0.12em] text-vp-ink-3">{continent}</SelectLabel>
               {countries.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   <span className="text-lg leading-none">

@@ -14,16 +14,17 @@ interface DataCardProps {
 
 export function DataCard({ title, content, onCopy, copied, copyKey, showPasteButton, onPaste }: DataCardProps) {
   return (
-    <div className="rounded-lg border overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 bg-muted border-b">
-        <span className="text-sm font-medium text-muted-foreground">{title}</span>
-        <div className="flex items-center space-x-2">
+    <div className="overflow-hidden rounded-xl bg-muted/40 ring-1 ring-inset ring-border/60">
+      <div className="flex items-center justify-between border-b border-border px-4 py-1.5">
+        <span className="text-xs font-semibold text-foreground">{title}</span>
+        <div className="flex items-center gap-1">
           {showPasteButton && onPaste && (
             <Button
               size="sm"
               variant="ghost"
               onClick={onPaste}
-              className="h-6 w-6 p-0 hover:bg-background/80"
+              aria-label="Paste"
+              className="size-8 rounded-full p-0 hover:bg-background/80"
             >
               <Clipboard className="h-3 w-3 text-muted-foreground" />
             </Button>
@@ -32,7 +33,8 @@ export function DataCard({ title, content, onCopy, copied, copyKey, showPasteBut
             size="sm"
             variant="ghost"
             onClick={() => onCopy(content, copyKey)}
-            className="h-6 w-6 p-0 hover:bg-background/80"
+            aria-label="Copy"
+            className="size-8 rounded-full p-0 hover:bg-background/80"
           >
             {copied ? (
               <Check className="h-3 w-3 text-green-600" />
@@ -42,7 +44,7 @@ export function DataCard({ title, content, onCopy, copied, copyKey, showPasteBut
           </Button>
         </div>
       </div>
-      <div className="bg-background">
+      <div className="bg-background/60">
         <div className="text-xs overflow-auto h-[200px] whitespace-pre-wrap break-words text-foreground font-mono p-4">
           {content}
         </div>

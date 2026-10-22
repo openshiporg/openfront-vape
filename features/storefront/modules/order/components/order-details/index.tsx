@@ -1,78 +1,90 @@
-// Removed HttpTypes and Text imports
-
-// Define inline types based on GraphQL schema and component usage
-type OrderDetailsType = {
-  email?: string | null;
-  createdAt?: string | null; // Correct field name
-  displayId?: string | null; // Correct field name
-  fulfillmentStatus?: string | null; // Correct field name (enum as string)
-  paymentStatus?: string | null; // Correct field name (enum as string)
-};
+import StatusDot from "@/features/storefront/modules/common/components/vape/status-dot"
 
 type OrderDetailsProps = {
   order: any;
   showStatus?: boolean;
 };
 
+const formatStatus = (str: string | null | undefined) => {
+  if (!str) return "N/A"
+  if (typeof str !== 'string') return String(str)
+  const formatted = str.split("_").join(" ")
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+}
+
+const statusTone = (str: string | null | undefined) => {
+  const s = (str || "").toLowerCase()
+  if (s.includes("cancel") || s.includes("return")) return "danger" as const
+  if (s.includes("partial")) return "warn" as const
+  if (s.includes("fulfilled") && !s.includes("unfulfilled")) return "ok" as const
+  if (s.includes("ship") || s.includes("deliver") || s.includes("complete")) return "ok" as const
+  if (s.includes("unfulfilled") || s.includes("pending") || s.includes("not")) return "warn" as const
+  return "muted" as const
+}
+
+const Fact = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="flex min-w-0 flex-col gap-1 px-4 py-3">
+    <dt className="text-[13px] leading-[18px] font-medium text-vp-ink-3">{label}</dt>
+    <dd className="text-[14px] leading-[20px] text-vp-ink [overflow-wrap:anywhere]">{children}</dd>
+  </div>
+)
+
+// Order header: number large in mono, status dot on the title line, then the facts.
 const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
-  const formatStatus = (str: string | null | undefined) => {
-    if (!str) return "N/A" // Handle null/undefined status
-    // Ensure str is a string before calling split
-    if (typeof str !== 'string') return String(str)
-    const formatted = str.split("_").join(" ")
-    return formatted.charAt(0).toUpperCase() + formatted.slice(1)
-  }
+  const fulfillment = order.fulfillmentStatus?.status
+
+  const paymentStatus = (() => {
+    const totalPaid = parseFloat(order.formattedTotalPaid?.replace(/[^0-9.-]+/g, "") || "0")
+    const total = parseFloat(order.total?.replace(/[^0-9.-]+/g, "") || "0")
+
+    if (totalPaid === 0) return "Unpaid"
+    if (totalPaid >= total) return "Paid"
+    return "Partially paid"
+  })()
+
+  const createdAt = order.createdAt ? new Date(order.createdAt) : null
 
   return (
-    <div>
-      <p>
-        We have sent the order confirmation details to{" "}
-        <span
-          className="text-foreground font-semibold"
-          data-testid="order-email"
-        >
-          {order.email}
-        </span>
-        .
-      </p>
-      <p className="mt-2 text-sm">
-        Order date:{" "}
-        <span data-testid="order-date">
-          {new Date(order.createdAt ?? "").toDateString()} {/* Corrected field name */}
-        </span>
-      </p>
-      <p className="mt-2 text-sm">
-        Order number: <span data-testid="order-id">{order.displayId}</span> {/* Corrected field name */}
-      </p>
-
-      <div className="flex items-center text-small gap-x-4 mt-4">
-        {showStatus && (
-          <>
-            <p className="text-sm">
-              Order status:{" "}
-              <span className="text-muted-foreground " data-testid="order-status">
-              {formatStatus(order.fulfillmentStatus?.status)}
-              </span>
-            </p>
-            <p className="text-sm">
-              Payment status:{" "}
-              <span
-                className="text-muted-foreground "
-                data-testid="order-payment-status"
-              >
-               {(() => {
-                 const totalPaid = parseFloat(order.formattedTotalPaid?.replace(/[^0-9.-]+/g, "") || "0")
-                 const total = parseFloat(order.total?.replace(/[^0-9.-]+/g, "") || "0")
-                 
-                 if (totalPaid === 0) return "Unpaid"
-                 if (totalPaid >= total) return "Paid"  
-                 return "Partially paid"
-               })()}
-              </span>
-            </p>
-          </>
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+        <h1 className="font-vp-mono text-[40px] leading-[44px] font-medium tracking-[-0.02em] text-vp-ink sm:text-[56px] sm:leading-[60px]">
+          <span className="sr-only">Order </span>#<span data-testid="order-id">{order.displayId}</span>
+        </h1>
+        {showStatus ? (
+          <span className="inline-flex items-baseline gap-1.5 text-[14px] text-vp-ink-2">
+            <StatusDot tone={statusTone(fulfillment)} />
+            <span data-testid="order-status">{formatStatus(fulfillment)}</span>
+          </span>
+        ) : (
+          <span className="inline-flex items-baseline gap-1.5 text-[14px] text-vp-ink-2">
+            <StatusDot tone="ok" />
+            Placed
+          </span>
         )}
       </div>
+
+      <dl className="vp-band grid grid-cols-1 divide-y divide-vp-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <Fact label="Date">
+          <span className="font-vp-mono" data-testid="order-date">
+            {createdAt ? createdAt.toDateString() : ""}
+          </span>
+        </Fact>
+        <Fact label="Confirmation sent to">
+          <span data-testid="order-email">{order.email}</span>
+        </Fact>
+        {showStatus ? (
+          <Fact label="Payment">
+            <span className="inline-flex items-baseline gap-1.5">
+              <StatusDot tone={paymentStatus === "Paid" ? "ok" : paymentStatus === "Unpaid" ? "danger" : "warn"} />
+              <span data-testid="order-payment-status">{paymentStatus}</span>
+            </span>
+          </Fact>
+        ) : (
+          <Fact label="Total">
+            <span className="font-vp-mono">{order.total}</span>
+          </Fact>
+        )}
+      </dl>
     </div>
   )
 }

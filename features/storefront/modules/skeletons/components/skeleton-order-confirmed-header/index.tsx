@@ -1,11 +1,12 @@
 const SkeletonOrderConfirmedHeader = () => {
   return (
-    <div className="flex flex-col gap-y-2 pb-10 animate-pulse">
-      <div className="w-2/5 h-4 bg-gray-100"></div>
-      <div className="w-3/6 h-6 bg-gray-100"></div>
-      <div className="flex gap-x-4">
-        <div className="w-16 h-4 bg-gray-100"></div>
-        <div className="w-12 h-4 bg-gray-100"></div>
+    <div className="flex flex-col gap-3 animate-pulse">
+      <div className="h-3 w-28 rounded-full bg-vp-well"></div>
+      <div className="h-11 w-56 rounded-full bg-vp-well sm:h-14"></div>
+      <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="h-10 rounded-[14px] bg-vp-well"></div>
+        <div className="h-10 rounded-[14px] bg-vp-well"></div>
+        <div className="h-10 rounded-[14px] bg-vp-well"></div>
       </div>
     </div>
   )

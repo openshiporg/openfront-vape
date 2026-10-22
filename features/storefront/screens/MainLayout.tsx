@@ -4,6 +4,7 @@ import OpenfrontCTA from "@/features/storefront/modules/layout/components/openfr
 import { Metadata } from "next"
 import InteractiveLink from "@/features/storefront/modules/common/components/interactive-link"
 import StorefrontServer from "./StorefrontServer"
+import VapeShell from "@/features/storefront/modules/layout/components/vape-shell"
 
 export async function MainLayout({ children }: { children: React.ReactNode }) {
   const hideBranding = process.env.HIDE_OPENFRONT_BRANDING === 'true'
@@ -15,27 +16,28 @@ export async function MainLayout({ children }: { children: React.ReactNode }) {
       prefetchCollections={true}
       prefetchCategories={true}
     >
-      <Nav />
-      {children}
-      <Footer />
-      {!hideBranding && <OpenfrontCTA />}
+      <VapeShell>
+        <Nav />
+        <main className="min-h-[60vh]">{children}</main>
+        <Footer />
+        {!hideBranding && <OpenfrontCTA />}
+      </VapeShell>
     </StorefrontServer>
   )
 }
 
 export const MainNotFoundMetadata: Metadata = {
-  title: "404",
-  description: "Something went wrong",
+  title: "Page not found",
 }
 
 export function MainNotFound() {
   return (
-    <div className="flex flex-col gap-4 items-center justify-center min-h-[calc(100vh-64px)]">
-      <h1 className="text-2xl font-semibold text-foreground">Page not found</h1>
-      <p className="text-xs font-normal text-foreground">
-        The page you tried to access does not exist.
-      </p>
-      <InteractiveLink href="/">Go to frontpage</InteractiveLink>
+    <div className="mx-auto flex min-h-[60vh] max-w-[1320px] flex-col justify-center gap-4 px-4 py-24 sm:px-6">
+      <span className="font-vp-mono text-[13px] text-vp-ink-3">404</span>
+      <h1 className="text-[40px] leading-[44px] font-semibold tracking-[-0.02em] text-vp-ink">Page not found</h1>
+      <div className="mt-4">
+        <InteractiveLink href="/store">Shop all</InteractiveLink>
+      </div>
     </div>
   )
 }

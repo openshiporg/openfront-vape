@@ -21,7 +21,7 @@ export async function AccountDashboardPage() {
 
 export function AccountLoading() {
   return (
-    <div className="flex items-center justify-center w-full h-full text-foreground">
+    <div className="flex h-full min-h-[240px] w-full items-center justify-center text-vp-ink-3">
       <Spinner size={36} />
     </div>
   )

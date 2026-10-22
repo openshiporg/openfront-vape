@@ -1,16 +1,10 @@
 "use client"
 
 import { useActionState, useEffect, startTransition } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
-import { TicketCheck } from "lucide-react"
 import type { StorefrontAccountCustomer as User } from "@/features/storefront/types"
 import { submitBusinessAccountRequest } from "@/features/storefront/lib/data/business-accounts"
+import { primaryButtonClass } from "@/features/storefront/modules/account/components/account-ui"
 
 type BusinessAccountRequestFormProps = {
   customer: User
@@ -30,7 +24,7 @@ const BusinessAccountRequestForm = ({ customer }: BusinessAccountRequestFormProp
     form.append('monthlyOrderVolume', 'medium')
     form.append('requestedCreditLimit', '100000')
     form.append('businessDescription', 'Business account request')
-    
+
     startTransition(() => action(form))
   }
 
@@ -38,8 +32,8 @@ const BusinessAccountRequestForm = ({ customer }: BusinessAccountRequestFormProp
   useEffect(() => {
     if (state.success) {
       toast({
-        title: "Request Submitted!",
-        description: state.message || "Your business account request has been submitted for review.",
+        title: "Request submitted",
+        description: state.message || "Your business account request is under review.",
       })
       // Refresh the page to show the new state
       window.location.reload()
@@ -53,10 +47,9 @@ const BusinessAccountRequestForm = ({ customer }: BusinessAccountRequestFormProp
   }, [state])
 
   return (
-    <Button onClick={handleSubmit} disabled={loading} size="lg">
-      <TicketCheck className="h-4 w-4 mr-2 opacity-60" />
-      {loading ? "Requesting..." : "Request Invoicing Access"}
-    </Button>
+    <button type="button" onClick={handleSubmit} disabled={loading} className={primaryButtonClass}>
+      {loading ? "Requesting..." : "Request invoicing"}
+    </button>
   )
 }
 

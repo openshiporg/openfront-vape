@@ -1,15 +1,7 @@
 "use client"
 
 import type { StorefrontAccountCustomer as User } from "@/features/storefront/types"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Copy, RefreshCw, Info, Mail, Zap, Bot, TicketCheck, Clock, CheckIcon, List, CheckCircle, AlertCircle, MoreVertical } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Copy, RefreshCw, CheckIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import BusinessAccountRequestForm from "./business-account-request-form"
 import { toast } from "@/components/ui/use-toast"
@@ -17,6 +9,14 @@ import PaymentDialog from "./invoice-payment-dialog"
 import OrderCard from "../order-card"
 import { useState, useActionState, useEffect, startTransition } from "react"
 import { regenerateCustomerToken } from "@/features/storefront/lib/data/business-accounts"
+import StatusDot from "@/features/storefront/modules/common/components/vape/status-dot"
+import { SegmentedButton, SegmentedTrack } from "@/features/storefront/modules/common/components/vape/segmented"
+import {
+  fieldClass,
+  formatAccountDate,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/features/storefront/modules/account/components/account-ui"
 
 type BusinessAccountTabProps = {
   customer: User
@@ -29,6 +29,7 @@ type BusinessAccountTabProps = {
 const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, orders, unpaidLineItems }: BusinessAccountTabProps) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false)
   const [tokenCopied, setTokenCopied] = useState(false)
+  const [orderFilter, setOrderFilter] = useState<'all' | 'paid' | 'unpaid'>('all')
   
   // Server actions with useActionState
   const [tokenState, tokenAction] = useActionState(regenerateCustomerToken, { success: false, error: '' })
@@ -130,46 +131,32 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
     }
   }, [tokenState])
 
+  const header = (status: { tone: "ok" | "warn" | "danger" | "muted" | "accent"; label: string }, action?: React.ReactNode) => (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-[24px] leading-[30px] font-semibold tracking-[-0.02em] text-vp-ink">Invoicing</h2>
+        <span className="flex items-baseline gap-2 text-[13px] text-vp-ink-2">
+          <StatusDot tone={status.tone} />
+          {status.label}
+        </span>
+      </div>
+      {action}
+    </div>
+  )
+
   // State 1: Empty State (No Account Request)
   if (accountStatus === 'none') {
     return (
-      <div className="text-center p-14 w-full group transition duration-500 hover:duration-200">
-        <div className="flex justify-center isolate">
-          <div className="bg-background size-12 grid place-items-center rounded-xl relative left-2.5 top-1.5 -rotate-6 shadow-lg ring-1 ring-border group-hover:-translate-x-5 group-hover:-rotate-12 group-hover:-translate-y-0.5 transition duration-500 group-hover:duration-200">
-            <TicketCheck className="w-4 h-4 fill-indigo-200 stroke-indigo-400 dark:stroke-indigo-600 dark:fill-indigo-950" />
-          </div>
-          <div className="bg-background size-12 grid place-items-center rounded-xl relative z-10 shadow-lg ring-1 ring-border group-hover:-translate-y-0.5 transition duration-500 group-hover:duration-200">
-            <Bot className="w-4 h-4 fill-orange-300 stroke-orange-500 dark:stroke-amber-600 dark:fill-amber-950" />
-          </div>
-          <div className="bg-background size-12 grid place-items-center rounded-xl relative right-2.5 top-1.5 rotate-6 shadow-lg ring-1 ring-border group-hover:translate-x-5 group-hover:rotate-12 group-hover:-translate-y-0.5 transition duration-500 group-hover:duration-200">
-            <Zap className="w-4 h-4 fill-emerald-200 stroke-emerald-400 dark:stroke-emerald-600 dark:fill-emerald-900" />
-          </div>
+      <div className="w-full">
+        {header({ tone: "muted", label: "Not requested" })}
+        <dl className="vp-band divide-y divide-vp-line">
+          <FactRow label="Billing">Monthly invoice</FactRow>
+          <FactRow label="Ordering">Store, or API with a customer token</FactRow>
+          <FactRow label="Use">Wholesale and bulk orders</FactRow>
+        </dl>
+        <div className="mt-5">
+          <BusinessAccountRequestForm customer={customer} />
         </div>
-        <h2 className="text-foreground font-medium mt-6">Business Account</h2>
-        <div className="text-sm text-muted-foreground mt-1">
-          <p className="mb-4">Setting up a business account gives you the ability to streamline your ordering process with flexible payment terms.</p>
-          <div className="flex flex-col space-y-3 my-6 items-center">
-            <span className="size-max flex items-center whitespace-nowrap ring-1 ring-inset bg-white text-gray-900 ring-gray-200 shadow-xs gap-1.5 py-1 px-2.5 text-sm font-medium rounded-lg">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-indigo-400">
-                <circle cx="4" cy="4" r="2.5" fill="currentColor" stroke="currentColor"></circle>
-              </svg>
-              Ideal for wholesale, distribution, and bulk purchasing
-            </span>
-            <span className="size-max flex items-center whitespace-nowrap ring-1 ring-inset bg-white text-gray-900 ring-gray-200 shadow-xs gap-1.5 py-1 px-2.5 text-sm font-medium rounded-lg">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-orange-500">
-                <circle cx="4" cy="4" r="2.5" fill="currentColor" stroke="currentColor"></circle>
-              </svg>
-              Let AI assistants create carts and place orders on your behalf
-            </span>
-            <span className="size-max flex items-center whitespace-nowrap ring-1 ring-inset bg-white text-gray-900 ring-gray-200 shadow-xs gap-1.5 py-1 px-2.5 text-sm font-medium rounded-lg">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-emerald-400">
-                <circle cx="4" cy="4" r="2.5" fill="currentColor" stroke="currentColor"></circle>
-              </svg>
-              Pay once monthly with flexible payment terms
-            </span>
-          </div>
-        </div>
-        <BusinessAccountRequestForm customer={customer} />
       </div>
     )
   }
@@ -177,70 +164,20 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
   // State 2: Pending State
   if (accountStatus === 'pending') {
     return (
-      <div className="text-center p-14 w-full group transition duration-500 hover:duration-200">
-        <div className="flex justify-center isolate">
-          <div className="bg-background size-12 grid place-items-center rounded-xl relative left-2.5 top-1.5 -rotate-6 shadow-lg ring-1 ring-border group-hover:-translate-x-5 group-hover:-rotate-12 group-hover:-translate-y-0.5 transition duration-500 group-hover:duration-200">
-            <TicketCheck className="w-4 h-4 fill-indigo-200 stroke-indigo-400 dark:stroke-indigo-600 dark:fill-indigo-950" />
-          </div>
-          <div className="bg-background size-12 grid place-items-center rounded-xl relative z-10 shadow-lg ring-1 ring-border group-hover:-translate-y-0.5 transition duration-500 group-hover:duration-200">
-            <Bot className="w-4 h-4 fill-orange-300 stroke-orange-500 dark:stroke-amber-600 dark:fill-amber-950" />
-          </div>
-          <div className="bg-background size-12 grid place-items-center rounded-xl relative right-2.5 top-1.5 rotate-6 shadow-lg ring-1 ring-border group-hover:translate-x-5 group-hover:rotate-12 group-hover:-translate-y-0.5 transition duration-500 group-hover:duration-200">
-            <Zap className="w-4 h-4 fill-emerald-200 stroke-emerald-400 dark:stroke-emerald-600 dark:fill-emerald-900" />
-          </div>
-        </div>
-        <h2 className="text-foreground font-medium mt-6">Business Account</h2>
-        <div className="text-sm text-muted-foreground mt-1">
-          <p className="mb-4">Your business account request is currently being reviewed by our team.</p>
-          <div className="flex flex-col space-y-3 my-6 items-center">
-            <span className="size-max flex items-center whitespace-nowrap ring-1 ring-inset bg-white text-gray-900 ring-gray-200 shadow-xs gap-1.5 py-1 px-2.5 text-sm font-medium rounded-lg">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-indigo-400">
-                <circle cx="4" cy="4" r="2.5" fill="currentColor" stroke="currentColor"></circle>
-              </svg>
-              Ideal for wholesale, distribution, and bulk purchasing
-            </span>
-            <span className="size-max flex items-center whitespace-nowrap ring-1 ring-inset bg-white text-gray-900 ring-gray-200 shadow-xs gap-1.5 py-1 px-2.5 text-sm font-medium rounded-lg">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-orange-500">
-                <circle cx="4" cy="4" r="2.5" fill="currentColor" stroke="currentColor"></circle>
-              </svg>
-              Let AI assistants create carts and place orders on your behalf
-            </span>
-            <span className="size-max flex items-center whitespace-nowrap ring-1 ring-inset bg-white text-gray-900 ring-gray-200 shadow-xs gap-1.5 py-1 px-2.5 text-sm font-medium rounded-lg">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-emerald-400">
-                <circle cx="4" cy="4" r="2.5" fill="currentColor" stroke="currentColor"></circle>
-              </svg>
-              Pay once monthly with flexible payment terms
-            </span>
-          </div>
-        </div>
-        <Button disabled size="lg" className="mb-6">
-          <Clock className="h-4 w-4 mr-2 opacity-60" />
-          Request Pending
-        </Button>
-        <div className="max-w-md mx-auto bg-white shadow-xs ring-1 ring-inset ring-gray-950/5 rounded-[12px] p-6 text-center relative before:absolute before:inset-1 before:shadow-[0px_1px_2px_0px_rgba(0,0,0,0.1),0px_3px_3px_0px_rgba(0,0,0,0.09),1px_8px_5px_0px_rgba(0,0,0,0.05),2px_21px_6px_0px_rgba(0,0,0,0),0px_0px_0px_1px_rgba(0,0,0,0.08),1px_13px_5px_0px_rgba(0,0,0,0.01),0px_-2px_2px_0px_rgba(0,0,0,0.13)_inset] before:ring-1 before:ring-gray-950/5 before:rounded-[8px]">
-          <div className="relative flex shrink-0 items-center justify-center size-12 rounded-[12px] bg-white shadow-xs ring-1 ring-inset ring-gray-950/5 mx-auto mb-4 before:absolute before:inset-1 before:shadow-[0px_1px_2px_0px_rgba(0,0,0,0.1),0px_3px_3px_0px_rgba(0,0,0,0.09),1px_8px_5px_0px_rgba(0,0,0,0.05),2px_21px_6px_0px_rgba(0,0,0,0),0px_0px_0px_1px_rgba(0,0,0,0.08),1px_13px_5px_0px_rgba(0,0,0,0.01),0px_-2px_2px_0px_rgba(0,0,0,0.13)_inset] before:ring-1 before:ring-gray-950/5 before:rounded-[8px]">
-            <Clock className="w-5 h-5 text-gray-600 z-1" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Under Review</h3>
-          <p className="text-gray-600 mb-6">Your business account application is being reviewed by our team. This typically takes 1-2 business days.</p>
-          <div className="space-y-4 text-left">
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-700">Our team will verify your business information</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-700">You'll receive an email notification once approved</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-700">Upon approval, you'll get your API customer token</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-700">Start placing orders immediately after approval</p>
-            </div>
-          </div>
+      <div className="w-full">
+        {header({ tone: "accent", label: "Under review" })}
+        <dl className="vp-band divide-y divide-vp-line">
+          {businessAccountRequest?.submittedAt && (
+            <FactRow label="Submitted">
+              <span className="font-vp-mono">{formatAccountDate(businessAccountRequest.submittedAt)}</span>
+            </FactRow>
+          )}
+          <FactRow label="Next">Email when approved, with your customer token</FactRow>
+        </dl>
+        <div className="mt-5">
+          <button type="button" disabled className={primaryButtonClass}>
+            Request pending
+          </button>
         </div>
       </div>
     )
@@ -249,238 +186,122 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
   // State 3: Active State
   if (accountStatus === 'active' && businessAccount) {
     const hasUnpaidItems = unpaidLineItems?.success && unpaidLineItems?.regions?.some((region: any) => region.totalAmount > 0)
-    
+    const statusLabel =
+      businessAccount?.status === 'active' ? 'Active'
+        : businessAccount?.status === 'suspended' ? 'Suspended'
+        : businessAccount?.status === 'not_approved' ? 'Not approved'
+        : businessAccount?.status === 'overdue' ? 'Overdue'
+        : businessAccount?.status === 'paid' ? 'Paid'
+        : 'Unknown'
+    const statusTone =
+      businessAccount?.status === 'active' || businessAccount?.status === 'paid' ? 'ok'
+        : businessAccount?.status === 'overdue' ? 'warn'
+        : businessAccount?.status === 'suspended' || businessAccount?.status === 'not_approved' ? 'danger'
+        : 'muted'
+    const visibleOrders = filterOrdersByStatus(orderFilter)
+
     return (
-      <div className="min-h-screen bg-background p-6 md:p-8">
-        <div className="max-w-6xl mx-auto space-y-12">
-          {/* Header Status */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold text-foreground">Business Account Active</h1>
-                <p className="text-muted-foreground mb-3">Your business account is active and ready for API orders.</p>
-                <span className="size-max flex items-center whitespace-nowrap rounded-full ring-1 ring-inset bg-white text-gray-900 ring-gray-200 shadow-xs gap-1.5 py-0.5 px-2 text-sm font-medium">
-                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-indigo-400">
-                    <circle cx="4" cy="4" r="2.5" fill="currentColor" stroke="currentColor"></circle>
-                  </svg>
-                  {businessAccount?.status === 'active' ? 'Active' 
-                    : businessAccount?.status === 'suspended' ? 'Suspended'
-                    : businessAccount?.status === 'not_approved' ? 'Not Approved'
-                    : businessAccount?.status === 'overdue' ? 'Overdue'
-                    : businessAccount?.status === 'paid' ? 'Paid'
-                    : 'Unknown'}
-                </span>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => setShowPaymentDialog(true)}
-                    disabled={!hasUnpaidItems}
-                  >
-                    {hasUnpaidItems ? 'Pay Outstanding Balance' : 'No Outstanding Balance'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    Request Credit Increase
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    Email Account
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+      <div className="flex w-full flex-col gap-12">
+        <section>
+          {header(
+            { tone: statusTone, label: statusLabel },
+            <button
+              type="button"
+              onClick={() => setShowPaymentDialog(true)}
+              disabled={!hasUnpaidItems}
+              className={primaryButtonClass}
+            >
+              {hasUnpaidItems ? 'Pay balance' : 'No balance due'}
+            </button>
+          )}
+          <dl className="vp-band divide-y divide-vp-line">
+            <FactRow label="Balance">
+              <span className="font-vp-mono text-[17px] font-medium">{businessAccount.formattedTotalOwedInAccountCurrency}</span>
+            </FactRow>
+            <FactRow label="Credit limit">
+              <span className="font-vp-mono">{businessAccount.formattedCreditLimit}</span>
+            </FactRow>
+            <FactRow label="Available">
+              <span className="font-vp-mono text-vp-ok">{businessAccount.formattedAvailableCreditInAccountCurrency}</span>
+            </FactRow>
+          </dl>
+        </section>
+
+        <section>
+          <h3 className="mb-4 text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">API access</h3>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="customer-token" className="text-[13px] leading-[18px] font-medium text-vp-ink-2">
+              Customer token
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="customer-token"
+                value={currentToken || '••••••••••••••••••••••••'}
+                readOnly
+                className={cn(fieldClass, "min-w-0 flex-1 font-vp-mono text-[13px]")}
+              />
+              <button
+                type="button"
+                onClick={copyToken}
+                className="relative inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-vp-well text-vp-ink-2 hover:text-vp-ink disabled:text-vp-ink-3"
+                aria-label={tokenCopied ? "Copied" : "Copy token"}
+                title={tokenCopied ? "Copied" : "Copy token"}
+                disabled={tokenCopied || !currentToken}
+              >
+                {tokenCopied ? (
+                  <CheckIcon className="text-vp-ok" size={18} aria-hidden="true" />
+                ) : (
+                  <Copy size={18} aria-hidden="true" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleTokenRegenerate}
+                className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-vp-well text-vp-ink-2 hover:text-vp-ink"
+                aria-label="Regenerate token"
+                title="Regenerate token"
+              >
+                <RefreshCw size={18} aria-hidden="true" />
+              </button>
             </div>
           </div>
+        </section>
 
-          {/* Main Content Grid */}
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Account Balance */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-medium text-foreground">Account Balance</h2>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-muted-foreground">Current Balance:</span>
-                  <span className="text-2xl font-semibold text-foreground">{businessAccount.formattedTotalOwedInAccountCurrency}</span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-muted-foreground">Credit Limit:</span>
-                  <span className="text-lg font-medium text-foreground">{businessAccount.formattedCreditLimit}</span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-muted-foreground">Available Credit:</span>
-                  <span className="text-lg font-medium text-green-600">{businessAccount.formattedAvailableCreditInAccountCurrency}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* API Access */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-medium text-foreground">API Access</h2>
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-foreground">Customer Token</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Use this token for API requests to place orders on your account.
-                  </p>
-                  <div className="relative">
-                    <Input 
-                      value={currentToken || '••••••••••••••••••••••••'}
-                      readOnly 
-                      className="font-mono bg-muted/30 pe-20" 
-                    />
-                    <div className="absolute inset-y-0 end-0 flex items-center">
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={copyToken}
-                              className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex h-full w-9 items-center justify-center transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed"
-                              aria-label={tokenCopied ? "Copied" : "Copy to clipboard"}
-                              disabled={tokenCopied || !currentToken}
-                            >
-                              <div
-                                className={cn(
-                                  "transition-all",
-                                  tokenCopied ? "scale-100 opacity-100" : "scale-0 opacity-0"
-                                )}
-                              >
-                                <CheckIcon
-                                  className="stroke-emerald-500"
-                                  size={16}
-                                  aria-hidden="true"
-                                />
-                              </div>
-                              <div
-                                className={cn(
-                                  "absolute transition-all",
-                                  tokenCopied ? "scale-0 opacity-0" : "scale-100 opacity-100"
-                                )}
-                              >
-                                <Copy size={16} aria-hidden="true" />
-                              </div>
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="px-2 py-1 text-xs">
-                            Copy to clipboard
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={handleTokenRegenerate}
-                              className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex h-full w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed"
-                              aria-label="Regenerate token"
-                            >
-                              <RefreshCw size={16} aria-hidden="true" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="px-2 py-1 text-xs">
-                            Regenerate token
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Orders */}
-          <div className="space-y-6">
-            <h2 className="text-xl font-medium text-foreground">Recent Orders</h2>
-
-            {orders.length > 0 ? (
-              <Tabs defaultValue="all">
-                <ScrollArea>
-                  <TabsList className="mb-4 gap-1 bg-transparent">
-                    <TabsTrigger
-                      value="all"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-full data-[state=active]:shadow-none"
-                    >
-                      <List
-                        className="-ms-0.5 me-1.5 opacity-60"
-                        size={16}
-                        aria-hidden="true"
-                      />
-                      All
-                      <span className="ml-1.5 text-xs opacity-60">{orderCounts.all}</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="paid"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-full data-[state=active]:shadow-none"
-                    >
-                      <CheckCircle
-                        className="-ms-0.5 me-1.5 opacity-60"
-                        size={16}
-                        aria-hidden="true"
-                      />
-                      Paid
-                      <span className="ml-1.5 text-xs opacity-60">{orderCounts.paid}</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="unpaid"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-full data-[state=active]:shadow-none"
-                    >
-                      <AlertCircle
-                        className="-ms-0.5 me-1.5 opacity-60"
-                        size={16}
-                        aria-hidden="true"
-                      />
-                      Unpaid
-                      <span className="ml-1.5 text-xs opacity-60">{orderCounts.unpaid}</span>
-                    </TabsTrigger>
-                  </TabsList>
-                  <ScrollBar orientation="horizontal" />
-                </ScrollArea>
-                
-                <TabsContent value="all">
-                  <div className="space-y-6">
-                    {filterOrdersByStatus('all').slice(0, 5).map((order) => (
-                      <div key={order.id} className="border-b pb-6 last:pb-0 last:border-none">
-                        <OrderCard order={order} />
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="paid">
-                  <div className="space-y-6">
-                    {filterOrdersByStatus('paid').slice(0, 5).map((order) => (
-                      <div key={order.id} className="border-b pb-6 last:pb-0 last:border-none">
-                        <OrderCard order={order} />
-                      </div>
-                    ))}
-                  </div>
-                  {filterOrdersByStatus('paid').length === 0 && (
-                    <p className="text-gray-500 text-center py-8">No paid orders yet.</p>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="unpaid">
-                  <div className="space-y-6">
-                    {filterOrdersByStatus('unpaid').slice(0, 5).map((order) => (
-                      <div key={order.id} className="border-b pb-6 last:pb-0 last:border-none">
-                        <OrderCard order={order} />
-                      </div>
-                    ))}
-                  </div>
-                  {filterOrdersByStatus('unpaid').length === 0 && (
-                    <p className="text-gray-500 text-center py-8">No unpaid orders.</p>
-                  )}
-                </TabsContent>
-              </Tabs>
-            ) : (
-              <p className="text-muted-foreground">No orders yet. Start placing orders using your customer token!</p>
+        <section>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Recent orders</h3>
+            {orders.length > 0 && (
+              <SegmentedTrack label="Filter orders by payment">
+                {([
+                  ['all', 'All', orderCounts.all],
+                  ['paid', 'Paid', orderCounts.paid],
+                  ['unpaid', 'Unpaid', orderCounts.unpaid],
+                ] as const).map(([value, label, count]) => (
+                  <SegmentedButton key={value} active={orderFilter === value} onClick={() => setOrderFilter(value)}>
+                    {label}
+                    <span className="font-vp-mono text-[12px] text-vp-ink-3">{count}</span>
+                  </SegmentedButton>
+                ))}
+              </SegmentedTrack>
             )}
           </div>
 
-        </div>
+          {orders.length === 0 ? (
+            <div className="vp-band px-4 py-8 text-[15px] text-vp-ink-2 sm:px-5">No orders yet</div>
+          ) : visibleOrders.length === 0 ? (
+            <div className="vp-band px-4 py-8 text-[15px] text-vp-ink-2 sm:px-5">
+              {orderFilter === 'paid' ? 'No paid orders' : 'No unpaid orders'}
+            </div>
+          ) : (
+            <ul className="vp-band divide-y divide-vp-line">
+              {visibleOrders.slice(0, 5).map((order) => (
+                <li key={order.id}>
+                  <OrderCard order={order} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         {/* Payment Dialog */}
         {showPaymentDialog && (
@@ -495,33 +316,33 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
     )
   }
 
-  // State 4: Suspended State  
+  // State 4: Suspended State
   if (accountStatus === 'suspended') {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center space-y-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 mx-auto">
-              <Info className="h-6 w-6 text-red-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-red-800">Account Suspended</h3>
-            <p className="text-gray-600">
-              Your business account has been suspended. Please contact our billing team.
-            </p>
-            
-            <div className="flex gap-4 justify-center pt-4">
-              <Button variant="outline">
-                <Mail className="h-4 w-4 mr-2" />
-                Contact Billing
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="w-full">
+        {header({ tone: "danger", label: "Suspended" })}
+        <dl className="vp-band divide-y divide-vp-line">
+          <FactRow label="Balance">
+            <span className="font-vp-mono">{businessAccount?.formattedTotalOwedInAccountCurrency || "—"}</span>
+          </FactRow>
+        </dl>
+        <div className="mt-5">
+          <button type="button" className={secondaryButtonClass}>
+            Contact billing
+          </button>
+        </div>
+      </div>
     )
   }
 
   return null
 }
+
+const FactRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="grid min-h-14 grid-cols-[104px_1fr] items-center gap-x-3 px-4 py-3 sm:grid-cols-[160px_1fr] sm:px-5">
+    <dt className="text-[13px] font-medium text-vp-ink-2">{label}</dt>
+    <dd className="min-w-0 text-[15px] text-vp-ink">{children}</dd>
+  </div>
+)
 
 export default InvoicingTab

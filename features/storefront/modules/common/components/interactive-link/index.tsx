@@ -18,13 +18,13 @@ const InteractiveLink = ({
 }: InteractiveLinkProps) => {
   return (
     <LocalizedClientLink
-      className={cn("inline-flex min-h-11 gap-x-1 items-center group", className)}
+      className={cn("inline-flex min-h-11 gap-x-1.5 items-center group text-vp-ink", className)}
       href={href}
       onClick={onClick}
       {...props}
     >
-      <span className="text-sm">{children}</span>
-      <ArrowUpRight className="group-hover:rotate-45 ease-in-out duration-150 text-primary h-4 w-4" />
+      <span className="text-[14px] font-medium underline decoration-vp-line underline-offset-4 group-hover:decoration-vp-ink">{children}</span>
+      <ArrowUpRight className="h-4 w-4 text-vp-accent transition-transform duration-150 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
     </LocalizedClientLink>
   )
 }

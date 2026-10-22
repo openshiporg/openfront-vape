@@ -1,7 +1,7 @@
 import { formatAmount } from "@/features/storefront/lib/util/prices";
 // Removed HttpTypes, Heading, Text imports
 
-import Divider from "@/features/storefront/modules/common/components/divider";
+
 
 // Define inline types based on GraphQL schema and component usage
 type CountryInfoForShipping = {
@@ -46,64 +46,45 @@ type ShippingDetailsProps = {
 };
 
 const ShippingDetails = ({ order }: ShippingDetailsProps) => {
+  const a = order.shippingAddress;
   return (
-    <div>
-      <h2 className="flex flex-row text-3xl font-medium my-6">Delivery</h2>
-      <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-x-8">
-        <div
-          className="flex flex-col w-full sm:w-1/3"
-          data-testid="shipping-address-summary"
-        >
-          <p className="text-sm font-medium text-foreground mb-1">
-            Shipping Address
-          </p>
-          <p className="text-sm font-normal text-muted-foreground">
-            {order.shippingAddress?.firstName} {/* Corrected field names */}
-            {order.shippingAddress?.lastName}
-          </p>
-          <p className="text-sm font-normal text-muted-foreground">
-            {order.shippingAddress?.address1} {/* Corrected field names */}
-            {order.shippingAddress?.address2}
-          </p>
-          <p className="text-sm font-normal text-muted-foreground">
-            {order.shippingAddress?.city}
-            {order.shippingAddress?.province
-              ? `, ${order.shippingAddress.province}`
-              : ""}
-          </p>
-          <p className="text-sm font-normal text-muted-foreground">
-            {order.shippingAddress?.postalCode}{" "}
-            {order.shippingAddress?.country?.iso2?.toUpperCase()}{" "}
-            {/* Updated to American style */}
-          </p>
+    <section className="flex flex-col gap-4 border-t border-vp-line pt-5" aria-label="Delivery">
+      <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Delivery</h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+        <div className="flex min-w-0 flex-col gap-1" data-testid="shipping-address-summary">
+          <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Ship to</p>
+          <div className="text-[14px] leading-[20px] text-vp-ink-2">
+            <p>{a?.firstName} {a?.lastName}</p>
+            <p>{a?.address1} {a?.address2}</p>
+            <p>
+              {a?.city}
+              {a?.province ? `, ${a.province}` : ""}
+            </p>
+            <p>
+              <span className="font-vp-mono text-[13px]">{a?.postalCode}</span>{" "}
+              {a?.country?.iso2?.toUpperCase()}
+            </p>
+          </div>
         </div>
 
-        <div
-          className="flex flex-col w-full sm:w-1/3"
-          data-testid="shipping-contact-summary"
-        >
-          <p className="text-sm font-medium text-foreground mb-1">Contact</p>
-          <p className="text-sm font-normal text-muted-foreground">
-            {order.shippingAddress?.phone} {/* Corrected field name */}
-          </p>
-          <p className="text-sm font-normal text-muted-foreground">
-            {order.email}
-          </p>
+        <div className="flex min-w-0 flex-col gap-1" data-testid="shipping-contact-summary">
+          <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Contact</p>
+          <div className="text-[14px] leading-[20px] text-vp-ink-2 [overflow-wrap:anywhere]">
+            {a?.phone && <p className="font-vp-mono text-[13px]">{a.phone}</p>}
+            <p>{order.email}</p>
+          </div>
         </div>
 
-        <div
-          className="flex flex-col w-full sm:w-1/3"
-          data-testid="shipping-method-summary"
-        >
-          <p className="text-sm font-medium text-foreground mb-1">Method</p>
-          <p className="text-sm font-normal text-muted-foreground">
-            {order.shippingMethods?.[0]?.shippingOption?.name} ({order.shipping}
-            )
+        <div className="flex min-w-0 flex-col gap-1" data-testid="shipping-method-summary">
+          <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Method</p>
+          <p className="text-[14px] leading-[20px] text-vp-ink-2">
+            {order.shippingMethods?.[0]?.shippingOption?.name}{" "}
+            <span className="font-vp-mono text-[13px] text-vp-ink">{order.shipping}</span>
           </p>
+          <p className="text-[13px] leading-[18px] text-vp-ink-3">Adult signature may be required</p>
         </div>
       </div>
-      <Divider className="mt-8" />
-    </div>
+    </section>
   );
 };
 

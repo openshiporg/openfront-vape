@@ -1,4 +1,5 @@
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
+import StatusDot from "@/features/storefront/modules/common/components/vape/status-dot"
 import Addresses from "@/features/storefront/modules/checkout/components/addresses";
 import Shipping from "@/features/storefront/modules/checkout/components/shipping";
 import Payment from "@/features/storefront/modules/checkout/components/payment";
@@ -43,34 +44,27 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
 
   if (!availableShippingMethods?.length || !availablePaymentMethods?.length) {
     return (
-      <section role="status" className="space-y-3 rounded-lg border p-6">
-        <p>Checkout isn&apos;t available right now. Please try again later.</p>
-        <LocalizedClientLink href="/cart" className="inline-flex min-h-11 items-center underline underline-offset-4">
-          Back to cart
+      <section role="status" className="flex flex-col items-start gap-4 border-t border-vp-line pt-6">
+        <p className="flex items-baseline gap-2.5 text-[17px] leading-[24px] font-medium text-vp-ink">
+          <StatusDot tone="danger" />
+          Checkout isn&apos;t available right now. Please try again later.
+        </p>
+        <LocalizedClientLink
+          href="/cart"
+          className="inline-flex min-h-11 items-center justify-center rounded-full bg-vp-well px-4 text-[14px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
+        >
+          Back to bag
         </LocalizedClientLink>
       </section>
     );
   }
 
   return (
-    <div>
-      <div className="w-full grid grid-cols-1 gap-y-8">
-        <div>
-          <Addresses cart={cart} customer={customer} />
-        </div>
-
-        <div>
-          <Shipping cart={cart} availableShippingMethods={availableShippingMethods} />
-        </div>
-
-        <div>
-          <Payment cart={cart} availablePaymentMethods={availablePaymentMethods} />
-        </div>
-
-        <div>
-          <Review cart={cart} />
-        </div>
-      </div>
+    <div className="flex w-full flex-col gap-8">
+      <Addresses cart={cart} customer={customer} />
+      <Shipping cart={cart} availableShippingMethods={availableShippingMethods} />
+      <Payment cart={cart} availablePaymentMethods={availablePaymentMethods} />
+      <Review cart={cart} />
     </div>
   );
 }

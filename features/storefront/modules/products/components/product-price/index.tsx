@@ -22,43 +22,34 @@ export default function ProductPrice({
 
   const selectedPrice = variant ? variantPrice : cheapestPrice
 
-  // Check if product has only one variant
   const hasOnlyOneVariant = useMemo(() => {
     return (product.productVariants?.length || 0) === 1
   }, [product])
 
   if (!selectedPrice) {
-    return <div className="block w-32 h-9 bg-gray-100 animate-pulse" />;
+    return <div className="block h-9 w-32 animate-pulse rounded-full bg-vp-well" />;
   }
 
-  const formattedPrice = new Intl.NumberFormat(region.locale, {
-    style: 'currency',
-    currency: selectedPrice.currencyCode,
-  }).format(selectedPrice.calculatedAmount / 100);
+  const format = (amount: number) =>
+    new Intl.NumberFormat(region.locale, {
+      style: 'currency',
+      currency: selectedPrice.currencyCode,
+    }).format(amount / 100);
 
   const isOnSale = selectedPrice.calculatedAmount < selectedPrice.originalAmount;
 
   return (
-    <div className="flex flex-col text-foreground">
-      <span
-        className={cn("text-lg font-medium", {
-          "text-primary": isOnSale,
-        })}>
-        {!variant && !hasOnlyOneVariant && "From "}
-        {formattedPrice}
+    <div className="flex items-baseline gap-3 text-vp-ink">
+      {!variant && !hasOnlyOneVariant && <span className="text-[13px] text-vp-ink-3">From</span>}
+      <span className={cn("font-vp-mono text-[28px] leading-[32px] font-medium", isOnSale && "text-vp-accent")} data-testid="product-price">
+        {format(selectedPrice.calculatedAmount)}
       </span>
       {isOnSale && (
         <>
-          <p>
-            <span className="text-muted-foreground">Original: </span>
-            <span className="line-through">
-              {new Intl.NumberFormat(region.locale, {
-                style: 'currency',
-                currency: selectedPrice.currencyCode,
-              }).format(selectedPrice.originalAmount / 100)}
-            </span>
-          </p>
-          <span className="text-primary">
+          <span className="font-vp-mono text-[15px] text-vp-ink-3 line-through" data-testid="original-product-price">
+            {format(selectedPrice.originalAmount)}
+          </span>
+          <span className="rounded-full bg-vp-tint px-2 py-0.5 font-vp-mono text-[12px] text-vp-accent">
             -{Math.round((1 - selectedPrice.calculatedAmount / selectedPrice.originalAmount) * 100)}%
           </span>
         </>

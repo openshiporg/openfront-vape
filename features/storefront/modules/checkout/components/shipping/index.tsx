@@ -1,13 +1,12 @@
 "use client"
 
 import { setShippingMethod } from "@/features/storefront/lib/data/cart"
-import { CircleCheck } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import ErrorMessage from "@/features/storefront/modules/checkout/components/error-message"
-import Divider from "@/features/storefront/modules/common/components/divider"
+import StepHeader, { StepFact } from "@/features/storefront/modules/checkout/components/step-header"
+import { vpPrimaryButton } from "@/features/storefront/modules/common/components/vp-classes"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { RiLoader2Fill } from "@remixicon/react";
@@ -79,146 +78,107 @@ const Shipping: React.FC<ShippingProps> = ({
     setSelectedOption(cart?.shippingMethods?.[0]?.shippingOption?.id || null)
   }, [isOpen, cart?.shippingMethods])
 
-  return (
-    <div className="bg-background">
-      <div className="flex flex-row items-center justify-between mb-6">
-        <h2
-          className={cn(
-            "flex flex-row text-3xl font-medium gap-x-2 items-baseline",
-            {
-              "opacity-50 pointer-events-none select-none":
-                !isOpen && cart?.shippingMethods?.length === 0,
-            }
-          )}
-        >
-          Delivery
-          {!isOpen && (cart?.shippingMethods?.length ?? 0) > 0 && (
-            <CircleCheck className="hidden sm:block h-5 w-5" />
-          )}
-        </h2>
-        {!isOpen &&
-          cart?.shippingAddress &&
-          cart?.billingAddress &&
-          cart?.email && (
-            <p>
-              <Button
-                onClick={handleEdit}
-                data-testid="edit-delivery-button"
-                variant="outline"
-                size="sm"
-              >
-                Update Delivery
-              </Button>
-            </p>
-          )}
-      </div>
-      {isOpen ? (
-        <>
-          <div className="grid">
-            <div className="flex flex-col">
-              <span className="font-medium text-sm text-foreground">
-                Shipping method
-              </span>
-              <span className="mb-4 text-muted-foreground text-sm font-normal">
-                How would you like your order delivered
-              </span>
-            </div>
-            <div data-testid="delivery-options-container">
-              <div className="pb-6 md:pt-0 pt-2">
-                <RadioGroup
-                  value={selectedOption || ""}
-                  onValueChange={handleChange}
-                  className="space-y-2"
-                >
-                  {availableShippingMethods?.map((option) => {
-                    const isDisabled = false
+  const hasMethod = (cart?.shippingMethods?.length ?? 0) > 0
+  const canEdit = !isOpen && !!cart?.shippingAddress && !!cart?.billingAddress && !!cart?.email
 
-                    return (
-                      <div
-                        key={option.id}
-                        data-testid="delivery-option-radio"
-                        className="relative"
-                      >
-                        <RadioGroupItem
-                          value={option.id}
-                          id={option.id}
-                          disabled={isDisabled}
-                          className="sr-only"
-                        />
-                        <Label
-                          htmlFor={option.id}
+  return (
+    <section className="flex flex-col gap-5 border-t border-vp-line pt-5" aria-label="Delivery">
+      <StepHeader
+        index={2}
+        title="Delivery"
+        state={isOpen ? "open" : hasMethod ? "done" : "todo"}
+        onEdit={canEdit ? handleEdit : undefined}
+        editLabel="Edit delivery"
+        editTestId="edit-delivery-button"
+      />
+      {isOpen ? (
+        <div className="flex flex-col gap-5 pb-2">
+          <div data-testid="delivery-options-container">
+            <RadioGroup
+              value={selectedOption || ""}
+              onValueChange={handleChange}
+              aria-label="Shipping method"
+              className="vp-band flex flex-col gap-0.5 p-1"
+            >
+              {availableShippingMethods?.map((option) => {
+                const isDisabled = false
+                const selected = option.id === selectedOption
+
+                return (
+                  <div
+                    key={option.id}
+                    data-testid="delivery-option-radio"
+                    className="relative"
+                  >
+                    <RadioGroupItem
+                      value={option.id}
+                      id={option.id}
+                      disabled={isDisabled}
+                      className="peer sr-only"
+                    />
+                    <Label
+                      htmlFor={option.id}
+                      className={cn(
+                        "flex min-h-14 cursor-pointer items-center justify-between gap-4 rounded-[14px] px-4 py-3 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-vp-accent",
+                        {
+                          "bg-vp-surface shadow-[0_1px_2px_rgb(20_24_22/0.12),0_0_0_0.5px_rgb(20_24_22/0.06)]": selected,
+                          "hover:bg-vp-surface/60": !selected && !isDisabled,
+                          "cursor-not-allowed opacity-50": isDisabled,
+                        }
+                      )}
+                    >
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span
+                          aria-hidden="true"
                           className={cn(
-                            "flex items-center justify-between text-xs font-normal cursor-pointer py-4 border rounded-md px-8 transition-colors",
-                            {
-                              "border-primary bg-primary/5": option.id === selectedOption,
-                              "border-border hover:border-primary/50": option.id !== selectedOption && !isDisabled,
-                              "cursor-not-allowed opacity-50": isDisabled,
-                            }
+                            "block h-[18px] w-[18px] flex-none rounded-full bg-vp-surface transition-all",
+                            selected ? "border-[5px] border-vp-ink" : "border-[1.5px] border-vp-ink-3"
                           )}
-                        >
-                          <div className="flex items-center gap-x-4">
-                            <div className={cn(
-                              "w-4 h-4 border-2 rounded-full flex items-center justify-center transition-colors",
-                              {
-                                "border-primary": option.id === selectedOption,
-                                "border-border": option.id !== selectedOption,
-                                "opacity-50": isDisabled,
-                              }
-                            )}>
-                              {option.id === selectedOption && (
-                                <div className="w-2 h-2 bg-primary rounded-full" />
-                              )}
-                            </div>
-                            <span className="text-sm font-normal">
-                              {option.name}
-                            </span>
-                          </div>
-                          <span className="justify-self-end text-foreground">
-                            {option.calculatedAmount}
-                          </span>
-                        </Label>
-                      </div>
-                    )
-                  })}
-                </RadioGroup>
-              </div>
-            </div>
+                        />
+                        <span className="text-[15px] leading-[20px] font-medium text-vp-ink">
+                          {option.name}
+                        </span>
+                      </span>
+                      <span className="flex-none font-vp-mono text-[14px] text-vp-ink">
+                        {option.calculatedAmount}
+                      </span>
+                    </Label>
+                  </div>
+                )
+              })}
+            </RadioGroup>
           </div>
 
           <div>
-            <ErrorMessage
-              error={error}
-              data-testid="delivery-option-error-message"
-            />
-            <Button
-              size="lg"
+            <button
+              type="button"
+              className={cn(vpPrimaryButton, "w-full sm:w-auto sm:px-8")}
               onClick={handleSubmit}
               disabled={!selectedOption || isLoading}
               data-testid="submit-delivery-option-button"
             >
-              {isLoading && <RiLoader2Fill className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading && <RiLoader2Fill className="h-4 w-4 animate-spin" />}
               Continue to payment
-            </Button>
-          </div>
-        </>
-      ) : (
-        <div>
-          <div className="text-xs font-normal">
-            {cart && (cart?.shippingMethods?.length ?? 0) > 0 && (
-              <div className="flex flex-col w-1/3">
-                <p className="text-sm font-medium text-foreground mb-1">
-                  Method
-                </p>
-                <p className="text-sm font-normal text-muted-foreground">
-                {cart.shippingMethods[0].shippingOption.name} ({cart.shipping})
-                </p>
-              </div>
-            )}
+            </button>
+            <ErrorMessage
+              error={error}
+              data-testid="delivery-option-error-message"
+            />
           </div>
         </div>
+      ) : (
+        cart && hasMethod && (
+          <div className="pb-2">
+            <StepFact label="Method">
+              <p>
+                {cart.shippingMethods[0].shippingOption.name}{" "}
+                <span className="font-vp-mono text-[13px] text-vp-ink">{cart.shipping}</span>
+              </p>
+            </StepFact>
+          </div>
+        )
       )}
-      <Divider className="mt-8" />
-    </div>
+    </section>
   )
 }
 

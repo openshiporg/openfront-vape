@@ -1,48 +1,42 @@
 "use client"
 
-import FilterRadioGroup from "../../../../common/components/filter-radio-group"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+
+import { SegmentedButton, SegmentedTrack } from "@/features/storefront/modules/common/components/vape/segmented"
 
 export type SortOptions = "price_asc" | "price_desc" | "created_at"
 
-type SortProductsProps = {
-  sortBy: SortOptions
-  setQueryParams: (name: string, value: SortOptions) => void
-  "data-testid"?: string
-}
-
 const sortOptions: { value: SortOptions; label: string }[] = [
-  {
-    value: "created_at",
-    label: "Latest Arrivals",
-  },
-  {
-    value: "price_asc",
-    label: "Price: Low -> High",
-  },
-  {
-    value: "price_desc",
-    label: "Price: High -> Low",
-  },
+  { value: "created_at", label: "Newest" },
+  { value: "price_asc", label: "Price low" },
+  { value: "price_desc", label: "Price high" },
 ]
 
-const SortProducts = ({
-  "data-testid": dataTestId,
+export default function SortProducts({
   sortBy,
-  setQueryParams,
-}: SortProductsProps) => {
-  const handleChange = (value: SortOptions) => {
-    setQueryParams("sortBy", value)
+  "data-testid": dataTestId,
+}: {
+  sortBy: SortOptions
+  "data-testid"?: string
+}) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams() ?? new URLSearchParams()
+
+  const choose = (value: SortOptions) => {
+    const params = new URLSearchParams(searchParams ?? undefined)
+    params.set("sortBy", value)
+    params.delete("page")
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   return (
-    <FilterRadioGroup
-      title="Sort by"
-      items={sortOptions}
-      value={sortBy}
-      handleChange={handleChange}
-      data-testid={dataTestId}
-    />
+    <SegmentedTrack label="Sort by" data-testid={dataTestId}>
+      {sortOptions.map((o) => (
+        <SegmentedButton key={o.value} active={sortBy === o.value} onClick={() => choose(o.value)}>
+          {o.label}
+        </SegmentedButton>
+      ))}
+    </SegmentedTrack>
   )
 }
-
-export default SortProducts

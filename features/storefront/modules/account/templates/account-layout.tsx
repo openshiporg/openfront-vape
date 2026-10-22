@@ -1,16 +1,12 @@
 import React from "react"
 
-import UnderlineLink from "@/features/storefront/modules/common/components/interactive-link"
-
 import AccountNav from "../components/account-nav"
-// Removed HttpTypes import
 
-// Define inline type based on GraphQL User schema
 type CustomerInfoForLayout = {
   id: string;
   firstName?: string | null;
   lastName?: string | null;
-  // Add other fields if needed by AccountNav or children
+  email?: string | null;
 };
 
 interface AccountLayoutProps {
@@ -22,40 +18,31 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({
   customer,
   children,
 }) => {
-  // If there's no customer, we're in the login/register view
-  const isAuthView = !customer;
+  if (!customer) {
+    return (
+      <div className="flex-1" data-testid="account-page">
+        <div className="mx-auto flex w-full max-w-[1320px] justify-center px-4 pt-8 pb-16 sm:px-6 sm:pt-16">
+          {children}
+        </div>
+      </div>
+    )
+  }
+
+  const name = [customer.firstName, customer.lastName].filter(Boolean).join(" ")
 
   return (
-    <div className="flex-1 sm:py-12" data-testid="account-page">
-      <div className="flex-1 w-full px-6 h-full max-w-5xl mx-auto bg-background flex flex-col">
-        {isAuthView ? (
-          // Login/Register view - centered layout
-          <div className="flex-1 flex items-center justify-center py-12">
-            {children}
-          </div>
-        ) : (
-          // Dashboard view - grid layout with nav
-          <div className="grid grid-cols-1 sm:grid-cols-[240px_1fr] py-12">
-            <div>
-              <AccountNav customer={customer} />
-            </div>
-            <div className="flex-1">{children}</div>
-          </div>
-        )}
-        <div className="flex flex-col sm:flex-row items-end justify-between lg:border-t py-12 gap-8">
-          <div>
-            <h3 className="text-2xl leading-[36px] font-semibold mb-4">Got questions?</h3>
-            <span className="text-sm leading-6 font-normal">
-              You can find frequently asked questions and answers on our
-              customer service page.
-            </span>
-          </div>
-          <div>
-            <UnderlineLink href="/customer-service">
-              Customer Service
-            </UnderlineLink>
-          </div>
+    <div className="flex-1" data-testid="account-page">
+      <div className="mx-auto w-full max-w-[1320px] px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+        <header className="flex flex-col gap-2">
+          <p className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3">Account</p>
+          <h1 className="break-words text-[36px] leading-[40px] font-semibold tracking-[-0.03em] text-vp-ink sm:text-[52px] sm:leading-[56px]">
+            {name || customer.email || "Account"}
+          </h1>
+        </header>
+        <div className="mt-6 border-b border-vp-line pb-5">
+          <AccountNav customer={customer} />
         </div>
+        <div className="mt-8 min-w-0">{children}</div>
       </div>
     </div>
   )

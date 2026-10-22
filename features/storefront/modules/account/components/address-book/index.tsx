@@ -3,6 +3,7 @@ import { StorefrontAccountCustomer, StorefrontRegion } from "@/features/storefro
 
 import AddAddress from "../address-card/add-address"
 import EditAddress from "../address-card/edit-address-modal"
+import { AccountPageHeader } from "../account-ui"
 
 type AddressBookProps = {
   customer: StorefrontAccountCustomer
@@ -13,14 +14,20 @@ const AddressBook: React.FC<AddressBookProps> = ({ customer, region }) => {
   const { addresses } = customer
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 mt-4">
-        <AddAddress region={region} />
-        {addresses?.map((address) => {
-          return (
-            <EditAddress region={region} address={address} key={address.id} />
-          )
-        })}
-      </div>
+      <AccountPageHeader title="Addresses" count={addresses?.length || 0} action={<AddAddress region={region} />} />
+      {addresses && addresses.length > 0 ? (
+        <ul className="vp-band divide-y divide-vp-line">
+          {addresses.map((address) => {
+            return (
+              <li key={address.id}>
+                <EditAddress region={region} address={address} />
+              </li>
+            )
+          })}
+        </ul>
+      ) : (
+        <div className="vp-band px-4 py-8 text-[15px] text-vp-ink-2 sm:px-5">No saved addresses</div>
+      )}
     </div>
   )
 }

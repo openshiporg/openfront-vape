@@ -1,6 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import React, { useMemo, useState } from "react"
 import { X, ChevronUp } from "lucide-react"
@@ -64,40 +63,47 @@ export default function MobileActions({
     }).format(amount / 100)
   }
 
+  const actionLabel = isAdding
+    ? "Adding"
+    : !variant
+    ? "Choose options"
+    : !inStock
+    ? "Out of stock"
+    : "Add to bag"
+
   return (
     <>
-      {/* Dark overlay when panel is open */}
       <div
         className={cn(
-          "fixed inset-0 bg-black transition-opacity duration-300 lg:hidden",
-          isOpen ? "opacity-50 z-[100]" : "opacity-0 pointer-events-none z-[-1]"
+          "fixed inset-0 bg-vp-ink/40 transition-opacity duration-300 lg:hidden",
+          isOpen ? "opacity-100 z-[100]" : "opacity-0 pointer-events-none z-[-1]"
         )}
         onClick={() => setIsOpen(false)}
         aria-hidden="true"
       />
 
-      {/* Sliding options panel */}
       <div
+        role="dialog"
+        aria-label="Options"
+        aria-hidden={!isOpen}
         className={cn(
-          "fixed left-0 right-0 bg-white rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)] transition-all duration-300 ease-out lg:hidden",
+          "fixed inset-x-0 rounded-t-[28px] bg-vp-bg shadow-[0_-12px_40px_rgb(20_24_22/0.18)] transition-all duration-300 ease-out lg:hidden",
           isOpen ? "bottom-0 z-[101]" : "-bottom-full z-[-1]"
         )}
       >
-        {/* Panel header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="text-lg font-semibold">Select Options</h2>
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <h2 className="text-[17px] font-semibold text-vp-ink">{product.title}</h2>
           <button
             onClick={() => setIsOpen(false)}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            className="inline-flex size-11 items-center justify-center rounded-full bg-vp-well"
             aria-label="Close options"
           >
-            <X className="w-5 h-5" />
+            <X className="size-5" />
           </button>
         </div>
 
-        {/* Panel content - options (scrollable with max height) */}
-        <div className="px-5 py-6 max-h-[50vh] overflow-y-auto">
-          <div className="flex flex-col gap-6">
+        <div className="max-h-[50vh] overflow-y-auto px-5 py-4">
+          <div className="flex flex-col gap-5">
             {(product.productOptions || []).map((option) => (
               <OptionSelect
                 key={option.id}
@@ -111,79 +117,56 @@ export default function MobileActions({
           </div>
         </div>
 
-        {/* Panel footer - add to cart */}
-        <div className="px-5 py-4 border-t bg-white">
-          <Button
+        <div className="px-5 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
             onClick={async () => {
               await handleAddToCart()
               setIsOpen(false)
             }}
             disabled={!inStock || !variant || !!isAdding}
-            className="w-full"
+            className="inline-flex h-14 w-full items-center justify-center rounded-full bg-vp-ink text-[16px] font-medium text-white disabled:bg-vp-well disabled:text-vp-ink-3"
           >
-            {isAdding
-              ? "Adding..."
-              : !variant
-              ? "Select variant"
-              : !inStock
-              ? "Out of stock"
-              : "Add to cart"}
-          </Button>
+            {actionLabel}
+          </button>
         </div>
       </div>
 
-      {/* Fixed bottom bar */}
       <div
         className={cn(
-          "fixed left-0 right-0 bottom-0 bg-white border-t z-[99] transition-all duration-300 lg:hidden",
+          "fixed inset-x-0 bottom-0 z-[99] border-t border-vp-line bg-vp-bg/95 backdrop-blur-md transition-all duration-300 lg:hidden",
           show ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
         )}
       >
-        <div className="px-4 py-3">
-          {/* Product title and price */}
-          <div className="flex items-center justify-center gap-2 mb-3 text-sm">
-            <span className="font-medium truncate max-w-[200px]">{product.title}</span>
-            <span className="text-gray-400">—</span>
+        <div className="flex items-center gap-3 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[14px] font-medium text-vp-ink">{product.title}</p>
             {selectedPrice && (
-              <span className={cn(selectedPrice.calculatedAmount < selectedPrice.originalAmount && "text-red-600")}>
+              <p className={cn("font-vp-mono text-[13px] text-vp-ink-2", selectedPrice.calculatedAmount < selectedPrice.originalAmount && "text-vp-accent")}>
                 {formatPrice(selectedPrice.calculatedAmount, selectedPrice.currencyCode)}
-              </span>
+              </p>
             )}
           </div>
-
-          {/* Action buttons */}
-          <div className={cn("grid gap-3", isSimple ? "grid-cols-1" : "grid-cols-2")}>
-            {!isSimple && (
-              <Button
-                variant="outline"
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                <span className="flex items-center justify-between w-full">
-                  <span className="truncate">
-                    {variant ? Object.values(options).filter(Boolean).join(" / ") : "Select Options"}
-                  </span>
-                  <ChevronUp
-                    className={cn(
-                      "w-4 h-4 ml-2 flex-shrink-0 transition-transform duration-200",
-                      isOpen && "rotate-180"
-                    )}
-                  />
-                </span>
-              </Button>
-            )}
-            <Button
-              onClick={handleAddToCart}
-              disabled={!inStock || !variant || !!isAdding}
+          {!isSimple && (
+            <button
+              type="button"
+              onClick={() => setIsOpen(!isOpen)}
+              className="inline-flex h-12 max-w-[40%] items-center gap-1.5 rounded-full bg-vp-well px-4 text-[14px] font-medium text-vp-ink"
             >
-              {isAdding
-                ? "Adding..."
-                : !variant
-                ? "Select variant"
-                : !inStock
-                ? "Out of stock"
-                : "Add to cart"}
-            </Button>
-          </div>
+              <span className="truncate font-vp-mono text-[12px]">
+                {variant ? Object.values(options).filter(Boolean).join(" / ") : "Options"}
+              </span>
+              <ChevronUp className={cn("size-4 shrink-0 transition-transform duration-200", isOpen && "rotate-180")} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!inStock || !variant || !!isAdding}
+            className="inline-flex h-12 items-center rounded-full bg-vp-ink px-5 text-[14px] font-medium text-white disabled:bg-vp-well disabled:text-vp-ink-3"
+          >
+            {actionLabel}
+          </button>
         </div>
       </div>
     </>

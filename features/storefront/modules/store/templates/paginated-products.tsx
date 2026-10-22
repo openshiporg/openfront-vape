@@ -82,13 +82,16 @@ export default async function PaginatedProducts({
 
   return (
     <>
+      <p className="mb-5 font-vp-mono text-[12px] text-vp-ink-3" data-testid="products-count">
+        {count} {count === 1 ? "product" : "products"}
+      </p>
       {products.length === 0 ? (
-        <div className="space-y-2 py-8" role="status">
-          <h2 className="text-xl font-semibold">No products available</h2>
+        <div className="vp-band px-6 py-16" role="status">
+          <h2 className="text-[18px] font-semibold text-vp-ink">No products here yet</h2>
         </div>
       ) : (
         <ul
-          className="grid grid-cols-2 w-full md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6"
+          className="grid w-full grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 md:grid-cols-3 lg:grid-cols-4"
           data-testid="products-list"
         >
           {products.map((p: any) => {

@@ -2,20 +2,13 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  SearchX,
-  CirclePlus,
-  Triangle,
-  Square,
-  Circle,
-  Search
-} from 'lucide-react';
+import { CirclePlus } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { EmptyState } from '@/components/ui/empty-state';
+import { ListBand, PageTitle } from '@/features/platform/components/vape-ui';
 import { Button } from '@/components/ui/button';
 import { PageContainer } from '../../../dashboard/components/PageContainer';
 import { PlatformFilterBar } from '../../components/PlatformFilterBar';
-import { StatusTabs } from '../../components/StatusTabs';
+import { StatusTabs } from '../components/StatusTabs';
 import { InventoryDetailsComponent } from '../components/InventoryDetailsComponent';
 import { Pagination } from '../../../dashboard/components/Pagination';
 import { FilterList } from '../../../dashboard/components/FilterList';
@@ -45,36 +38,31 @@ interface InventoryListPageClientProps {
   } | null;
 }
 
-const statusConfig = {
-  in_stock: { label: "In Stock", color: "emerald" },
-  low_stock: { label: "Low Stock", color: "yellow" },
-  out_of_stock: { label: "Out of Stock", color: "red" },
-  backordered: { label: "Backordered", color: "purple" }
-};
-
 function EmptyStateDefault() {
   return (
-    <EmptyState
-      title="No Inventory Created"
-      description="You can create a new inventory item to get started."
-      icons={[Triangle, Square, Circle]}
-    />
-  );
+    <ListBand>
+      <div className="px-4 py-4 text-sm text-muted-foreground">No inventory items</div>
+    </ListBand>
+  )
 }
 
 function EmptyStateSearch({ onResetFilters }: { onResetFilters: () => void }) {
   return (
-    <EmptyState
-      title="No Results Found"
-      description="Try adjusting your search filters."
-      icons={[Search]}
-      action={{
-        label: "Reset Filters",
-        onClick: onResetFilters
-      }}
-    />
-  );
+    <ListBand>
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+        <span className="text-muted-foreground">No matching inventory items</span>
+        <button
+          type="button"
+          onClick={onResetFilters}
+          className="inline-flex min-h-9 items-center rounded-full bg-background px-4 text-sm font-medium text-foreground shadow-xs ring-1 ring-border max-sm:min-h-10"
+        >
+          Reset filters
+        </button>
+      </div>
+    </ListBand>
+  )
 }
+
 
 export function InventoryListPageClient({
   list,
@@ -208,16 +196,7 @@ export function InventoryListPageClient({
     { type: 'page' as const, label: 'Inventory' }
   ];
 
-  const header = (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
-        Inventory
-      </h1>
-      <p className="text-muted-foreground">
-        Manage inventory levels and stock tracking
-      </p>
-    </div>
-  );
+  const header = <PageTitle title="Inventory" />;
 
   // Check if we have any active filters
   const hasFilters = !!searchString;
@@ -234,7 +213,7 @@ export function InventoryListPageClient({
             <Button 
               onClick={() => setIsCreateDrawerOpen(true)}
               size="icon"
-              className="lg:px-4 lg:py-2 lg:w-auto rounded-lg"
+              className="rounded-full lg:px-4 lg:py-2 lg:w-auto"
             >
               <CirclePlus />
               <span className="hidden lg:inline">Create {list.singular}</span>
@@ -244,18 +223,10 @@ export function InventoryListPageClient({
       </div>
 
       {/* Status Tabs */}
-      {statusCounts && (
-        <div className="border-b">
-          <StatusTabs 
-            statusCounts={statusCounts}
-            statusConfig={statusConfig}
-            entityName="Items"
-          />
-        </div>
-      )}
+      {statusCounts && <StatusTabs statusCounts={statusCounts} />}
 
       {/* Active Filters */}
-      <div className="px-4 md:px-6 border-b">
+      <div className="px-4 md:px-6">
         <FilterList list={list} />
       </div>
 
@@ -269,17 +240,17 @@ export function InventoryListPageClient({
           </Alert>
         </div>
       ) : isEmpty ? (
-        <div className="px-4 md:px-6">
+        <div className="px-4 md:px-6 py-4">
           <EmptyStateDefault />
         </div>
       ) : data?.count === 0 ? (
-        <div className="px-4 md:px-6">
+        <div className="px-4 md:px-6 py-4">
           <EmptyStateSearch onResetFilters={handleResetFilters} />
         </div>
       ) : (
         <>
           {/* Data grid */}
-          <div className="grid grid-cols-1 divide-y">
+          <div className="grid grid-cols-1 border-t border-border">
             {data?.items?.map((item: any) => (
               <InventoryDetailsComponent key={item.id} inventory={item} list={list} />
             ))}

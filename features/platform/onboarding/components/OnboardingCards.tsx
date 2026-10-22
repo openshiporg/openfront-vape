@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dot } from "@/features/platform/components/vape-ui";
 
 export interface OnboardingStep {
   href: string;
@@ -147,33 +148,33 @@ function OnboardingCard({
       {/* Full sidebar view */}
       <div
         className={cn(
-          "group relative rounded-lg border bg-white dark:bg-black transition-all duration-300 ease-spring group-has-[[data-collapsible=icon]]/sidebar-wrapper:hidden",
+          "group relative rounded-xl bg-muted/40 shadow-[inset_0_1px_2px_rgb(0_0_0/0.04)] ring-1 ring-inset ring-border/60 transition-all duration-300 ease-spring group-has-[[data-collapsible=icon]]/sidebar-wrapper:hidden",
           "opacity-100 translate-y-0",
-          "hover:shadow-sm"
+          "hover:bg-muted/60"
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="absolute -top-1 -right-1.5 z-10">
-          <div className="h-3 w-3 rounded-full bg-blue-700 dark:bg-blue-400 border-blue-200 dark:border-blue-800/50 border-3 animate-pulse" />
-        </div>
         <div className="flex items-start">
-          <InfoCardContent className="pt-2 px-2">
-            <InfoCardTitle>{title}</InfoCardTitle>
+          <InfoCardContent className="px-3 pt-2.5">
+            <InfoCardTitle className="flex items-baseline gap-2">
+              <Dot tone="accent" className="animate-pulse" />
+              {title}
+            </InfoCardTitle>
             <InfoCardDescription>{description}</InfoCardDescription>
           </InfoCardContent>
         </div>
 
         <InfoCardFooter isHovered={isHovered}>
-          <div className="m-2 space-x-2">
-            <Button size="sm" onClick={onOpenDialog} className="text-xs h-6">
+          <div className="m-2 flex gap-1.5">
+            <Button size="sm" onClick={onOpenDialog} className="h-8 rounded-full px-3 text-xs">
               Get started
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDismiss}
-              className="text-xs h-6"
+              className="h-8 rounded-full px-3 text-xs"
             >
               Skip for now
             </Button>
@@ -188,14 +189,12 @@ function OnboardingCard({
           "relative"
         )}
       >
-        <div className="absolute -top-1 -right-1.5 z-10">
-          <div className="h-3 w-3 rounded-full bg-blue-700 dark:bg-blue-400 border-blue-200 dark:border-blue-800/50 border-3 animate-pulse" />
-        </div>
+        <Dot tone="accent" className="absolute -right-0.5 -top-0.5 z-10 translate-y-0 animate-pulse" />
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="size-8"
-          // className="w-full h-9 hover:bg-accent hover:text-accent-foreground"
+          className="size-8 rounded-full bg-muted"
+          aria-label="Get started"
           onClick={onOpenDialog}
         >
           <Rocket className="size-3" />

@@ -28,7 +28,7 @@ const BillingAddress = ({ cart }: { cart: any | null }) => {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <Input
           label="First name"
           name="billingAddress.firstName"
@@ -54,10 +54,12 @@ const BillingAddress = ({ cart }: { cart: any | null }) => {
           value={formData["billingAddress.address1"]}
           onChange={handleChange}
           required
+          className="col-span-2 sm:col-span-1"
           data-testid="billing-address-input"
         />
         <Input
-          label="Company"
+          label="Company (optional)"
+          className="col-span-2 sm:col-span-1"
           name="billingAddress.company"
           value={formData["billingAddress.company"]}
           onChange={handleChange}
@@ -73,25 +75,23 @@ const BillingAddress = ({ cart }: { cart: any | null }) => {
           required
           data-testid="billing-city-input"
         />
-        <div className="grid grid-cols-2 gap-x-2">
-          <Input
-            label="State / Province"
-            name="billingAddress.province"
-            autoComplete="address-level1"
-            value={formData["billingAddress.province"]}
-            onChange={handleChange}
-            data-testid="billing-province-input"
-          />
-          <Input
-            label="ZIP / Postal code"
-            name="billingAddress.postalCode"
-            autoComplete="postal-code"
-            value={formData["billingAddress.postalCode"]}
-            onChange={handleChange}
-            required
-            data-testid="billing-postal-input"
-          />
-        </div>
+        <Input
+          label="State / Province"
+          name="billingAddress.province"
+          autoComplete="address-level1"
+          value={formData["billingAddress.province"]}
+          onChange={handleChange}
+          data-testid="billing-province-input"
+        />
+        <Input
+          label="ZIP / Postal code"
+          name="billingAddress.postalCode"
+          autoComplete="postal-code"
+          value={formData["billingAddress.postalCode"]}
+          onChange={handleChange}
+          required
+          data-testid="billing-postal-input"
+        />
         <CountrySelect
           name="billingAddress.countryCode"
           autoComplete="country"
@@ -103,6 +103,8 @@ const BillingAddress = ({ cart }: { cart: any | null }) => {
         />
         <Input
           label="Phone"
+          type="tel"
+          className="col-span-2 sm:col-span-1"
           name="billingAddress.phone"
           autoComplete="tel"
           value={formData["billingAddress.phone"]}

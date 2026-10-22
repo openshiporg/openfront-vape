@@ -1,47 +1,58 @@
 import { Suspense } from 'react';
 
 import { listRegions } from '@/features/storefront/lib/data/regions';
+import { getCategoriesList } from '@/features/storefront/lib/data/categories';
+import { getCollectionsList } from '@/features/storefront/lib/data/collections';
 
 import LocalizedClientLink from '@/features/storefront/modules/common/components/localized-client-link';
 import CartButton from '@/features/storefront/modules/layout/components/cart-button';
 import SideMenu from '@/features/storefront/modules/layout/components/side-menu';
 import Logo from '@/features/storefront/modules/layout/components/logo';
+import NavLinks from './nav-links';
 
 export default async function Nav() {
-  const { regions } = await listRegions();
+  const [{ regions }, { productCategories }, { collections }] = await Promise.all([
+    listRegions(),
+    getCategoriesList(0, 8),
+    getCollectionsList(0, 6),
+  ]);
+
+  const categories = (productCategories || [])
+    .filter((c: any) => !c.parentCategory && !c.isInternal && c.isActive !== false)
+    .map((c: any) => ({ id: c.id, title: c.title, handle: c.handle }));
+  const collectionLinks = (collections || []).map((c: any) => ({ id: c.id, title: c.title, handle: c.handle }));
 
   return (
-    <div className="sticky top-0 inset-x-0 z-50 group">
-      <header className="relative h-16 mx-auto border-b duration-200 bg-background border-border">
-        <nav className="max-w-[1440px] mx-auto px-6 text-muted-foreground flex items-center justify-between w-full h-full text-xs leading-5 font-normal">
-          <div className="flex-1 basis-0 h-full flex items-center">
-            <div className="h-full">
-              <SideMenu regions={regions} />
-            </div>
+    <div className="sticky top-0 inset-x-0 z-50">
+      <div className="bg-vp-ink text-white/80">
+        <div className="mx-auto flex h-8 max-w-[1320px] items-center justify-between px-4 sm:px-6 text-[12px]">
+          <span className="font-vp-mono tracking-[0.08em] uppercase">21+ only</span>
+          <span className="hidden sm:inline">Adult signature may be required on delivery</span>
+        </div>
+      </div>
+      <header className="border-b border-vp-line bg-vp-bg/90 backdrop-blur-md">
+        <nav className="mx-auto flex h-16 max-w-[1320px] items-center gap-6 px-4 sm:px-6">
+          <div className="lg:hidden -ml-2">
+            <SideMenu regions={regions} categories={categories} collections={collectionLinks} />
           </div>
-
-          <div className="flex items-center h-full">
-            <Logo />
-          </div>
-
-          <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
-            <div className="hidden lg:flex items-center gap-x-6 h-full">
-              <LocalizedClientLink
-                className="hover:text-foreground cursor-pointer"
-                href="/account"
-                data-testid="nav-account-link"
-              >
-                Account
-              </LocalizedClientLink>
-            </div>
+          <Logo />
+          <NavLinks categories={categories} />
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <LocalizedClientLink
+              className="hidden lg:inline-flex min-h-11 items-center rounded-full px-3 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink"
+              href="/account"
+              data-testid="nav-account-link"
+            >
+              Account
+            </LocalizedClientLink>
             <Suspense
               fallback={
                 <LocalizedClientLink
-                  className="hover:text-foreground flex min-h-11 min-w-11 items-center justify-end gap-2 cursor-pointer"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-[14px] font-medium text-vp-ink"
                   href="/cart"
                   data-testid="nav-cart-link"
                 >
-                  Cart (0)
+                  Bag <span className="font-vp-mono text-vp-ink-3">0</span>
                 </LocalizedClientLink>
               }
             >

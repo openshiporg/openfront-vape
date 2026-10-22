@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: oklch(100% 0 0);
-  --color-foreground: oklch(9.65% 0 0);
-  --color-card: oklch(100% 0 0);
-  --color-card-foreground: oklch(9.65% 0 0);
-  --color-popover: oklch(100% 0 0);
-  --color-popover-foreground: oklch(9.65% 0 0);
-  --color-primary: oklch(9.65% 0 0);
-  --color-primary-foreground: oklch(98.04% 0 0);
-  --color-secondary: oklch(96.08% 0 0);
-  --color-secondary-foreground: oklch(9.65% 0 0);
-  --color-muted: oklch(96.08% 0 0);
-  --color-muted-foreground: oklch(45.47% 0.004 270.54);
-  --color-accent: oklch(96.08% 0 0);
-  --color-accent-foreground: oklch(9.65% 0 0);
-  --color-destructive: oklch(55.75% 0.224 29.23);
-  --color-destructive-foreground: oklch(98.04% 0 0);
-  --color-border: oklch(89.84% 0 0);
-  --color-input: oklch(89.84% 0 0);
-  --color-ring: oklch(9.65% 0 0);
+  --color-background: var(--sf-background, oklch(100% 0 0));
+  --color-foreground: var(--sf-foreground, oklch(9.65% 0 0));
+  --color-card: var(--sf-card, oklch(100% 0 0));
+  --color-card-foreground: var(--sf-card-foreground, oklch(9.65% 0 0));
+  --color-popover: var(--sf-popover, oklch(100% 0 0));
+  --color-popover-foreground: var(--sf-popover-foreground, oklch(9.65% 0 0));
+  --color-primary: var(--sf-primary, oklch(9.65% 0 0));
+  --color-primary-foreground: var(--sf-primary-foreground, oklch(98.04% 0 0));
+  --color-secondary: var(--sf-secondary, oklch(96.08% 0 0));
+  --color-secondary-foreground: var(--sf-secondary-foreground, oklch(9.65% 0 0));
+  --color-muted: var(--sf-muted, oklch(96.08% 0 0));
+  --color-muted-foreground: var(--sf-muted-foreground, oklch(45.47% 0.004 270.54));
+  --color-accent: var(--sf-accent, oklch(96.08% 0 0));
+  --color-accent-foreground: var(--sf-accent-foreground, oklch(9.65% 0 0));
+  --color-destructive: var(--sf-destructive, oklch(55.75% 0.224 29.23));
+  --color-destructive-foreground: var(--sf-destructive-foreground, oklch(98.04% 0 0));
+  --color-border: var(--sf-border, oklch(89.84% 0 0));
+  --color-input: var(--sf-input, oklch(89.84% 0 0));
+  --color-ring: var(--sf-ring, oklch(9.65% 0 0));
 
   --radius-lg: 0.5rem;
   --radius-md: calc(var(--radius-lg) - 2px);
@@ -37,4 +37,109 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+}
+
+/* Vape storefront: "spec sheet" tokens. See docs/design/vape-redesign-2026-10-22.md.
+   --vp-h is set per store from the saved logo colour on the .vape-sf wrapper. */
+@theme inline {
+  --color-vp-bg: #f1f2ef;
+  --color-vp-surface: #ffffff;
+  --color-vp-well: #e6e8e4;
+  --color-vp-ink: #141816;
+  --color-vp-ink-2: #525955;
+  --color-vp-ink-3: #878d89;
+  --color-vp-line: #d9dcd7;
+  --color-vp-accent: hsl(var(--vp-h, 178) 46% 34%);
+  --color-vp-tint: hsl(var(--vp-h, 178) 38% 90%);
+  --color-vp-danger: #b4232a;
+  --color-vp-ok: #1f7a4d;
+  --color-vp-warn: #a86411;
+  --font-vp: var(--vp-font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-vp-mono: var(--vp-font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  .vape-sf {
+    --sf-background: #f1f2ef;
+    --sf-foreground: #141816;
+    --sf-card: #ffffff;
+    --sf-card-foreground: #141816;
+    --sf-popover: #ffffff;
+    --sf-popover-foreground: #141816;
+    --sf-primary: #141816;
+    --sf-primary-foreground: #f8f9f7;
+    --sf-secondary: #e6e8e4;
+    --sf-secondary-foreground: #141816;
+    --sf-muted: #e6e8e4;
+    --sf-muted-foreground: #525955;
+    --sf-accent: #e6e8e4;
+    --sf-accent-foreground: #141816;
+    --sf-border: #d9dcd7;
+    --sf-input: #d9dcd7;
+    --sf-ring: hsl(var(--vp-h, 178) 46% 34%);
+    background-color: #f1f2ef;
+    color: #141816;
+    font-family: var(--vp-font-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .vape-sf .vp-num,
+  .vape-sf .font-vp-mono {
+    font-family: var(--vp-font-mono), ui-monospace, SFMono-Regular, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+}
+
+@layer components {
+  /* Raised pill in a recessed track */
+  .vp-track {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: #e6e8e4;
+    box-shadow: inset 0 1px 2px rgb(20 24 22 / 0.08);
+  }
+  .vp-pill {
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #525955;
+    white-space: nowrap;
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  }
+  .vp-pill:hover { color: #141816; }
+  .vp-pill[data-active="true"] {
+    background: #ffffff;
+    color: #141816;
+    box-shadow: 0 1px 2px rgb(20 24 22 / 0.12), 0 0 0 0.5px rgb(20 24 22 / 0.06);
+  }
+  .vp-pill:disabled,
+  .vp-pill[aria-disabled="true"] { color: #b3b8b4; text-decoration: line-through; cursor: not-allowed; }
+  .vp-pill:focus-visible { outline: 2px solid hsl(var(--vp-h, 178) 46% 34%); outline-offset: 1px; }
+  @media (max-width: 639px) {
+    .vp-pill { min-height: 40px; }
+  }
+
+  .vp-band {
+    border-radius: 18px;
+    background: #e6e8e4;
+    box-shadow: inset 0 1px 2px rgb(20 24 22 / 0.06);
+  }
+
+  .vp-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    flex: none;
+    transform: translateY(-0.1em);
+  }
+  .vp-pill[data-active="true"]:disabled { color: #141816; text-decoration: none; cursor: default; }
 }

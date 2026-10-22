@@ -1,18 +1,18 @@
-
-import InteractiveLink from "@/features/storefront/modules/common/components/interactive-link"
+import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
 
 const EmptyCartMessage = () => {
   return (
-    <div className="py-16 sm:py-32 px-2 flex flex-col justify-center items-start" data-testid="empty-cart-message">
-      <h1 className="flex flex-row text-3xl font-medium gap-x-2 items-baseline">
+    <div className="flex flex-col items-start gap-4 py-16 sm:py-24" data-testid="empty-cart-message">
+      <span className="font-vp-mono text-[13px] text-vp-ink-3">0 items</span>
+      <h1 className="text-[36px] leading-[40px] font-semibold tracking-[-0.03em] text-vp-ink sm:text-[52px] sm:leading-[56px]">
+        Your bag is empty
       </h1>
-      <p className="text-sm font-normal mt-4 mb-6 max-w-[32rem]">
-        You don&apos;t have anything in your cart. Let&apos;s change that, use
-        the link below to start browsing our products.
-      </p>
-      <div>
-        <InteractiveLink href="/store">Explore products</InteractiveLink>
-      </div>
+      <LocalizedClientLink
+        href="/store"
+        className="mt-2 inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+      >
+        Shop all
+      </LocalizedClientLink>
     </div>
   )
 }

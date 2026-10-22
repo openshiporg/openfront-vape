@@ -26,7 +26,7 @@ const renderers = {
         return (
           <LocalizedClientLink
             href={href}
-            className="text-primary hover:text-primary/90 underline"
+            className="text-vp-ink underline decoration-vp-line underline-offset-4 hover:decoration-vp-ink"
           >
             {children}
           </LocalizedClientLink>
@@ -36,7 +36,7 @@ const renderers = {
       return (
         <a
           href={href}
-          className="text-primary hover:text-primary/90 underline"
+          className="text-vp-ink underline decoration-vp-line underline-offset-4 hover:decoration-vp-ink"
         >
           {children}
         </a>
@@ -60,7 +60,7 @@ const renderers = {
       const HeadingTag = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
       return (
         <HeadingTag
-          className={`${sizes[level]} leading-tight text-foreground mb-2`}
+          className={`${sizes[level]} leading-tight font-semibold text-vp-ink mb-2`}
         >
           {children}
         </HeadingTag>
@@ -69,7 +69,7 @@ const renderers = {
     paragraph: ({ children, textAlign }: { children: React.ReactNode, textAlign?: string }) => {
       return (
         <p // Replaced Text with p
-          className={`text-muted-foreground mb-4 leading-relaxed ${
+          className={`text-vp-ink-2 mb-3 last:mb-0 ${
             textAlign ? `text-${textAlign}` : ''
           }`}
         >
@@ -79,8 +79,8 @@ const renderers = {
     },
     blockquote: ({ children }: { children: React.ReactNode }) => {
       return (
-        <blockquote className="border-l-4 border-border pl-4 italic my-4">
-          <p className="text-muted-foreground">{children}</p>
+        <blockquote className="border-l-2 border-vp-line pl-4 my-4">
+          <p className="text-vp-ink-2">{children}</p>
         </blockquote>
       )
     },
@@ -88,7 +88,7 @@ const renderers = {
       const List = type === "ordered" ? "ol" : "ul"
 
       return (
-        <List className={`${type === "ordered" ? "list-decimal" : "list-disc"} pl-4`}>
+        <List className={`${type === "ordered" ? "list-decimal" : "list-disc"} pl-5 text-vp-ink-2 space-y-1 mb-3`}>
           {children.map((x, i) => (
             <li key={i}>{x}</li>
           ))}
@@ -99,36 +99,23 @@ const renderers = {
 }
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
-  return (
-    <div id="product-info">
-      <div className="flex flex-col gap-y-4 lg:max-w-[500px] mx-auto">
-        {product.productCollections && product.productCollections.length > 0 && (
-          <LocalizedClientLink
-            href={`/collections/${product.productCollections[0].handle}`}
-            className="text-base text-muted-foreground hover:text-muted-foreground/80"
-          >
-            {product.productCollections[0].title}
-          </LocalizedClientLink>
-        )}
-        <h2
-          className="text-3xl leading-10 text-foreground"
-          data-testid="product-title"
-        >
-          {product.title}
-        </h2>
+  const hasDescription =
+    (typeof product.description === "string" && product.description.trim()) ||
+    (typeof product.description === "object" && product.description?.document)
 
-        {typeof product.description === 'string' ? (
-          <p
-            className="text-base text-muted-foreground whitespace-pre-line"
-            data-testid="product-description"
-          >
-            {product.description}
-          </p>
+  if (!hasDescription) return null
+
+  return (
+    <section id="product-info" className="flex flex-col gap-3 border-t border-vp-line pt-6">
+      <h2 className="text-[13px] font-medium text-vp-ink">Details</h2>
+      <div className="text-[15px] leading-[24px]" data-testid="product-description">
+        {typeof product.description === "string" ? (
+          <p className="whitespace-pre-line text-vp-ink-2">{product.description}</p>
         ) : product.description?.document ? (
           <DocumentRenderer document={product.description.document} renderers={renderers} />
         ) : null}
       </div>
-    </div>
+    </section>
   )
 }
 

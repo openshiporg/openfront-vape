@@ -2,15 +2,15 @@
 
 import { setAddresses } from "@/features/storefront/lib/data/cart";
 import compareAddresses from "@/features/storefront/lib/util/compare-addresses";
-import { CircleCheck } from "lucide-react";
-import Divider from "@/features/storefront/modules/common/components/divider";
 import { useState } from "react";
 import { usePathname, useRouter, useSearchParams, useParams } from "next/navigation";
 import BillingAddress from "../billing-address";
 import ErrorMessage from "../error-message";
 import ShippingAddress from "../shipping-address";
-import { Button } from "@/components/ui/button";
 import { RiLoader2Fill } from "@remixicon/react";
+import StepHeader, { StepFact } from "../step-header";
+import { vpPrimaryButton } from "@/features/storefront/modules/common/components/vp-classes";
+import { cn } from "@/lib/utils";
 
 const Addresses = ({
   cart,
@@ -122,146 +122,97 @@ const Addresses = ({
     }
   };
 
+  const address = cart?.shippingAddress;
+  const billing = cart?.billingAddress;
+
   return (
-    <div className="bg-background">
-      <div className="flex flex-row items-center justify-between mb-6">
-        <h2 className="flex flex-row text-3xl font-medium gap-x-2 items-baseline">
-          Shipping Address
-          {!isOpen && <CircleCheck className="hidden sm:block h-5 w-5" />}
-        </h2>
-        {!isOpen && cart?.shippingAddress && (
-          <p>
-            <Button
-              onClick={handleEdit}
-              data-testid="edit-address-button"
-              variant="outline"
-              size="sm"
-            >
-              Update Address
-            </Button>
-          </p>
-        )}
-      </div>
+    <section className="flex flex-col gap-5 border-t border-vp-line pt-5" aria-label="Address">
+      <StepHeader
+        index={1}
+        title="Address"
+        state={isOpen ? "open" : "done"}
+        onEdit={!isOpen && address ? handleEdit : undefined}
+        editLabel="Edit address"
+        editTestId="edit-address-button"
+      />
       {isOpen ? (
-        <form onSubmit={handleSubmit}>
-          <div className="pb-8">
-            <ShippingAddress
-              customer={customer}
-              checked={sameAsBilling}
-              onChange={toggleSameAsBilling}
-              cart={cart}
-              countryCode={params?.countryCode as string}
-            />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 pb-2">
+          <ShippingAddress
+            customer={customer}
+            checked={sameAsBilling}
+            onChange={toggleSameAsBilling}
+            cart={cart}
+            countryCode={params?.countryCode as string}
+          />
 
-            {!sameAsBilling && (
-              <div>
-                <h2 className="text-3xl font-medium gap-x-4 pb-6 pt-8">
-                  Billing address
-                </h2>
-
-                <BillingAddress cart={cart} />
-              </div>
-            )}
-            <Button
-              size="lg"
-              className="mt-6"
+          {!sameAsBilling && (
+            <div className="flex flex-col gap-4">
+              <h3 className="text-[15px] leading-[20px] font-semibold text-vp-ink">
+                Billing address
+              </h3>
+              <BillingAddress cart={cart} />
+            </div>
+          )}
+          <div>
+            <button
+              className={cn(vpPrimaryButton, "w-full sm:w-auto sm:px-8")}
               data-testid="submit-address-button"
               type="submit"
               disabled={isLoading}
             >
-              {isLoading && <RiLoader2Fill className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading && <RiLoader2Fill className="h-4 w-4 animate-spin" />}
               Continue to delivery
-            </Button>
+            </button>
             <ErrorMessage error={error} data-testid="address-error-message" />
           </div>
         </form>
       ) : (
-        <div>
-          <div className="text-xs font-normal">
-            {cart && cart.shippingAddress ? (
-              <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-x-8">
-                <div
-                  className="flex flex-col w-full sm:flex-1 sm:min-w-0"
-                  data-testid="shipping-address-summary"
-                >
-                  <p className="text-sm font-medium text-foreground mb-1">
-                    Shipping Address
-                  </p>
-                  <p className="text-sm font-normal text-muted-foreground">
-                    {cart.shippingAddress.firstName}{" "}
-                    {cart.shippingAddress.lastName}
-                  </p>
-                  <p className="text-sm font-normal text-muted-foreground">
-                    {cart.shippingAddress.address1}{" "}
-                    {cart.shippingAddress.address2}
-                  </p>
-                  <p className="text-sm font-normal text-muted-foreground">
-                    {cart.shippingAddress.city}
-                    {cart.shippingAddress.province && `, ${cart.shippingAddress.province}`}
-                  </p>
-                  <p className="text-sm font-normal text-muted-foreground">
-                    {cart.shippingAddress.postalCode} {cart.shippingAddress.countryCode?.toUpperCase()}
-                  </p>
-                </div>
+        <div className="pb-2">
+          {cart && address ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+              <StepFact label="Ship to" testId="shipping-address-summary">
+                <p>{address.firstName} {address.lastName}</p>
+                <p>{address.address1} {address.address2}</p>
+                <p>
+                  {address.city}
+                  {address.province && `, ${address.province}`}
+                </p>
+                <p>
+                  <span className="font-vp-mono text-[13px]">{address.postalCode}</span>{" "}
+                  {address.countryCode?.toUpperCase()}
+                </p>
+              </StepFact>
 
-                <div
-                  className="flex flex-col w-full sm:flex-1 sm:min-w-0"
-                  data-testid="shipping-contact-summary"
-                >
-                  <p className="text-sm font-medium text-foreground mb-1">
-                    Contact
-                  </p>
-                  <p className="text-sm font-normal text-muted-foreground">
-                    {cart.shippingAddress.phone}
-                  </p>
-                  <p className="text-sm font-normal text-muted-foreground">
-                    {cart.email}
-                  </p>
-                </div>
+              <StepFact label="Contact" testId="shipping-contact-summary">
+                {address.phone && <p className="font-vp-mono text-[13px]">{address.phone}</p>}
+                <p>{cart.email}</p>
+              </StepFact>
 
-                <div
-                  className="flex flex-col w-full sm:flex-1 sm:min-w-0"
-                  data-testid="billing-address-summary"
-                >
-                  <p className="text-sm font-medium text-foreground mb-1">
-                    Billing Address
-                  </p>
-
-                  {sameAsBilling ? (
-                    <p className="text-sm font-normal text-muted-foreground">
-                      Billing and delivery address are the same.
+              <StepFact label="Billing" testId="billing-address-summary">
+                {sameAsBilling ? (
+                  <p>Billing and delivery address are the same.</p>
+                ) : (
+                  <>
+                    <p>{billing?.firstName} {billing?.lastName}</p>
+                    <p>{billing?.address1} {billing?.address2}</p>
+                    <p>
+                      {billing?.city}
+                      {billing?.province && `, ${billing.province}`}
                     </p>
-                  ) : (
-                    <>
-                      <p className="text-sm font-normal text-muted-foreground">
-                        {cart.billingAddress?.firstName}{" "}
-                        {cart.billingAddress?.lastName}
-                      </p>
-                      <p className="text-sm font-normal text-muted-foreground">
-                        {cart.billingAddress?.address1}{" "}
-                        {cart.billingAddress?.address2}
-                      </p>
-                      <p className="text-sm font-normal text-muted-foreground">
-                        {cart.billingAddress?.city}
-                        {cart.billingAddress?.province && `, ${cart.billingAddress.province}`}
-                      </p>
-                      <p className="text-sm font-normal text-muted-foreground">
-                        {cart.billingAddress?.postalCode} {cart.billingAddress?.countryCode?.toUpperCase()}
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div>
-                <RiLoader2Fill className="animate-spin h-5 w-5" />
-              </div>
-            )}
-          </div>
+                    <p>
+                      <span className="font-vp-mono text-[13px]">{billing?.postalCode}</span>{" "}
+                      {billing?.countryCode?.toUpperCase()}
+                    </p>
+                  </>
+                )}
+              </StepFact>
+            </div>
+          ) : (
+            <RiLoader2Fill className="h-5 w-5 animate-spin text-vp-ink-3" aria-label="Loading" />
+          )}
         </div>
       )}
-      <Divider className="mt-8" />
-    </div>
+    </section>
   );
 };
 

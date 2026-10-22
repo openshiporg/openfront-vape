@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 
 import SkeletonProductGrid from "@/features/storefront/modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@/features/storefront/modules/store/components/refinement-list"
+import CatalogLayout from "@/features/storefront/modules/store/components/catalog-layout"
 import { SortOptions } from "@/features/storefront/modules/store/components/refinement-list/sort-products"
 
 import PaginatedProducts from "./paginated-products"
@@ -19,24 +19,11 @@ const StoreTemplate = ({
   const sort = sortBy || "created_at"
 
   return (
-    <div
-      className="flex flex-col lg:flex-row lg:items-start py-6 max-w-[1440px] w-full mx-auto px-6"
-      data-testid="category-container"
-    >
-      <RefinementList sortBy={sort} />
-      <div className="w-full">
-        <div className="mb-8 text-3xl font-semibold">
-          <h1 data-testid="store-page-title">All products</h1>
-        </div>
-        <Suspense fallback={<SkeletonProductGrid />}>
-          <PaginatedProducts
-            sortBy={sort}
-            page={pageNumber}
-            countryCode={countryCode}
-          />
-        </Suspense>
-      </div>
-    </div>
+    <CatalogLayout title="Shop all" activeCategory="all" sortBy={sort}>
+      <Suspense fallback={<SkeletonProductGrid />}>
+        <PaginatedProducts sortBy={sort} page={pageNumber} countryCode={countryCode} />
+      </Suspense>
+    </CatalogLayout>
   )
 }
 

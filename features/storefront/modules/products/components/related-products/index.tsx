@@ -79,23 +79,18 @@ export default async function RelatedProducts({
   }
 
   return (
-    <div className="product-page-constraint">
-      <div className="flex flex-col items-center text-center mb-16">
-        <span className="text-sm leading-6 font-normal text-gray-600 mb-6">
-          Related products
-        </span>
-        <p className="text-3xl font-medium text-foreground max-w-lg">
-          You might also want to check out these products.
-        </p>
+    <section className="py-10 sm:py-14">
+      <div className="mb-6 flex items-baseline gap-3 border-t border-vp-line pt-5">
+        <h2 className="text-[24px] leading-[30px] font-semibold tracking-[-0.02em] text-vp-ink">Related</h2>
+        <span className="font-vp-mono text-[12px] text-vp-ink-3">{Math.min(filteredProducts.length, 4)}</span>
       </div>
-
-      <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6">
-        {filteredProducts.map((productPreview: ProductPreviewType) => (
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 lg:grid-cols-4">
+        {filteredProducts.slice(0, 4).map((productPreview: ProductPreviewType) => (
           <li key={productPreview.id}>
             <ProductPreview region={region} productPreview={productPreview} />
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   )
 }

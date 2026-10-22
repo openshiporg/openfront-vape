@@ -5,6 +5,7 @@ import React, { useEffect, useImperativeHandle, useState } from "react"
 
 import Eye from "@/features/storefront/modules/common/icons/eye"
 import EyeOff from "@/features/storefront/modules/common/icons/eye-off"
+import { vpInput, vpLabel } from "@/features/storefront/modules/common/components/vp-classes"
 
 type InputProps = Omit<
   Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
@@ -19,7 +20,7 @@ type InputProps = Omit<
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ type, name, label, touched, required, topLabel, placeholder, ...props }, ref) => {
+  ({ type, name, label, touched, errors, required, topLabel, placeholder, className, ...props }, ref) => {
     const inputRef = React.useRef<HTMLInputElement>(null)
     const [showPassword, setShowPassword] = useState(false)
     const [inputType, setInputType] = useState(type)
@@ -37,17 +38,18 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     useImperativeHandle(ref, () => inputRef.current!)
 
     return (
-      <div className="flex flex-col w-full">
+      <div className={cn("flex w-full flex-col", className)}>
         {topLabel && (
-          <Label className="mb-2 text-xs font-medium leading-5">{topLabel}</Label>
+          <Label className={cn(vpLabel, "mb-2")}>{topLabel}</Label>
         )}
-        <div className="flex relative z-0 w-full text-sm font-normal leading-5"> 
+        <div className="relative z-0 flex w-full">
           <BaseInput
             type={inputType}
             name={name}
             placeholder={placeholder || label}
+            aria-label={props["aria-label"] || label}
             required={required}
-            className="block w-full h-auto appearance-none rounded-md border border-border bg-background px-4 py-3 focus:outline-none focus:ring-0 hover:bg-accent"
+            className={cn(vpInput, type === "password" && "pr-12")}
             {...props}
             ref={inputRef}
           />
@@ -55,7 +57,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-muted-foreground px-4 focus:outline-none transition-all duration-150 outline-none focus:text-foreground absolute right-0 top-3"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-0.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-vp-ink-3 outline-none transition-colors hover:text-vp-ink focus-visible:text-vp-ink"
             >
               {showPassword ? <Eye /> : <EyeOff />}
             </button>

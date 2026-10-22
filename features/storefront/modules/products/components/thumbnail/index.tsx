@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 import React from "react"
 
-import PlaceholderImage from "@/features/storefront/modules/common/icons/placeholder-image"
+import SpecTile from "@/features/storefront/modules/common/components/vape/spec-tile"
 
 type ThumbnailProps = {
   thumbnail?: string | null;
@@ -10,6 +10,9 @@ type ThumbnailProps = {
   size?: "small" | "medium" | "large" | "full" | "square";
   isFeatured?: boolean;
   className?: string;
+  title?: string | null;
+  kicker?: string | null;
+  specs?: { label: string; value: string }[];
   "data-testid"?: string;
 };
 
@@ -19,54 +22,46 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   size = "small",
   isFeatured,
   className,
+  title,
+  kicker,
+  specs,
   "data-testid": dataTestid,
 }) => {
-  const initialImage =
+  const image =
     thumbnail ||
     images?.[0]?.url ||
     images?.[0]?.image?.url ||
     images?.[0]?.imagePath ||
-    "/images/placeholder.svg";
+    null;
+
+  const compact = size === "small" || (size === "square" && !specs?.length)
 
   return (
     <div
       className={cn(
-        "relative w-full overflow-hidden p-4 bg-muted shadow-sm rounded-lg group-hover:shadow-md transition-shadow ease-in-out duration-150",
+        "relative w-full overflow-hidden rounded-[14px] bg-vp-well",
         className,
         {
-          "aspect-[11/14]": isFeatured,
-          "aspect-[9/16]": !isFeatured && size !== "square",
-          "aspect-[1/1]": size === "square",
-          "w-[180px]": size === "small",
-          "w-[290px]": size === "medium",
-          "w-[440px]": size === "large",
-          "w-full": size === "full",
+          "aspect-[4/5]": isFeatured,
+          "aspect-[3/4]": !isFeatured && size !== "square",
+          "aspect-square": size === "square",
         }
       )}
       data-testid={dataTestid}
     >
-      <ImageOrPlaceholder image={initialImage} size={size} />
-    </div>
-  )
-}
-
-const ImageOrPlaceholder = ({
-  image,
-  size,
-}: Pick<ThumbnailProps, "size"> & { image?: string }) => {
-  return image ? (
-    <Image
-      src={image}
-      alt="Thumbnail"
-      className="absolute inset-0 object-cover object-center"
-      draggable={false}
-      sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-      fill
-      suppressHydrationWarning
-    />
-  ) : (
-    <div className="w-full h-full absolute inset-0 flex items-center justify-center">
-      <PlaceholderImage size={size === "small" ? 16 : 24} />
+      {image ? (
+        <Image
+          src={image}
+          alt={title || "Product image"}
+          className="absolute inset-0 object-cover object-center"
+          draggable={false}
+          sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
+          fill
+          suppressHydrationWarning
+        />
+      ) : (
+        <SpecTile title={title || ""} kicker={kicker} specs={specs} size={compact ? "sm" : "md"} />
+      )}
     </div>
   )
 }

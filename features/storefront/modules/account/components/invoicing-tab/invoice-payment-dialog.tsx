@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { StoreIcon } from "lucide-react"
+import { ArrowUpRight } from "lucide-react"
+import { primaryButtonClass, secondaryButtonClass } from "@/features/storefront/modules/account/components/account-ui"
 import { toast } from "@/components/ui/use-toast"
 import { CardElement } from '@stripe/react-stripe-js'
 import InvoicePaymentWrapper from "./invoice-payment-wrapper"
@@ -234,51 +233,48 @@ export default function InvoicePaymentDialog({
   if (invoice && availablePaymentMethods.length > 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="vape-sf w-[calc(100%-32px)] max-h-[92dvh] overflow-y-auto rounded-[22px] border-vp-line bg-vp-bg text-vp-ink sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Pay Invoice #{invoice.invoiceNumber}</DialogTitle>
-            <DialogDescription>
-              Select payment method and complete payment
+            <DialogTitle className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em]">Pay invoice <span className="font-vp-mono">#{invoice.invoiceNumber}</span></DialogTitle>
+            <DialogDescription className="text-[13px] text-vp-ink-2">
+              Payment method
             </DialogDescription>
           </DialogHeader>
 
           <InvoicePaymentWrapper invoice={invoice}>
             <div className="space-y-4">
               {/* Invoice Summary */}
-              <div className="p-4 border rounded-lg">
-                <h4 className="text-sm text-muted-foreground uppercase font-semibold tracking-wide mb-3">Invoice Summary</h4>
-                <div className="flex justify-between items-center mb-3">
-                  <span>Total: {invoice.formattedTotal}</span>
-                  <span className="text-sm text-gray-600">{invoice.itemCount} {invoice.itemCount === 1 ? 'order' : 'orders'}</span>
+              <div className="vp-band p-4">
+                <h4 className="mb-3 font-vp-mono text-[12px] uppercase tracking-[0.12em] text-vp-ink-3">Summary</h4>
+                <div className="mb-3 flex items-baseline justify-between">
+                  <span className="text-[14px] text-vp-ink-2">Total <span className="font-vp-mono text-[17px] font-medium text-vp-ink">{invoice.formattedTotal}</span></span>
+                  <span className="font-vp-mono text-[13px] text-vp-ink-2">{invoice.itemCount} {invoice.itemCount === 1 ? 'order' : 'orders'}</span>
                 </div>
                 
                 {/* Orders list */}
-                <div className="overflow-y-auto space-y-2">
+                <div className="flex flex-col divide-y divide-vp-line overflow-hidden rounded-[14px] bg-vp-surface">
                   {invoice.lineItems?.map((lineItem: any) => (
-                    <div 
-                      key={lineItem.id} 
-                      className="bg-muted/40 border rounded-md flex justify-between items-center p-3 cursor-pointer hover:bg-muted/60"
+                    <button
+                      type="button"
+                      key={lineItem.id}
+                      className="grid min-h-12 w-full grid-cols-[1fr_auto_18px] items-center gap-x-3 px-3 py-2.5 text-left hover:bg-vp-bg"
                       onClick={() => window.open(`/account/orders/details/${lineItem.accountLineItem.order?.id}`, '_blank')}
+                      aria-label={`Open order #${lineItem.accountLineItem.order.displayId} in a new tab`}
                     >
-                      <div className="grid grid-cols-3 text-xs leading-4 font-normal gap-x-3 flex-1">
-                        <span className="font-semibold text-gray-700">Date placed</span>
-                        <span className="font-semibold text-gray-700">Order number</span>
-                        <span className="font-semibold text-gray-700">Total amount</span>
-                        <span>{new Date(lineItem.accountLineItem.order.createdAt).toLocaleDateString()}</span>
-                        <span>#{lineItem.accountLineItem.order.displayId}</span>
-                        <span>{lineItem.accountLineItem.order.total}</span>
-                      </div>
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
+                      <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                        <span className="font-vp-mono text-[13px] text-vp-ink">#{lineItem.accountLineItem.order.displayId}</span>
+                        <span className="font-vp-mono text-[12px] text-vp-ink-2">{new Date(lineItem.accountLineItem.order.createdAt).toLocaleDateString()}</span>
+                      </span>
+                      <span className="font-vp-mono text-[13px] text-vp-ink">{lineItem.accountLineItem.order.total}</span>
+                      <ArrowUpRight size={16} aria-hidden="true" className="text-vp-ink-3" />
+                    </button>
                   ))}
                 </div>
               </div>
 
               {/* Payment Method Card with Selection */}
-              <div className="p-4 border rounded-lg">
-                <h4 className="text-sm text-muted-foreground uppercase font-semibold tracking-wide mb-3">Payment Method</h4>
+              <div className="vp-band p-4">
+                <h4 className="mb-3 font-vp-mono text-[12px] uppercase tracking-[0.12em] text-vp-ink-3">Payment method</h4>
                 <RadioGroup
                   value={selectedPaymentMethod}
                   onValueChange={handlePaymentMethodChange}
@@ -290,10 +286,10 @@ export default function InvoicePaymentDialog({
                       <Label 
                         htmlFor={method.id}
                         className={cn(
-                          "flex items-center justify-between text-sm font-normal cursor-pointer py-3 border rounded-md px-4 transition-colors min-w-0",
+                          "flex min-h-12 min-w-0 cursor-pointer items-center justify-between rounded-[14px] border bg-vp-surface px-4 py-3 text-sm font-normal transition-colors",
                           {
-                            "border-primary bg-primary/5": selectedPaymentMethod === method.code,
-                            "border-border hover:border-primary/50": selectedPaymentMethod !== method.code,
+                            "border-vp-ink": selectedPaymentMethod === method.code,
+                            "border-vp-line hover:border-vp-ink-3": selectedPaymentMethod !== method.code,
                           }
                         )}
                       >
@@ -301,19 +297,19 @@ export default function InvoicePaymentDialog({
                           <div className={cn(
                             "w-4 h-4 border-2 rounded-full flex items-center justify-center transition-colors flex-shrink-0",
                             {
-                              "border-primary": selectedPaymentMethod === method.code,
-                              "border-border": selectedPaymentMethod !== method.code,
+                              "border-vp-ink": selectedPaymentMethod === method.code,
+                              "border-vp-line": selectedPaymentMethod !== method.code,
                             }
                           )}>
                             {selectedPaymentMethod === method.code && (
-                              <div className="w-2 h-2 bg-primary rounded-full" />
+                              <div className="w-2 h-2 bg-vp-ink rounded-full" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="text-sm font-medium truncate">
                               {paymentInfoMap[method.code]?.title || method.code}
                             </div>
-                            <div className="text-xs text-muted-foreground truncate">
+                            <div className="truncate font-vp-mono text-[11px] text-vp-ink-3">
                               {method.code}
                             </div>
                           </div>
@@ -330,22 +326,22 @@ export default function InvoicePaymentDialog({
               {/* Stripe card element - only show if Stripe is selected and has clientSecret */}
               {isStripe(selectedPaymentMethod) && invoice?.paymentCollection?.paymentSessions?.find((s: { isSelected: boolean; data?: { clientSecret?: string } }) => s.isSelected && s.data?.clientSecret) && (
                 <div className="mt-5 transition-all duration-150 ease-in-out">
-                  <p className="text-base font-semibold mb-1">
-                    Enter your card details:
+                  <p className="mb-1.5 text-[13px] font-medium text-vp-ink-2">
+                    Card
                   </p>
                   <CardElement
                     options={{
                       style: {
                         base: {
-                          fontFamily: "Inter, sans-serif",
-                          color: "#424270",
+                          fontFamily: "ui-sans-serif, system-ui, sans-serif",
+                          color: "#141816",
                           "::placeholder": {
-                            color: "rgb(107 114 128)",
+                            color: "#878d89",
                           },
                         },
                       },
                       classes: {
-                        base: "pt-3 pb-1 block w-full h-11 px-4 mt-0 bg-background border rounded-md appearance-none focus:outline-none focus:ring-0 focus:shadow-borders-interactive-with-active border-border hover:bg-muted transition-all duration-300 ease-in-out",
+                        base: "block h-12 w-full appearance-none rounded-[14px] border border-vp-line bg-vp-surface px-4 pt-3.5 pb-1",
                       },
                       // Hide postal code - billing address is already collected
                       hidePostalCode: true,
@@ -356,7 +352,7 @@ export default function InvoicePaymentDialog({
                     }}
                   />
                   {cardError && (
-                    <p className="text-sm text-red-500 mt-2">{cardError}</p>
+                    <p role="alert" className="mt-2 text-[13px] text-vp-danger">{cardError}</p>
                   )}
                 </div>
               )}
@@ -364,26 +360,26 @@ export default function InvoicePaymentDialog({
               {/* Show loading state for Stripe when waiting for clientSecret */}
               {isStripe(selectedPaymentMethod) && !invoice?.paymentCollection?.paymentSessions?.find((s: { isSelected: boolean; data?: { clientSecret?: string } }) => s.isSelected && s.data?.clientSecret) && (
                 <div className="mt-5">
-                  <p className="text-base font-semibold mb-1">Enter your card details:</p>
-                  <div className="h-11 bg-muted rounded animate-pulse"></div>
+                  <p className="mb-1.5 text-[13px] font-medium text-vp-ink-2">Card</p>
+                  <div className="h-12 animate-pulse rounded-[14px] bg-vp-well"></div>
                 </div>
               )}
 
 
               {/* Terms and Payment Button */}
-              <div className="text-sm text-muted-foreground mb-4">
-                By clicking Pay Invoice, you confirm payment for the selected orders.
+              <div className="mb-4 text-[13px] text-vp-ink-2">
+                By clicking Pay invoice, you confirm payment for the selected orders.
               </div>
 
               <div className="w-full">
                 {!selectedPaymentMethod ? (
-                  <div className="h-12 bg-muted rounded animate-pulse flex items-center justify-center">
-                    <span className="text-sm text-muted-foreground">Select a payment method</span>
+                  <div className="flex h-12 items-center justify-center rounded-full bg-vp-well">
+                    <span className="text-[14px] text-vp-ink-3">Select a payment method</span>
                   </div>
                 ) : paymentMethodSwitching ? (
-                  <div className="h-12 bg-muted rounded animate-pulse flex items-center justify-center">
-                    <RiLoader2Fill className="h-4 w-4 animate-spin mr-2" />
-                    <span className="text-sm text-muted-foreground">Loading payment method...</span>
+                  <div className="flex h-12 items-center justify-center rounded-full bg-vp-well">
+                    <RiLoader2Fill className="mr-2 h-4 w-4 animate-spin text-vp-ink-3" />
+                    <span className="text-[14px] text-vp-ink-3">Loading payment method...</span>
                   </div>
                 ) : (
                   <InvoicePaymentButton 
@@ -404,11 +400,11 @@ export default function InvoicePaymentDialog({
   // Show region selection (like checkout shows cart items)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="vape-sf w-[calc(100%-32px)] rounded-[22px] border-vp-line bg-vp-bg text-vp-ink sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Select Invoice Region</DialogTitle>
-          <DialogDescription>
-            Choose which region's unpaid orders to pay
+          <DialogTitle className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em]">Pay balance</DialogTitle>
+          <DialogDescription className="text-[13px] text-vp-ink-2">
+            Region
           </DialogDescription>
         </DialogHeader>
 
@@ -416,19 +412,16 @@ export default function InvoicePaymentDialog({
           {unpaidLineItems.success && unpaidLineItems.regions?.length > 0 ? (
             <RadioGroup value={selectedRegion || ""} onValueChange={handleRegionSelect}>
               {unpaidLineItems.regions.map((regionData: any) => (
-                <div key={regionData.region.id} className="flex items-center space-x-2 p-3 border rounded-lg">
+                <div key={regionData.region.id} className="flex min-h-14 items-center gap-3 rounded-[14px] border border-vp-line bg-vp-surface px-4 py-3">
                   <RadioGroupItem value={regionData.region.id} id={regionData.region.id} />
                   <Label htmlFor={regionData.region.id} className="flex-1 cursor-pointer">
                     <div className="flex items-center justify-between">
+                      <span className="font-medium text-vp-ink">{regionData.region.name}</span>
                       <div className="flex items-center gap-2">
-                        <StoreIcon className="h-4 w-4" />
-                        <span className="font-medium">{regionData.region.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">
+                        <span className="font-vp-mono text-[12px] text-vp-ink-2">
                           {regionData.itemCount} {regionData.itemCount === 1 ? 'order' : 'orders'}
-                        </Badge>
-                        <span className="font-semibold text-green-600">
+                        </span>
+                        <span className="font-vp-mono text-[14px] font-medium text-vp-ink">
                           {regionData.formattedTotalAmount}
                         </span>
                       </div>
@@ -438,21 +431,23 @@ export default function InvoicePaymentDialog({
               ))}
             </RadioGroup>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              No unpaid orders found
+            <div className="vp-band px-4 py-8 text-[15px] text-vp-ink-2">
+              No unpaid orders
             </div>
           )}
 
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+            <button type="button" className={secondaryButtonClass} onClick={onClose}>
               Cancel
-            </Button>
-            <Button 
+            </button>
+            <button
+              type="button"
+              className={primaryButtonClass}
               onClick={handleCreateInvoiceWithPaymentSessions}
               disabled={!selectedRegion || loading}
             >
-              {loading ? "Creating..." : "Continue to Payment"}
-            </Button>
+              {loading ? "Creating..." : "Continue to payment"}
+            </button>
           </div>
         </div>
       </DialogContent>

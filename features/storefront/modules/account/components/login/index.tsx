@@ -1,9 +1,11 @@
-import { login } from "@/features/storefront/lib/data/user" 
-import { LOGIN_VIEW } from "@/features/storefront/modules/account/templates/login-template" 
-import ErrorMessage from "@/features/storefront/modules/checkout/components/error-message" 
-import { SubmitButton } from "@/features/storefront/modules/checkout/components/submit-button" 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+"use client"
+
+import { login } from "@/features/storefront/lib/data/user"
+import { LOGIN_VIEW } from "@/features/storefront/modules/account/templates/login-template"
+import ErrorMessage from "@/features/storefront/modules/checkout/components/error-message"
+import { SubmitButton } from "@/features/storefront/modules/checkout/components/submit-button"
+import AuthSwitch from "@/features/storefront/modules/account/components/auth-switch"
+import { fieldClass, labelClass, primaryButtonClass } from "@/features/storefront/modules/account/components/account-ui"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { useState } from "react"
 import { useActionState } from "react"
@@ -19,75 +21,57 @@ const Login = ({ setCurrentView }: Props) => {
   const toggleVisibility = () => setIsVisible((prev) => !prev)
 
   return (
-    <div
-      className="max-w-sm w-full flex flex-col items-center"
-      data-testid="login-page"
-    >
-      <h1 className="text-base leading-6 font-semibold uppercase mb-6">Welcome back</h1>
-      <p className="text-center text-sm leading-6 font-normal text-foreground mb-8">
-        Sign in to access an enhanced shopping experience.
-      </p>
-      <form className="w-full" action={formAction}>
-        <div className="flex flex-col w-full gap-y-2">
-          <div className="flex flex-col space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Email"
-              title="Enter a valid email address."
-              autoComplete="email"
+    <div className="flex w-full max-w-[400px] flex-col gap-6" data-testid="login-page">
+      <AuthSwitch
+        current={LOGIN_VIEW.SIGN_IN}
+        setCurrentView={setCurrentView}
+        testIds={{ [LOGIN_VIEW.REGISTER]: "register-button" }}
+      />
+      <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink">Sign in</h1>
+      <form className="flex w-full flex-col gap-4" action={formAction}>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="email" className={labelClass}>Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            title="Enter a valid email address."
+            autoComplete="email"
+            inputMode="email"
+            required
+            data-testid="email-input"
+            className={fieldClass}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="password" className={labelClass}>Password</label>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={isVisible ? "text" : "password"}
+              autoComplete="current-password"
               required
-              data-testid="email-input"
+              data-testid="password-input"
+              className={`${fieldClass} pe-12`}
             />
-          </div>
-          <div className="flex flex-col space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                name="password"
-                type={isVisible ? "text" : "password"}
-                placeholder="Password"
-                autoComplete="current-password"
-                required
-                data-testid="password-input"
-                className="pe-11"
-              />
-              <button
-                className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 end-0 flex h-full min-h-11 w-11 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                type="button"
-                onClick={toggleVisibility}
-                aria-label={isVisible ? "Hide password" : "Show password"}
-                aria-pressed={isVisible}
-                tabIndex={-1}
-              >
-                {isVisible ? (
-                  <EyeOffIcon size={16} aria-hidden="true" />
-                ) : (
-                  <EyeIcon size={16} aria-hidden="true" />
-                )}
-              </button>
-            </div>
+            <button
+              className="absolute inset-y-0 end-0 flex w-12 items-center justify-center rounded-e-[14px] text-vp-ink-3 outline-none hover:text-vp-ink focus-visible:text-vp-ink"
+              type="button"
+              onClick={toggleVisibility}
+              aria-label={isVisible ? "Hide password" : "Show password"}
+              aria-pressed={isVisible}
+              tabIndex={-1}
+            >
+              {isVisible ? <EyeOffIcon size={18} aria-hidden="true" /> : <EyeIcon size={18} aria-hidden="true" />}
+            </button>
           </div>
         </div>
         <ErrorMessage error={message} data-testid="login-error-message" />
-        <SubmitButton data-testid="sign-in-button" className="w-full mt-6">
+        <SubmitButton data-testid="sign-in-button" className={`${primaryButtonClass} mt-2 w-full`}>
           Sign in
         </SubmitButton>
       </form>
-      <span className="text-center text-foreground text-xs leading-5 font-normal mt-6">
-        Not a member?{" "}
-        <button
-          onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
-          className="underline"
-          data-testid="register-button"
-        >
-          Join us
-        </button>
-        .
-      </span>
     </div>
   )
 }

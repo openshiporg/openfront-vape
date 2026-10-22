@@ -1,6 +1,6 @@
 "use client"
 
-import { X } from "lucide-react"
+import { ChevronLeft } from "lucide-react"
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
 import Help from "@/features/storefront/modules/order/components/help"
 import Items from "@/features/storefront/modules/order/components/items"
@@ -19,26 +19,31 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   order,
 }) => {
   return (
-    <div className="flex flex-col justify-center gap-y-4">
-      <div className="flex gap-2 justify-between items-center">
-        <h1 className="text-3xl font-semibold">Order details</h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between gap-4">
+        <p className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3">Order details</p>
         <LocalizedClientLink
           href="/account/orders"
-          className="flex gap-2 items-center text-muted-foreground hover:text-foreground"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-vp-well pl-3 pr-4 text-[14px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
           data-testid="back-to-overview-button"
         >
-          <X /> Back to overview
+          <ChevronLeft className="size-4" /> Orders
         </LocalizedClientLink>
       </div>
       <div
-        className="flex flex-col gap-4 h-full bg-background w-full"
+        className="flex w-full flex-col gap-8"
         data-testid="order-details-container"
       >
         <OrderDetails order={order} showStatus />
-        <Items items={order.lineItems} region={order.region} />
+        <section className="flex flex-col gap-4" aria-label="Items">
+          <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Items</h2>
+          <Items items={order.lineItems} region={order.region} />
+        </section>
+        <div className="rounded-[22px] border border-vp-line bg-vp-surface p-5 sm:p-6">
+          <OrderSummary order={order} />
+        </div>
         <FulfillmentCard order={order} />
         <ShippingDetails order={order} />
-        <OrderSummary order={order} />
         <Help />
       </div>
     </div>

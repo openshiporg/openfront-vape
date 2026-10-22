@@ -1,16 +1,10 @@
 "use client"
 
 import React, { useEffect, useState, useActionState } from "react"
-import { Pencil, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox" // Added Checkbox
-import { Label } from "@/components/ui/label" // Added Label
 import { RiLoader2Fill } from "@remixicon/react"
+import { Dialog } from "@/components/ui/dialog"
 
 import useToggleState from "@/features/storefront/lib/hooks/use-toggle-state"
-import CountrySelect from "@/features/storefront/modules/checkout/components/country-select"
-import Input from "@/features/storefront/modules/common/components/input"
-import Modal from "@/features/storefront/modules/common/components/modal"
 import { SubmitButton } from "@/features/storefront/modules/checkout/components/submit-button"
 import {
   deleteCustomerShippingAddress,
@@ -18,6 +12,13 @@ import {
 } from "@/features/storefront/lib/data/user"
 import { cn } from "@/lib/utils"
 import { StorefrontAddress, StorefrontRegion } from "@/features/storefront/types"
+import {
+  InlineError,
+  primaryButtonClass,
+  rowPillClass,
+  secondaryButtonClass,
+} from "@/features/storefront/modules/account/components/account-ui"
+import { AddressDialogContent, AddressFields } from "./address-fields"
 
 type EditAddressProps = {
   region: StorefrontRegion
@@ -64,33 +65,32 @@ const EditAddress: React.FC<EditAddressProps> = ({
     setRemoving(false)
   }
 
+  const f = formState.fields
+
   return (
     <>
       <div
         className={cn(
-          "border rounded-lg p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-colors",
-          {
-            "border-gray-900": isActive,
-          }
+          "flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5",
+          { "bg-vp-tint": isActive }
         )}
         data-testid="address-container"
       >
-        <div className="flex flex-col">
-          <h3
-            className="text-left text-sm leading-6 font-semibold"
-            data-testid="address-name"
-          >
-            {address.firstName} {address.lastName}
-          </h3>
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <h3 className="text-[15px] font-medium text-vp-ink" data-testid="address-name">
+              {address.firstName} {address.lastName}
+            </h3>
+            {address.isBilling && (
+              <span className="font-vp-mono text-[11px] uppercase tracking-[0.12em] text-vp-accent">Billing</span>
+            )}
+          </div>
           {address.company && (
-            <p
-              className="text-[0.8125rem] leading-5 font-normal text-foreground"
-              data-testid="address-company"
-            >
+            <p className="text-[14px] text-vp-ink-2" data-testid="address-company">
               {address.company}
             </p>
           )}
-          <div className="flex flex-col text-left text-sm leading-6 font-normal mt-2">
+          <div className="flex flex-col text-[14px] leading-[20px] text-vp-ink-2">
             <span data-testid="address-address">
               {address.address1}
               {address.address2 && <span>, {address.address2}</span>}
@@ -99,159 +99,66 @@ const EditAddress: React.FC<EditAddressProps> = ({
               {address.city}{address.province && `, ${address.province}`}
             </span>
             <span data-testid="address-postal-country">
-              {address.postalCode} {address.country?.iso2?.toUpperCase()}
+              <span className="font-vp-mono">{address.postalCode}</span>{" "}
+              <span className="font-vp-mono">{address.country?.iso2?.toUpperCase()}</span>
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-x-4">
-          <Button
-            onClick={open}
-            variant="outline"
-            data-testid="address-edit-button"
-            size="sm"
-          >
-            <Pencil />
+        <div className="flex shrink-0 items-center gap-2">
+          <button type="button" onClick={open} className={rowPillClass} data-testid="address-edit-button">
             Edit
-          </Button>
-          <Button
+          </button>
+          <button
+            type="button"
             onClick={removeAddress}
-            variant="destructive"
+            disabled={removing}
+            className={cn(rowPillClass, "text-vp-ink-2 hover:text-vp-danger")}
             data-testid="address-delete-button"
-            size="sm"
           >
-            {removing ? <RiLoader2Fill className="animate-spin" /> : <Trash2 />}
-            Remove
-          </Button>
+            {removing && <RiLoader2Fill className="size-4 animate-spin" />}
+            {removing ? "Removing..." : "Remove"}
+          </button>
         </div>
       </div>
 
-      <Modal isOpen={state} close={close} data-testid="edit-address-modal">
-        <Modal.Title>
-          Edit address
-        </Modal.Title>
-        <form action={formAction}>
-          <input type="hidden" name="addressId" value={address.id} />
-          <Modal.Body>
-            <div className="grid grid-cols-1 gap-y-2">
-              <div className="grid grid-cols-2 gap-x-2">
-                <Input
-                  label="First name"
-                  name="first_name"
-                  required
-                  autoComplete="given-name"
-                  defaultValue={formState.fields?.first_name ?? (address.firstName || undefined)}
-                  data-testid="first-name-input"
-                />
-                <Input
-                  label="Last name"
-                  name="last_name"
-                  required
-                  autoComplete="family-name"
-                  defaultValue={formState.fields?.last_name ?? (address.lastName || undefined)}
-                  data-testid="last-name-input"
-                />
-              </div>
-              <Input
-                label="Company"
-                name="company"
-                autoComplete="organization"
-                defaultValue={formState.fields?.company ?? (address.company || undefined)}
-                data-testid="company-input"
-              />
-              <Input
-                label="Address"
-                name="address_1"
-                required
-                autoComplete="address-line1"
-                defaultValue={formState.fields?.address_1 ?? (address.address1 || undefined)}
-                data-testid="address-1-input"
-              />
-              <Input
-                label="Apartment, suite, etc."
-                name="address_2"
-                autoComplete="address-line2"
-                defaultValue={formState.fields?.address_2 ?? (address.address2 || undefined)}
-                data-testid="address-2-input"
-              />
-              <Input
-                label="City"
-                name="city"
-                required
-                autoComplete="locality"
-                defaultValue={formState.fields?.city ?? (address.city || undefined)}
-                data-testid="city-input"
-              />
-              <div className="grid grid-cols-2 gap-x-2">
-                <Input
-                  label="State / Province"
-                  name="province"
-                  autoComplete="address-level1"
-                  defaultValue={formState.fields?.province ?? (address.province || undefined)}
-                  data-testid="state-input"
-                />
-                <Input
-                  label="ZIP / Postal code"
-                  name="postal_code"
-                  required
-                  autoComplete="postal-code"
-                  defaultValue={formState.fields?.postal_code ?? (address.postalCode || undefined)}
-                  data-testid="postal-code-input"
-                />
-              </div>
-              <CountrySelect
-                name="country_code"
-                region={region}
-                required
-                autoComplete="country"
-                defaultValue={address.country?.iso2 || undefined}
-                data-testid="country-select"
-              />
-              <div className="flex items-center gap-x-2 mt-2">
-                <Checkbox
-                  id="is_billing"
-                  name="is_billing"
-                  value="true"
-                  defaultChecked={!!address.isBilling}
-                  data-testid="billing-checkbox"
-                />
-                <Label
-                  htmlFor="is_billing"
-                  className="!text-[0.8125rem] leading-5 font-normal text-foreground"
-                  data-testid="billing-label"
-                >
-                  Set as default billing address
-                </Label>
-              </div>
-              <Input
-                label="Phone"
-                name="phone"
-                autoComplete="phone"
-                defaultValue={formState.fields?.phone ?? (address.phone || undefined)}
-                data-testid="phone-input"
-              />
-            </div>
-            {formState.error && (
-              <div className="text-rose-500 text-xs leading-5 font-normal py-2">
-                {formState.error}
-              </div>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <div className="flex gap-3 mt-6">
-              <Button
+      <Dialog open={state} onOpenChange={(isOpen) => !isOpen && close()}>
+        <AddressDialogContent title="Edit address" data-testid="edit-address-modal">
+          <form action={formAction} className="flex flex-col gap-5">
+            <input type="hidden" name="addressId" value={address.id} />
+            <AddressFields
+              region={region}
+              idPrefix={`edit-address-${address.id}`}
+              defaults={{
+                first_name: f?.first_name ?? (address.firstName || undefined),
+                last_name: f?.last_name ?? (address.lastName || undefined),
+                company: f?.company ?? (address.company || undefined),
+                address_1: f?.address_1 ?? (address.address1 || undefined),
+                address_2: f?.address_2 ?? (address.address2 || undefined),
+                city: f?.city ?? (address.city || undefined),
+                province: f?.province ?? (address.province || undefined),
+                postal_code: f?.postal_code ?? (address.postalCode || undefined),
+                country_code: address.country?.iso2 || undefined,
+                phone: f?.phone ?? (address.phone || undefined),
+                is_billing: !!address.isBilling,
+              }}
+            />
+            {formState.error && <InlineError>{formState.error}</InlineError>}
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
                 type="reset"
-                variant="secondary"
                 onClick={close}
-                className="h-10"
+                className={secondaryButtonClass}
                 data-testid="cancel-button"
               >
                 Cancel
-              </Button>
-              <SubmitButton data-testid="save-button">Save</SubmitButton>
+              </button>
+              <SubmitButton data-testid="save-button" className={primaryButtonClass}>
+                Save
+              </SubmitButton>
             </div>
-          </Modal.Footer>
-        </form>
-      </Modal>
+          </form>
+        </AddressDialogContent>
+      </Dialog>
     </>
   )
 }

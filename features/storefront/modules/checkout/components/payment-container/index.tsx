@@ -31,11 +31,10 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
   return (
     <div
       className={cn(
-        "flex flex-col gap-y-2 text-xs font-normal cursor-pointer py-4 border rounded-md px-8 mb-2", // Use Tailwind class, rounded-md, remove hover shadow
-        {
-          "border-primary": // Use Tailwind color
-            selectedPaymentOptionId === paymentProviderId,
-        }
+        "flex cursor-pointer flex-col gap-2 rounded-[14px] px-4 py-3 transition-colors",
+        selectedPaymentOptionId === paymentProviderId
+          ? "bg-vp-surface shadow-[0_1px_2px_rgb(20_24_22/0.12),0_0_0_0.5px_rgb(20_24_22/0.06)]"
+          : "hover:bg-vp-surface/60"
       )}
     >
       <RadioGroupItem
@@ -43,23 +42,24 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
         value={paymentProviderId}
         disabled={disabled}
         id={paymentProviderId}
+        className="sr-only"
       />
-      <div className="flex items-center justify-between ">
-        <div className="flex items-center gap-x-4">
+      <div className="flex min-h-8 items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
           <Radio checked={selectedPaymentOptionId === paymentProviderId} />
-          <p className="text-sm font-normal">
+          <p className="text-[15px] leading-[20px] font-medium text-vp-ink">
             {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
           </p>
           {isManual(paymentProviderId) && isDevelopment && (
             <PaymentTest className="hidden sm:block" />
           )}
         </div>
-        <span className="justify-self-end text-foreground">
+        <span className="flex-none text-vp-ink-2">
           {paymentInfoMap[paymentProviderId]?.icon}
         </span>
       </div>
       {isManual(paymentProviderId) && isDevelopment && (
-        <PaymentTest className="sm:hidden text-[10px]" />
+        <PaymentTest className="sm:hidden" />
       )}
       {children}
     </div>
@@ -87,15 +87,16 @@ export const StripeCardContainer = ({
     return {
       style: {
         base: {
-          fontFamily: "Inter, sans-serif",
-          color: "#424270",
+          fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif",
+          fontSize: "16px",
+          color: "#141816",
           "::placeholder": {
-            color: "rgb(107 114 128)",
+            color: "#878d89",
           },
         },
       },
       classes: {
-        base: "pt-3 pb-1 block w-full h-11 px-4 mt-0 bg-background border rounded-md appearance-none focus:outline-none focus:ring-0 border-border hover:bg-accent transition-all duration-300 ease-in-out", // Use Tailwind classes, remove focus shadow
+        base: "block h-12 w-full rounded-[14px] border border-vp-line bg-vp-surface px-4 pt-[15px] transition-colors hover:border-vp-ink-3",
       },
       // Hide postal code since we already collect it in the billing address form
       hidePostalCode: true,
@@ -111,9 +112,9 @@ export const StripeCardContainer = ({
     >
       {selectedPaymentOptionId === paymentProviderId &&
         (stripeReady ? (
-          <div className="my-4 transition-all duration-150 ease-in-out">
-            <p className="text-sm font-medium text-foreground mb-1">
-              Enter your card details:
+          <div className="my-2 flex flex-col gap-2">
+            <p className="text-[13px] leading-[18px] font-medium text-vp-ink-2">
+              Card details
             </p>
             <CardElement
               options={useOptions as StripeCardElementOptions}

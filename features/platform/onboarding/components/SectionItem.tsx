@@ -31,13 +31,13 @@ export const SectionItem: React.FC<SectionItemProps> = ({
   const getItemStyles = () => {
     switch (status) {
       case 'completed':
-        return 'bg-blue-50 dark:bg-blue-900/10 border-blue-400/20 dark:border-blue-700/50';
+        return 'bg-background text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.06)] dark:bg-zinc-800';
       case 'loading':
-        return 'bg-background border-blue-500/30 dark:border-blue-800';
+        return 'bg-background text-foreground ring-1 ring-inset ring-border';
       case 'error':
-        return 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-800';
+        return 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-300 dark:bg-red-900/20 dark:text-red-300 dark:ring-red-800';
       default:
-        return 'border-border';
+        return 'bg-muted text-muted-foreground dark:bg-muted/60';
     }
   };
 
@@ -46,11 +46,11 @@ export const SectionItem: React.FC<SectionItemProps> = ({
     switch (status) {
       case 'completed':
         return (
-          <CircleCheck className="mr-1.5 h-3.5 w-3.5 fill-blue-500 text-background" />
+          <CircleCheck className="mr-1.5 h-3.5 w-3.5 fill-emerald-500 text-background dark:fill-emerald-400" />
         );
       case 'loading':
         return (
-          <RiLoader4Line className="mr-1.5 h-3.5 w-3.5 animate-spin text-blue-500" />
+          <RiLoader4Line className="mr-1.5 h-3.5 w-3.5 animate-spin text-muted-foreground" />
         );
       case 'error':
         return (
@@ -90,7 +90,7 @@ export const SectionItem: React.FC<SectionItemProps> = ({
 
   return (
     <div
-      className={`inline-flex items-center px-2 py-1 border rounded-md text-xs ${getItemStyles()}`}
+      className={`inline-flex min-h-7 items-center rounded-full px-2.5 py-1 text-xs font-medium ${getItemStyles()}`}
     >
       {renderStatusIcon()}
       <span>{item}</span>
@@ -100,7 +100,7 @@ export const SectionItem: React.FC<SectionItemProps> = ({
             <TooltipTrigger asChild>
               <Info
                 className={`ml-2 h-3 w-3 cursor-help ${
-                  step === 'done' ? 'text-red-500' : 'text-blue-500'
+                  step === 'done' ? 'text-red-500' : 'text-muted-foreground'
                 }`}
                 aria-hidden={true}
               />
@@ -115,13 +115,13 @@ export const SectionItem: React.FC<SectionItemProps> = ({
                 {requiresEnvVar.vars.map((envVar, index) => (
                   <React.Fragment key={envVar}>
                     {index > 0 && ' and '}
-                    <code className="bg-zinc-100 dark:bg-zinc-800 px-1 rounded">
+                    <code className="mx-1 rounded bg-muted px-1 font-mono">
                       {envVar}
                     </code>
                   </React.Fragment>
                 ))}
                 in your
-                <code className="bg-zinc-100 dark:bg-zinc-800 px-1 rounded">
+                <code className="mx-1 rounded bg-muted px-1 font-mono">
                   .env
                 </code>
                 file

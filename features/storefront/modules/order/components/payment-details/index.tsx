@@ -1,5 +1,4 @@
 import { paymentInfoMap } from "@/features/storefront/lib/constants";
-import Divider from "@/features/storefront/modules/common/components/divider";
 
 import { StoreOrder } from "@/features/storefront/types/storefront";
 
@@ -11,40 +10,38 @@ const PaymentDetails = ({ order }: { order: StoreOrder }) => {
   const provider = paymentSession?.paymentProvider;
 
   return (
-    <div>
-      <h2 className="flex flex-row text-3xl font-medium my-6">Payment</h2>
-      <div>
-        {payment && provider?.code && (
-          <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-x-8 w-full">
-            <div className="flex flex-col w-full sm:w-1/3">
-              <p className="text-sm font-medium text-foreground mb-1">
-                Payment Method
-              </p>
-              <p className="text-sm font-normal text-muted-foreground">
-                {paymentInfoMap[provider.code]?.title}
-              </p>
-            </div>
-            <div className="flex flex-col w-full sm:w-2/3">
-              <p className="text-sm font-medium text-foreground mb-1">
-                Payment Details
-              </p>
-              <div className="flex items-center text-sm font-normal text-muted-foreground">
-                <div className="flex items-center h-7 w-fit mr-4">
-                  {paymentInfoMap[provider.code]?.icon}
-                </div>
-                <p>
-                  {`${order.total} paid at ${new Date(
-                    payment.createdAt
-                  ).toString()}`}
-                </p>
-              </div>
-            </div>
+    <section className="flex flex-col gap-4 border-t border-vp-line pt-5" aria-label="Payment">
+      <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Payment</h2>
+      {payment && provider?.code && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Method</p>
+            <p className="flex items-center gap-2 text-[14px] leading-[20px] text-vp-ink-2">
+              <span className="flex h-8 w-11 flex-none items-center justify-center rounded-[8px] bg-vp-well text-vp-ink">
+                {paymentInfoMap[provider.code]?.icon}
+              </span>
+              {paymentInfoMap[provider.code]?.title}
+            </p>
           </div>
-        )}
-      </div>
-
-      <Divider className="mt-8" />
-    </div>
+          <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
+            <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Paid</p>
+            <p className="text-[14px] leading-[20px] text-vp-ink-2">
+              <span className="font-vp-mono text-vp-ink">{order.total}</span>
+              {" on "}
+              <span className="font-vp-mono text-[13px]">
+                {new Date(payment.createdAt).toLocaleString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
+    </section>
   );
 };
 

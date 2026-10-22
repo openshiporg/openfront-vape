@@ -4,8 +4,7 @@ import { SortOptions } from "@/features/storefront/modules/store/components/refi
 import StoreTemplate from "@/features/storefront/modules/store/templates"
 
 export const metadata: Metadata = {
-  title: "Store",
-  description: "Explore all of our products.",
+  title: "Shop all",
 }
 
 type Params = {

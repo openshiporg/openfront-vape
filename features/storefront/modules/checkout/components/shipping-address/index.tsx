@@ -2,8 +2,19 @@ import React, { useState, useEffect, useMemo } from "react";
 import Checkbox from "@/features/storefront/modules/common/components/checkbox";
 import AddressSelect from "../address-select";
 import CountrySelect from "../country-select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input as BaseInput } from "@/components/ui/input";
+import { vpInput } from "@/features/storefront/modules/common/components/vp-classes";
+import { cn } from "@/lib/utils";
+
+// Placeholder doubles as the accessible name so the form stays one line per field.
+const Input = ({ className, placeholder, ...props }: React.ComponentProps<typeof BaseInput>) => (
+  <BaseInput
+    placeholder={placeholder}
+    aria-label={props["aria-label"] || placeholder}
+    className={cn(vpInput, className)}
+    {...props}
+  />
+);
 
 const ShippingAddress = ({
   customer,
@@ -96,141 +107,118 @@ const ShippingAddress = ({
   };
 
   return (
-    <>
+    <div className="flex flex-col gap-5">
       {customer && (addressesInRegion?.length || 0) > 0 && (
-        <div className="mb-4 flex flex-col gap-y-2">
-          <p className="text-sm text-muted-foreground">
-            {`Hi ${customer.firstName || ""}, do you want to use one of your saved addresses?`}
-          </p>
-          <AddressSelect
-            addresses={addressesInRegion}
-            cart={cart}
-            onSelect={handleAddressSelect}
-          />
-        </div>
+        <AddressSelect
+          addresses={addressesInRegion}
+          cart={cart}
+          onSelect={handleAddressSelect}
+          label="Saved addresses"
+        />
       )}
       <input
         type="hidden"
         name="selectedAddressId"
         value={selectedAddressId || ""}
       />
-      <div className="grid gap-4">
-        {/* First name and Last name - always together */}
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            placeholder="First name"
-            name="shippingAddress.firstName"
-            autoComplete="given-name"
-            value={formData["shippingAddress.firstName"]}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            placeholder="Last name"
-            name="shippingAddress.lastName"
-            autoComplete="family-name"
-            value={formData["shippingAddress.lastName"]}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* Address - full width on mobile, but can be 2 columns on larger screens */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          <Input
-            placeholder="Address"
-            name="shippingAddress.address1"
-            autoComplete="address-line1"
-            value={formData["shippingAddress.address1"]}
-            onChange={handleChange}
-            required
-            className="sm:col-span-1"
-          />
-          <Input
-            placeholder="Company"
-            name="shippingAddress.company"
-            value={formData["shippingAddress.company"]}
-            onChange={handleChange}
-            autoComplete="organization"
-            className="sm:col-span-1"
-          />
-        </div>
-
-        {/* City and State - together on mobile and desktop */}
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            placeholder="City"
-            name="shippingAddress.city"
-            autoComplete="address-level2"
-            value={formData["shippingAddress.city"]}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            placeholder="State / Province"
-            name="shippingAddress.province"
-            autoComplete="address-level1"
-            value={formData["shippingAddress.province"]}
-            onChange={handleChange}
-          />
-        </div>
-
-        {/* ZIP and Country - together on mobile, but can be 2 columns on larger screens */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-          <Input
-            placeholder="ZIP / Postal code"
-            name="shippingAddress.postalCode"
-            autoComplete="postal-code"
-            value={formData["shippingAddress.postalCode"]}
-            onChange={handleChange}
-            required
-          />
-          <div>
-            <CountrySelect
-              id="country"
-              name="shippingAddress.countryCode"
-              region={cart?.region}
-              value={formData["shippingAddress.countryCode"]}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-      </div>
-      <div className="my-8">
-        <Checkbox
-          label="Billing address same as shipping address"
-          name="same_as_billing"
-          checked={checked}
-          onChange={onChange}
+      <div className="grid grid-cols-2 gap-3">
+        <Input
+          placeholder="First name"
+          name="shippingAddress.firstName"
+          autoComplete="given-name"
+          value={formData["shippingAddress.firstName"]}
+          onChange={handleChange}
+          required
+        />
+        <Input
+          placeholder="Last name"
+          name="shippingAddress.lastName"
+          autoComplete="family-name"
+          value={formData["shippingAddress.lastName"]}
+          onChange={handleChange}
+          required
+        />
+        <Input
+          placeholder="Address"
+          name="shippingAddress.address1"
+          autoComplete="address-line1"
+          value={formData["shippingAddress.address1"]}
+          onChange={handleChange}
+          required
+          className="col-span-2 sm:col-span-1"
+        />
+        <Input
+          placeholder="Company (optional)"
+          name="shippingAddress.company"
+          value={formData["shippingAddress.company"]}
+          onChange={handleChange}
+          autoComplete="organization"
+          className="col-span-2 sm:col-span-1"
+        />
+        <Input
+          placeholder="City"
+          name="shippingAddress.city"
+          autoComplete="address-level2"
+          value={formData["shippingAddress.city"]}
+          onChange={handleChange}
+          required
+        />
+        <Input
+          placeholder="State / Province"
+          name="shippingAddress.province"
+          autoComplete="address-level1"
+          value={formData["shippingAddress.province"]}
+          onChange={handleChange}
+        />
+        <Input
+          placeholder="ZIP / Postal code"
+          name="shippingAddress.postalCode"
+          autoComplete="postal-code"
+          inputMode="text"
+          value={formData["shippingAddress.postalCode"]}
+          onChange={handleChange}
+          required
+          className="font-vp-mono"
+        />
+        <CountrySelect
+          id="country"
+          name="shippingAddress.countryCode"
+          region={cart?.region}
+          value={formData["shippingAddress.countryCode"]}
+          onChange={handleChange}
+          required
         />
       </div>
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            title="Enter a valid email address."
-            autoComplete="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            name="shippingAddress.phone"
-            autoComplete="tel"
-            value={formData["shippingAddress.phone"]}
-            onChange={handleChange}
-          />
-        </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="Email"
+          title="Enter a valid email address."
+          autoComplete="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+        <Input
+          id="phone"
+          name="shippingAddress.phone"
+          type="tel"
+          placeholder="Phone"
+          autoComplete="tel"
+          value={formData["shippingAddress.phone"]}
+          onChange={handleChange}
+          className="font-vp-mono"
+        />
       </div>
-    </>
+      <Checkbox
+        label="Billing address same as shipping address"
+        name="same_as_billing"
+        checked={checked}
+        onChange={onChange}
+      />
+    </div>
   );
 };
 

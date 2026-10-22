@@ -1,25 +1,52 @@
-// Removed Medusa UI import
+import { ChevronDown } from "lucide-react"
 
 import ItemsPreviewTemplate from "@/features/storefront/modules/cart/templates/preview"
 import DiscountCode from "@/features/storefront/modules/checkout/components/discount-code"
 import CartTotals from "@/features/storefront/modules/common/components/cart-totals"
-import Divider from "@/features/storefront/modules/common/components/divider"
 
+const SummaryBody = ({ cart }: { cart: any }) => (
+  <div className="flex flex-col gap-5">
+    <ItemsPreviewTemplate region={cart?.region} items={cart?.lineItems} />
+    <div className="border-b border-vp-line pb-2">
+      <DiscountCode cart={cart} />
+    </div>
+    <CartTotals data={cart} />
+  </div>
+)
+
+// Phone: a collapsed summary above the steps. Desktop: a sticky panel on the right.
 const CheckoutSummary = ({ cart }: { cart: any }) => {
+  const count = cart?.lineItems?.reduce((acc: number, item: any) => acc + (item.quantity || 0), 0) || 0
+
   return (
-    <div className="sticky top-0 flex flex-col-reverse sm:flex-col gap-y-8 py-8 sm:py-0 ">
-      <div className="w-full bg-background flex flex-col">
-        <Divider className="my-6 sm:hidden" />
-        <h2 className="flex flex-row text-3xl font-medium items-baseline">
-          In your Cart
-        </h2>
-        <Divider className="my-6" />
-        <CartTotals data={cart} />
-        <ItemsPreviewTemplate region={cart?.region} items={cart?.lineItems} />
-        <div className="my-6">
-          <DiscountCode cart={cart} />
+    <div className="lg:col-start-2 lg:row-start-2">
+      <details className="group rounded-[22px] border border-vp-line bg-vp-surface lg:hidden">
+        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 [&::-webkit-details-marker]:hidden">
+          <span className="flex items-baseline gap-2 text-[15px] font-medium text-vp-ink">
+            Summary
+            <span className="font-vp-mono text-[12px] text-vp-ink-3">
+              {count} {count === 1 ? "item" : "items"}
+            </span>
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="font-vp-mono text-[15px] font-medium text-vp-ink">{cart?.total}</span>
+            <ChevronDown className="size-4 text-vp-ink-3 transition-transform group-open:rotate-180" />
+          </span>
+        </summary>
+        <div className="px-4 pb-4">
+          <SummaryBody cart={cart} />
         </div>
-      </div>
+      </details>
+
+      <aside className="sticky top-6 hidden rounded-[22px] border border-vp-line bg-vp-surface p-6 lg:block">
+        <div className="mb-5 flex items-baseline justify-between gap-3">
+          <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Summary</h2>
+          <span className="font-vp-mono text-[12px] text-vp-ink-3">
+            {count} {count === 1 ? "item" : "items"}
+          </span>
+        </div>
+        <SummaryBody cart={cart} />
+      </aside>
     </div>
   )
 }

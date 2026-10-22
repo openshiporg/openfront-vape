@@ -42,17 +42,17 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
 
             {/* Section header with number badge */}
             <div className="flex items-center space-x-3 mb-2 relative">
-              <div className="inline-flex size-6 items-center justify-center rounded-sm border border-border bg-background text-sm text-foreground shadow-sm z-10">
-                {section.id}
+              <div className="z-10 inline-flex size-6 items-center justify-center rounded-full bg-muted font-mono text-[11px] tabular-nums text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] ring-1 ring-inset ring-border/60">
+                {String(section.id).padStart(2, '0')}
               </div>
-              <Label className="text-sm font-medium text-foreground">
+              <Label className="text-sm font-semibold text-foreground">
                 {section.label}
               </Label>
             </div>
 
             {/* Section items */}
             <div className="pl-9">
-              <div className="flex flex-wrap gap-2 pb-6">
+              <div className="flex flex-wrap gap-1.5 pb-6">
                 {/* Special case for payment providers with tooltips */}
                 {section.type === 'paymentProviders' && selectedTemplate === 'full' ? (
                   <>

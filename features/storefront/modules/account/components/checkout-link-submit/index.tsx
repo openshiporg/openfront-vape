@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { Button } from "@/components/ui/button";
 import type { CheckoutLinkActionState } from "@/features/storefront/lib/data/checkout-link-read-state";
+import { primaryButtonClass } from "@/features/storefront/modules/account/components/account-ui";
 
 type CheckoutLinkSubmitProps = {
   action: (
@@ -20,12 +20,17 @@ export default function CheckoutLinkSubmit({ action }: CheckoutLinkSubmitProps) 
   return (
     <>
       <form action={formAction}>
-        <Button type="submit" disabled={pending} data-testid="checkout-link-continue-button" variant="default" size="sm">
-          Continue to checkout
-        </Button>
+        <button
+          type="submit"
+          disabled={pending}
+          data-testid="checkout-link-continue-button"
+          className={`${primaryButtonClass} w-full sm:w-auto`}
+        >
+          {pending ? "Continuing..." : "Continue to checkout"}
+        </button>
       </form>
       {state.status === "error" && (
-        <p className="mt-3 text-sm text-destructive" role="alert" data-testid="checkout-link-action-error">
+        <p className="mt-3 text-[13px] text-vp-danger" role="alert" data-testid="checkout-link-action-error">
           We couldn&apos;t continue. Refresh to try again.
         </p>
       )}

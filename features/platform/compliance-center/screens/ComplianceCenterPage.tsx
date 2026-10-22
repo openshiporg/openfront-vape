@@ -1,21 +1,19 @@
 import Link from 'next/link';
-import { AlertTriangle, ArrowUpRight, CheckCircle2, CircleSlash2 } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 
 import { PageContainer } from '@/features/dashboard/components/PageContainer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dot, ListBand, PageTitle, SectionTitle } from '@/features/platform/components/vape-ui';
 import { getComplianceReadiness } from '../actions/getReadiness';
 import { MerchantSafetyActions } from '../components/MerchantSafetyActions';
 
 const resources = [
-  ['Merchant authority', 'Profiles, licenses, PACT registration, owner and kill switch', '/dashboard/regulated-merchant-profiles'],
+  ['Merchant authority', 'Profiles, licenses, PACT, kill switch', '/dashboard/regulated-merchant-profiles'],
   ['Jurisdictions & policies', 'Authority sources and rule sets', '/dashboard/jurisdictions'],
-  ['Product evidence', 'Variant classifications and product authorizations', '/dashboard/regulated-product-classifications'],
-  ['Provider approvals', 'Identity, registry, tax, payment and carrier approvals', '/dashboard/provider-approvals'],
-  ['Decision ledger', 'Compliance decisions and events', '/dashboard/compliance-decisions'],
-  ['Reports', 'Report runs and submission receipts', '/dashboard/compliance-report-runs'],
+  ['Product evidence', 'Classifications and authorizations', '/dashboard/regulated-product-classifications'],
+  ['Provider approvals', 'Identity, registry, tax, payment, carrier', '/dashboard/provider-approvals'],
+  ['Decision ledger', 'Decisions and events', '/dashboard/compliance-decisions'],
+  ['Reports', 'Report runs and receipts', '/dashboard/compliance-report-runs'],
 ] as const;
 
 const breadcrumbs = [
@@ -24,19 +22,15 @@ const breadcrumbs = [
   { type: 'page' as const, label: 'Compliance Center' },
 ];
 
-const header = (
-  <div>
-    <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
-      Compliance Center
-    </h1>
-    <p className="text-muted-foreground">
-      Merchant authority, policies, product evidence and reports.
-    </p>
-  </div>
-);
-
 function label(code: string) {
   return code.toLowerCase().replaceAll('_', ' ').replace(/\b\w/g, character => character.toUpperCase());
+}
+
+function reportTone(status: string) {
+  const value = status.toLowerCase();
+  if (['submitted', 'accepted', 'completed', 'generated'].includes(value)) return 'ok' as const;
+  if (['failed', 'rejected', 'error'].includes(value)) return 'danger' as const;
+  return 'muted' as const;
 }
 
 export async function ComplianceCenterPage() {
@@ -44,94 +38,169 @@ export async function ComplianceCenterPage() {
 
   if (!response.success) {
     return (
-      <PageContainer title="Compliance Center" header={header} breadcrumbs={breadcrumbs}>
+      <PageContainer title="Compliance Center" header={<PageTitle title="Compliance Center" />} breadcrumbs={breadcrumbs}>
         <div className="px-4 md:px-6 space-y-4">
           <Alert variant="destructive">
             <AlertDescription>
               Failed to load compliance records: {response.error}
             </AlertDescription>
           </Alert>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/platform/compliance">Retry</Link>
-          </Button>
+          <Link
+            href="/dashboard/platform/compliance"
+            className="inline-flex h-9 items-center rounded-full bg-muted px-4 text-sm font-medium text-foreground"
+          >
+            Retry
+          </Link>
         </div>
       </PageContainer>
     );
   }
 
   const readiness = response.data;
+  const header = (
+    <PageTitle
+      title="Compliance Center"
+      tone={readiness.launchReady ? 'ok' : 'danger'}
+      state={readiness.launchReady ? 'Sales enabled' : 'Sales disabled'}
+      meta={readiness.transactionMode ? `Mode: ${label(readiness.transactionMode)}` : undefined}
+    />
+  );
+
+  const counts = [
+    ['Profiles', readiness.profiles.length],
+    ['Policies', readiness.activeRuleSets.length],
+    ['Classifications', readiness.approvedClassifications.length],
+    ['Approvals', readiness.activeProviderApprovals.length],
+  ] as const;
 
   return (
     <PageContainer title="Compliance Center" header={header} breadcrumbs={breadcrumbs}>
-      <div className="px-4 md:px-6 pb-8 space-y-8">
-        <Card className={readiness.launchReady ? 'border-emerald-500/40' : 'border-amber-500/40'}>
-          <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2 text-base">
-              {readiness.launchReady ? <CheckCircle2 className="size-5 text-emerald-600" /> : <CircleSlash2 className="size-5 text-amber-600" />}
-              Launch status
-              <Badge variant={readiness.launchReady ? 'default' : 'destructive'} className="w-fit">
-                {readiness.launchReady ? 'Sales enabled' : 'Sales disabled'}
-              </Badge>
-            </CardTitle>
-            <CardDescription>{readiness.claimBoundary}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-[1fr_18rem]">
-            <div className="space-y-2">
+      <div className="px-4 md:px-6 pb-10 space-y-10">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <div>
+            <SectionTitle meta={readiness.blockers.length}>Blockers</SectionTitle>
+            <ListBand>
               {readiness.blockers.length ? readiness.blockers.map(blocker => (
-                <div key={blocker} className="flex items-start gap-2 rounded-md bg-muted/60 px-3 py-2 text-sm">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" /> {label(blocker)}
+                <div key={blocker} className="flex items-baseline gap-2.5 px-4 py-3 text-sm text-foreground">
+                  <Dot tone="warn" />
+                  {label(blocker)}
                 </div>
-              )) : <p className="text-sm text-emerald-700">All checks pass.</p>}
-            </div>
-            <dl className="grid grid-cols-2 gap-3 rounded-md border p-4 text-sm">
-              <div><dt className="text-muted-foreground">Profiles</dt><dd className="text-xl font-semibold">{readiness.profiles.length}</dd></div>
-              <div><dt className="text-muted-foreground">Policies</dt><dd className="text-xl font-semibold">{readiness.activeRuleSets.length}</dd></div>
-              <div><dt className="text-muted-foreground">Classifications</dt><dd className="text-xl font-semibold">{readiness.approvedClassifications.length}</dd></div>
-              <div><dt className="text-muted-foreground">Approvals</dt><dd className="text-xl font-semibold">{readiness.activeProviderApprovals.length}</dd></div>
-            </dl>
-          </CardContent>
-        </Card>
-
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold">Safety controls</h2>
-          {readiness.profiles.length === 0 && <p className="rounded-lg border p-4 text-sm text-muted-foreground">No merchant profiles yet.</p>}
-          {readiness.profiles.map(profile => (
-            <Card key={profile.id}>
-              <CardHeader>
-                <CardTitle className="text-base">{profile.legalName}</CardTitle>
-                <CardDescription>{label(profile.status)} · Kill switch {profile.killSwitch ? 'on' : 'off'}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <MerchantSafetyActions profileId={profile.id} canStop={readiness.canStop} canExport={readiness.canExport} />
-              </CardContent>
-            </Card>
-          ))}
+              )) : (
+                <div className="flex items-baseline gap-2.5 px-4 py-3 text-sm text-foreground">
+                  <Dot tone="ok" />
+                  All checks pass
+                </div>
+              )}
+            </ListBand>
+            {readiness.claimBoundary && (
+              <p className="mt-3 text-xs text-muted-foreground">{readiness.claimBoundary}</p>
+            )}
+          </div>
+          <div>
+            <SectionTitle>Records in force</SectionTitle>
+            <ListBand className="grid grid-cols-2 divide-y-0">
+              {counts.map(([name, value], index) => (
+                <div
+                  key={name}
+                  className={`px-4 py-3 ${index % 2 === 0 ? 'border-r border-border' : ''} ${index < 2 ? 'border-b border-border' : ''}`}
+                >
+                  <span className="block text-xs text-muted-foreground">{name}</span>
+                  <span className="mt-1 block font-mono text-2xl font-medium tabular-nums text-foreground">{value}</span>
+                </div>
+              ))}
+            </ListBand>
+          </div>
         </section>
 
         <section>
-          <h2 className="mb-4 text-lg font-semibold">Provider status</h2>
-          <div className="grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-2 lg:grid-cols-5">
-            {readiness.integrationStates.map(integration => (
-              <div key={integration.purpose} className="bg-background p-4">
-                <p className="text-sm font-medium">{label(integration.purpose)}</p>
-                <p className={`mt-2 text-xs ${integration.status === 'recorded_active' ? 'text-emerald-600' : 'text-muted-foreground'}`}>
-                  {integration.status === 'recorded_active' ? 'Active' : 'Not configured'}
-                </p>
+          <SectionTitle meta={readiness.profiles.length}>Safety controls</SectionTitle>
+          <ListBand>
+            {readiness.profiles.length === 0 && (
+              <div className="px-4 py-3 text-sm text-muted-foreground">No merchant profiles</div>
+            )}
+            {readiness.profiles.map(profile => (
+              <div key={profile.id} className="grid gap-4 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <h3 className="text-sm font-semibold text-foreground">{profile.legalName}</h3>
+                    <span className="inline-flex items-baseline gap-1.5 text-xs text-muted-foreground">
+                      <Dot tone={profile.killSwitch ? 'danger' : 'ok'} />
+                      {profile.killSwitch ? 'Kill switch on' : 'Kill switch off'}
+                    </span>
+                  </div>
+                  <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs">
+                    <div className="flex gap-1.5"><dt className="text-muted-foreground">Status</dt><dd className="text-foreground">{label(profile.status)}</dd></div>
+                    <div className="flex gap-1.5"><dt className="text-muted-foreground">PACT</dt><dd className="text-foreground">{profile.pactRegistered ? 'Registered' : 'Not registered'}</dd></div>
+                  </dl>
+                </div>
+                <MerchantSafetyActions profileId={profile.id} canStop={readiness.canStop} canExport={readiness.canExport} />
               </div>
             ))}
+          </ListBand>
+        </section>
+
+        <section className="grid gap-10 lg:grid-cols-2">
+          <div>
+            <SectionTitle meta={readiness.integrationStates.filter(i => i.status === 'recorded_active').length + ' / ' + readiness.integrationStates.length}>
+              Providers
+            </SectionTitle>
+            <ListBand>
+              {readiness.integrationStates.map(integration => {
+                const active = integration.status === 'recorded_active';
+                return (
+                  <div key={integration.purpose} className="flex items-baseline justify-between gap-4 px-4 py-3">
+                    <span className="inline-flex items-baseline gap-2.5 text-sm font-medium text-foreground">
+                      <Dot tone={active ? 'ok' : 'muted'} />
+                      {label(integration.purpose)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{active ? 'Active' : 'Not configured'}</span>
+                  </div>
+                );
+              })}
+            </ListBand>
+          </div>
+
+          <div>
+            <SectionTitle meta={readiness.reportRuns?.length || 0}>Recent reports</SectionTitle>
+            <ListBand>
+              {(readiness.reportRuns || []).length === 0 && (
+                <div className="px-4 py-3 text-sm text-muted-foreground">No report runs</div>
+              )}
+              {(readiness.reportRuns || []).slice(0, 6).map(run => (
+                <div key={run.id} className="flex items-baseline justify-between gap-4 px-4 py-3">
+                  <span className="inline-flex items-baseline gap-2.5 text-sm font-medium text-foreground">
+                    <Dot tone={reportTone(run.status)} />
+                    {label(run.reportType)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {label(run.status)}
+                    {run.generatedAt && (
+                      <span className="ml-2 font-mono tabular-nums">{new Date(run.generatedAt).toISOString().slice(0, 10)}</span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </ListBand>
           </div>
         </section>
 
         <section>
-          <h2 className="mb-4 text-lg font-semibold">Records</h2>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <SectionTitle>Records</SectionTitle>
+          <ListBand className="sm:grid sm:grid-cols-2 sm:divide-y-0 xl:grid-cols-3">
             {resources.map(([title, description, href]) => (
-              <Card key={href}>
-                <CardHeader><CardTitle className="text-base">{title}</CardTitle><CardDescription>{description}</CardDescription></CardHeader>
-                <CardContent><Button asChild variant="outline" size="sm"><Link href={href}>Open <ArrowUpRight className="ml-2 size-4" /></Link></Button></CardContent>
-              </Card>
+              <Link
+                key={href}
+                href={href}
+                className="group flex items-start justify-between gap-4 border-border px-4 py-4 transition-colors hover:bg-background/60 max-sm:border-b max-sm:last:border-b-0 sm:border-b sm:[&:nth-last-child(-n+2)]:border-b-0 xl:[&:nth-last-child(-n+3)]:border-b-0"
+              >
+                <span>
+                  <span className="block text-sm font-medium text-foreground">{title}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">{description}</span>
+                </span>
+                <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+              </Link>
             ))}
-          </div>
+          </ListBand>
         </section>
       </div>
     </PageContainer>
