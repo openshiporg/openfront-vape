@@ -10,7 +10,7 @@ export type ComplianceReadiness = {
   integrationStates: Array<{ purpose: string; status: string }>;
   transactionMode: string;
   claimBoundary: string;
-  profiles: Array<{ id: string; legalName: string; status: string; pactRegistered: boolean; killSwitch: boolean }>;
+  profiles: Array<{ id: string; legalName: string; status: string; pactRegistered: boolean; killSwitch: boolean; effectiveAt?: string | null; expiresAt?: string | null }>;
   activeRuleSets: unknown[];
   approvedClassifications: unknown[];
   activeProviderApprovals: unknown[];

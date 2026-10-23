@@ -6,6 +6,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dot, ListBand, PageTitle, SectionTitle } from '@/features/platform/components/vape-ui';
 import { getComplianceReadiness } from '../actions/getReadiness';
 import { MerchantSafetyActions } from '../components/MerchantSafetyActions';
+import { AddApprovalButton } from '../components/ProviderApprovalSheet';
+import { keystoneClient } from '@/features/dashboard/lib/keystoneClient';
+import { missingStoreInfo } from '@/features/platform/store-settings/lib/store-info';
+import { PROVIDER_PURPOSE_LABELS } from '@/features/keystone/regulated/labels';
+
+const linkClass = 'inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline';
 
 const resources = [
   ['Merchant authority', 'Profiles, licenses, PACT, kill switch', '/dashboard/regulated-merchant-profiles'],
@@ -25,7 +31,10 @@ const breadcrumbs = [
 const PROFILES = '/dashboard/regulated-merchant-profiles';
 const APPROVALS = '/dashboard/provider-approvals';
 
-const BLOCKERS: Record<string, { title: string; detail: string; href: string; action: string }> = {
+type Blocker = { title: string; detail: string; href: string; action: string; purpose?: string };
+
+const BLOCKERS: Record<string, Blocker> = {
+  STORE_POLICIES_REQUIRED: { title: 'Store details and policies missing', detail: 'Publish them in Store Settings.', href: '/dashboard/platform/store', action: 'Store Settings' },
   ACTIVE_MERCHANT_PROFILE_REQUIRED: { title: 'No active merchant profile', detail: 'Set a merchant profile to Active with PACT evidence, origin and dates.', href: PROFILES, action: 'Profiles' },
   KILL_SWITCH_ENABLED: { title: 'Kill switch on', detail: 'Every active profile has its kill switch on.', href: PROFILES, action: 'Profiles' },
   LAUNCH_JURISDICTION_REQUIRED: { title: 'No launch jurisdiction', detail: 'Add a launch jurisdiction to the active merchant profile.', href: PROFILES, action: 'Profiles' },
@@ -34,20 +43,17 @@ const BLOCKERS: Record<string, { title: string; detail: string; href: string; ac
   CURRENT_PRODUCT_AND_FEDERAL_AUTHORITY_REQUIRED: { title: 'No sellable product evidence', detail: 'Approve a product classification with marketing review and a current federal authorization.', href: '/dashboard/regulated-product-classifications', action: 'Classifications' },
 };
 
-const PROVIDERS: Record<string, string> = {
-  identity: 'Identity verification',
-  payment: 'Payment',
-  tax: 'Tax',
-  carrier: 'Adult-signature carrier',
-  registry: 'Registry',
-};
+const PROVIDERS = PROVIDER_PURPOSE_LABELS;
 
-function blocker(code: string) {
+function blocker(code: string, missingInfo: string[]): Blocker {
   const known = BLOCKERS[code];
+  if (code === 'STORE_POLICIES_REQUIRED' && missingInfo.length) {
+    return { ...known, detail: `Missing: ${missingInfo.join(', ')}.` };
+  }
   if (known) return known;
   const purpose = code.match(/^([A-Z]+)_PROVIDER_AUTHORITY_REQUIRED$/)?.[1]?.toLowerCase();
   if (purpose) {
-    return { title: `No ${(PROVIDERS[purpose] || label(purpose)).toLowerCase()} provider approval`, detail: 'Record an active provider approval for this purpose.', href: `${APPROVALS}/create`, action: 'Add approval' };
+    return { title: `No ${(PROVIDERS[purpose] || label(purpose)).toLowerCase()} provider approval`, detail: 'Record an active provider approval for this purpose.', href: APPROVALS, action: 'Add approval', purpose };
   }
   return { title: label(code), detail: '', href: '', action: '' };
 }
@@ -94,6 +100,13 @@ export async function ComplianceCenterPage() {
 
   const readiness = response.data;
   const blockers = visibleBlockers(readiness.blockers);
+  const storeResponse = await keystoneClient<{ stores: Array<{ metadata: unknown }> }>(`query ComplianceStoreInfo { stores(take: 1) { metadata } }`);
+  const missingInfo = storeResponse.success ? missingStoreInfo(storeResponse.data.stores[0]?.metadata) : [];
+  const now = Date.now();
+  const profilesInForce = readiness.profiles.filter(profile =>
+    profile.status === 'active' &&
+    (!profile.effectiveAt || new Date(profile.effectiveAt).getTime() <= now) &&
+    (!profile.expiresAt || new Date(profile.expiresAt).getTime() > now));
   const header = (
     <PageTitle
       title="Compliance Center"
@@ -104,7 +117,7 @@ export async function ComplianceCenterPage() {
   );
 
   const counts = [
-    ['Profiles', readiness.profiles.length],
+    ['Profiles', profilesInForce.length],
     ['Policies', readiness.activeRuleSets.length],
     ['Classifications', readiness.approvedClassifications.length],
     ['Approvals', readiness.activeProviderApprovals.length],
@@ -112,13 +125,13 @@ export async function ComplianceCenterPage() {
 
   return (
     <PageContainer title="Compliance Center" header={header} breadcrumbs={breadcrumbs}>
-      <div className="px-4 md:px-6 pb-10 space-y-10">
+      <div className="px-4 md:px-6 pb-24 sm:pb-10 space-y-10">
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div>
             <SectionTitle meta={blockers.length}>Blockers</SectionTitle>
             <ListBand>
               {blockers.length ? blockers.map(code => {
-                const item = blocker(code);
+                const item = blocker(code, missingInfo);
                 return (
                   <div key={code} className="flex items-baseline justify-between gap-4 px-4 py-3">
                     <span className="min-w-0">
@@ -128,8 +141,12 @@ export async function ComplianceCenterPage() {
                       </span>
                       {item.detail && <span className="mt-0.5 block pl-[1.125rem] text-xs text-muted-foreground">{item.detail}</span>}
                     </span>
-                    {item.href && (
-                      <Link href={item.href} className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline">
+                    {item.purpose ? (
+                      <AddApprovalButton purpose={item.purpose} className={linkClass}>
+                        {item.action}
+                      </AddApprovalButton>
+                    ) : item.href && (
+                      <Link href={item.href} className={linkClass}>
                         {item.action}
                         <ArrowUpRight className="size-3" />
                       </Link>
@@ -212,10 +229,9 @@ export async function ComplianceCenterPage() {
                     {active ? (
                       <span className="text-xs text-muted-foreground">Active</span>
                     ) : (
-                      <Link href={`${APPROVALS}/create`} className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline">
-                        Not configured
-                        <ArrowUpRight className="size-3" />
-                      </Link>
+                      <AddApprovalButton purpose={integration.purpose} className={linkClass}>
+                        Add approval
+                      </AddApprovalButton>
                     )}
                   </div>
                 );

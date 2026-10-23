@@ -7,6 +7,7 @@ import { openfrontClient } from "../config";
 import { getAuthHeaders, getCartId, setCartId, removeCartId, setAuthToken } from "./cookies";
 import { redirect } from "next/navigation";
 import { getUser } from "./user";
+import { normalizeProvince, US_STATE_REQUIRED_ERROR } from "../util/us-states";
 import type { AddressCreateInput } from ".keystone/types";
 import { requireUpdatedCartAddresses } from "./cart-address-update-result";
 import { requireUpdatedCartRegion } from "./cart-region-update-result";
@@ -1010,6 +1011,16 @@ export async function setAddresses(currentState: any, formData: FormData) {
     return "Please choose a shipping address in the selected region.";
   }
 
+  // US addresses carry the two-letter state code the compliance engine matches on.
+  const shippingProvince = reuseSelectedAddress
+    ? null
+    : normalizeProvince(shippingCountryCode, submittedShippingAddress.province);
+  if (!reuseSelectedAddress && shippingProvince === null) return US_STATE_REQUIRED_ERROR;
+  const billingProvince = sameAsBilling
+    ? null
+    : normalizeProvince(formData.get("billingAddress.countryCode"), formData.get("billingAddress.province"));
+  if (!sameAsBilling && !reuseSelectedAddress && billingProvince === null) return US_STATE_REQUIRED_ERROR;
+
   // Reuse a saved address only when its server-owned fields still match the submission.
   if (reuseSelectedAddress && selectedAddress) {
     data.shippingAddress = {
@@ -1047,7 +1058,7 @@ export async function setAddresses(currentState: any, formData: FormData) {
       company: formData.get("shippingAddress.company"),
       postalCode: formData.get("shippingAddress.postalCode"),
       city: formData.get("shippingAddress.city"),
-      province: formData.get("shippingAddress.province"),
+      province: shippingProvince,
       phone: formData.get("shippingAddress.phone"),
       country: {
         connect: {
@@ -1189,7 +1200,7 @@ export async function setAddresses(currentState: any, formData: FormData) {
           company: billingText("company"),
           postalCode: billingText("postalCode"),
           city: billingText("city"),
-          province: billingText("province"),
+          province: billingProvince ?? "",
           phone: billingText("phone"),
           country: { connect: { iso2: billingText("countryCode") } },
           ...(addressOwnerId ? { user: { connect: { id: addressOwnerId } } } : {}),

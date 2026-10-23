@@ -65,6 +65,40 @@ const toMap = (items: Array<Record<string, any>> | null | undefined, field: stri
   return map;
 };
 
+// A seed region is kept when its code or name exists, or when one of its
+// countries already belongs to a region (connecting it would move it).
+const findExistingRegionId = (region: any, existing: ExistingRecords): string | undefined => {
+  const countries: Array<{ iso2: string }> = region?.countries || [];
+  const assignedRegionId = countries
+    .map((c) => existing.countries[key(c.iso2)]?.regionId)
+    .find(Boolean);
+  return (
+    existing.regionsByCode[key(region?.code)] ||
+    existing.regionsByName[key(region?.name)] ||
+    assignedRegionId ||
+    undefined
+  );
+};
+
+export type OnboardingPlanKey = 'store' | OnboardingSummaryKey;
+
+export interface OnboardingPlanSection {
+  // Item labels this run would create, matching the progress item names.
+  add: string[];
+  // Item labels that already exist and are kept.
+  existing: string[];
+  // Not created because the existing store cannot sell yet.
+  skipped: boolean;
+}
+
+export interface OnboardingPlan {
+  storeExisted: boolean;
+  sections: Record<OnboardingPlanKey, OnboardingPlanSection>;
+  nothingToAdd: boolean;
+}
+
+const regionLabel = (r: any) => `${r?.name || 'Unknown'} (${(r?.currencyCode || 'USD').toUpperCase()})`;
+
 const emptyCounts = (): Record<OnboardingSummaryKey, number> => ({
   regions: 0,
   paymentProviders: 0,
@@ -138,7 +172,7 @@ export function useOnboardingApi({
       const paymentProviderIds = skipRegulatedSeed
         ? skipPaymentProviders(currentJsonData, existing)
         : await createPaymentProviders(client, currentJsonData, existing);
-      const fulfillmentProviderIds = await createFulfillmentProvider(client, existing);
+      const fulfillmentProviderIds = await createFulfillmentProvider(client, currentJsonData, existing);
       const { createdRegions, regionIds } = await createRegions(client, currentJsonData, existing, currencyIds, paymentProviderIds, fulfillmentProviderIds, countryIds);
       await createShippingOptions(client, currentJsonData, existing, fulfillmentProviderIds, createdRegions);
       const categoryIds = await createCategories(client, currentJsonData, existing);
@@ -165,6 +199,105 @@ export function useOnboardingApi({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const canManageCompliance = async (client: GraphQLClient) => {
+    try {
+      const viewer = (await client.request(gql`
+        query OnboardingViewerRole {
+          authenticatedItem {
+            ... on User {
+              role {
+                canManageCompliance
+              }
+            }
+          }
+        }
+      `)) as { authenticatedItem: { role?: { canManageCompliance?: boolean | null } | null } | null };
+      return Boolean(viewer.authenticatedItem?.role?.canManageCompliance);
+    } catch {
+      return false;
+    }
+  };
+
+  // Read-only: what runOnboarding would create for the current data, using
+  // the same existing-records and readiness checks. Creates nothing.
+  const planOnboarding = async (): Promise<OnboardingPlan> => {
+    const data = currentJsonData || {};
+    const client = new GraphQLClient(GRAPHQL_ENDPOINT, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const existing = await loadExisting(client, data);
+    const storeExisted = Boolean(existing.storeId);
+    const skipRegulatedSeed = storeExisted && existing.salesBlocked;
+
+    const section = (): OnboardingPlanSection => ({ add: [], existing: [], skipped: false });
+    const sections: Record<OnboardingPlanKey, OnboardingPlanSection> = {
+      store: section(),
+      regions: section(),
+      paymentProviders: section(),
+      shipping: section(),
+      categories: section(),
+      collections: section(),
+      products: section(),
+    };
+
+    if (storeExisted) {
+      sections.store.existing.push(existing.storeName || 'Store');
+    } else {
+      sections.store.add.push(data.store?.name || 'Cloud Nine Vapor');
+    }
+    if (!existing.hasMerchantProfile && (await canManageCompliance(client))) {
+      sections.store.add.push('Compliance profile (draft)');
+    }
+
+    const createdRegionCodes: string[] = [];
+    for (const region of data.regions || []) {
+      if (findExistingRegionId(region, existing)) {
+        sections.regions.existing.push(regionLabel(region));
+      } else {
+        sections.regions.add.push(regionLabel(region));
+        createdRegionCodes.push(String(region.code));
+      }
+    }
+
+    for (const provider of data.paymentProviders || []) {
+      const name = provider.name || 'Unknown Provider';
+      if (existing.paymentProviders[key(provider.code)]) sections.paymentProviders.existing.push(name);
+      else if (!skipRegulatedSeed) sections.paymentProviders.add.push(name);
+    }
+    sections.paymentProviders.skipped = skipRegulatedSeed && (data.paymentProviders || []).length > 0;
+
+    for (const option of data.shipping_options || []) {
+      const name = option.name || 'Unknown Shipping';
+      const willCreate = createdRegionCodes.some(
+        (code) => !existing.shippingOptionKeys.has(key(`${option.name}-${code}`))
+      );
+      (willCreate ? sections.shipping.add : sections.shipping.existing).push(name);
+    }
+
+    for (const category of data.categories || []) {
+      const name = category.title || category.name || 'Unknown Category';
+      const found = existing.categoriesByHandle[key(category.handle)] || existing.categoriesByTitle[key(name)];
+      (found ? sections.categories.existing : sections.categories.add).push(name);
+    }
+
+    for (const collection of data.collections || []) {
+      const name = collection.title || 'Unknown Collection';
+      const found = existing.collectionsByHandle[key(collection.handle)] || existing.collectionsByTitle[key(name)];
+      (found ? sections.collections.existing : sections.collections.add).push(name);
+    }
+
+    for (const product of data.products || []) {
+      const name = product.title || 'Unknown Product';
+      const found = existing.productsByHandle[key(product.handle)] || existing.productsByTitle[key(name)];
+      if (found) sections.products.existing.push(name);
+      else if (!skipRegulatedSeed) sections.products.add.push(name);
+    }
+    sections.products.skipped = skipRegulatedSeed && (data.products || []).length > 0;
+
+    const nothingToAdd = Object.values(sections).every((s) => s.add.length === 0);
+    return { storeExisted, sections, nothingToAdd };
   };
 
   const loadExisting = async (client: GraphQLClient, data: any): Promise<ExistingRecords> => {
@@ -420,6 +553,8 @@ export function useOnboardingApi({
         currencyIds[code] = existing.currencies[code];
         continue;
       }
+      // A kept region keeps its own currency; nothing is created for it.
+      if (findExistingRegionId(region, existing)) continue;
 
       const regionName = `${region.name || 'Unknown'} (${(region.currencyCode || 'USD').toUpperCase()})`;
       setItemLoading('regions', regionName);
@@ -457,6 +592,8 @@ export function useOnboardingApi({
     const countryIds: IdMap = {};
 
     for (const region of data.regions || []) {
+      // A kept region keeps its own countries; nothing is created for it.
+      const regionKept = Boolean(findExistingRegionId(region, existing));
       for (const country of region.countries || []) {
         const iso2 = key(country.iso2);
         if (!iso2 || countryIds[iso2]) continue;
@@ -464,6 +601,7 @@ export function useOnboardingApi({
           countryIds[iso2] = existing.countries[iso2].id;
           continue;
         }
+        if (regionKept) continue;
 
         const mutation = gql`
           mutation CreateCountry($data: CountryCreateInput!) {
@@ -533,14 +671,18 @@ export function useOnboardingApi({
     return paymentProviderIds;
   };
 
-  const createFulfillmentProvider = async (client: GraphQLClient, existing: ExistingRecords) => {
-    setProgress('Creating fulfillment provider...');
+  const createFulfillmentProvider = async (client: GraphQLClient, data: any, existing: ExistingRecords) => {
     const fulfillmentProviderIds: IdMap = {};
 
     if (existing.fulfillmentProviders['fp_manual']) {
       fulfillmentProviderIds['fp_manual'] = existing.fulfillmentProviders['fp_manual'];
       return fulfillmentProviderIds;
     }
+    // Only new regions and their shipping options use it.
+    const anyNewRegion = (data.regions || []).some((region: any) => !findExistingRegionId(region, existing));
+    if (!anyNewRegion) return fulfillmentProviderIds;
+
+    setProgress('Creating fulfillment provider...');
 
     const fulfillmentMutation = gql`
       mutation CreateFulfillmentProvider($data: FulfillmentProviderCreateInput!) {
@@ -581,13 +723,7 @@ export function useOnboardingApi({
       const code = key(region.code);
       const countries: Array<{ iso2: string }> = region.countries || [];
 
-      // Skip a region whose code or name exists, or whose countries already
-      // belong to a region; connecting them here would move them.
-      const assignedRegionId = countries
-        .map((c) => existing.countries[key(c.iso2)]?.regionId)
-        .find(Boolean);
-      const existingRegionId =
-        existing.regionsByCode[code] || existing.regionsByName[key(region.name)] || assignedRegionId;
+      const existingRegionId = findExistingRegionId(region, existing);
       if (existingRegionId) {
         regionIds[code] = existingRegionId;
         summary.existing.regions += 1;
@@ -954,5 +1090,5 @@ export function useOnboardingApi({
     }
   };
 
-  return { runOnboarding };
+  return { runOnboarding, planOnboarding };
 }

@@ -4,6 +4,7 @@ import type { SortOptions } from '@/features/storefront/modules/store/components
 import { notFound } from "next/navigation"
 
 import { getCategoryByHandle } from "@/features/storefront/lib/data/categories"
+import { MainNotFoundMetadata } from "@/features/storefront/screens/MainLayout"
 import CategoryTemplate from "@/features/storefront/modules/categories/templates"
 
 // Type alias for props
@@ -39,33 +40,24 @@ type Props = {
 // }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params // Await params in Next.js 15
-  const handle = params.category[params.category.length - 1] // Get the last handle from the array
+  const params = await props.params
+  const handle = params.category[params.category.length - 1]
 
-  try {
-    // Fetch category using the new function and structure
-    const { productCategory } = await getCategoryByHandle(handle) as { productCategory: StorefrontProductCategory | null }
+  const { productCategory } = (await getCategoryByHandle(handle).catch(() => ({ productCategory: null }))) as {
+    productCategory: StorefrontProductCategory | null
+  }
 
-    if (!productCategory || (productCategory as any).isActive === false) {
-      notFound()
-    }
+  // Missing or inactive categories render the branded 404, so the tab says so too.
+  if (!productCategory || (productCategory as any).isActive === false) {
+    return MainNotFoundMetadata
+  }
 
-    // Assuming 'title' exists on the category object from the new API
-    const title = productCategory.title
-
-    // Use title for description since ProductCategory doesn't have a description field
-    const description = `${productCategory.title} category.`
-
-    return {
-      title: title,
-      description,
-      alternates: {
-        canonical: `${params.category.join("/")}`,
-      },
-    }
-  } catch (error) {
-    console.error("Error fetching category for metadata:", error) // Log error
-    notFound()
+  return {
+    title: productCategory.title,
+    description: `${productCategory.title} category.`,
+    alternates: {
+      canonical: `${params.category.join("/")}`,
+    },
   }
 }
 

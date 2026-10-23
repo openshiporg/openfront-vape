@@ -170,7 +170,7 @@ export async function getCustomerAnalytics(startDate: string, endDate: string, r
           ${regionFilter}
         }
       )
-      allUsersCount: usersCount
+      allUsersCount: usersCount(where: { ${regionFilter} })
     }
   `;
 

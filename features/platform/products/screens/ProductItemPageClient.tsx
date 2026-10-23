@@ -32,6 +32,7 @@ import { updateItemAction, deleteItemAction } from '../../../dashboard/actions/i
 import { VariantsTab } from '../components/VariantsTab'
 import { MediaTab } from '../components/MediaTab'
 import { ComplianceSection } from '../components/ComplianceSection'
+import { ClassifySheet } from '../components/ClassifySheet'
 import { explainProductSaveError, getProductCompliance, type ProductCompliance } from '../actions/compliance'
 
 
@@ -139,6 +140,7 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
   const [errorDialogValue, setErrorDialogValue] = useState<Error | null>(null)
   
   const [compliance, setCompliance] = useState<ProductCompliance | null>(null)
+  const [classifyVariantId, setClassifyVariantId] = useState<string | null>(null)
 
   useEffect(() => { setValue(initialValue) }, [initialValue])
 
@@ -366,7 +368,7 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
                 </section>
               )}
 
-              {compliance && <ComplianceSection compliance={compliance} />}
+              {compliance && <ComplianceSection compliance={compliance} onClassify={setClassifyVariantId} />}
 
               {Object.keys(fieldsSplit.organizationFields).length > 0 && (
                 <section>
@@ -448,6 +450,13 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
           </div>
         </main>
       </div>
+
+      <ClassifySheet
+        variantId={classifyVariantId}
+        open={classifyVariantId !== null}
+        onOpenChange={open => { if (!open) setClassifyVariantId(null) }}
+        onSaved={loadCompliance}
+      />
 
       {errorDialogValue && (
         <AlertDialog open={true} onOpenChange={() => setErrorDialogValue(null)}>

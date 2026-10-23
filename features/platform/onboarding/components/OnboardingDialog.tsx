@@ -30,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CustomSetupSteps } from './CustomSetupSteps';
 import { SectionRenderer } from './SectionRenderer';
 import { useOnboardingState } from '../hooks/useOnboardingState';
-import { useOnboardingApi, type OnboardingSummary, type OnboardingSummaryKey } from '../hooks/useOnboardingApi';
+import { useOnboardingApi, type OnboardingPlan, type OnboardingSummary, type OnboardingSummaryKey } from '../hooks/useOnboardingApi';
 import { STORE_TEMPLATES, SECTION_DEFINITIONS } from '../config/templates';
 
 const TEMPLATE_CHOICES: Array<{
@@ -194,7 +194,7 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
 
   const [summary, setSummary] = React.useState<OnboardingSummary | null>(null);
 
-  const { runOnboarding } = useOnboardingApi({
+  const { runOnboarding, planOnboarding } = useOnboardingApi({
     selectedTemplate,
     currentJsonData,
     completedItems,
@@ -209,7 +209,36 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
     setSummary,
   });
 
+  // Read-only preview of what Confirm would add, from the same checks the run uses.
+  const [plan, setPlan] = React.useState<OnboardingPlan | null>(null);
+  const [planStatus, setPlanStatus] = React.useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const planRef = React.useRef(planOnboarding);
+  planRef.current = planOnboarding;
 
+  React.useEffect(() => {
+    if (!isOpen || step !== 'template' || !currentJsonData) return;
+    let cancelled = false;
+    setPlanStatus('loading');
+    planRef
+      .current()
+      .then((next) => {
+        if (cancelled) return;
+        setPlan(next);
+        setPlanStatus('ready');
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setPlan(null);
+        setPlanStatus('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, step, currentJsonData]);
+
+  const planChecking = planStatus === 'loading';
+  const nothingToAdd = planStatus === 'ready' && Boolean(plan?.nothingToAdd);
+  const primaryLabel = planChecking ? 'Checking store' : nothingToAdd ? 'Nothing to add' : 'Confirm';
 
   if (!isOpen) return null;
 
@@ -416,8 +445,13 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
                         Creating...
                       </Button>
                     ) : (
-                      <Button onClick={runOnboarding} className="h-10 w-full rounded-full px-5 sm:w-auto">
-                        Confirm
+                      <Button
+                        onClick={runOnboarding}
+                        disabled={planChecking || nothingToAdd}
+                        className="h-10 w-full rounded-full px-5 sm:w-auto"
+                      >
+                        {planChecking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {primaryLabel}
                       </Button>
                     )}
                   </div>
@@ -449,6 +483,7 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
                 error={error}
                 step={step}
                 currentJsonData={currentJsonData}
+                plan={planStatus === 'ready' ? plan : null}
               />
             )}
           </div>
@@ -500,8 +535,13 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
                     Creating...
                   </Button>
                 ) : (
-                  <Button onClick={runOnboarding} className="h-11 flex-1 rounded-full">
-                    Confirm
+                  <Button
+                    onClick={runOnboarding}
+                    disabled={planChecking || nothingToAdd}
+                    className="h-11 flex-1 rounded-full"
+                  >
+                    {planChecking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {primaryLabel}
                   </Button>
                 )}
               </div>

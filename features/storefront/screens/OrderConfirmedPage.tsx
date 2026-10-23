@@ -2,6 +2,7 @@ import { retrieveOrder } from "@/features/storefront/lib/data/orders"
 import OrderCompletedTemplate from "@/features/storefront/modules/order/templates/order-completed-template"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { MainNotFoundMetadata } from "@/features/storefront/screens/MainLayout"
 import type { StoreOrder } from "@/features/storefront/types/storefront"
 import SkeletonOrderConfirmed from "@/features/storefront/modules/skeletons/templates/skeleton-order-confirmed"
 
@@ -14,6 +15,15 @@ type Props = {
 export const metadata: Metadata = {
   title: "Order confirmed",
   description: "Your order was placed.",
+}
+
+// Unknown orders render the branded 404, so the tab says so too.
+export async function generateMetadata({ params: paramsPromise, searchParams: searchParamsPromise }: Props): Promise<Metadata> {
+  const params = await paramsPromise
+  const searchParams = await searchParamsPromise
+  const secretKey = typeof searchParams?.secretKey === 'string' ? searchParams.secretKey : null
+  const order: StoreOrder | null = await retrieveOrder(params.id, secretKey).catch(() => null)
+  return order ? metadata : MainNotFoundMetadata
 }
 
 // Update function signature to accept searchParams

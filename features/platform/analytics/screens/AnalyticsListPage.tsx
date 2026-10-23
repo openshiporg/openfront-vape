@@ -43,7 +43,7 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
   const selectedPeriod = (resolvedSearchParams.period as string) || "30d";
   const selectedRegion = resolvedSearchParams.region as string;
-  const conversionCurrency = (resolvedSearchParams.currency as string) || 'usd';
+  const requestedCurrency = ((resolvedSearchParams.currency as string) || '').toLowerCase();
 
   // Check for custom date range
   const customStartDate = resolvedSearchParams.startDate as string;
@@ -134,6 +134,18 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
       : null;
     const regionsData = regionsResponse.success ? regionsResponse.data : null;
 
+    // Convert-to options: only the currencies the store's regions use.
+    const storeCurrencies: Array<{ code: string; symbol: string }> = [];
+    for (const region of (regionsData?.regions || []) as Region[]) {
+      const code = region.currency?.code?.toLowerCase();
+      if (code && !storeCurrencies.some((c) => c.code === code)) {
+        storeCurrencies.push({ code, symbol: region.currency.symbol || '' });
+      }
+    }
+    const conversionCurrency = storeCurrencies.some((c) => c.code === requestedCurrency)
+      ? requestedCurrency
+      : storeCurrencies[0]?.code || 'usd';
+
     // Calculate metrics with previous period data
     let salesMetrics = salesData
       ? calculateSalesMetrics(salesData.orders, salesData.previousOrders)
@@ -160,7 +172,7 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
     }
     const customerMetrics =
       customerData && salesData
-        ? calculateCustomerMetrics(customerData.users, salesData.orders)
+        ? calculateCustomerMetrics(customerData.users, salesData.orders, customerData.allUsersCount)
         : null;
     const productMetrics = productData
       ? calculateProductMetrics(productData.orderLineItems)
@@ -252,12 +264,8 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
     let currencySymbol = '$'; // default
     if (!selectedRegion) {
       // All Regions mode - use conversion currency
-      const conversionCurrencyMap: Record<string, string> = {
-        'usd': '$',
-        'eur': '€', 
-        'gbp': '£'
-      };
-      currencySymbol = conversionCurrencyMap[conversionCurrency] || '$';
+      currencySymbol =
+        storeCurrencies.find((c) => c.code === conversionCurrency)?.symbol || '$';
     } else {
       // Specific region selected
       currencySymbol = firstOrder?.currency?.symbol || 
@@ -442,7 +450,12 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
                 <RegionalTabs regions={regions} selectedRegion={selectedRegion} className="hidden md:flex" />
               </>
             )}
-            <ConvertToTabs />
+            {storeCurrencies.length > 1 && !selectedRegion && (
+              <ConvertToTabs
+                currencies={storeCurrencies.map((c) => c.code)}
+                value={conversionCurrency}
+              />
+            )}
           </div>
 
           <div className="px-4 md:px-6">

@@ -71,3 +71,14 @@ export function mergeStoreInfo(
     policies: Object.fromEntries(POLICY_KEYS.map((key) => [key, text(policies[key])])),
   };
 }
+
+// What a regulated store must publish before it can sell
+export function missingStoreInfo(metadata: unknown): string[] {
+  const business = readStoreBusiness(metadata);
+  const policies = readStorePolicies(metadata);
+  return [
+    ...(business.legalName ? [] : ['Legal name']),
+    ...(business.licenses.length ? [] : ['Licence numbers']),
+    ...POLICY_PAGES.filter((page) => !policies[page.key]).map((page) => page.title),
+  ];
+}

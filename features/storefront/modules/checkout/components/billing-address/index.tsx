@@ -1,6 +1,8 @@
 import Input from "@/features/storefront/modules/common/components/input"
 import React, { useState } from "react"
 import CountrySelect from "../country-select"
+import StateSelect from "../state-select"
+import { isUsCountry, toUsStateCode } from "@/features/storefront/lib/util/us-states"
 
 const BillingAddress = ({ cart }: { cart: any | null }) => {
   const [formData, setFormData] = useState<any>({
@@ -20,10 +22,11 @@ const BillingAddress = ({ cart }: { cart: any | null }) => {
       HTMLInputElement | HTMLInputElement | HTMLSelectElement
     >
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+    const { name, value } = e.target
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: value,
+    }))
   }
 
   return (
@@ -75,14 +78,24 @@ const BillingAddress = ({ cart }: { cart: any | null }) => {
           required
           data-testid="billing-city-input"
         />
-        <Input
-          label="State / Province"
-          name="billingAddress.province"
-          autoComplete="address-level1"
-          value={formData["billingAddress.province"]}
-          onChange={handleChange}
-          data-testid="billing-province-input"
-        />
+        {isUsCountry(formData["billingAddress.countryCode"]) ? (
+          <StateSelect
+            name="billingAddress.province"
+            autoComplete="address-level1"
+            value={toUsStateCode(formData["billingAddress.province"])}
+            onChange={handleChange}
+            data-testid="billing-province-input"
+          />
+        ) : (
+          <Input
+            label="State / Province"
+            name="billingAddress.province"
+            autoComplete="address-level1"
+            value={formData["billingAddress.province"]}
+            onChange={handleChange}
+            data-testid="billing-province-input"
+          />
+        )}
         <Input
           label="ZIP / Postal code"
           name="billingAddress.postalCode"

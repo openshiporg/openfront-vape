@@ -10,7 +10,13 @@ export enum LOGIN_VIEW {
   REGISTER = "register",
 }
 
-const LoginTemplate = () => {
+export type PublishedPolicies = { privacy: boolean; terms: boolean }
+
+const LoginTemplate = ({
+  publishedPolicies = { privacy: false, terms: false },
+}: {
+  publishedPolicies?: PublishedPolicies
+}) => {
   const [currentView, setCurrentView] = useState("sign-in")
 
   return (
@@ -18,7 +24,7 @@ const LoginTemplate = () => {
       {currentView === "sign-in" ? (
         <Login setCurrentView={setCurrentView} />
       ) : (
-        <Register setCurrentView={setCurrentView} />
+        <Register setCurrentView={setCurrentView} publishedPolicies={publishedPolicies} />
       )}
     </div>
   )

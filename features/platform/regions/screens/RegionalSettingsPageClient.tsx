@@ -52,8 +52,8 @@ export function RegionalSettingsPageClient({
 
   return (
     <PageContainer
-      title="Regional Settings"
-      header={<PageTitle title="Regional Settings" />}
+      title="Markets"
+      header={<PageTitle title="Markets" />}
     >
       <RegionalSettingsTabs
         initialTab={initialTab}

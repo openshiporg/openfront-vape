@@ -3,6 +3,22 @@ import { Label } from '@/components/ui/label';
 import { SectionItem } from './SectionItem';
 import { SectionDefinition } from '../config/templates';
 import { getItemsFromJsonData } from '../utils/dataUtils';
+import type { OnboardingPlan, OnboardingPlanKey } from '../hooks/useOnboardingApi';
+
+const PROVIDER_ENV_VARS: Record<string, string[]> = {
+  Stripe: ['NEXT_PUBLIC_STRIPE_KEY', 'STRIPE_SECRET_KEY'],
+  PayPal: ['NEXT_PUBLIC_PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_SECRET'],
+};
+
+// What happens to the records this run would not add.
+function planStateLabel(section: OnboardingPlan['sections'][OnboardingPlanKey]): string | null {
+  const kept = section.existing.length;
+  if (section.skipped) return 'Skipped, sales are disabled';
+  if (section.add.length === 0 && kept > 0) return 'Already set up';
+  if (kept > 0) return `${kept} already exist`;
+  if (section.add.length === 0) return 'None';
+  return null;
+}
 
 interface SectionRendererProps {
   sections: SectionDefinition[];
@@ -14,6 +30,8 @@ interface SectionRendererProps {
   error: string | null;
   step: 'template' | 'progress' | 'done';
   currentJsonData?: any;
+  // When present, the preview shows only what this run would add.
+  plan?: OnboardingPlan | null;
 }
 
 export const SectionRenderer: React.FC<SectionRendererProps> = ({
@@ -26,12 +44,19 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
   error,
   step,
   currentJsonData,
+  plan,
 }) => {
   return (
     <div className="space-y-0">
       {sections.map((section, idx) => {
         const isLastItem = idx === sections.length - 1;
-        const items = currentJsonData ? getItemsFromJsonData(currentJsonData, section.type) : [];
+        const planSection = plan?.sections[section.type as OnboardingPlanKey];
+        const items = planSection
+          ? planSection.add
+          : currentJsonData
+          ? getItemsFromJsonData(currentJsonData, section.type)
+          : [];
+        const planLabel = planSection ? planStateLabel(planSection) : null;
 
         return (
           <div key={section.type} className="relative">
@@ -54,7 +79,14 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
             <div className="pl-9">
               <div className="flex flex-wrap gap-1.5 pb-6">
                 {/* Special case for payment providers with tooltips */}
-                {section.type === 'paymentProviders' && selectedTemplate === 'full' ? (
+                {planSection && section.type === 'store' &&
+                  planSection.existing.map((name) => (
+                    <span key={name} className="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground dark:bg-muted/60">
+                      {name}
+                      <span className="font-normal text-muted-foreground">Kept</span>
+                    </span>
+                  ))}
+                {!planSection && section.type === 'paymentProviders' && selectedTemplate === 'full' ? (
                   <>
                     <SectionItem
                       item="Stripe"
@@ -147,10 +179,18 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
                         sectionType={section.type}
                         status={status}
                         errorMessage={errorMessage}
+                        requiresEnvVar={
+                          planSection && section.type === 'paymentProviders' && PROVIDER_ENV_VARS[item]
+                            ? { vars: PROVIDER_ENV_VARS[item] }
+                            : undefined
+                        }
                         step={step}
                       />
                     );
                   })
+                )}
+                {planLabel && (section.type !== 'store' || planSection?.existing.length === 0) && (
+                  <span className="self-center text-xs text-muted-foreground">{planLabel}</span>
                 )}
               </div>
             </div>

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import Checkbox from "@/features/storefront/modules/common/components/checkbox";
 import AddressSelect from "../address-select";
 import CountrySelect from "../country-select";
+import StateSelect from "../state-select";
+import { isUsCountry, toUsStateCode } from "@/features/storefront/lib/util/us-states";
 import { Input as BaseInput } from "@/components/ui/input";
 import { vpInput } from "@/features/storefront/modules/common/components/vp-classes";
 import { cn } from "@/lib/utils";
@@ -81,12 +83,15 @@ const ShippingAddress = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    if (e.target.name.startsWith("shippingAddress.")) setSelectedAddressId(null);
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    if (name.startsWith("shippingAddress.")) setSelectedAddressId(null);
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
+
+  const isUs = isUsCountry(formData["shippingAddress.countryCode"]);
 
   const handleAddressSelect = (address: any) => {
     if (!address) return;
@@ -163,13 +168,23 @@ const ShippingAddress = ({
           onChange={handleChange}
           required
         />
-        <Input
-          placeholder="State / Province"
-          name="shippingAddress.province"
-          autoComplete="address-level1"
-          value={formData["shippingAddress.province"]}
-          onChange={handleChange}
-        />
+        {isUs ? (
+          <StateSelect
+            name="shippingAddress.province"
+            autoComplete="address-level1"
+            value={toUsStateCode(formData["shippingAddress.province"])}
+            onChange={handleChange}
+            data-testid="shipping-state-select"
+          />
+        ) : (
+          <Input
+            placeholder="State / Province"
+            name="shippingAddress.province"
+            autoComplete="address-level1"
+            value={formData["shippingAddress.province"]}
+            onChange={handleChange}
+          />
+        )}
         <Input
           placeholder="ZIP / Postal code"
           name="shippingAddress.postalCode"

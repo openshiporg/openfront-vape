@@ -4,6 +4,7 @@ import { login } from "@/features/storefront/lib/data/user"
 import { LOGIN_VIEW } from "@/features/storefront/modules/account/templates/login-template"
 import ErrorMessage from "@/features/storefront/modules/checkout/components/error-message"
 import { SubmitButton } from "@/features/storefront/modules/checkout/components/submit-button"
+import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
 import AuthSwitch from "@/features/storefront/modules/account/components/auth-switch"
 import { fieldClass, labelClass, primaryButtonClass } from "@/features/storefront/modules/account/components/account-ui"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
@@ -68,14 +69,13 @@ const Login = ({ setCurrentView }: Props) => {
           </div>
         </div>
         <div className="-mt-2 flex justify-end">
-          {/* Shared Keystone reset flow (sendUserPasswordResetLink); its email links to /dashboard/reset. */}
-          <a
-            href="/dashboard/reset"
+          <LocalizedClientLink
+            href="/account/reset"
             className="inline-flex min-h-11 items-center text-[13px] font-medium text-vp-ink-2 underline decoration-vp-line underline-offset-4 hover:text-vp-ink"
             data-testid="forgot-password-link"
           >
             Forgot password
-          </a>
+          </LocalizedClientLink>
         </div>
         <ErrorMessage error={message} data-testid="login-error-message" />
         <SubmitButton data-testid="sign-in-button" className={`${primaryButtonClass} mt-2 w-full`}>

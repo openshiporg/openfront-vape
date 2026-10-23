@@ -4,12 +4,14 @@ import { ArrowUpRight } from 'lucide-react'
 import { Dot, ListBand, SectionTitle } from '@/features/platform/components/vape-ui'
 import type { DotTone } from '@/features/platform/components/vape-primitives'
 import type { ProductCompliance, VariantCompliance } from '../actions/compliance'
+import {
+  CLASSIFICATION_CATEGORY_LABELS,
+  CLASSIFICATION_STATUS_LABELS,
+  REVIEW_STATUS_LABELS,
+  regulatedLabel,
+} from '@/features/keystone/regulated/labels'
 
 const CLASSIFICATIONS = '/dashboard/regulated-product-classifications'
-
-function words(value: string) {
-  return value.replaceAll('_', ' ').replace(/^\w/, character => character.toUpperCase())
-}
 
 function number(value: string | null) {
   if (value === null || value === undefined) return null
@@ -19,7 +21,7 @@ function number(value: string | null) {
 
 function classificationState(classification: VariantCompliance['classification']): { tone: DotTone; label: string } {
   if (!classification) return { tone: 'danger', label: 'No classification' }
-  if (classification.status !== 'approved') return { tone: 'warn', label: `Classification ${words(classification.status).toLowerCase()}` }
+  if (classification.status !== 'approved') return { tone: 'warn', label: `Classification ${regulatedLabel(CLASSIFICATION_STATUS_LABELS, classification.status).toLowerCase()}` }
   if (!classification.current) return { tone: 'danger', label: 'Classification expired' }
   return { tone: 'ok', label: 'Classification approved' }
 }
@@ -36,7 +38,7 @@ function Fact({ label, value, tone }: { label: string; value: string; tone?: Dot
   )
 }
 
-function VariantRow({ variant }: { variant: VariantCompliance }) {
+function VariantRow({ variant, onClassify }: { variant: VariantCompliance; onClassify: (variantId: string) => void }) {
   const { classification } = variant
   const state = classificationState(classification)
   const specs = classification
@@ -55,21 +57,21 @@ function VariantRow({ variant }: { variant: VariantCompliance }) {
           <span className="truncate font-medium text-foreground">{variant.title}</span>
           <span className="shrink-0 text-xs text-muted-foreground">{state.label}</span>
         </span>
-        <Link
-          href={classification ? `${CLASSIFICATIONS}/${classification.id}` : `${CLASSIFICATIONS}/create`}
-          className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline"
+        <button
+          type="button"
+          onClick={() => onClassify(variant.id)}
+          className="inline-flex min-h-8 shrink-0 items-center rounded-full bg-background px-3 text-xs font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.08)] max-sm:min-h-10"
         >
-          {classification ? 'Open' : 'Classify'}
-          <ArrowUpRight className="size-3" />
-        </Link>
+          {classification ? 'Edit' : 'Classify'}
+        </button>
       </div>
       <dl className="mt-2 space-y-1 text-xs">
         {classification && (
           <>
-            <Fact label="Category" value={words(classification.category)} />
+            <Fact label="Category" value={regulatedLabel(CLASSIFICATION_CATEGORY_LABELS, classification.category)} />
             <Fact
               label="Marketing review"
-              value={words(classification.marketingReviewStatus)}
+              value={regulatedLabel(REVIEW_STATUS_LABELS, classification.marketingReviewStatus)}
               tone={classification.marketingReviewStatus === 'approved' ? 'ok' : 'warn'}
             />
             <Fact
@@ -86,7 +88,7 @@ function VariantRow({ variant }: { variant: VariantCompliance }) {
   )
 }
 
-export function ComplianceSection({ compliance }: { compliance: ProductCompliance }) {
+export function ComplianceSection({ compliance, onClassify }: { compliance: ProductCompliance; onClassify: (variantId: string) => void }) {
   const ready = !compliance.publishIssue
 
   return (
@@ -125,7 +127,7 @@ export function ComplianceSection({ compliance }: { compliance: ProductComplianc
         {compliance.regulated && compliance.variants.length === 0 && (
           <div className="px-4 py-3 text-sm text-muted-foreground">No variants</div>
         )}
-        {compliance.regulated && compliance.variants.map(variant => <VariantRow key={variant.id} variant={variant} />)}
+        {compliance.regulated && compliance.variants.map(variant => <VariantRow key={variant.id} variant={variant} onClassify={onClassify} />)}
       </ListBand>
     </section>
   )

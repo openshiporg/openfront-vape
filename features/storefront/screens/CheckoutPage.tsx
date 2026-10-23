@@ -23,6 +23,7 @@ const BLOCKER_STATES: Record<string, string> = {
   ACTIVE_MERCHANT_PROFILE_REQUIRED: "Sales paused: store setup isn't complete.",
   KILL_SWITCH_ENABLED: "Sales paused by the store.",
   LAUNCH_JURISDICTION_REQUIRED: "Sales paused: no sales region is open yet.",
+  STORE_POLICIES_REQUIRED: "Sales paused: store policies aren't published yet.",
 };
 
 export async function CheckoutPage() {

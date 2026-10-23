@@ -71,11 +71,14 @@ export function ProductDetailsComponent({
 
   const variantCount = product.productVariants?.length || 0;
   const imageCount = product.productImages?.length || 0;
-  const totalInventory =
-    product.productVariants?.reduce(
-      (sum, variant) => sum + (variant.inventoryQuantity || 0),
-      0
-    ) || 0;
+  // Only variants with inventory tracking count toward stock.
+  const trackedVariants =
+    product.productVariants?.filter((variant) => variant.manageInventory) || [];
+  const untrackedCount = variantCount - trackedVariants.length;
+  const totalInventory = trackedVariants.reduce(
+    (sum, variant) => sum + (variant.inventoryQuantity || 0),
+    0
+  );
 
   const imageUrl =
     product.thumbnail ||
@@ -83,7 +86,7 @@ export function ProductDetailsComponent({
     product.productImages?.[0]?.imagePath;
 
   const stockTone =
-    variantCount === 0 ? "muted" : totalInventory <= 0 ? "danger" : "ok";
+    trackedVariants.length === 0 ? "muted" : totalInventory <= 0 ? "danger" : "ok";
   const iconButton =
     "inline-flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground [&_svg]:size-3.5 max-sm:size-10";
 
@@ -120,11 +123,23 @@ export function ProductDetailsComponent({
                   <p className="truncate text-xs text-muted-foreground">{product.subtitle}</p>
                 )}
                 <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                  <span className="inline-flex items-baseline gap-1.5">
-                    <Dot tone={stockTone} />
-                    <span className="font-mono tabular-nums text-foreground">{totalInventory}</span>
-                    in stock
-                  </span>
+                  {variantCount > 0 && trackedVariants.length === 0 ? (
+                    <span className="inline-flex items-baseline gap-1.5">
+                      <Dot tone="muted" />
+                      Not tracked
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-baseline gap-1.5">
+                      <Dot tone={stockTone} />
+                      <span className="font-mono tabular-nums text-foreground">{totalInventory}</span>
+                      in stock
+                    </span>
+                  )}
+                  {trackedVariants.length > 0 && untrackedCount > 0 && (
+                    <span>
+                      <span className="font-mono tabular-nums text-foreground">{untrackedCount}</span> not tracked
+                    </span>
+                  )}
                   <span>
                     <span className="font-mono tabular-nums text-foreground">{variantCount}</span> variants
                   </span>

@@ -2,6 +2,7 @@
 // Existing action call sites retain their local name; Next 16 immediate action invalidation is updateTag.
 import { updateTag, revalidatePath } from "next/cache";
 import { accountActionError } from "../util/openfront-error";
+import { normalizeProvince, US_STATE_REQUIRED_ERROR } from "../util/us-states";
 
 function revalidateTag(tag: string) {
   updateTag(tag);
@@ -326,6 +327,34 @@ export const getUserAddresses = cache(async function () {
   return authenticatedItem;
 });
 
+// Records the sign-up "I am 21 or older" attestation as a compliance event.
+// A failure is logged without user data and never blocks the sign-up.
+async function recordAgeAttestation(userId: string) {
+  try {
+    const { createHash } = await import("node:crypto");
+    const { keystoneContext } = await import("@/features/keystone/context");
+    const occurredAt = new Date();
+    const attestedAt = occurredAt.toISOString();
+    const statement = "I am 21 or older";
+    const evidenceDigest = createHash("sha256")
+      .update(JSON.stringify({ userId, attestedAt, statement }))
+      .digest("hex");
+    await keystoneContext.sudo().prisma.complianceEvent.create({
+      data: {
+        eventType: "AGE_ATTESTED_21",
+        resourceType: "User",
+        resourceId: userId,
+        actorId: userId,
+        evidenceDigest,
+        data: { attestedAt, statement },
+        occurredAt,
+      },
+    });
+  } catch (error) {
+    console.error("Age attestation record failed", error instanceof Error ? error.name : "unknown");
+  }
+}
+
 export async function signUp(_currentState: any, formData: FormData) {
   if (formData.get("age_21") !== "on") {
     return "Confirm you are 21 or older.";
@@ -363,6 +392,8 @@ export async function signUp(_currentState: any, formData: FormData) {
     if (!createUser?.id) {
       return "Failed to create account";
     }
+
+    await recordAgeAttestation(createUser.id);
 
     // Then authenticate them
     const { authenticateUserWithPassword } = await openfrontClient.request(
@@ -638,6 +669,10 @@ function addressFormFields(formData: FormData): Record<string, string> {
 
 export async function createCustomerAddress(prevState: any, formData: FormData) {
   try {
+    const province = normalizeProvince(formData.get("country_code"), formData.get("province"));
+    if (province === null) {
+      return { success: false, error: US_STATE_REQUIRED_ERROR, fields: addressFormFields(formData) };
+    }
     const headers = await getAuthHeaders();
     const addressData = {
       firstName: formData.get("first_name"),
@@ -646,7 +681,7 @@ export async function createCustomerAddress(prevState: any, formData: FormData) 
       address1: formData.get("address_1"),
       address2: formData.get("address_2"),
       city: formData.get("city"),
-      province: formData.get("province"),
+      province,
       postalCode: formData.get("postal_code"),
       country: {
         connect: {
@@ -683,6 +718,10 @@ export async function createCustomerAddress(prevState: any, formData: FormData) 
 
 export async function updateCustomerAddress(prevState: any, formData: FormData) {
   try {
+    const province = normalizeProvince(formData.get("country_code"), formData.get("province"));
+    if (province === null) {
+      return { success: false, error: US_STATE_REQUIRED_ERROR, fields: addressFormFields(formData), addressId: prevState.addressId };
+    }
     const headers = await getAuthHeaders();
     const addressData = {
       firstName: formData.get("first_name"),
@@ -691,7 +730,7 @@ export async function updateCustomerAddress(prevState: any, formData: FormData) 
       address1: formData.get("address_1"),
       address2: formData.get("address_2"),
       city: formData.get("city"),
-      province: formData.get("province"),
+      province,
       postalCode: formData.get("postal_code"),
       country: { connect: { iso2: formData.get("country_code") } },
       phone: formData.get("phone"),
@@ -744,5 +783,74 @@ export async function deleteCustomerShippingAddress(addressId: string) {
     return { success: true, error: null };
   } catch (error) {
     return { success: false, error: accountActionError(error) };
+  }
+}
+
+export type PasswordResetState = { status: "idle" | "sent" | "reset" | "error"; error?: string | null }
+
+// Always reports "sent" so the form never reveals whether an account exists.
+export async function requestPasswordReset(
+  _prevState: PasswordResetState,
+  formData: FormData
+): Promise<PasswordResetState> {
+  const email = formData.get("email")
+  if (typeof email !== "string" || !email.trim()) {
+    return { status: "error", error: "Enter your email." }
+  }
+  try {
+    await openfrontClient.request(
+      gql`
+        mutation SendPasswordResetLink($email: String!) {
+          sendUserPasswordResetLink(email: $email)
+        }
+      `,
+      { email: email.trim() }
+    )
+  } catch {
+    // Never log ClientError: its request contains the email. Report the same state.
+    console.error("Password reset link request failed")
+  }
+  return { status: "sent", error: null }
+}
+
+export async function redeemPasswordReset(
+  _prevState: PasswordResetState,
+  formData: FormData
+): Promise<PasswordResetState> {
+  const email = formData.get("email")
+  const token = formData.get("token")
+  const password = formData.get("password")
+  if (typeof email !== "string" || !email.trim() || typeof token !== "string" || !token) {
+    return { status: "error", error: "This reset link is invalid. Request a new one." }
+  }
+  if (typeof password !== "string" || password.length < 10) {
+    return { status: "error", error: "Password must be at least 10 characters." }
+  }
+  try {
+    const { redeemUserPasswordResetToken } = await openfrontClient.request(
+      gql`
+        mutation RedeemPasswordReset($email: String!, $token: String!, $password: String!) {
+          redeemUserPasswordResetToken(email: $email, token: $token, password: $password) {
+            code
+            message
+          }
+        }
+      `,
+      { email: email.trim(), token, password }
+    )
+    if (redeemUserPasswordResetToken?.code === "TOKEN_EXPIRED") {
+      return { status: "error", error: "This reset link has expired. Request a new one." }
+    }
+    if (redeemUserPasswordResetToken?.code) {
+      return { status: "error", error: "This reset link is invalid or already used. Request a new one." }
+    }
+    return { status: "reset", error: null }
+  } catch (error) {
+    // Never log ClientError: its request contains the token and password.
+    const message = accountActionError(error, "Unable to reset the password. Please try again.")
+    if (/common|invalid/i.test(message)) {
+      return { status: "error", error: "Choose a less common password of at least 10 characters." }
+    }
+    return { status: "error", error: message }
   }
 }

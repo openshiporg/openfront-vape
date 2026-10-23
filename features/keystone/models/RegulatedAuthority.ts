@@ -7,10 +7,12 @@ import { managedComplianceAccess } from "./regulatedAccess";
 import { permissions } from "../access";
 import { validateRules } from "../../regulated-commerce/core/policy-validation";
 import { effectiveValue, validateAuthorityRevision } from "../regulated/authority-revision";
+import { PROVIDER_APPROVAL_STATUS_LABELS, PROVIDER_PURPOSE_LABELS, regulatedLabel } from "../regulated/labels";
 
-const state = (values: string[], defaultValue: string) => select({
+const state = (values: string[], defaultValue: string, labels: Record<string, string> = {}, label?: string) => select({
   type: "enum",
-  options: values.map(value => ({ label: value.replaceAll("_", " "), value })),
+  label,
+  options: values.map(value => ({ label: regulatedLabel(labels, value), value })),
   defaultValue,
   validation: { isRequired: true },
 });
@@ -118,7 +120,7 @@ export const ProviderApproval = list({
   access: managedComplianceAccess,
   fields: {
     profile: relationship({ ref: "RegulatedMerchantProfile.providerApprovals" }),
-    purpose: state(["identity", "payment", "tax", "registry", "carrier"], "identity"),
+    purpose: state(["identity", "payment", "tax", "registry", "carrier"], "identity", PROVIDER_PURPOSE_LABELS),
     providerCode: text({ validation: { isRequired: true } }),
     paymentProvider: relationship({ ref: "PaymentProvider" }),
     shippingProvider: relationship({ ref: "ShippingProvider" }),
@@ -126,8 +128,8 @@ export const ProviderApproval = list({
     coveredJurisdictionCodes: json({ defaultValue: [] }),
     capabilities: json({ defaultValue: [] }),
     approvalReference: text({ validation: { isRequired: true } }),
-    evidenceDigest: text({ access: { read: denyAll }, validation: { isRequired: true } }),
-    status: state(["unconfigured", "review", "active", "suspended", "expired", "revoked"], "unconfigured"),
+    evidenceDigest: text({ label: "Evidence SHA-256", access: { read: denyAll }, validation: { isRequired: true } }),
+    status: state(["unconfigured", "review", "active", "suspended", "expired", "revoked"], "unconfigured", PROVIDER_APPROVAL_STATUS_LABELS),
     effectiveAt: timestamp(),
     expiresAt: timestamp(),
     validatedAt: timestamp(),

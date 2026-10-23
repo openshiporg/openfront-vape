@@ -438,8 +438,28 @@ const { withAuth } = createAuth({
   },
   passwordResetLink: {
     async sendToken(args) {
-      // send the email
-      await sendPasswordResetEmail(args.token, args.identity);
+      // Customers (no dashboard access) reset inside the storefront; dashboard
+      // users keep /dashboard/reset.
+      let storefrontCountryCode: string | undefined;
+      try {
+        const sudo = args.context.sudo();
+        const user = await sudo.query.User.findOne({
+          where: { id: String(args.itemId) },
+          query: "id role { canAccessDashboard }",
+        });
+        if (!user?.role?.canAccessDashboard) {
+          const regions = await sudo.query.Region.findMany({
+            take: 1,
+            orderBy: { createdAt: "asc" },
+            query: "countries(take: 1) { iso2 }",
+          });
+          const iso2 = String(regions?.[0]?.countries?.[0]?.iso2 || "").toLowerCase();
+          storefrontCountryCode = /^[a-z]{2}$/.test(iso2) ? iso2 : "us";
+        }
+      } catch {
+        storefrontCountryCode = undefined;
+      }
+      await sendPasswordResetEmail(args.token, args.identity, undefined, storefrontCountryCode);
     },
   },
   sessionData: `id name email role { ${permissionsList.join(" ")} }`,

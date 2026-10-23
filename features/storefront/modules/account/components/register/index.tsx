@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
-import { LOGIN_VIEW } from "@/features/storefront/modules/account/templates/login-template"
+import { LOGIN_VIEW, type PublishedPolicies } from "@/features/storefront/modules/account/templates/login-template"
 import ErrorMessage from "@/features/storefront/modules/checkout/components/error-message"
 import { SubmitButton } from "@/features/storefront/modules/checkout/components/submit-button"
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
@@ -11,10 +11,26 @@ import { signUp } from "@/features/storefront/lib/data/user"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
+  publishedPolicies?: PublishedPolicies
 }
 
-const Register = ({ setCurrentView }: Props) => {
+const policyLinkClass = "font-medium text-vp-ink underline underline-offset-2"
+
+const Register = ({ setCurrentView, publishedPolicies }: Props) => {
   const [message, formAction] = useActionState(signUp, null)
+  // Only reference policies the store has actually published.
+  const policyLinks = [
+    publishedPolicies?.privacy && (
+      <LocalizedClientLink key="privacy" href="/policies/privacy" className={policyLinkClass}>
+        Privacy Policy
+      </LocalizedClientLink>
+    ),
+    publishedPolicies?.terms && (
+      <LocalizedClientLink key="terms" href="/policies/terms" className={policyLinkClass}>
+        Terms of Use
+      </LocalizedClientLink>
+    ),
+  ].filter(Boolean)
 
   return (
     <div className="flex w-full max-w-[400px] flex-col gap-6" data-testid="register-page">
@@ -80,17 +96,19 @@ const Register = ({ setCurrentView }: Props) => {
           <p className="text-[13px] leading-[18px] text-vp-ink-3">ID is verified at checkout.</p>
         </div>
         <ErrorMessage error={message} data-testid="register-error" />
-        <p className="text-[13px] leading-[18px] text-vp-ink-2">
-          By creating an account you agree to the{" "}
-          <LocalizedClientLink href="/policies/privacy" className="font-medium text-vp-ink underline underline-offset-2">
-            Privacy Policy
-          </LocalizedClientLink>{" "}
-          and{" "}
-          <LocalizedClientLink href="/policies/terms" className="font-medium text-vp-ink underline underline-offset-2">
-            Terms of Use
-          </LocalizedClientLink>
-          .
-        </p>
+        {policyLinks.length > 0 && (
+          <p className="text-[13px] leading-[18px] text-vp-ink-2" data-testid="register-policy-agreement">
+            By creating an account you agree to the{" "}
+            {policyLinks.length === 2 ? (
+              <>
+                {policyLinks[0]} and {policyLinks[1]}
+              </>
+            ) : (
+              policyLinks[0]
+            )}
+            .
+          </p>
+        )}
         <SubmitButton className={`${primaryButtonClass} w-full`} data-testid="register-button">
           Create account
         </SubmitButton>

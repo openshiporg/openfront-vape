@@ -1,11 +1,13 @@
 "use client"
 
+import { useState } from "react"
 import { X } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 import CountrySelect from "@/features/storefront/modules/checkout/components/country-select"
-import { Field, FieldFrame } from "@/features/storefront/modules/account/components/account-ui"
+import { Field, FieldFrame, SelectField } from "@/features/storefront/modules/account/components/account-ui"
+import { US_STATES, isUsCountry, toUsStateCode } from "@/features/storefront/lib/util/us-states"
 import { cn } from "@/lib/utils"
 
 type AddressDefaults = {
@@ -34,6 +36,7 @@ export function AddressFields({
   defaults?: AddressDefaults
 }) {
   const id = (n: string) => `${idPrefix}-${n}`
+  const [country, setCountry] = useState<string>(defaults.country_code || "")
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Field
@@ -96,14 +99,37 @@ export function AddressFields({
           data-testid="city-input"
         />
       </div>
-      <Field
-        label="State / Province"
-        id={id("province")}
-        name="province"
-        defaultValue={defaults.province}
-        autoComplete="address-level1"
-        data-testid="state-input"
-      />
+      {isUsCountry(country) ? (
+        <SelectField
+          key="us-state"
+          label="State"
+          id={id("province")}
+          name="province"
+          defaultValue={toUsStateCode(defaults.province)}
+          required
+          autoComplete="address-level1"
+          data-testid="state-input"
+        >
+          <option value="" disabled>
+            Choose a state
+          </option>
+          {US_STATES.map((state) => (
+            <option key={state.code} value={state.code}>
+              {state.name}
+            </option>
+          ))}
+        </SelectField>
+      ) : (
+        <Field
+          key="province-text"
+          label="State / Province"
+          id={id("province")}
+          name="province"
+          defaultValue={defaults.province}
+          autoComplete="address-level1"
+          data-testid="state-input"
+        />
+      )}
       <Field
         label="ZIP / Postal code"
         id={id("postal-code")}
@@ -121,6 +147,7 @@ export function AddressFields({
             required
             autoComplete="country"
             defaultValue={defaults.country_code}
+            onChange={(e) => setCountry(e.target.value)}
             data-testid="country-select"
           />
         </FieldFrame>

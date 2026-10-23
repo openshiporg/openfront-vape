@@ -1,3 +1,3 @@
-import { ShippingProviderListPage } from "@/features/platform/shipping-providers/screens/ShippingProviderListPage";
+import { ShippingOptionListPage } from "@/features/platform/shipping-options/screens/ShippingOptionListPage";
 
-export default ShippingProviderListPage;
+export default ShippingOptionListPage;

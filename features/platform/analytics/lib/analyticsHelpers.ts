@@ -228,22 +228,19 @@ export const calculateSalesMetrics = (orders: any[], previousOrders?: any[]) => 
 };
 
 // Customer analytics calculations
-export const calculateCustomerMetrics = (users: any[], orders: any[]) => {
-  const totalCustomers = users.length;
-  
-  // Calculate new vs returning customers
-  const customerFirstOrders = new Map();
-  orders.forEach(order => {
-    if (order.user?.id) {
-      const existing = customerFirstOrders.get(order.user.id);
-      if (!existing || new Date(order.createdAt) < new Date(existing.createdAt)) {
-        customerFirstOrders.set(order.user.id, order);
-      }
-    }
-  });
+// users: customers who signed up in the range (User.createdAt).
+// totalUsersCount: every customer, signed up at any time.
+export const calculateCustomerMetrics = (users: any[], orders: any[], totalUsersCount?: number) => {
+  const newCustomers = users.length;
+  const totalCustomers = typeof totalUsersCount === 'number' ? totalUsersCount : newCustomers;
 
-  const newCustomers = Array.from(customerFirstOrders.values()).length;
-  const returningCustomers = totalCustomers - newCustomers;
+  // Returning: ordered in the range but signed up before it.
+  const newCustomerIds = new Set(users.map((user) => user.id));
+  const orderingCustomerIds = new Set<string>();
+  orders.forEach(order => {
+    if (order.user?.id) orderingCustomerIds.add(order.user.id);
+  });
+  const returningCustomers = Array.from(orderingCustomerIds).filter((id) => !newCustomerIds.has(id)).length;
 
   // Calculate customer lifetime value
   const customerValues = users.map(user => ({
@@ -263,7 +260,7 @@ export const calculateCustomerMetrics = (users: any[], orders: any[]) => {
 
   // Calculate retention rate (customers who made more than one order)
   const retainedCustomers = customerValues.filter(c => c.orderCount > 1).length;
-  const retentionRate = totalCustomers > 0 ? (retainedCustomers / totalCustomers) * 100 : 0;
+  const retentionRate = newCustomers > 0 ? (retainedCustomers / newCustomers) * 100 : 0;
 
   return {
     totalCustomers,
