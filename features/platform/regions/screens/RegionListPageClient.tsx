@@ -29,6 +29,7 @@ interface RegionListPageClientProps {
   list: any
   initialData: { items: any[], count: number }
   initialError: string | null
+  salesDisabled?: boolean
   initialSearchParams: {
     page: number
     pageSize: number  
@@ -48,6 +49,7 @@ export function RegionListPageClient({
   list,
   initialData,
   initialError,
+  salesDisabled = false,
   initialSearchParams
 }: RegionListPageClientProps) {
   const router = useRouter()
@@ -224,7 +226,7 @@ export function RegionListPageClient({
           <div className="px-4 md:px-6 pb-6">
             <ListBand>
               {data?.items?.map((region: any) => (
-                <RegionDetailsComponent key={region.id} region={region} list={list} />
+                <RegionDetailsComponent key={region.id} region={region} list={list} salesDisabled={salesDisabled} />
               ))}
             </ListBand>
           </div>

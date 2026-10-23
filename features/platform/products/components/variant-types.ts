@@ -30,6 +30,7 @@ export interface VariantRecord {
   upc?: string | null;
   material?: string | null;
   inventoryQuantity?: number | null;
+  manageInventory?: boolean | null;
   primaryImage?: VariantImage | null;
   prices?: VariantPrice[];
   productOptionValues: Array<{ id?: string; value: string; productOption: { id?: string; title: string } }>;

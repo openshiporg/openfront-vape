@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
 import { ItemPagination } from "../../orders/components/ItemPagination";
-import { Count, Dot, ListBand, Pill, Track } from "../../components/vape-ui";
+import { Count, Dot, ListBand, Pill, Track, type DotTone } from "../../components/vape-ui";
 
 interface Region {
   id: string;
@@ -55,6 +55,17 @@ interface Region {
 interface RegionDetailsComponentProps {
   region: Region;
   list: any;
+  salesDisabled?: boolean;
+}
+
+// Whether the region can take orders: it needs countries, a payment and a
+// fulfillment provider, and the store-level release gate must be open.
+function regionStatus(region: Region, salesDisabled: boolean): { tone: DotTone; label: string } {
+  if (!region.countries?.length) return { tone: "muted", label: "No countries" };
+  if (salesDisabled) return { tone: "danger", label: "Sales disabled" };
+  if (!region.paymentProviders?.length) return { tone: "warn", label: "No payment provider" };
+  if (!region.fulfillmentProviders?.length) return { tone: "warn", label: "No fulfillment provider" };
+  return { tone: "ok", label: "Active" };
 }
 
 type TabType = 'currency' | 'countries' | 'payment' | 'fulfillment';
@@ -93,6 +104,7 @@ function TabContent({ items, currentPage, itemsPerPage, renderItem }: TabContent
 export function RegionDetailsComponent({
   region,
   list,
+  salesDisabled = false,
 }: RegionDetailsComponentProps) {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('currency');
@@ -114,8 +126,7 @@ export function RegionDetailsComponent({
   
   const itemsPerPage = 5;
   
-  // Determine if region is "active" based on whether it has countries
-  const isActive = region.countries && region.countries.length > 0;
+  const status = regionStatus(region, salesDisabled);
 
   // Prepare data for tabs
   const currencyData = [{
@@ -181,15 +192,15 @@ export function RegionDetailsComponent({
           <div className="flex items-start justify-between gap-3 px-4 py-3">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                <Dot tone={isActive ? "ok" : "muted"} />
+                <Dot tone={status.tone} />
                 <Link
-                  href={`/dashboard/platform/regions/${region.id}`}
+                  href={`/dashboard/regions/${region.id}`}
                   className="text-sm font-semibold text-foreground hover:underline"
                 >
                   {region.name}
                 </Link>
                 <span className="font-mono text-xs uppercase tabular-nums text-muted-foreground">{region.code}</span>
-                <span className="text-xs text-muted-foreground">{isActive ? "Active" : "Inactive"}</span>
+                <span className="text-xs text-muted-foreground">{status.label}</span>
               </div>
 
               <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">

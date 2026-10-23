@@ -9,7 +9,8 @@ const spaceGrotesk = Space_Grotesk({
 
 const OpenfrontCTA = () => {
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    // In the page flow on phone so it never covers content; pinned to the corner from sm up.
+    <div className="flex justify-center pb-6 sm:fixed sm:right-4 sm:bottom-4 sm:z-50 sm:pb-0">
       <a
         href="https://www.openship.org"
         target="_blank"

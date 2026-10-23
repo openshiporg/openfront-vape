@@ -67,6 +67,16 @@ const Login = ({ setCurrentView }: Props) => {
             </button>
           </div>
         </div>
+        <div className="-mt-2 flex justify-end">
+          {/* Shared Keystone reset flow (sendUserPasswordResetLink); its email links to /dashboard/reset. */}
+          <a
+            href="/dashboard/reset"
+            className="inline-flex min-h-11 items-center text-[13px] font-medium text-vp-ink-2 underline decoration-vp-line underline-offset-4 hover:text-vp-ink"
+            data-testid="forgot-password-link"
+          >
+            Forgot password
+          </a>
+        </div>
         <ErrorMessage error={message} data-testid="login-error-message" />
         <SubmitButton data-testid="sign-in-button" className={`${primaryButtonClass} mt-2 w-full`}>
           Sign in

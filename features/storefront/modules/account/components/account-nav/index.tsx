@@ -46,8 +46,13 @@ const AccountNav = ({ customer: _customer }: AccountNavProps) => {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <nav aria-label="Account" className="min-w-0" data-testid="account-nav">
-        <SegmentedTrack label="Account sections">
+      {/* The track scrolls sideways on phone instead of clipping the last sections. */}
+      <nav
+        aria-label="Account"
+        className="no-scrollbar -mx-4 min-w-0 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+        data-testid="account-nav"
+      >
+        <SegmentedTrack label="Account sections" className="w-max max-w-none overflow-visible">
           {SECTIONS.map((s) => (
             <SegmentedLink key={s.href} href={s.href} active={isActive(s.href)} className="max-sm:min-h-11" data-testid={s.testId}>
               {s.label}

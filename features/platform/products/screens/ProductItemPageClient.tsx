@@ -31,6 +31,8 @@ import { toast } from 'sonner'
 import { updateItemAction, deleteItemAction } from '../../../dashboard/actions/item-actions'
 import { VariantsTab } from '../components/VariantsTab'
 import { MediaTab } from '../components/MediaTab'
+import { ComplianceSection } from '../components/ComplianceSection'
+import { explainProductSaveError, getProductCompliance, type ProductCompliance } from '../actions/compliance'
 
 
 interface ProductItemPageClientProps {
@@ -136,7 +138,15 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
   const [forceValidation, setForceValidation] = useState(false)
   const [errorDialogValue, setErrorDialogValue] = useState<Error | null>(null)
   
+  const [compliance, setCompliance] = useState<ProductCompliance | null>(null)
+
   useEffect(() => { setValue(initialValue) }, [initialValue])
+
+  const loadCompliance = useCallback(() => {
+    getProductCompliance(itemId).then(setCompliance).catch(() => setCompliance(null))
+  }, [itemId])
+
+  useEffect(() => { loadCompliance() }, [loadCompliance])
 
   const isRequireds = useMemo(() => {
     const result: Record<string, any> = {}
@@ -174,13 +184,16 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
       const result = await updateItemAction(list.key, itemId, data)
       
       if (result.errors && result.errors.length > 0) {
-        toast.error('Failed to save changes', { action: { label: 'Details', onClick: () => setErrorDialogValue(new Error(result.errors[0]?.message || 'Update failed')) } })
+        const reason = await explainProductSaveError(itemId, data).catch(() => null)
+        const message = reason || result.errors[0]?.message || 'Update failed'
+        toast.error(reason ? 'Not saved' : 'Failed to save changes', { description: reason || undefined, action: { label: 'Details', onClick: () => setErrorDialogValue(new Error(message)) } })
         setLoading(false)
         setSaveState('idle')
         return
       }
       
       toast.success('Saved')
+      loadCompliance()
       setSaveState('saved')
       setForceValidation(false)
       setTimeout(() => setSaveState('idle'), 2000)
@@ -190,7 +203,7 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
     } finally {
       setLoading(false)
     }
-  }, [hasChanges, loading, invalidFields, enhancedFields, value, initialValue, list.key, itemId])
+  }, [hasChanges, loading, invalidFields, enhancedFields, value, initialValue, list.key, itemId, loadCompliance])
 
   const handleReset = useCallback(() => {
     setValue(initialValue)
@@ -352,6 +365,8 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
                   </div>
                 </section>
               )}
+
+              {compliance && <ComplianceSection compliance={compliance} />}
 
               {Object.keys(fieldsSplit.organizationFields).length > 0 && (
                 <section>

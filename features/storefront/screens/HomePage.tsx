@@ -12,7 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const store = await getStore()
 
   return {
-    title: store?.name ? `${store.name}: ${store.homepageTitle || "Shop"}` : store?.homepageTitle || "Shop",
+    title: {
+      absolute: store?.name ? `${store.name}: ${store.homepageTitle || "Shop"}` : store?.homepageTitle || "Shop",
+    },
     description: store?.homepageDescription || undefined,
   }
 }

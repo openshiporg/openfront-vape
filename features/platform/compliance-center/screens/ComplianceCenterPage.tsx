@@ -22,6 +22,42 @@ const breadcrumbs = [
   { type: 'page' as const, label: 'Compliance Center' },
 ];
 
+const PROFILES = '/dashboard/regulated-merchant-profiles';
+const APPROVALS = '/dashboard/provider-approvals';
+
+const BLOCKERS: Record<string, { title: string; detail: string; href: string; action: string }> = {
+  ACTIVE_MERCHANT_PROFILE_REQUIRED: { title: 'No active merchant profile', detail: 'Set a merchant profile to Active with PACT evidence, origin and dates.', href: PROFILES, action: 'Profiles' },
+  KILL_SWITCH_ENABLED: { title: 'Kill switch on', detail: 'Every active profile has its kill switch on.', href: PROFILES, action: 'Profiles' },
+  LAUNCH_JURISDICTION_REQUIRED: { title: 'No launch jurisdiction', detail: 'Add a launch jurisdiction to the active merchant profile.', href: PROFILES, action: 'Profiles' },
+  EXACTLY_ONE_ACTIVE_MERCHANT_PROFILE_REQUIRED: { title: 'Merchant profile incomplete', detail: 'Exactly one current profile needs PACT registration, an origin, enabled categories and a launch jurisdiction, with the kill switch off.', href: PROFILES, action: 'Profiles' },
+  ACTIVE_REVIEWED_POLICY_REQUIRED: { title: 'No active policy', detail: 'Activate a reviewed rule set that is in its effective dates.', href: '/dashboard/regulated-rule-sets', action: 'Rule sets' },
+  CURRENT_PRODUCT_AND_FEDERAL_AUTHORITY_REQUIRED: { title: 'No sellable product evidence', detail: 'Approve a product classification with marketing review and a current federal authorization.', href: '/dashboard/regulated-product-classifications', action: 'Classifications' },
+};
+
+const PROVIDERS: Record<string, string> = {
+  identity: 'Identity verification',
+  payment: 'Payment',
+  tax: 'Tax',
+  carrier: 'Adult-signature carrier',
+  registry: 'Registry',
+};
+
+function blocker(code: string) {
+  const known = BLOCKERS[code];
+  if (known) return known;
+  const purpose = code.match(/^([A-Z]+)_PROVIDER_AUTHORITY_REQUIRED$/)?.[1]?.toLowerCase();
+  if (purpose) {
+    return { title: `No ${(PROVIDERS[purpose] || label(purpose)).toLowerCase()} provider approval`, detail: 'Record an active provider approval for this purpose.', href: `${APPROVALS}/create`, action: 'Add approval' };
+  }
+  return { title: label(code), detail: '', href: '', action: '' };
+}
+
+function visibleBlockers(codes: string[]) {
+  // The gate's profile codes already say what the broader "exactly one" check would
+  const gateProfileCode = codes.some(code => ['ACTIVE_MERCHANT_PROFILE_REQUIRED', 'KILL_SWITCH_ENABLED'].includes(code));
+  return Array.from(new Set(codes)).filter(code => !(gateProfileCode && code === 'EXACTLY_ONE_ACTIVE_MERCHANT_PROFILE_REQUIRED'));
+}
+
 function label(code: string) {
   return code.toLowerCase().replaceAll('_', ' ').replace(/\b\w/g, character => character.toUpperCase());
 }
@@ -57,6 +93,7 @@ export async function ComplianceCenterPage() {
   }
 
   const readiness = response.data;
+  const blockers = visibleBlockers(readiness.blockers);
   const header = (
     <PageTitle
       title="Compliance Center"
@@ -78,14 +115,28 @@ export async function ComplianceCenterPage() {
       <div className="px-4 md:px-6 pb-10 space-y-10">
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div>
-            <SectionTitle meta={readiness.blockers.length}>Blockers</SectionTitle>
+            <SectionTitle meta={blockers.length}>Blockers</SectionTitle>
             <ListBand>
-              {readiness.blockers.length ? readiness.blockers.map(blocker => (
-                <div key={blocker} className="flex items-baseline gap-2.5 px-4 py-3 text-sm text-foreground">
-                  <Dot tone="warn" />
-                  {label(blocker)}
-                </div>
-              )) : (
+              {blockers.length ? blockers.map(code => {
+                const item = blocker(code);
+                return (
+                  <div key={code} className="flex items-baseline justify-between gap-4 px-4 py-3">
+                    <span className="min-w-0">
+                      <span className="flex items-baseline gap-2.5 text-sm font-medium text-foreground">
+                        <Dot tone="warn" />
+                        {item.title}
+                      </span>
+                      {item.detail && <span className="mt-0.5 block pl-[1.125rem] text-xs text-muted-foreground">{item.detail}</span>}
+                    </span>
+                    {item.href && (
+                      <Link href={item.href} className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline">
+                        {item.action}
+                        <ArrowUpRight className="size-3" />
+                      </Link>
+                    )}
+                  </div>
+                );
+              }) : (
                 <div className="flex items-baseline gap-2.5 px-4 py-3 text-sm text-foreground">
                   <Dot tone="ok" />
                   All checks pass
@@ -122,7 +173,12 @@ export async function ComplianceCenterPage() {
               <div key={profile.id} className="grid gap-4 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h3 className="text-sm font-semibold text-foreground">{profile.legalName}</h3>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      <Link href={`${PROFILES}/${profile.id}`} className="inline-flex items-center gap-1 underline-offset-4 hover:underline">
+                        {profile.legalName}
+                        <ArrowUpRight className="size-3.5 text-muted-foreground" />
+                      </Link>
+                    </h3>
                     <span className="inline-flex items-baseline gap-1.5 text-xs text-muted-foreground">
                       <Dot tone={profile.killSwitch ? 'danger' : 'ok'} />
                       {profile.killSwitch ? 'Kill switch on' : 'Kill switch off'}
@@ -133,7 +189,7 @@ export async function ComplianceCenterPage() {
                     <div className="flex gap-1.5"><dt className="text-muted-foreground">PACT</dt><dd className="text-foreground">{profile.pactRegistered ? 'Registered' : 'Not registered'}</dd></div>
                   </dl>
                 </div>
-                <MerchantSafetyActions profileId={profile.id} canStop={readiness.canStop} canExport={readiness.canExport} />
+                <MerchantSafetyActions profileId={profile.id} killSwitch={profile.killSwitch} canStop={readiness.canStop} canExport={readiness.canExport} />
               </div>
             ))}
           </ListBand>
@@ -151,9 +207,16 @@ export async function ComplianceCenterPage() {
                   <div key={integration.purpose} className="flex items-baseline justify-between gap-4 px-4 py-3">
                     <span className="inline-flex items-baseline gap-2.5 text-sm font-medium text-foreground">
                       <Dot tone={active ? 'ok' : 'muted'} />
-                      {label(integration.purpose)}
+                      {PROVIDERS[integration.purpose] || label(integration.purpose)}
                     </span>
-                    <span className="text-xs text-muted-foreground">{active ? 'Active' : 'Not configured'}</span>
+                    {active ? (
+                      <span className="text-xs text-muted-foreground">Active</span>
+                    ) : (
+                      <Link href={`${APPROVALS}/create`} className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline">
+                        Not configured
+                        <ArrowUpRight className="size-3" />
+                      </Link>
+                    )}
                   </div>
                 );
               })}

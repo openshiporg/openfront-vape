@@ -50,7 +50,7 @@ export function CurrencyDetailsComponent({
               <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
                 {currency.status && <Dot tone={statusTones[currency.status] || "muted"} />}
                 <Link
-                  href={`/dashboard/platform/currencies/${currency.id}`}
+                  href={`/dashboard/currencies/${currency.id}`}
                   className="text-sm font-semibold text-foreground hover:underline"
                 >
                   {currency.name}

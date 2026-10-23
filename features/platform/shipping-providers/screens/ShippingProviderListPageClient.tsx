@@ -184,10 +184,10 @@ export function ShippingProviderListPageClient({
   const breadcrumbs = [
     { type: 'link' as const, label: 'Dashboard', href: basePath },
     { type: 'page' as const, label: 'Platform' },
-    { type: 'page' as const, label: 'ShippingProviders' }
+    { type: 'page' as const, label: 'Shipping Providers' }
   ]
 
-  const header = <PageTitle title="ShippingProviders" />
+  const header = <PageTitle title="Shipping Providers" />
 
   // Check if we have any active filters (search or actual filters)
   const hasFilters = !!searchString
@@ -196,7 +196,7 @@ export function ShippingProviderListPageClient({
 
   return (
     <>
-    <PageContainer title="ShippingProviders" header={header} breadcrumbs={breadcrumbs}>
+    <PageContainer title="Shipping Providers" header={header} breadcrumbs={breadcrumbs}>
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 

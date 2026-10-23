@@ -65,14 +65,28 @@ const Register = ({ setCurrentView }: Props) => {
           autoComplete="new-password"
           data-testid="password-input"
         />
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="register-age-21" className="flex min-h-11 cursor-pointer items-center gap-3 text-[15px] font-medium text-vp-ink">
+            <input
+              id="register-age-21"
+              name="age_21"
+              type="checkbox"
+              required
+              data-testid="age-21-checkbox"
+              className="size-5 shrink-0 cursor-pointer rounded accent-vp-ink"
+            />
+            I am 21 or older
+          </label>
+          <p className="text-[13px] leading-[18px] text-vp-ink-3">ID is verified at checkout.</p>
+        </div>
         <ErrorMessage error={message} data-testid="register-error" />
         <p className="text-[13px] leading-[18px] text-vp-ink-2">
           By creating an account you agree to the{" "}
-          <LocalizedClientLink href="/content/privacy-policy" className="font-medium text-vp-ink underline underline-offset-2">
+          <LocalizedClientLink href="/policies/privacy" className="font-medium text-vp-ink underline underline-offset-2">
             Privacy Policy
           </LocalizedClientLink>{" "}
           and{" "}
-          <LocalizedClientLink href="/content/terms-of-use" className="font-medium text-vp-ink underline underline-offset-2">
+          <LocalizedClientLink href="/policies/terms" className="font-medium text-vp-ink underline underline-offset-2">
             Terms of Use
           </LocalizedClientLink>
           .

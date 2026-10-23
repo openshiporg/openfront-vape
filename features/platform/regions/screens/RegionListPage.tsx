@@ -10,6 +10,7 @@ import { buildWhereClause } from '../../../dashboard/lib/buildWhereClause'
 import { notFound } from 'next/navigation'
 import { RegionListPageClient } from './RegionListPageClient'
 import { getRegions } from '../actions'
+import { getComplianceReadiness } from '../../compliance-center/actions/getReadiness'
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -61,12 +62,18 @@ export async function RegionListPage({ searchParams }: PageProps) {
   const where = whereConditions.length > 0 ? { AND: whereConditions } : {}
 
   // Use Regions actions with where clause
-  const response = await getRegions(
-    where,
-    pageSize,
-    (currentPage - 1) * pageSize,
-    orderBy
-  )
+  const [response, readiness] = await Promise.all([
+    getRegions(
+      where,
+      pageSize,
+      (currentPage - 1) * pageSize,
+      orderBy
+    ),
+    getComplianceReadiness(),
+  ])
+
+  // Store-level release gate: when it is closed no region can sell.
+  const salesDisabled = readiness.success ? !readiness.data.launchReady : false
 
   let fetchedData: { items: any[], count: number } = { items: [], count: 0 }
   let error: string | null = null
@@ -93,6 +100,7 @@ export async function RegionListPage({ searchParams }: PageProps) {
       list={enhancedList}
       initialData={fetchedData}
       initialError={error}
+      salesDisabled={salesDisabled}
       initialSearchParams={{
         page: currentPage,
         pageSize,

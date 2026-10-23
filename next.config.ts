@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    // A restored .next/cache served the previous Tailwind output after globals.css changed
+    turbopackFileSystemCacheForBuild: false,
   },
   // Workaround since we diverged from Keystone reltionship and document views
   typescript: {

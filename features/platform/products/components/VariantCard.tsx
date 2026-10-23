@@ -355,11 +355,18 @@ export function VariantCard({
                 <div>
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
                     <span className="font-mono text-sm font-medium tabular-nums text-foreground">{variant.title}</span>
-                    <span className="inline-flex items-baseline gap-1.5 text-xs text-muted-foreground">
-                      <Dot tone={(variant.inventoryQuantity || 0) <= 0 ? "danger" : "ok"} />
-                      <span className="font-mono tabular-nums text-foreground">{variant.inventoryQuantity || 0}</span>
-                      in stock
-                    </span>
+                    {variant.manageInventory ? (
+                      <span className="inline-flex items-baseline gap-1.5 text-xs text-muted-foreground">
+                        <Dot tone={(variant.inventoryQuantity || 0) <= 0 ? "danger" : "ok"} />
+                        <span className="font-mono tabular-nums text-foreground">{variant.inventoryQuantity || 0}</span>
+                        in stock
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-baseline gap-1.5 text-xs text-muted-foreground">
+                        <Dot tone="muted" />
+                        Not tracked
+                      </span>
+                    )}
                     {variant.sku && (
                       <span className="font-mono text-xs tabular-nums text-muted-foreground">{variant.sku}</span>
                     )}
@@ -518,9 +525,13 @@ export function VariantCard({
               <div className="text-[11px] font-medium text-muted-foreground">
                 Stock
               </div>
-              <div className="font-mono text-sm tabular-nums font-medium">
-                {variant.inventoryQuantity || "0"}
-              </div>
+              {variant.manageInventory ? (
+                <div className="font-mono text-sm tabular-nums font-medium">
+                  {variant.inventoryQuantity || "0"}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">Not tracked</div>
+              )}
             </div>
             <div className="space-y-1">
               <div className="text-[11px] font-medium text-muted-foreground">

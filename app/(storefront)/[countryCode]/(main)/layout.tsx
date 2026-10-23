@@ -1,3 +1,4 @@
-import { MainLayout } from "@/features/storefront/screens/MainLayout";
+import { MainLayout, generateMainMetadata } from "@/features/storefront/screens/MainLayout";
 
+export const generateMetadata = generateMainMetadata;
 export default MainLayout;

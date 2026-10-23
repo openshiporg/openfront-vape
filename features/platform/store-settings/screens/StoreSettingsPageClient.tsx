@@ -23,6 +23,13 @@ import { toast } from 'sonner';
 import { Code } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ListBand, SectionTitle } from '@/features/platform/components/vape-ui';
+import {
+  POLICY_PAGES,
+  readStoreBusiness,
+  readStorePolicies,
+  type StoreBusiness,
+  type StorePolicies,
+} from '../lib/store-info';
 
 interface StoreSettingsPageClientProps {
   initialData: {
@@ -32,6 +39,7 @@ interface StoreSettingsPageClientProps {
     logoColor: string;
     homepageTitle: string;
     homepageDescription: string;
+    metadata?: unknown;
   } | null;
   initialError: string | null;
 }
@@ -53,7 +61,13 @@ export function StoreSettingsPageClient({
   const [homepageDescription, setHomepageDescription] = useState(
     initialData?.homepageDescription || ''
   );
+  const [business, setBusiness] = useState<StoreBusiness>(() => readStoreBusiness(initialData?.metadata));
+  const [licenses, setLicenses] = useState(() => readStoreBusiness(initialData?.metadata).licenses.join('\n'));
+  const [policies, setPolicies] = useState<StorePolicies>(() => readStorePolicies(initialData?.metadata));
   const [isLoading, setIsLoading] = useState(false);
+
+  const setBusinessField = (key: Exclude<keyof StoreBusiness, 'licenses'>, value: string) =>
+    setBusiness((prev) => ({ ...prev, [key]: value }));
 
   const handleSave = async () => {
     if (!initialData?.id) {
@@ -68,6 +82,8 @@ export function StoreSettingsPageClient({
       logoColor,
       homepageTitle,
       homepageDescription,
+      business: { ...business, licenses: licenses.split('\n') },
+      policies,
     });
 
     if (result.success) {
@@ -93,6 +109,9 @@ export function StoreSettingsPageClient({
   const selectedHue = HUE_PRESETS.find((preset) => preset.value.toString() === logoColor);
 
   const field = 'h-10 rounded-lg bg-background';
+  const area = 'min-h-24 rounded-lg bg-background';
+  const row = 'grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center';
+  const rowTop = 'grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-start';
   const square =
     'flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-background p-0 shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.06)] transition-colors hover:bg-background/80 focus:outline-none focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-800';
 
@@ -244,15 +263,84 @@ export function StoreSettingsPageClient({
                 className={field}
               />
             </div>
-            <div className="grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
-              <Label htmlFor="homepage-description" className="text-sm text-muted-foreground">Description</Label>
-              <Input
+            <div className={rowTop}>
+              <Label htmlFor="homepage-description" className="text-sm sm:pt-2.5 text-muted-foreground">Description</Label>
+              <Textarea
                 id="homepage-description"
                 value={homepageDescription}
                 onChange={(e) => setHomepageDescription(e.target.value)}
-                className={field}
+                rows={3}
+                className={area}
               />
             </div>
+          </ListBand>
+        </section>
+
+        <section>
+          <SectionTitle>Business</SectionTitle>
+          <ListBand>
+            {(
+              [
+                { key: 'legalName', label: 'Legal name', type: 'text', autoComplete: 'organization' },
+                { key: 'email', label: 'Contact email', type: 'email', autoComplete: 'email' },
+                { key: 'phone', label: 'Contact phone', type: 'tel', autoComplete: 'tel' },
+              ] as const
+            ).map((item) => (
+              <div key={item.key} className={row}>
+                <Label htmlFor={`business-${item.key}`} className="text-sm text-muted-foreground">{item.label}</Label>
+                <Input
+                  id={`business-${item.key}`}
+                  type={item.type}
+                  autoComplete={item.autoComplete}
+                  value={business[item.key]}
+                  onChange={(e) => setBusinessField(item.key, e.target.value)}
+                  className={field}
+                />
+              </div>
+            ))}
+            <div className={rowTop}>
+              <Label htmlFor="business-address" className="text-sm sm:pt-2.5 text-muted-foreground">Address</Label>
+              <Textarea
+                id="business-address"
+                value={business.address}
+                onChange={(e) => setBusinessField('address', e.target.value)}
+                rows={3}
+                className={area}
+              />
+            </div>
+            <div className={rowTop}>
+              <Label htmlFor="business-licenses" className="text-sm sm:pt-2.5 text-muted-foreground">
+                Licences
+              </Label>
+              <Textarea
+                id="business-licenses"
+                value={licenses}
+                onChange={(e) => setLicenses(e.target.value)}
+                rows={3}
+                className={`${area} font-mono text-xs`}
+              />
+            </div>
+          </ListBand>
+        </section>
+
+        <section>
+          <SectionTitle>Policies</SectionTitle>
+          <ListBand>
+            {POLICY_PAGES.map((page) => (
+              <div key={page.key} className={rowTop}>
+                <Label htmlFor={`policy-${page.key}`} className="text-sm sm:pt-2.5 text-muted-foreground">
+                  {page.title}
+                  <span className="block font-mono text-xs">/policies/{page.slug}</span>
+                </Label>
+                <Textarea
+                  id={`policy-${page.key}`}
+                  value={policies[page.key]}
+                  onChange={(e) => setPolicies((prev) => ({ ...prev, [page.key]: e.target.value }))}
+                  rows={6}
+                  className={area}
+                />
+              </div>
+            ))}
           </ListBand>
         </section>
 

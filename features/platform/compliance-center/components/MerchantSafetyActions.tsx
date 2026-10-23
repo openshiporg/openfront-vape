@@ -1,10 +1,12 @@
 'use client';
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
+import { ArrowUpRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { stopCommerce, exportInventory } from '../actions/operations';
 
-export function MerchantSafetyActions({ profileId, canStop, canExport }: { profileId: string; canStop: boolean; canExport: boolean }) {
+export function MerchantSafetyActions({ profileId, killSwitch, canStop, canExport }: { profileId: string; killSwitch: boolean; canStop: boolean; canExport: boolean }) {
   const [reason, setReason] = useState('');
   const [message, setMessage] = useState('');
   const [pending, startTransition] = useTransition();
@@ -12,7 +14,11 @@ export function MerchantSafetyActions({ profileId, canStop, canExport }: { profi
   if (!canStop && !canExport) return null;
 
   return <div className="space-y-3">
-    {canStop && <form className="space-y-2" onSubmit={event => {
+    {canStop && killSwitch && <Link href={`/dashboard/regulated-merchant-profiles/${profileId}`} className="inline-flex h-9 items-center gap-1 rounded-full bg-background px-4 text-sm font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.08)]">
+      Turn off on profile
+      <ArrowUpRight className="size-3.5" />
+    </Link>}
+    {canStop && !killSwitch && <form className="space-y-2" onSubmit={event => {
       event.preventDefault();
       startTransition(async () => { const result = await stopCommerce(profileId, reason); setMessage(result.message); if (result.success) setReason(''); });
     }}>

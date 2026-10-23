@@ -327,6 +327,10 @@ export const getUserAddresses = cache(async function () {
 });
 
 export async function signUp(_currentState: any, formData: FormData) {
+  if (formData.get("age_21") !== "on") {
+    return "Confirm you are 21 or older.";
+  }
+
   const customer = {
     email: formData.get("email"),
     password: formData.get("password"),
@@ -445,7 +449,7 @@ export async function login(_currentState: any, formData: FormData) {
 
     // Check for authentication failure
     if (authenticateUserWithPassword.__typename === "UserAuthenticationWithPasswordFailure") {
-      return authenticateUserWithPassword.message;
+      return "Email or password is incorrect.";
     }
 
     // Only set auth token and cart if authentication was successful

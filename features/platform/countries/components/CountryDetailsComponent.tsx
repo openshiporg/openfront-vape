@@ -54,7 +54,7 @@ export function CountryDetailsComponent({
               <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
                 {country.status && <Dot tone={statusTones[country.status] || "muted"} />}
                 <Link
-                  href={`/dashboard/platform/countries/${country.id}`}
+                  href={`/dashboard/countries/${country.id}`}
                   className="text-sm font-semibold text-foreground hover:underline"
                 >
                   {country.name || country.displayName}

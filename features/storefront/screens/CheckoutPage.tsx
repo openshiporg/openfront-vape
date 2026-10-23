@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { releaseBlockers } from "@/features/regulated-commerce/core/release-gate";
 import { keystoneContext } from "@/features/keystone/context";
 import Wrapper from "@/features/storefront/modules/checkout/components/payment-wrapper";
@@ -20,36 +19,46 @@ export const metadata = {
   title: "Checkout",
 };
 
-const fetchCart = async () => {
-  const cart = await retrieveCart();
-
-  if (!cart) {
-    return notFound();
-  }
-
-  return cart;
+const BLOCKER_STATES: Record<string, string> = {
+  ACTIVE_MERCHANT_PROFILE_REQUIRED: "Sales paused: store setup isn't complete.",
+  KILL_SWITCH_ENABLED: "Sales paused by the store.",
+  LAUNCH_JURISDICTION_REQUIRED: "Sales paused: no sales region is open yet.",
 };
 
 export async function CheckoutPage() {
-  if ((await releaseBlockers(keystoneContext)).length) return (
-    <main className="mx-auto flex min-h-[50vh] w-full max-w-[1320px] flex-col justify-center gap-5 px-4 py-16 sm:px-6 sm:py-24">
-      <div className="flex items-baseline gap-3">
-        <StatusDot tone="danger" />
-        <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink sm:text-[40px] sm:leading-[44px]">
-          Checkout isn&apos;t available right now.
-        </h1>
-      </div>
-      <div>
-        <LocalizedClientLink
-          href="/cart"
-          className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
-        >
-          Back to bag
-        </LocalizedClientLink>
-      </div>
-    </main>
-  );
-  const cart = await fetchCart();
+  const [blockers, cart] = await Promise.all([releaseBlockers(keystoneContext), retrieveCart()]);
+  const bagEmpty = !cart?.lineItems?.length;
+
+  if (!cart || blockers.length || bagEmpty) {
+    const reasons = [
+      ...(bagEmpty ? ["Your bag is empty."] : []),
+      ...blockers.map((code) => BLOCKER_STATES[code] || "Sales paused."),
+    ];
+    return (
+      <main className="mx-auto flex min-h-[50vh] w-full max-w-[1320px] flex-col justify-center gap-5 px-4 py-16 sm:px-6 sm:py-24">
+        <div className="flex items-baseline gap-3">
+          <StatusDot tone={blockers.length ? "danger" : "muted"} />
+          <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink sm:text-[40px] sm:leading-[44px]">
+            Checkout isn&apos;t available right now.
+          </h1>
+        </div>
+        <ul className="flex flex-col gap-1 text-[15px] leading-[24px] text-vp-ink-2" data-testid="checkout-unavailable-reasons">
+          {reasons.map((reason) => (
+            <li key={reason}>{reason}</li>
+          ))}
+        </ul>
+        <div>
+          <LocalizedClientLink
+            href={bagEmpty ? "/store" : "/cart"}
+            className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+          >
+            {bagEmpty ? "Shop all" : "Back to bag"}
+          </LocalizedClientLink>
+        </div>
+      </main>
+    );
+  }
+
   const customer = await getUser();
 
   return (

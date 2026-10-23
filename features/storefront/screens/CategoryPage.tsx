@@ -46,7 +46,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     // Fetch category using the new function and structure
     const { productCategory } = await getCategoryByHandle(handle) as { productCategory: StorefrontProductCategory | null }
 
-    if (!productCategory) {
+    if (!productCategory || (productCategory as any).isActive === false) {
       notFound()
     }
 
@@ -78,7 +78,7 @@ export async function CategoryPage(props: Props) {
   // Fetch category using the new function and structure
   const { productCategory } = await getCategoryByHandle(handle) as { productCategory: StorefrontProductCategory | null }
 
-  if (!productCategory) {
+  if (!productCategory || (productCategory as any).isActive === false) {
     notFound()
   }
 

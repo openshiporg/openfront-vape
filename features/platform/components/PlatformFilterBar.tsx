@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,7 +19,9 @@ import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import Link from "next/link"
 import { useDashboard } from '../../dashboard/context/DashboardProvider'
-import { enhanceFields } from '../../dashboard/utils/enhanceFields'
+
+/** Lists with their own platform create page; others use the generic model route. */
+const PLATFORM_CREATE_PATHS = new Set(["orders", "products"])
 
 /** Class for a feature's own create button passed as `customCreateButton`. */
 export const platformCreateButtonClass =
@@ -53,11 +55,6 @@ export function PlatformFilterBar({
     searchParams?.get("search") || ""
   )
 
-  // Get enhanced fields using dashboard's pattern
-  const enhancedFields = useMemo(() => {
-    return enhanceFields(list.fields, list.key)
-  }, [list.fields, list.key])
-
   // Create a new URLSearchParams instance to manipulate
   const createQueryString = (
     params: Record<string, string | number | null | undefined>
@@ -90,11 +87,10 @@ export function PlatformFilterBar({
     setSearchString(searchParams?.get("search") || "")
   }, [searchParams])
 
-  // Get searchable field labels for placeholder
-  const searchableFields = Object.values(enhancedFields).filter((field: any) => 
-    field.controller?.filter && Object.keys(field.controller.filter.types || {}).length > 0
-  )
-  const searchLabels = searchableFields.map((field: any) => field.label)
+  const searchPlaceholder = `Search ${String(list.plural || list.label || "items").toLowerCase()}`
+  const createHref = PLATFORM_CREATE_PATHS.has(list.path)
+    ? `${basePath}/platform/${list.path}/create`
+    : `${basePath}/${list.path}/create`
 
   const control =
     "h-10 rounded-full border-0 bg-muted px-3 text-[13px] font-medium text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] hover:bg-muted/80 dark:bg-muted/60 lg:w-auto lg:px-4 [&_svg]:size-4"
@@ -118,11 +114,8 @@ export function PlatformFilterBar({
               className="h-10 w-full rounded-full border-0 bg-muted pl-10 text-sm shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] placeholder:text-muted-foreground/80 focus-visible:bg-background dark:bg-muted/60"
               value={searchString}
               onChange={(e) => setSearchString(e.target.value)}
-              placeholder={`Search by ${
-                searchLabels.length
-                  ? searchLabels.join(", ").toLowerCase()
-                  : "ID"
-              }`}
+              placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
             />
           </form>
         </div>
@@ -165,7 +158,7 @@ export function PlatformFilterBar({
                 </Button>
               ) : (
                 <Link
-                  href={`${basePath}/platform/${list.path}/create`}
+                  href={createHref}
                   className={cn(buttonVariants({ size: "icon" }), create)}
                 >
                   <Plus />

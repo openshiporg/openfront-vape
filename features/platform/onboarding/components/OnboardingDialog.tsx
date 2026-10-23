@@ -30,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CustomSetupSteps } from './CustomSetupSteps';
 import { SectionRenderer } from './SectionRenderer';
 import { useOnboardingState } from '../hooks/useOnboardingState';
-import { useOnboardingApi } from '../hooks/useOnboardingApi';
+import { useOnboardingApi, type OnboardingSummary, type OnboardingSummaryKey } from '../hooks/useOnboardingApi';
 import { STORE_TEMPLATES, SECTION_DEFINITIONS } from '../config/templates';
 
 const TEMPLATE_CHOICES: Array<{
@@ -192,6 +192,8 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
     resetOnboardingState,
   } = onboardingState;
 
+  const [summary, setSummary] = React.useState<OnboardingSummary | null>(null);
+
   const { runOnboarding } = useOnboardingApi({
     selectedTemplate,
     currentJsonData,
@@ -204,6 +206,7 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
     setError,
     setIsLoading,
     resetOnboardingState,
+    setSummary,
   });
 
 
@@ -234,7 +237,7 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
                         ? 'Your store is ready'
                         : selectedTemplate === 'custom'
                         ? 'Copy JSON templates for custom setup'
-                        : 'Configure your new store'}
+                        : 'Adds only what your store is missing'}
                     </p>
                   </div>
                 </div>
@@ -245,32 +248,34 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
                     <h4 className="mb-2 text-sm font-semibold text-foreground">
                       Setup Complete
                     </h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Your{' '}
-                      {selectedTemplate === 'minimal' ? 'Basic' : 'Complete'}
-                      {' '}store setup is ready to use.
-                    </p>
                     <div className="mb-4 flex items-baseline gap-2 text-sm font-medium text-foreground">
                       <Dot tone="ok" />
                       <span>Onboarding complete</span>
                     </div>
 
                     <ListBand className="text-sm">
-                      {[
+                      {([
                         { key: 'regions', singular: 'region', plural: 'regions' },
                         { key: 'paymentProviders', singular: 'payment method', plural: 'payment methods' },
                         { key: 'shipping', singular: 'shipping option', plural: 'shipping options' },
                         { key: 'categories', singular: 'category', plural: 'categories' },
+                        { key: 'collections', singular: 'collection', plural: 'collections' },
                         { key: 'products', singular: 'product', plural: 'products' },
-                      ].map(({ key, singular, plural }) => {
-                        const count = STORE_TEMPLATES[selectedTemplate].displayNames[key as 'regions' | 'paymentProviders' | 'shipping' | 'categories' | 'products'].length;
+                      ] as Array<{ key: OnboardingSummaryKey; singular: string; plural: string }>).map(({ key, singular, plural }) => {
+                        const count = summary
+                          ? summary.created[key]
+                          : STORE_TEMPLATES[selectedTemplate].displayNames[key].length;
+                        const kept = summary?.existing[key] ?? 0;
+                        const skipped = summary?.skippedForCompliance.includes(key) ?? false;
                         return (
-                          <div key={key} className="flex items-center gap-2 px-3 py-2 text-muted-foreground">
+                          <div key={key} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-2 text-muted-foreground">
                             <span className="min-w-6 font-mono tabular-nums text-foreground">{count}</span>
                             <span>
                               {count === 1 ? singular : plural} created
                             </span>
-                            {key === 'paymentProviders' && (
+                            {kept > 0 && <span className="text-xs">{kept} already existed</span>}
+                            {skipped && <span className="text-xs">Skipped, sales are disabled</span>}
+                            {key === 'paymentProviders' && count > 0 && (
                               <PaymentProviderEnvDisplay
                                 createdProviders={
                                   STORE_TEMPLATES[selectedTemplate].displayNames
@@ -372,8 +377,7 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
                 <div role="alert" className="flex items-start gap-2.5 border-b border-border bg-red-50 px-4 py-3 text-red-700 dark:bg-red-950/30 dark:text-red-300">
                   <AlertCircle className="mt-0.5 size-4 shrink-0" />
                   <span className="text-xs sm:text-sm">
-                    Error: Please ensure you're using a fresh installation
-                    without existing data.
+                    Setup stopped before it finished. Records created so far were kept.
                   </span>
                 </div>
               )}
@@ -457,8 +461,7 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
             <div role="alert" className="flex items-start gap-2.5 border-b border-border bg-red-50 px-4 py-3 text-red-700 dark:bg-red-950/30 dark:text-red-300">
               <AlertCircle className="mt-0.5 size-4 shrink-0" />
               <span className="text-xs sm:text-sm">
-                Error: Please ensure you're using a fresh installation
-                without existing data.
+                Setup stopped before it finished. Records created so far were kept.
               </span>
             </div>
           )}

@@ -4,6 +4,7 @@ import { keystoneClient } from '@/features/dashboard/lib/keystoneClient';
 import { revalidatePath } from 'next/cache';
 import { normalizeStoreLogoColor } from '../lib/store-logo';
 import { sanitizeStoreLogoSvg } from '@/features/keystone/utils/storeLogo';
+import { mergeStoreInfo, type StoreBusiness, type StorePolicies } from '../lib/store-info';
 
 export async function getStoreSettings() {
   const query = `
@@ -15,6 +16,7 @@ export async function getStoreSettings() {
         logoColor
         homepageTitle
         homepageDescription
+        metadata
       }
     }
   `;
@@ -34,10 +36,13 @@ export async function updateStoreSettings(storeId: string, data: {
   logoColor?: string;
   homepageTitle?: string;
   homepageDescription?: string;
+  business?: StoreBusiness;
+  policies?: StorePolicies;
 }) {
+  const { business, policies, ...fields } = data;
   // Sanitize SVG before saving to prevent XSS attacks
-  const sanitizedData = {
-    ...data,
+  const sanitizedData: Record<string, unknown> = {
+    ...fields,
     logoIcon: data.logoIcon ? sanitizeStoreLogoSvg(data.logoIcon) : undefined,
     logoColor:
       data.logoColor === undefined ? undefined : normalizeStoreLogoColor(data.logoColor),
@@ -46,6 +51,18 @@ export async function updateStoreSettings(storeId: string, data: {
   // If SVG sanitization failed (returned empty string), reject the update
   if (data.logoIcon && !sanitizedData.logoIcon) {
     return { success: false, error: 'Invalid SVG format' };
+  }
+
+  if (business && policies) {
+    // Read the current metadata so keys owned elsewhere survive the save.
+    const current = await keystoneClient(
+      `query StoreMetadata($id: ID!) { store(where: { id: $id }) { id metadata } }`,
+      { id: storeId }
+    );
+    if (!current.success) {
+      return { success: false, error: current.error };
+    }
+    sanitizedData.metadata = mergeStoreInfo(current.data?.store?.metadata, business, policies);
   }
 
   const mutation = `
@@ -57,6 +74,7 @@ export async function updateStoreSettings(storeId: string, data: {
         logoColor
         homepageTitle
         homepageDescription
+        metadata
       }
     }
   `;
@@ -68,6 +86,8 @@ export async function updateStoreSettings(storeId: string, data: {
   }
 
   revalidatePath('/dashboard');
+  // Footer and policy pages read the same record.
+  revalidatePath('/', 'layout');
 
   return { success: true, data: response.data?.updateStore };
 }

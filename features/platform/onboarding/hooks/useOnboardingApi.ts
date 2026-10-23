@@ -18,7 +18,61 @@ interface OnboardingApiProps {
   setError: (error: string | null) => void;
   setIsLoading: (loading: boolean) => void;
   resetOnboardingState: () => void;
+  setSummary?: (summary: OnboardingSummary) => void;
 }
+
+export type OnboardingSummaryKey = 'regions' | 'paymentProviders' | 'shipping' | 'categories' | 'collections' | 'products';
+
+export interface OnboardingSummary {
+  storeExisted: boolean;
+  created: Record<OnboardingSummaryKey, number>;
+  existing: Record<OnboardingSummaryKey, number>;
+  skippedForCompliance: OnboardingSummaryKey[];
+}
+
+type IdMap = Record<string, string>;
+
+// What the store already has, keyed the same way the seed refers to it.
+// Onboarding only creates what is missing from these maps.
+interface ExistingRecords {
+  storeId: string;
+  storeName: string;
+  hasMerchantProfile: boolean;
+  salesBlocked: boolean;
+  currencies: IdMap;
+  countries: Record<string, { id: string; regionId: string | null }>;
+  paymentProviders: IdMap;
+  fulfillmentProviders: IdMap;
+  regionsByCode: IdMap;
+  regionsByName: IdMap;
+  categoriesByHandle: IdMap;
+  categoriesByTitle: IdMap;
+  collectionsByHandle: IdMap;
+  collectionsByTitle: IdMap;
+  productsByHandle: IdMap;
+  productsByTitle: IdMap;
+  shippingOptionKeys: Set<string>;
+}
+
+const key = (value: unknown) => String(value ?? '').trim().toLowerCase();
+
+const toMap = (items: Array<Record<string, any>> | null | undefined, field: string): IdMap => {
+  const map: IdMap = {};
+  for (const item of items || []) {
+    const k = key(item[field]);
+    if (k && item.id) map[k] = item.id;
+  }
+  return map;
+};
+
+const emptyCounts = (): Record<OnboardingSummaryKey, number> => ({
+  regions: 0,
+  paymentProviders: 0,
+  shipping: 0,
+  categories: 0,
+  collections: 0,
+  products: 0,
+});
 
 export function useOnboardingApi({
   selectedTemplate,
@@ -32,7 +86,14 @@ export function useOnboardingApi({
   setError,
   setIsLoading,
   resetOnboardingState,
+  setSummary,
 }: OnboardingApiProps) {
+  let summary: OnboardingSummary = {
+    storeExisted: false,
+    created: emptyCounts(),
+    existing: emptyCounts(),
+    skippedForCompliance: [],
+  };
 
   const runOnboarding = async () => {
     setIsLoading(true);
@@ -53,18 +114,42 @@ export function useOnboardingApi({
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const createdStoreId = await createStore(client, currentJsonData);
-      await createMerchantProfile(client, createdStoreId, currentJsonData);
-      const createdCurrencies = await createCurrencies(client, currentJsonData);
-      const createdCountries = await createCountries(client, currentJsonData);
-      const createdPaymentProviders = await createPaymentProviders(client, currentJsonData);
-      const createdFulfillmentProviders = await createFulfillmentProvider(client);
-      const createdRegions = await createRegions(client, currentJsonData, createdCurrencies, createdPaymentProviders, createdFulfillmentProviders, createdCountries);
-      await createShippingOptions(client, currentJsonData, createdFulfillmentProviders, createdRegions);
-      const createdCategories = await createCategories(client, currentJsonData);
-      const createdCollections = await createCollections(client, currentJsonData);
-      await createProducts(client, currentJsonData, createdCategories, createdCollections, createdCurrencies, createdRegions);
+      summary = {
+        storeExisted: false,
+        created: emptyCounts(),
+        existing: emptyCounts(),
+        skippedForCompliance: [],
+      };
 
+      setProgress('Checking existing store data...');
+      const existing = await loadExisting(client, currentJsonData);
+      summary.storeExisted = Boolean(existing.storeId);
+
+      // An existing store that cannot sell (regulated, fail-closed) does not get
+      // a manual payment method or unclassified seed products added to it.
+      const skipRegulatedSeed = summary.storeExisted && existing.salesBlocked;
+
+      const storeId = await createStore(client, currentJsonData, existing);
+      if (!existing.hasMerchantProfile) {
+        await createMerchantProfile(client, storeId, existing.storeName || currentJsonData.store?.name);
+      }
+      const currencyIds = await createCurrencies(client, currentJsonData, existing);
+      const countryIds = await createCountries(client, currentJsonData, existing);
+      const paymentProviderIds = skipRegulatedSeed
+        ? skipPaymentProviders(currentJsonData, existing)
+        : await createPaymentProviders(client, currentJsonData, existing);
+      const fulfillmentProviderIds = await createFulfillmentProvider(client, existing);
+      const { createdRegions, regionIds } = await createRegions(client, currentJsonData, existing, currencyIds, paymentProviderIds, fulfillmentProviderIds, countryIds);
+      await createShippingOptions(client, currentJsonData, existing, fulfillmentProviderIds, createdRegions);
+      const categoryIds = await createCategories(client, currentJsonData, existing);
+      const collectionIds = await createCollections(client, currentJsonData, existing);
+      if (skipRegulatedSeed) {
+        summary.skippedForCompliance.push('products');
+      } else {
+        await createProducts(client, currentJsonData, existing, categoryIds, collectionIds, currencyIds, regionIds);
+      }
+
+      setSummary?.(summary);
       setProgress('Onboarding complete!');
 
       // Mark onboarding as completed
@@ -82,7 +167,142 @@ export function useOnboardingApi({
     }
   };
 
-  const createStore = async (client: GraphQLClient, data: any) => {
+  const loadExisting = async (client: GraphQLClient, data: any): Promise<ExistingRecords> => {
+    const handles = (items: any[] | undefined, field: string) =>
+      (items || []).map((item) => item?.[field]).filter((v): v is string => typeof v === 'string' && v !== '');
+
+    const productHandles = handles(data.products, 'handle');
+    const productTitles = handles(data.products, 'title');
+
+    const result = (await client.request(
+      gql`
+        query OnboardingExisting($productHandles: [String!], $productTitles: [String!]) {
+          stores(take: 1) {
+            id
+            name
+          }
+          currencies {
+            id
+            code
+          }
+          countries {
+            id
+            iso2
+            region {
+              id
+            }
+          }
+          paymentProviders {
+            id
+            code
+          }
+          fulfillmentProviders {
+            id
+            code
+          }
+          regions {
+            id
+            code
+            name
+          }
+          productCategories {
+            id
+            handle
+            title
+          }
+          productCollections {
+            id
+            handle
+            title
+          }
+          products(
+            where: {
+              OR: [
+                { handle: { in: $productHandles, mode: insensitive } }
+                { title: { in: $productTitles, mode: insensitive } }
+              ]
+            }
+          ) {
+            id
+            handle
+            title
+          }
+          shippingOptions {
+            id
+            uniqueKey
+          }
+        }
+      `,
+      { productHandles, productTitles }
+    )) as any;
+
+    const store = result.stores?.[0] || null;
+
+    let hasMerchantProfile = false;
+    let salesBlocked = false;
+    if (store?.id) {
+      try {
+        const profiles = (await client.request(
+          gql`
+            query OnboardingMerchantProfiles($storeId: ID!) {
+              regulatedMerchantProfilesCount(where: { store: { id: { equals: $storeId } } })
+            }
+          `,
+          { storeId: store.id }
+        )) as { regulatedMerchantProfilesCount: number | null };
+        hasMerchantProfile = (profiles.regulatedMerchantProfilesCount || 0) > 0;
+      } catch {
+        // Without compliance access the profile step is skipped anyway.
+        hasMerchantProfile = true;
+      }
+
+      try {
+        const readiness = (await client.request(gql`
+          query OnboardingReadiness {
+            regulatedCommerceReadiness
+          }
+        `)) as { regulatedCommerceReadiness?: { launchReady?: boolean } | null };
+        salesBlocked = readiness.regulatedCommerceReadiness?.launchReady !== true;
+      } catch {
+        // Unknown readiness on an existing store is treated as fail-closed.
+        salesBlocked = true;
+      }
+    }
+
+    const countries: ExistingRecords['countries'] = {};
+    for (const country of result.countries || []) {
+      const k = key(country.iso2);
+      if (k) countries[k] = { id: country.id, regionId: country.region?.id || null };
+    }
+
+    return {
+      storeId: store?.id || '',
+      storeName: store?.name || '',
+      hasMerchantProfile,
+      salesBlocked,
+      currencies: toMap(result.currencies, 'code'),
+      countries,
+      paymentProviders: toMap(result.paymentProviders, 'code'),
+      fulfillmentProviders: toMap(result.fulfillmentProviders, 'code'),
+      regionsByCode: toMap(result.regions, 'code'),
+      regionsByName: toMap(result.regions, 'name'),
+      categoriesByHandle: toMap(result.productCategories, 'handle'),
+      categoriesByTitle: toMap(result.productCategories, 'title'),
+      collectionsByHandle: toMap(result.productCollections, 'handle'),
+      collectionsByTitle: toMap(result.productCollections, 'title'),
+      productsByHandle: toMap(result.products, 'handle'),
+      productsByTitle: toMap(result.products, 'title'),
+      shippingOptionKeys: new Set((result.shippingOptions || []).map((o: any) => key(o.uniqueKey)).filter(Boolean)),
+    };
+  };
+
+  const createStore = async (client: GraphQLClient, data: any, existing: ExistingRecords) => {
+    // A store that already exists keeps its name and settings.
+    if (existing.storeId) {
+      setItemCompleted('store', existing.storeName || 'Store');
+      return existing.storeId;
+    }
+
     setProgress('Creating store...');
 
     // Merge seed data over the defaults so normal onboarding receives its
@@ -129,7 +349,7 @@ export function useOnboardingApi({
   // Draft compliance profile for the new store. It stays in draft with the
   // kill switch on until the merchant records their licences and approvals in
   // Compliance Center. Skipped when the user cannot manage compliance.
-  const createMerchantProfile = async (client: GraphQLClient, storeId: string, data: any) => {
+  const createMerchantProfile = async (client: GraphQLClient, storeId: string, legalName?: string) => {
     if (!storeId) return;
 
     try {
@@ -167,7 +387,7 @@ export function useOnboardingApi({
       await client.request(profileMutation, {
         data: {
           store: { connect: { id: storeId } },
-          legalName: data.store?.name || 'Cloud Nine Vapor',
+          legalName: legalName || 'Cloud Nine Vapor',
           complianceOwner: user.name || user.email,
           status: 'draft',
           killSwitch: true,
@@ -180,12 +400,27 @@ export function useOnboardingApi({
     }
   };
 
-  const createCurrencies = async (client: GraphQLClient, data: any) => {
-    setProgress('Creating currencies...');
-    const createdCurrencies: Record<string, string> = {};
+  const formatItemError = (itemError: any) => {
+    if (itemError?.response?.errors) {
+      return itemError.response.errors
+        .map((err: any) => err.message || JSON.stringify(err))
+        .join('\n');
+    }
+    return itemError?.message || 'Unknown error';
+  };
 
-    for (const region of data.regions) {
-      // Set the specific region as loading
+  const createCurrencies = async (client: GraphQLClient, data: any, existing: ExistingRecords) => {
+    setProgress('Creating currencies...');
+    const currencyIds: IdMap = {};
+
+    for (const region of data.regions || []) {
+      const code = key(region.currencyCode);
+      if (!code || currencyIds[code]) continue;
+      if (existing.currencies[code]) {
+        currencyIds[code] = existing.currencies[code];
+        continue;
+      }
+
       const regionName = `${region.name || 'Unknown'} (${(region.currencyCode || 'USD').toUpperCase()})`;
       setItemLoading('regions', regionName);
 
@@ -206,36 +441,30 @@ export function useOnboardingApi({
             name: region.currencyName,
           },
         })) as { createCurrency: { id: string } };
-        createdCurrencies[region.currencyCode] = result.createCurrency.id;
-
-        // Mark the region as completed after its currency is created
+        currencyIds[code] = result.createCurrency.id;
         setItemCompleted('regions', regionName);
       } catch (itemError: any) {
-        // Format the error message
-        let itemErrorMessage = itemError.message || 'Unknown error';
-        if (itemError.response?.errors) {
-          itemErrorMessage = itemError.response.errors
-            .map((err: any) => err.message || JSON.stringify(err))
-            .join('\n');
-        }
-
-        // Set specific error for this item
-        setItemError('regions', regionName, itemErrorMessage);
-
-        // Continue with other items
+        setItemError('regions', regionName, formatItemError(itemError));
         console.error(`Error creating currency for ${region.name}:`, itemError);
       }
     }
 
-    return createdCurrencies;
+    return currencyIds;
   };
 
-  const createCountries = async (client: GraphQLClient, data: any) => {
+  const createCountries = async (client: GraphQLClient, data: any, existing: ExistingRecords) => {
     setProgress('Creating countries...');
-    const createdCountries: Record<string, string> = {};
+    const countryIds: IdMap = {};
 
-    for (const region of data.regions) {
-      for (const country of region.countries) {
+    for (const region of data.regions || []) {
+      for (const country of region.countries || []) {
+        const iso2 = key(country.iso2);
+        if (!iso2 || countryIds[iso2]) continue;
+        if (existing.countries[iso2]) {
+          countryIds[iso2] = existing.countries[iso2].id;
+          continue;
+        }
+
         const mutation = gql`
           mutation CreateCountry($data: CountryCreateInput!) {
             createCountry(data: $data) {
@@ -247,20 +476,41 @@ export function useOnboardingApi({
         const result = (await client.request(mutation, {
           data: country,
         })) as { createCountry: { id: string } };
-        createdCountries[country.iso2] = result.createCountry.id;
+        countryIds[iso2] = result.createCountry.id;
       }
     }
 
-    return createdCountries;
+    return countryIds;
   };
 
-  const createPaymentProviders = async (client: GraphQLClient, data: any) => {
-    setProgress('Creating payment providers...');
-    const createdPaymentProviders: Record<string, string> = {};
+  // Fail-closed store: reuse providers that already exist, create none.
+  const skipPaymentProviders = (data: any, existing: ExistingRecords) => {
+    const paymentProviderIds: IdMap = {};
+    for (const provider of data.paymentProviders || []) {
+      const code = key(provider.code);
+      if (existing.paymentProviders[code]) {
+        paymentProviderIds[code] = existing.paymentProviders[code];
+        summary.existing.paymentProviders += 1;
+      }
+    }
+    summary.skippedForCompliance.push('paymentProviders');
+    return paymentProviderIds;
+  };
 
-    for (const provider of data.paymentProviders) {
-      // Set the specific payment provider as loading
+  const createPaymentProviders = async (client: GraphQLClient, data: any, existing: ExistingRecords) => {
+    setProgress('Creating payment providers...');
+    const paymentProviderIds: IdMap = {};
+
+    for (const provider of data.paymentProviders || []) {
       const providerName = provider.name || 'Unknown Provider';
+      const code = key(provider.code);
+      if (existing.paymentProviders[code]) {
+        paymentProviderIds[code] = existing.paymentProviders[code];
+        summary.existing.paymentProviders += 1;
+        setItemCompleted('paymentProviders', providerName);
+        continue;
+      }
+
       setItemLoading('paymentProviders', providerName);
 
       const mutation = gql`
@@ -274,18 +524,23 @@ export function useOnboardingApi({
       const result = (await client.request(mutation, { data: provider })) as {
         createPaymentProvider: { id: string };
       };
-      createdPaymentProviders[provider.code] = result.createPaymentProvider.id;
+      paymentProviderIds[code] = result.createPaymentProvider.id;
+      summary.created.paymentProviders += 1;
 
-      // Mark the payment provider as completed
       setItemCompleted('paymentProviders', providerName);
     }
 
-    return createdPaymentProviders;
+    return paymentProviderIds;
   };
 
-  const createFulfillmentProvider = async (client: GraphQLClient) => {
+  const createFulfillmentProvider = async (client: GraphQLClient, existing: ExistingRecords) => {
     setProgress('Creating fulfillment provider...');
-    const createdFulfillmentProviders: Record<string, string> = {};
+    const fulfillmentProviderIds: IdMap = {};
+
+    if (existing.fulfillmentProviders['fp_manual']) {
+      fulfillmentProviderIds['fp_manual'] = existing.fulfillmentProviders['fp_manual'];
+      return fulfillmentProviderIds;
+    }
 
     const fulfillmentMutation = gql`
       mutation CreateFulfillmentProvider($data: FulfillmentProviderCreateInput!) {
@@ -302,33 +557,58 @@ export function useOnboardingApi({
         isInstalled: true,
       },
     })) as { createFulfillmentProvider: { id: string } };
-    createdFulfillmentProviders['fp_manual'] = fulfillmentResult.createFulfillmentProvider.id;
+    fulfillmentProviderIds['fp_manual'] = fulfillmentResult.createFulfillmentProvider.id;
 
-    return createdFulfillmentProviders;
+    return fulfillmentProviderIds;
   };
 
   const createRegions = async (
     client: GraphQLClient,
     data: any,
-    createdCurrencies: Record<string, string>,
-    createdPaymentProviders: Record<string, string>,
-    createdFulfillmentProviders: Record<string, string>,
-    createdCountries: Record<string, string>
+    existing: ExistingRecords,
+    currencyIds: IdMap,
+    paymentProviderIds: IdMap,
+    fulfillmentProviderIds: IdMap,
+    countryIds: IdMap
   ) => {
     setProgress('Creating regions...');
-    const createdRegions: Record<string, string> = {};
+    // createdRegions: regions made by this run (they get seed shipping options).
+    // regionIds: every seed region code mapped to a usable region, for prices.
+    const createdRegions: IdMap = {};
+    const regionIds: IdMap = {};
 
-    for (const region of data.regions) {
+    for (const region of data.regions || []) {
+      const code = key(region.code);
+      const countries: Array<{ iso2: string }> = region.countries || [];
+
+      // Skip a region whose code or name exists, or whose countries already
+      // belong to a region; connecting them here would move them.
+      const assignedRegionId = countries
+        .map((c) => existing.countries[key(c.iso2)]?.regionId)
+        .find(Boolean);
+      const existingRegionId =
+        existing.regionsByCode[code] || existing.regionsByName[key(region.name)] || assignedRegionId;
+      if (existingRegionId) {
+        regionIds[code] = existingRegionId;
+        summary.existing.regions += 1;
+        continue;
+      }
+
+      const currencyId = currencyIds[key(region.currencyCode)];
+      if (!currencyId) continue;
+
       const filteredPaymentProviders = (region.paymentProviders?.connect || [])
-        .map((p: any) => createdPaymentProviders[p.code])
+        .map((p: any) => paymentProviderIds[key(p.code)])
         .filter(Boolean)
         .map((id: string) => ({ id }));
-      const filteredFulfillmentProviders = region.fulfillmentProviders?.connect || []
-        ? region.fulfillmentProviders.connect
-            .map((p: any) => createdFulfillmentProviders[p.code])
-            .filter(Boolean)
-            .map((id: string) => ({ id }))
-        : [];
+      const filteredFulfillmentProviders = (region.fulfillmentProviders?.connect || [])
+        .map((p: any) => fulfillmentProviderIds[key(p.code)])
+        .filter(Boolean)
+        .map((id: string) => ({ id }));
+      const countriesToConnect = countries
+        .map((c) => countryIds[key(c.iso2)])
+        .filter(Boolean)
+        .map((id: string) => ({ id }));
 
       const mutation = gql`
         mutation CreateRegion($data: RegionCreateInput!) {
@@ -343,7 +623,7 @@ export function useOnboardingApi({
           code: region.code,
           name: region.name,
           currency: {
-            connect: { id: createdCurrencies[region.currencyCode] },
+            connect: { id: currencyId },
           },
           taxRate: region.taxRate,
           paymentProviders: filteredPaymentProviders.length > 0
@@ -352,33 +632,40 @@ export function useOnboardingApi({
           fulfillmentProviders: filteredFulfillmentProviders.length > 0
             ? { connect: filteredFulfillmentProviders }
             : undefined,
-          countries: {
-            connect: region.countries.map((c: { iso2: string }) => ({
-              id: createdCountries[c.iso2],
-            })),
-          },
+          countries: countriesToConnect.length > 0
+            ? { connect: countriesToConnect }
+            : undefined,
         },
       })) as { createRegion: { id: string } };
-      createdRegions[region.code] = result.createRegion.id;
+      createdRegions[code] = result.createRegion.id;
+      regionIds[code] = result.createRegion.id;
+      summary.created.regions += 1;
     }
 
-    return createdRegions;
+    return { createdRegions, regionIds };
   };
 
   const createShippingOptions = async (
     client: GraphQLClient,
     data: any,
-    createdFulfillmentProviders: Record<string, string>,
-    createdRegions: Record<string, string>
+    existing: ExistingRecords,
+    fulfillmentProviderIds: IdMap,
+    createdRegions: IdMap
   ) => {
     setProgress('Creating shipping options...');
 
-    for (const option of data.shipping_options) {
-      // Set the specific shipping option as loading
+    for (const option of data.shipping_options || []) {
       const shippingName = option.name || 'Unknown Shipping';
-      setItemLoading('shipping', shippingName);
+      let created = 0;
 
-      for (const region of data.regions) {
+      // Existing regions keep their own shipping setup.
+      for (const region of data.regions || []) {
+        const regionId = createdRegions[key(region.code)];
+        const uniqueKey = `${option.name}-${region.code}`;
+        if (!regionId || existing.shippingOptionKeys.has(key(uniqueKey))) continue;
+
+        if (created === 0) setItemLoading('shipping', shippingName);
+
         const mutation = gql`
           mutation CreateShippingOption($data: ShippingOptionCreateInput!) {
             createShippingOption(data: $data) {
@@ -392,27 +679,37 @@ export function useOnboardingApi({
             priceType: option.priceType,
             amount: option.amount,
             isReturn: option.isReturn || false,
-            uniqueKey: `${option.name}-${region.code}`,
+            uniqueKey,
             fulfillmentProvider: {
-              connect: { id: createdFulfillmentProviders['fp_manual'] },
+              connect: { id: fulfillmentProviderIds['fp_manual'] },
             },
-            region: { connect: { id: createdRegions[region.code] } },
+            region: { connect: { id: regionId } },
           },
         });
+        created += 1;
       }
 
-      // Mark the shipping option as completed
+      if (created > 0) summary.created.shipping += 1;
+      else summary.existing.shipping += 1;
       setItemCompleted('shipping', shippingName);
     }
   };
 
-  const createCategories = async (client: GraphQLClient, data: any) => {
+  const createCategories = async (client: GraphQLClient, data: any, existing: ExistingRecords) => {
     setProgress('Creating categories...');
-    const createdCategories: Record<string, string> = {};
+    const categoryIds: IdMap = {};
 
-    for (const category of data.categories) {
-      // Set the specific category as loading
+    for (const category of data.categories || []) {
       const categoryName = category.title || category.name || 'Unknown Category';
+      const handle = key(category.handle);
+      const existingId = existing.categoriesByHandle[handle] || existing.categoriesByTitle[key(categoryName)];
+      if (existingId) {
+        categoryIds[handle] = existingId;
+        summary.existing.categories += 1;
+        setItemCompleted('categories', categoryName);
+        continue;
+      }
+
       setItemLoading('categories', categoryName);
 
       const mutation = gql`
@@ -430,22 +727,30 @@ export function useOnboardingApi({
           isActive: category.isActive,
         },
       })) as { createProductCategory: { id: string } };
-      createdCategories[category.handle] = result.createProductCategory.id;
+      categoryIds[handle] = result.createProductCategory.id;
+      summary.created.categories += 1;
 
-      // Mark the category as completed
       setItemCompleted('categories', categoryName);
     }
 
-    return createdCategories;
+    return categoryIds;
   };
 
-  const createCollections = async (client: GraphQLClient, data: any) => {
+  const createCollections = async (client: GraphQLClient, data: any, existing: ExistingRecords) => {
     setProgress('Creating collections...');
-    const createdCollections: Record<string, string> = {};
+    const collectionIds: IdMap = {};
 
-    for (const collection of data.collections) {
-      // Set the specific collection as loading
+    for (const collection of data.collections || []) {
       const collectionName = collection.title || 'Unknown Collection';
+      const handle = key(collection.handle);
+      const existingId = existing.collectionsByHandle[handle] || existing.collectionsByTitle[key(collectionName)];
+      if (existingId) {
+        collectionIds[handle] = existingId;
+        summary.existing.collections += 1;
+        setItemCompleted('collections', collectionName);
+        continue;
+      }
+
       setItemLoading('collections', collectionName);
 
       const mutation = gql`
@@ -459,49 +764,49 @@ export function useOnboardingApi({
       const result = (await client.request(mutation, {
         data: collection,
       })) as { createProductCollection: { id: string } };
-      createdCollections[collection.handle] = result.createProductCollection.id;
+      collectionIds[handle] = result.createProductCollection.id;
+      summary.created.collections += 1;
 
-      // Mark the collection as completed
       setItemCompleted('collections', collectionName);
     }
 
-    return createdCollections;
+    return collectionIds;
   };
 
   const createProducts = async (
     client: GraphQLClient,
     data: any,
-    createdCategories: Record<string, string>,
-    createdCollections: Record<string, string>,
-    createdCurrencies: Record<string, string>,
-    createdRegions: Record<string, string>
+    existing: ExistingRecords,
+    categoryIds: IdMap,
+    collectionIds: IdMap,
+    currencyIds: IdMap,
+    regionIds: IdMap
   ) => {
     setProgress('Creating products and variants...');
 
-    for (const product of data.products) {
-      // Set the specific product as loading
+    for (const product of data.products || []) {
       const productName = product.title || 'Unknown Product';
+      if (existing.productsByHandle[key(product.handle)] || existing.productsByTitle[key(productName)]) {
+        summary.existing.products += 1;
+        setItemCompleted('products', productName);
+        continue;
+      }
+
       setItemLoading('products', productName);
 
       const { variants, productCollections, productCategories, subtitle, ...productInput } = product;
 
       // Only connect the collections that exist for this product, by id
-      let collectionsToConnect: any[] = [];
-      if (productCollections && productCollections.connect) {
-        collectionsToConnect = productCollections.connect
-          .map((c: { handle: string }) => createdCollections[c.handle])
-          .filter(Boolean)
-          .map((id: string) => ({ id }));
-      }
+      const collectionsToConnect = (productCollections?.connect || [])
+        .map((c: { handle: string }) => collectionIds[key(c.handle)])
+        .filter(Boolean)
+        .map((id: string) => ({ id }));
 
       // Only connect the categories that exist for this product, by id
-      let categoriesToConnect: any[] = [];
-      if (productCategories && productCategories.connect) {
-        categoriesToConnect = productCategories.connect
-          .map((c: { handle: string }) => createdCategories[c.handle])
-          .filter(Boolean)
-          .map((id: string) => ({ id }));
-      }
+      const categoriesToConnect = (productCategories?.connect || [])
+        .map((c: { handle: string }) => categoryIds[key(c.handle)])
+        .filter(Boolean)
+        .map((id: string) => ({ id }));
 
       // Remove variants and connect collections/categories by id, omit subtitle if null/empty
       const productData = {
@@ -530,7 +835,7 @@ export function useOnboardingApi({
       const productResult = await client.request(productMutation, { data: productData });
 
       // Create variants for this product
-      for (const variant of variants) {
+      for (const variant of variants || []) {
         const variantMutation = gql`
           mutation CreateProductVariant($data: ProductVariantCreateInput!) {
             createProductVariant(data: $data) {
@@ -542,7 +847,7 @@ export function useOnboardingApi({
         const allOptionValues = (productResult as any).createProduct.productOptions.flatMap(
           (opt: any) => opt.productOptionValues
         );
-        const matchingIds = variant.options
+        const matchingIds = (variant.options || [])
           .map((opt: any) =>
             allOptionValues.find((v: any) => v.value === opt.value)?.id
           )
@@ -550,15 +855,15 @@ export function useOnboardingApi({
           .map((id: string) => ({ id }));
 
         // Only create prices where both currency and region exist
-        const validPrices = variant.prices.filter(
+        const validPrices = (variant.prices || []).filter(
           (price: { currencyCode: string; regionCode: string }) =>
-            createdCurrencies[price.currencyCode] && createdRegions[price.regionCode]
+            currencyIds[key(price.currencyCode)] && regionIds[key(price.regionCode)]
         );
         const prices = {
           create: validPrices.map((price: { currencyCode: string; regionCode: string; amount: number }) => ({
             amount: price.amount,
-            currency: { connect: { id: createdCurrencies[price.currencyCode] } },
-            region: { connect: { id: createdRegions[price.regionCode] } },
+            currency: { connect: { id: currencyIds[key(price.currencyCode)] } },
+            region: { connect: { id: regionIds[key(price.regionCode)] } },
           })),
         };
 
@@ -574,7 +879,7 @@ export function useOnboardingApi({
         });
       }
 
-      // Mark the product as completed
+      summary.created.products += 1;
       setItemCompleted('products', productName);
     }
   };

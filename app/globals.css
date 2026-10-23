@@ -142,4 +142,8 @@
     transform: translateY(-0.1em);
   }
   .vp-pill[data-active="true"]:disabled { color: #141816; text-decoration: none; cursor: default; }
+
+  /* Horizontal scrollers (segmented tracks on phone) */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 }
