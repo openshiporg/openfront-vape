@@ -49,3 +49,8 @@ export async function startOnboarding() {
 export async function completeOnboarding() {
   return updateOnboardingStatus('completed');
 }
+/** Whether a store record exists, so the sidebar card doesn't call a set-up store empty. */
+export async function hasExistingStore(): Promise<boolean> {
+  const response = await keystoneClient<{ storesCount: number }>(`query OnboardingStoreExists { storesCount }`);
+  return response.success ? (response.data?.storesCount ?? 0) > 0 : false;
+}

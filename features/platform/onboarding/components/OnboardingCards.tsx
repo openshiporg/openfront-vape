@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dot } from "@/features/platform/components/vape-ui";
+import { hasExistingStore } from "../actions/onboarding";
 
 export interface OnboardingStep {
   href: string;
@@ -88,6 +89,14 @@ export function OnboardingCards({
   const cards = steps.filter(({ href }) => !dismissedSteps.includes(href));
   const cardCount = cards.length;
   const [showCompleted, setShowCompleted] = React.useState(cardCount > 0);
+  // A store that already exists isn't empty; onboarding only adds what's missing
+  const [storeExists, setStoreExists] = React.useState(false);
+
+  React.useEffect(() => {
+    let active = true;
+    hasExistingStore().then((exists) => { if (active) setStoreExists(exists); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   React.useEffect(() => {
     let timeout: NodeJS.Timeout | undefined = undefined;
@@ -111,7 +120,7 @@ export function OnboardingCards({
         <OnboardingCard
           key={href}
           title={title}
-          description={description}
+          description={storeExists ? "Add what your store is missing." : description}
           onDismiss={onDismiss}
           onOpenDialog={onOpenDialog}
         />

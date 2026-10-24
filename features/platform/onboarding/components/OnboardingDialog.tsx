@@ -32,6 +32,7 @@ import { SectionRenderer } from './SectionRenderer';
 import { useOnboardingState } from '../hooks/useOnboardingState';
 import { useOnboardingApi, type OnboardingPlan, type OnboardingSummary, type OnboardingSummaryKey } from '../hooks/useOnboardingApi';
 import { STORE_TEMPLATES, SECTION_DEFINITIONS } from '../config/templates';
+import { completeOnboarding } from '../actions/onboarding';
 
 const TEMPLATE_CHOICES: Array<{
   value: 'minimal' | 'full' | 'custom';
@@ -239,6 +240,14 @@ const OnboardingDialog: React.FC<OnboardingDialogProps> = ({
   const planChecking = planStatus === 'loading';
   const nothingToAdd = planStatus === 'ready' && Boolean(plan?.nothingToAdd);
   const primaryLabel = planChecking ? 'Checking store' : nothingToAdd ? 'Nothing to add' : 'Confirm';
+
+  // A store that already has everything is set up: retire the sidebar prompt
+  const markedComplete = React.useRef(false);
+  React.useEffect(() => {
+    if (!nothingToAdd || markedComplete.current) return;
+    markedComplete.current = true;
+    completeOnboarding().catch(() => {});
+  }, [nothingToAdd]);
 
   if (!isOpen) return null;
 
