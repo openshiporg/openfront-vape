@@ -428,14 +428,7 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
 
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="flex flex-wrap items-end justify-between gap-4 px-4 pb-4 pt-4 md:px-6 md:pt-6">
-            <PageTitle
-              title="Analytics"
-              meta={
-                <span className="font-mono tabular-nums">
-                  {startDate.slice(0, 10)} to {endDate.slice(0, 10)}
-                </span>
-              }
-            />
+            <PageTitle title="Analytics" />
             <DateRangePickerWrapper />
           </div>
 

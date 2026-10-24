@@ -7,10 +7,16 @@ export function DateRangePickerWrapper() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams() ?? new URLSearchParams();
+  const start = searchParams.get('startDate');
+  const end = searchParams.get('endDate');
+  const defaultValue = start && end && !Number.isNaN(Date.parse(start)) && !Number.isNaN(Date.parse(end))
+    ? { from: new Date(start), to: new Date(end) }
+    : undefined;
 
   return (
     <div className="flex items-center justify-end">
-      <DateRangePicker 
+      <DateRangePicker
+        defaultValue={defaultValue}
         onDateChange={(range) => {
           if (range?.from && range?.to) {
             const params = new URLSearchParams(searchParams.toString());

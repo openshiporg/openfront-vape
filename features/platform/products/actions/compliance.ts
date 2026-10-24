@@ -59,7 +59,7 @@ export async function getProductCompliance(productId: string): Promise<ProductCo
   const now = new Date();
   const record = await keystoneContext.sudo().query.Product.findOne({
     where: { id: productId },
-    query: `regulatedCommerceRequired regulatedExemptionExpiresAt productVariants {
+    query: `title regulatedCommerceRequired regulatedExemptionExpiresAt productVariants {
       id title sku
       regulatedClassification {
         id status effectiveAt expiresAt category marketingReviewStatus nicotineConcentrationMgMl liquidVolumeMl flavor
@@ -74,7 +74,7 @@ export async function getProductCompliance(productId: string): Promise<ProductCo
     const classification = variant.regulatedClassification;
     return {
       id: variant.id,
-      title: variant.title || variant.sku || 'Variant',
+      title: (variant.title && variant.title !== 'Default Title' ? variant.title : record.title) || variant.sku || 'Variant',
       sku: variant.sku || null,
       classification: classification ? {
         id: classification.id,

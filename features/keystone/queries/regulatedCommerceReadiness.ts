@@ -60,7 +60,7 @@ export default async function regulatedCommerceReadiness(_root: unknown, _args: 
     blockers,
     integrationStates,
     transactionMode,
-    claimBoundary: "Checkout opens when a merchant profile is active, its kill switch is off and it has a launch jurisdiction. Each order is still checked against the compliance rules for its cart.",
+    claimBoundary: "Checkout opens when a merchant profile is active, its kill switch is off and it has a launch jurisdiction, and the store has published its legal name, licence numbers and all five policies. Each order is still checked against the compliance rules for its cart.",
     profiles,
     activeRuleSets,
     approvedClassifications: usableClassifications,

@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { runMutation, sessionContext, type SaveResult } from '@/features/platform/lib/session-context';
 
 export type ApprovalOptions = {
@@ -32,17 +30,25 @@ const iso = (value: string) => (value ? new Date(`${value}T00:00:00.000Z`).toISO
 export async function getApprovalOptions(): Promise<ApprovalOptions | null> {
   const context = await sessionContext();
   if (!context.session?.itemId) return null;
-  try {
-    const [profiles, paymentProviders, shippingProviders, jurisdictions] = await Promise.all([
-      context.query.RegulatedMerchantProfile.findMany({ take: 20, orderBy: [{ createdAt: 'desc' }], query: 'id legalName status' }),
-      context.query.PaymentProvider.findMany({ take: 50, query: 'id name' }),
-      context.query.ShippingProvider.findMany({ take: 50, query: 'id name' }),
-      context.query.Jurisdiction.findMany({ take: 200, orderBy: [{ code: 'asc' }], query: 'code name' }),
-    ]);
-    return { profiles, paymentProviders, shippingProviders, jurisdictions } as unknown as ApprovalOptions;
-  } catch {
-    return null;
-  }
+  // Each list loads on its own so one refused read leaves the rest of the form usable
+  const [profiles, paymentProviders, shippingProviders, jurisdictions] = await Promise.allSettled([
+    context.query.RegulatedMerchantProfile.findMany({ take: 20, query: 'id legalName status' }),
+    context.query.PaymentProvider.findMany({ take: 50, query: 'id name' }),
+    context.query.ShippingProvider.findMany({ take: 50, query: 'id name' }),
+    context.query.Jurisdiction.findMany({ take: 100, query: 'code name' }),
+  ]);
+  const value = (result: PromiseSettledResult<readonly Record<string, any>[]>, list: string) => {
+    if (result.status === 'fulfilled') return [...result.value];
+    const error = result.reason as any;
+    console.error(`Approval options: ${list} read failed`, { name: error?.name, code: error?.extensions?.code });
+    return [];
+  };
+  return {
+    profiles: value(profiles, 'RegulatedMerchantProfile'),
+    paymentProviders: value(paymentProviders, 'PaymentProvider'),
+    shippingProviders: value(shippingProviders, 'ShippingProvider'),
+    jurisdictions: value(jurisdictions, 'Jurisdiction').sort((a, b) => String(a.code).localeCompare(String(b.code))),
+  } as ApprovalOptions;
 }
 
 export async function createProviderApproval(input: ApprovalInput): Promise<SaveResult> {
@@ -63,11 +69,10 @@ export async function createProviderApproval(input: ApprovalInput): Promise<Save
   if (input.purpose === 'carrier' && input.shippingProviderId) data.shippingProvider = { connect: { id: input.shippingProviderId } };
   if (input.status === 'active') data.validatedAt = new Date().toISOString();
 
-  const result = await runMutation(
+  // The sheet refreshes the page itself; revalidating inside the action re-renders the route in the response
+  return runMutation(
     `mutation CreateProviderApproval($data: ProviderApprovalCreateInput!) { createProviderApproval(data: $data) { id } }`,
     { data },
     response => response.createProviderApproval
   );
-  if (result.success) revalidatePath('/dashboard/platform/compliance');
-  return result;
 }

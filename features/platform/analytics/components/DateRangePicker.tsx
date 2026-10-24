@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   endOfMonth,
   endOfYear,
@@ -60,6 +60,9 @@ export function DateRangePicker({ onDateChange, defaultValue }: DateRangePickerP
   const [month, setMonth] = useState(today)
   const [date, setDate] = useState<DateRange | undefined>(defaultValue || last30Days)
   const [open, setOpen] = useState(false)
+  // Server and browser can be on different calendar days, so the label waits for the browser
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   const handleDateSelect = (newDate: DateRange | undefined) => {
     setDate(newDate)
@@ -87,7 +90,7 @@ export function DateRangePicker({ onDateChange, defaultValue }: DateRangePickerP
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="h-10 justify-start rounded-full bg-background px-4 font-mono text-sm tabular-nums">
-          {formatDateRange(date)}
+          {mounted ? formatDateRange(date) : "Date range"}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="end">

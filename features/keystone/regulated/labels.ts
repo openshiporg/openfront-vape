@@ -6,8 +6,8 @@ export const CLASSIFICATION_CATEGORY_LABELS: Record<string, string> = {
   e_liquid: "E-liquid",
   component: "Component (pod, coil, tank)",
   accessory: "Accessory",
-  tobacco_derived_nicotine: "Tobacco-derived nicotine",
-  synthetic_nicotine: "Synthetic nicotine",
+  tobacco_derived_nicotine: "Raw nicotine, tobacco-derived",
+  synthetic_nicotine: "Raw nicotine, synthetic",
 };
 
 export const NICOTINE_SOURCE_LABELS: Record<string, string> = {

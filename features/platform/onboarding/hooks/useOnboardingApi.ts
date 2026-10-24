@@ -89,6 +89,8 @@ export interface OnboardingPlanSection {
   existing: string[];
   // Not created because the existing store cannot sell yet.
   skipped: boolean;
+  // Not created for another reason, shown instead of "Already set up".
+  skipReason?: string;
 }
 
 export interface OnboardingPlan {
@@ -268,12 +270,18 @@ export function useOnboardingApi({
     }
     sections.paymentProviders.skipped = skipRegulatedSeed && (data.paymentProviders || []).length > 0;
 
+    // Options are only added to regions this run creates
     for (const option of data.shipping_options || []) {
       const name = option.name || 'Unknown Shipping';
       const willCreate = createdRegionCodes.some(
         (code) => !existing.shippingOptionKeys.has(key(`${option.name}-${code}`))
       );
-      (willCreate ? sections.shipping.add : sections.shipping.existing).push(name);
+      const alreadyThere = createdRegionCodes.length > 0 && !willCreate;
+      if (willCreate) sections.shipping.add.push(name);
+      else if (alreadyThere) sections.shipping.existing.push(name);
+    }
+    if (!createdRegionCodes.length && (data.shipping_options || []).length > 0) {
+      sections.shipping.skipReason = 'Skipped, region already exists';
     }
 
     for (const category of data.categories || []) {

@@ -355,7 +355,25 @@ async function recordAgeAttestation(userId: string) {
   }
 }
 
-export async function signUp(_currentState: any, formData: FormData) {
+export type SignUpState = {
+  error: string;
+  fields: { first_name: string; last_name: string; email: string; phone: string; age_21: boolean };
+} | null;
+
+export async function signUp(_currentState: SignUpState, formData: FormData): Promise<SignUpState> {
+  // Returned with every error so the form keeps what the customer typed (never the password)
+  const fields = {
+    first_name: String(formData.get("first_name") || ""),
+    last_name: String(formData.get("last_name") || ""),
+    email: String(formData.get("email") || ""),
+    phone: String(formData.get("phone") || ""),
+    age_21: formData.get("age_21") === "on",
+  };
+  const error = await createAccount(formData);
+  return error ? { error, fields } : null;
+}
+
+async function createAccount(formData: FormData): Promise<string | null> {
   if (formData.get("age_21") !== "on") {
     return "Confirm you are 21 or older.";
   }
@@ -367,6 +385,10 @@ export async function signUp(_currentState: any, formData: FormData) {
     lastName: formData.get("last_name"),
     phone: formData.get("phone"),
   };
+
+  if (typeof customer.password !== "string" || customer.password.length < 10) {
+    return "Password must be at least 10 characters.";
+  }
 
   try {
     // First create the user
@@ -445,7 +467,12 @@ export async function signUp(_currentState: any, formData: FormData) {
     if (error instanceof Error && error.message.includes("Unique constraint failed on the fields: (`email`)")) {
       return "An account with this email already exists";
     }
-    return accountActionError(error);
+    const message = accountActionError(error);
+    // The User model rejects common passwords as invalid data
+    if (message === "The supplied details are invalid") {
+      return "Choose a less common password of at least 10 characters.";
+    }
+    return message;
   }
 }
 

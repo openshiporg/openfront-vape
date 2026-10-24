@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { keystoneContext } from '@/features/keystone/context';
 import { runMutation, sessionContext, type SaveResult } from '@/features/platform/lib/session-context';
 
@@ -73,7 +71,7 @@ export async function getClassifyForm(variantId: string): Promise<ClassifyForm |
             authorizations { id authority authorizationType authorizationIdentifier status effectiveAt expiresAt jurisdiction { code } }
           }`,
       }),
-      context.query.Jurisdiction.findMany({ orderBy: [{ code: 'asc' }], take: 200, query: 'id code name' }),
+      context.query.Jurisdiction.findMany({ orderBy: [{ code: 'asc' }], take: 100, query: 'id code name' }),
     ]);
     if (!variant) return null;
 
@@ -87,7 +85,12 @@ export async function getClassifyForm(variantId: string): Promise<ClassifyForm |
       : null;
 
     return {
-      variant: { id: variant.id, title: variant.title || variant.sku || 'Variant', productId: variant.product?.id },
+      // Single-variant products carry the placeholder "Default Title"
+      variant: {
+        id: variant.id,
+        title: (variant.title && variant.title !== 'Default Title' ? variant.title : variant.product?.title) || variant.sku || 'Variant',
+        productId: variant.product?.id,
+      },
       classification: classification ? {
         id: classification.id,
         category: classification.category,
@@ -150,7 +153,9 @@ export async function saveClassification(
   if (input.marketingReviewStatus === 'approved') data.marketingReviewedAt = new Date().toISOString();
   if (input.status === 'approved' && userId) data.reviewedBy = { connect: { id: userId } };
 
-  const result = classificationId
+  // No revalidatePath: re-rendering the product route inside the action response
+  // crashed the page; the sheet reloads its own data after a save.
+  return classificationId
     ? await runMutation(
         `mutation SaveClassification($id: ID!, $data: RegulatedProductClassificationUpdateInput!) {
           updateRegulatedProductClassification(where: { id: $id }, data: $data) { id }
@@ -165,8 +170,6 @@ export async function saveClassification(
         { data: { ...data, variant: { connect: { id: variantId } } } },
         response => response.createRegulatedProductClassification
       );
-  if (result.success) revalidatePath('/dashboard/platform/products');
-  return result;
 }
 
 export async function saveAuthorization(classificationId: string, input: AuthorizationInput): Promise<SaveResult> {
@@ -184,13 +187,11 @@ export async function saveAuthorization(classificationId: string, input: Authori
   if (input.jurisdictionId) data.jurisdiction = { connect: { id: input.jurisdictionId } };
   if (input.status === 'authorized') data.lastVerifiedAt = new Date().toISOString();
 
-  const result = await runMutation(
+  return runMutation(
     `mutation CreateAuthorization($data: ProductAuthorizationCreateInput!) {
       createProductAuthorization(data: $data) { id }
     }`,
     { data },
     response => response.createProductAuthorization
   );
-  if (result.success) revalidatePath('/dashboard/platform/products');
-  return result;
 }

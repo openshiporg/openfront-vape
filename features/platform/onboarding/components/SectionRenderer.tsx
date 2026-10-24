@@ -14,6 +14,7 @@ const PROVIDER_ENV_VARS: Record<string, string[]> = {
 function planStateLabel(section: OnboardingPlan['sections'][OnboardingPlanKey]): string | null {
   const kept = section.existing.length;
   if (section.skipped) return 'Skipped, sales are disabled';
+  if (section.skipReason && section.add.length === 0) return section.skipReason;
   if (section.add.length === 0 && kept > 0) return 'Already set up';
   if (kept > 0) return `${kept} already exist`;
   if (section.add.length === 0) return 'None';

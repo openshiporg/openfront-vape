@@ -226,6 +226,7 @@ export function UserDetailsComponent({
                     year: "numeric",
                     month: "long",
                     day: "numeric",
+                    timeZone: "UTC",
                   })}
                 </span>
               </div>
@@ -371,7 +372,7 @@ export function UserDetailsComponent({
                               {cart.totalPrice && (
                                 <span className="font-mono tabular-nums text-foreground">{cart.totalPrice}</span>
                               )}
-                              <span className="font-mono tabular-nums">{new Date(cart.createdAt).toLocaleDateString()}</span>
+                              <span className="font-mono tabular-nums">{new Date(cart.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })}</span>
                               {cart.lineItems && (
                                 <span><span className="font-mono tabular-nums">{cart.lineItems.length}</span> items</span>
                               )}

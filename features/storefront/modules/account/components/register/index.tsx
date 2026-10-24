@@ -17,7 +17,8 @@ type Props = {
 const policyLinkClass = "font-medium text-vp-ink underline underline-offset-2"
 
 const Register = ({ setCurrentView, publishedPolicies }: Props) => {
-  const [message, formAction] = useActionState(signUp, null)
+  const [state, formAction] = useActionState(signUp, null)
+  const fields = state?.fields
   // Only reference policies the store has actually published.
   const policyLinks = [
     publishedPolicies?.privacy && (
@@ -41,6 +42,7 @@ const Register = ({ setCurrentView, publishedPolicies }: Props) => {
           label="First name"
           id="register-first-name"
           name="first_name"
+          defaultValue={fields?.first_name}
           required
           autoComplete="given-name"
           data-testid="first-name-input"
@@ -49,6 +51,7 @@ const Register = ({ setCurrentView, publishedPolicies }: Props) => {
           label="Last name"
           id="register-last-name"
           name="last_name"
+          defaultValue={fields?.last_name}
           required
           autoComplete="family-name"
           data-testid="last-name-input"
@@ -57,6 +60,7 @@ const Register = ({ setCurrentView, publishedPolicies }: Props) => {
           label="Email"
           id="register-email"
           name="email"
+          defaultValue={fields?.email}
           required
           type="email"
           inputMode="email"
@@ -67,16 +71,18 @@ const Register = ({ setCurrentView, publishedPolicies }: Props) => {
           label="Phone"
           id="register-phone"
           name="phone"
+          defaultValue={fields?.phone}
           type="tel"
           inputMode="tel"
           autoComplete="tel"
           data-testid="phone-input"
         />
         <Field
-          label="Password"
+          label="Password (10+ characters)"
           id="register-password"
           name="password"
           required
+          minLength={10}
           type="password"
           autoComplete="new-password"
           data-testid="password-input"
@@ -87,6 +93,7 @@ const Register = ({ setCurrentView, publishedPolicies }: Props) => {
               id="register-age-21"
               name="age_21"
               type="checkbox"
+              defaultChecked={fields?.age_21}
               required
               data-testid="age-21-checkbox"
               className="size-5 shrink-0 cursor-pointer rounded accent-vp-ink"
@@ -95,7 +102,7 @@ const Register = ({ setCurrentView, publishedPolicies }: Props) => {
           </label>
           <p className="text-[13px] leading-[18px] text-vp-ink-3">ID is verified at checkout.</p>
         </div>
-        <ErrorMessage error={message} data-testid="register-error" />
+        <ErrorMessage error={state?.error} data-testid="register-error" />
         {policyLinks.length > 0 && (
           <p className="text-[13px] leading-[18px] text-vp-ink-2" data-testid="register-policy-agreement">
             By creating an account you agree to the{" "}
