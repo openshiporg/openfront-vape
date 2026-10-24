@@ -1,6 +1,7 @@
 import { PageBreadcrumbs } from '@/features/dashboard/components/PageBreadcrumbs';
 import { OrderPageClient } from './OrderPageClient';
 import { getOrder } from '@/features/platform/orders/actions';
+import { OrderComplianceSection } from '../components/OrderComplianceSection';
 
 interface OrderPageParams {
   params: Promise<{
@@ -53,6 +54,7 @@ export async function OrderDetailPage({ params }: OrderPageParams) {
         fieldModes={{}}
         fieldPositions={{}}
         uiConfig={uiConfig}
+        compliance={<OrderComplianceSection orderId={order.id} />}
       />
     </>
   );

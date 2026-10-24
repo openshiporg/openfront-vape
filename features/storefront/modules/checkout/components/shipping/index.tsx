@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import ErrorMessage from "@/features/storefront/modules/checkout/components/error-message"
+import { checkoutErrorText } from "@/features/storefront/modules/checkout/lib/compliance-reasons"
 import StepHeader, { StepFact } from "@/features/storefront/modules/checkout/components/step-header"
 import { vpPrimaryButton } from "@/features/storefront/modules/common/components/vp-classes"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -62,7 +63,7 @@ const Shipping: React.FC<ShippingProps> = ({
       await setShippingMethod(selectedOption)
       router.push(pathname + "?step=payment", { scroll: false })
     } catch (err: any) {
-      setError(err.message || err.toString())
+      setError(checkoutErrorText(err))
     } finally {
       setIsLoading(false)
     }

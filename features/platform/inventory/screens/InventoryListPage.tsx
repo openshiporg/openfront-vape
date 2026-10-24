@@ -4,6 +4,8 @@ import { keystoneClient } from '@/features/dashboard/lib/keystoneClient';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dot, ListBand, PageTitle } from '@/features/platform/components/vape-ui';
+import { AdjustStockSheet } from '../components/AdjustStockSheet';
+import { BulkAdjustSheet } from '../components/BulkAdjustSheet';
 
 export default async function InventoryListPage({ searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -14,9 +16,10 @@ export default async function InventoryListPage({ searchParams }: {
   const auth = await keystoneClient(`{ authenticatedItem { ... on User { role { canReadProducts canManageProducts } } } }`);
   const role = auth.success ? auth.data?.authenticatedItem?.role : null;
   const allowed = role?.canReadProducts || role?.canManageProducts;
+  const canManage = !!role?.canManageProducts;
   const result = allowed ? await keystoneClient(`query($where: ProductVariantWhereInput!, $skip: Int!) {
     items: productVariants(where: $where, take: 20, skip: $skip, orderBy: [{id: asc}]) {
-      id sku title inventoryQuantity manageInventory
+      id sku title inventoryQuantity manageInventory product { id title }
     }
     count: productVariantsCount(where: $where)
   }`, {
@@ -57,7 +60,7 @@ export default async function InventoryListPage({ searchParams }: {
         />
       }
     >
-      <div className="space-y-4 px-4 pb-10 md:px-6">
+      <div className="space-y-4 px-4 pb-24 sm:pb-10 md:px-6">
         {!allowed ? (
           <ListBand>
             <p role="alert" className="flex items-baseline gap-2.5 px-4 py-3 text-sm text-foreground">
@@ -78,6 +81,7 @@ export default async function InventoryListPage({ searchParams }: {
               />
             </label>
             <Button type="submit" className="h-10 rounded-full px-5">Search</Button>
+            {canManage && <BulkAdjustSheet />}
           </form>
           {!result?.success ? (
             <ListBand>
@@ -94,19 +98,30 @@ export default async function InventoryListPage({ searchParams }: {
             </ListBand>
           ) : (
             <ListBand>
-              <div className="hidden grid-cols-[minmax(0,1fr)_10rem_7rem] gap-4 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid">
+              <div className="hidden grid-cols-[minmax(0,1fr)_10rem_7rem_7rem] gap-4 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid">
                 <span>Variant</span>
                 <span>SKU</span>
                 <span className="text-right">Quantity</span>
+                <span className="sr-only">Actions</span>
               </div>
               {items.map((item: any) => (
                 <div
                   key={item.id}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-0.5 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_10rem_7rem] sm:items-baseline"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_10rem_7rem_7rem] sm:items-baseline"
                 >
-                  <div className="flex min-w-0 items-baseline gap-2.5">
-                    <Dot tone={stockTone(item)} />
-                    <span className="min-w-0 truncate font-mono text-sm tabular-nums text-foreground">{item.title}</span>
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 items-baseline gap-2.5">
+                      <Dot tone={stockTone(item)} />
+                      <span className="min-w-0 truncate font-mono text-sm tabular-nums text-foreground">{item.title}</span>
+                    </div>
+                    {item.product && (
+                      <Link
+                        href={`/dashboard/platform/products/${item.product.id}`}
+                        className="block truncate pl-[18px] text-xs text-muted-foreground hover:text-foreground hover:underline underline-offset-4"
+                      >
+                        {item.product.title}
+                      </Link>
+                    )}
                   </div>
                   <span className="col-start-1 row-start-2 truncate pl-[18px] font-mono text-xs tabular-nums text-muted-foreground sm:col-start-auto sm:row-start-auto sm:pl-0">
                     {item.sku || '-'}
@@ -117,6 +132,13 @@ export default async function InventoryListPage({ searchParams }: {
                     </span>
                     <span className="block text-xs text-muted-foreground">{stockLabel(item)}</span>
                   </div>
+                  {canManage && item.manageInventory && (
+                    <div className="col-span-2 row-start-3 pl-[18px] sm:col-span-1 sm:row-start-auto sm:pl-0 sm:text-right">
+                      <AdjustStockSheet
+                        variant={{ id: item.id, title: item.title, sku: item.sku, inventoryQuantity: Number(item.inventoryQuantity) || 0 }}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </ListBand>

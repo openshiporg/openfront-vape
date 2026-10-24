@@ -25,7 +25,14 @@ import {
   ShieldCheck,
   Key,
   Receipt,
-  FileText
+  FileText,
+  LayoutDashboard,
+  BadgeCheck,
+  Scale,
+  FlaskConical,
+  PlugZap,
+  ScrollText,
+  FileBarChart
 } from 'lucide-react';
 
 export interface PlatformNavItem {
@@ -47,6 +54,14 @@ export interface PlatformNavGroup {
 // Core platform navigation items organized by logical groups
 export const platformNavItems: PlatformNavItem[] = [
   // Standalone Items
+  {
+    title: 'Overview',
+    href: '/platform/overview',
+    color: 'teal',
+    description: 'Sales status, orders to fulfil and blocked products.',
+    icon: LayoutDashboard,
+    group: 'standalone'
+  },
   {
     title: 'Compliance Center',
     href: '/platform/compliance',
@@ -86,6 +101,56 @@ export const platformNavItems: PlatformNavItem[] = [
     description: 'Configure store settings, logo, and branding.',
     icon: Store,
     group: 'standalone'
+  },
+
+  // Compliance records
+  {
+    title: 'Merchant Profiles',
+    href: '/platform/merchant-profiles',
+    color: 'amber',
+    description: 'Merchant authority, PACT, licences and the kill switch.',
+    icon: BadgeCheck,
+    group: 'compliance'
+  },
+  {
+    title: 'Jurisdictions',
+    href: '/platform/jurisdictions',
+    color: 'amber',
+    description: 'Jurisdictions, authority sources and rule sets.',
+    icon: Scale,
+    group: 'compliance'
+  },
+  {
+    title: 'Product Evidence',
+    href: '/platform/product-evidence',
+    color: 'amber',
+    description: 'Product classifications and authorizations.',
+    icon: FlaskConical,
+    group: 'compliance'
+  },
+  {
+    title: 'Provider Approvals',
+    href: '/platform/provider-approvals',
+    color: 'amber',
+    description: 'Identity, payment, tax, registry and carrier approvals.',
+    icon: PlugZap,
+    group: 'compliance'
+  },
+  {
+    title: 'Compliance Ledger',
+    href: '/platform/compliance-ledger',
+    color: 'amber',
+    description: 'Compliance decisions, age checks, tax quotes and carrier checks.',
+    icon: ScrollText,
+    group: 'compliance'
+  },
+  {
+    title: 'Compliance Reports',
+    href: '/platform/compliance-reports',
+    color: 'amber',
+    description: 'Report runs, submissions and evidence exports.',
+    icon: FileBarChart,
+    group: 'compliance'
   },
 
   // Products & Catalog
@@ -214,6 +279,12 @@ export const platformStandaloneItems = platformNavItems.filter(item => item.grou
 
 // Organized navigation groups following e-commerce best practices
 export const platformNavGroups: PlatformNavGroup[] = [
+  {
+    id: 'compliance',
+    title: 'Compliance',
+    icon: ShieldCheck,
+    items: platformNavItems.filter(item => item.group === 'compliance')
+  },
   {
     id: 'catalog',
     title: 'Products',

@@ -14,12 +14,15 @@ import { notFound } from 'next/navigation';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { Order } from '../types';
+import { FulfilmentEvidence } from '../components/FulfilmentEvidence';
+import type { FulfilmentEvidence as Evidence } from '../actions/label-evidence';
 
 interface FulfillOrderClientProps {
   order: Order;
+  evidence: Evidence;
 }
 
-export function FulfillOrderClient({ order }: FulfillOrderClientProps) {
+export function FulfillOrderClient({ order, evidence }: FulfillOrderClientProps) {
   const router = useRouter();
   const [selectedQuantities, setSelectedQuantities] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -49,13 +52,10 @@ export function FulfillOrderClient({ order }: FulfillOrderClientProps) {
     const response = await cancelFulfillment(id);
 
     if (response.success) {
-      toast.success('Fulfillment cancelled successfully');
+      toast.success('Fulfillment cancelled');
       router.refresh();
     } else {
-      console.error('Failed to cancel fulfillment:', response.error, response.errors);
-      toast.error('Failed to cancel fulfillment', {
-        description: response.error
-      });
+      toast.error('Fulfillment not cancelled', { description: response.error });
     }
     setIsLoading(false);
   };
@@ -75,7 +75,7 @@ export function FulfillOrderClient({ order }: FulfillOrderClientProps) {
 
   return (
     <div>
-      <div className="max-w-6xl space-y-8 p-4 pb-10 md:p-6">
+      <div className="max-w-6xl space-y-8 p-4 pb-24 sm:pb-10 md:p-6">
         <div className="space-y-3">
           <Link
             href={`/dashboard/platform/orders/${order.id}`}
@@ -167,6 +167,7 @@ export function FulfillOrderClient({ order }: FulfillOrderClientProps) {
                 onDelete={handleDeleteFulfillment}
               />
             )}
+            <FulfilmentEvidence evidence={evidence} />
           </div>
 
           {!isFullyFulfilled && (

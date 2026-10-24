@@ -4,7 +4,7 @@ const ErrorMessage = ({ error, 'data-testid': dataTestid }: { error?: string | n
   }
 
   return (
-    <div role="alert" className="pt-2 text-[13px] leading-[18px] text-vp-danger" data-testid={dataTestid}>
+    <div role="alert" className="whitespace-pre-line pt-2 text-[13px] leading-[18px] text-vp-danger" data-testid={dataTestid}>
       <span>{error}</span>
     </div>
   )

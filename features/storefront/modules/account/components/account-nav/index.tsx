@@ -23,6 +23,7 @@ const SECTIONS = [
   { href: "/account/profile", label: "Profile", testId: "profile-link" },
   { href: "/account/invoicing", label: "Invoicing", testId: "invoicing-link" },
   { href: "/account/invoices", label: "Invoices", testId: "invoices-link" },
+  { href: "/account/privacy", label: "Privacy", testId: "privacy-link" },
 ]
 
 const AccountNav = ({ customer: _customer }: AccountNavProps) => {

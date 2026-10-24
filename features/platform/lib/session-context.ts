@@ -53,3 +53,6 @@ export async function runMutation<T>(query: string, variables: Record<string, un
     return { success: false, error: GENERIC_ERROR };
   }
 }
+
+/** A yyyy-mm-dd date input as an ISO timestamp at midnight UTC, or null when empty. */
+export const isoDay = (value: string | null | undefined) => (value ? new Date(`${value}T00:00:00.000Z`).toISOString() : null);

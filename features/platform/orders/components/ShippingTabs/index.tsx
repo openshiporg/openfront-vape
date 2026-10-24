@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ErrorLine } from '@/features/platform/components/compliance-form';
 import { Dot, ListBand, SectionTitle } from '@/features/platform/components/vape-ui';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue, SelectLabel } from '@/components/ui/select';
 import { ProviderActionsInline } from './ProviderActionsInline';
@@ -44,6 +46,9 @@ export function ShippingTabs({
   const [trackingNumber, setTrackingNumber] = useState('');
   const [carrier, setCarrier] = useState('');
   const [noNotification, setNoNotification] = useState(false);
+  const [labelError, setLabelError] = useState<Error | null>(null);
+  const [manualError, setManualError] = useState('');
+  const router = useRouter();
 
   // Use SWR to fetch shipping providers
   const { data: providers = [], mutate: refreshProviders } = useSWR(
@@ -74,6 +79,7 @@ export function ShippingTabs({
   const handleCreateLabel = async () => {
     if (!selectedRate || !hasSelectedItems || !selectedProvider) return;
     setIsLoading(true);
+    setLabelError(null);
 
     const response = await createProviderShippingLabel({
       orderId: order.id,
@@ -98,18 +104,12 @@ export function ShippingTabs({
 
     if (response.success) {
       setSelectedRate(null);
-      toast.success('Shipping label created successfully');
+      setSelectedQuantities({});
+      toast.success('Shipping label created');
+      router.refresh();
     } else {
-      console.error('Failed to create shipping label:', response.error, response.errors);
-      
-      // Get the detailed error message from response.errors if available
-      const errorMessage = response.errors?.[0]?.message || response.error;
-      const extensions = response.errors?.[0]?.extensions;
-      const originalError = extensions?.originalError?.message;
-      
-      toast.error('Failed to create shipping label', {
-        description: originalError || errorMessage || 'An unexpected error occurred'
-      });
+      // The label mutation's own refusal reason (carrier evidence, compliance decision, quantities)
+      setLabelError(new Error(response.error));
     }
     setIsLoading(false);
   };
@@ -117,6 +117,7 @@ export function ShippingTabs({
   const handleManualFulfill = async () => {
     if (!hasSelectedItems) return;
     setIsLoading(true);
+    setManualError('');
 
     const response = await createManualFulfillment({
       orderId: order.id,
@@ -137,12 +138,10 @@ export function ShippingTabs({
       setTrackingNumber('');
       setCarrier('');
       setNoNotification(false);
-      toast.success('Fulfillment created successfully');
+      toast.success('Fulfillment created');
+      router.refresh();
     } else {
-      console.error('Failed to create fulfillment:', response.error, response.errors);
-      toast.error('Failed to create fulfillment', {
-        description: response.error
-      });
+      setManualError(response.error);
     }
     setIsLoading(false);
   };
@@ -312,7 +311,7 @@ export function ShippingTabs({
                 noNotification={noNotification}
                 setNoNotification={setNoNotification}
                 handleManualFulfill={handleManualFulfill}
-                fulfillmentState={{ loading: isLoading, error: null }}
+                fulfillmentState={{ loading: isLoading, error: manualError || null }}
                 hasSelectedItems={hasSelectedItems}
                 dimensions={dimensions}
                 setDimensions={handleDimensionsUpdate}
@@ -325,7 +324,7 @@ export function ShippingTabs({
                 selectedRate={selectedRate}
                 setSelectedRate={setSelectedRate}
                 createLabelLoading={isLoading}
-                createLabelError={null}
+                createLabelError={labelError}
                 handleCreateLabel={handleCreateLabel}
                 hasSelectedItems={hasSelectedItems}
                 order={order}
@@ -336,6 +335,7 @@ export function ShippingTabs({
                 onWeightChange={handleWeightUpdate}
               />
             ) : null}
+            {selectedTab === 'manual' && <div className="mt-3"><ErrorLine message={manualError} /></div>}
           </div>
         </div>
       </ListBand>

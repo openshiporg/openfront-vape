@@ -1,7 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-import { keystoneClient } from '../../../dashboard/lib/keystoneClient';
+import { runCommand } from '@/features/platform/lib/run-command';
 
 interface CreateFulfillmentInput {
   orderId: string;
@@ -87,23 +86,12 @@ export async function createManualFulfillment({
     }
   `;
 
-  const response = await keystoneClient(mutation, {
-    orderId,
-    lineItems,
-    trackingNumber,
-    carrier,
-    noNotification: noNotification || false,
-    idempotencyKey,
-  });
-
-  // Revalidate the path only on success
-  if (response.success) {
-    revalidatePath(`/platform/orders/${orderId}`);
-    revalidatePath(`/platform/orders/${orderId}/fulfill`);
-    revalidatePath(`/dashboard/platform/orders/${orderId}`);
-  }
-
-  return response;
+  // Errors come back as the fulfilment rules wrote them; the client refreshes.
+  return runCommand(
+    mutation,
+    { orderId, lineItems, trackingNumber, carrier, noNotification: noNotification || false, idempotencyKey },
+    data => data.createOrderFulfillment
+  );
 }
 
 export async function createProviderShippingLabel({
@@ -155,22 +143,12 @@ export async function createProviderShippingLabel({
     }
   `;
 
-  const response = await keystoneClient(mutation, {
-    orderId,
-    providerId,
-    rateId,
-    dimensions,
-    lineItems,
-    idempotencyKey,
-  });
-
-  // Revalidate the path only on success
-  if (response.success) {
-    revalidatePath(`/platform/orders/${orderId}`);
-    revalidatePath(`/platform/orders/${orderId}/fulfill`);
-  }
-
-  return response;
+  // A refused label returns the carrier-evidence or compliance reason; the client refreshes.
+  return runCommand(
+    mutation,
+    { orderId, providerId, rateId, dimensions, lineItems, idempotencyKey },
+    data => data.createProviderShippingLabel
+  );
 }
 
 /**
@@ -189,11 +167,5 @@ export async function cancelFulfillment(
     }
   `;
 
-  const response = await keystoneClient(mutation, { fulfillmentId, reason });
-
-  if (response.success) {
-    revalidatePath('/dashboard/platform/orders/[id]');
-  }
-
-  return response;
+  return runCommand(mutation, { fulfillmentId, reason }, data => data.cancelOrderFulfillment);
 }

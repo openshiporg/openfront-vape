@@ -14,7 +14,7 @@ export function MerchantSafetyActions({ profileId, killSwitch, canStop, canExpor
   if (!canStop && !canExport) return null;
 
   return <div className="space-y-3">
-    {canStop && killSwitch && <Link href={`/dashboard/regulated-merchant-profiles/${profileId}`} className="inline-flex h-9 items-center gap-1 rounded-full bg-background px-4 text-sm font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.08)]">
+    {canStop && killSwitch && <Link href={`/dashboard/platform/merchant-profiles/${profileId}`} className="inline-flex h-9 items-center gap-1 rounded-full bg-background px-4 text-sm font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.08)]">
       Turn off on profile
       <ArrowUpRight className="size-3.5" />
     </Link>}

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getOrder } from "@/features/platform/orders/actions";
 import { FulfillOrderClient } from "./FulfillOrderClient";
+import { getFulfilmentEvidence } from "../actions/label-evidence";
 import { PageBreadcrumbs } from "@/features/dashboard/components/PageBreadcrumbs";
 
 interface PageProps {
@@ -20,6 +21,8 @@ export async function FulfillOrderPage({ params }: PageProps) {
     notFound();
   }
 
+  const evidence = await getFulfilmentEvidence(order.id);
+
   return (
     <>
       <PageBreadcrumbs
@@ -38,7 +41,7 @@ export async function FulfillOrderPage({ params }: PageProps) {
           { type: "page", label: "Fulfill" },
         ]}
       />
-      <FulfillOrderClient order={order} />
+      <FulfillOrderClient order={order} evidence={evidence} />
     </>
   );
 } 

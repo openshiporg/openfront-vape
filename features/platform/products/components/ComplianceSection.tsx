@@ -11,7 +11,7 @@ import {
   regulatedLabel,
 } from '@/features/keystone/regulated/labels'
 
-const CLASSIFICATIONS = '/dashboard/regulated-product-classifications'
+const CLASSIFICATIONS = '/dashboard/platform/product-evidence'
 
 function number(value: string | null) {
   if (value === null || value === undefined) return null

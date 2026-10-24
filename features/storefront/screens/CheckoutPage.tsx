@@ -14,16 +14,10 @@ import Logo from "@/features/storefront/modules/layout/components/logo"
 import InteractiveLink from "@/features/storefront/modules/common/components/interactive-link"
 import StatusDot from "@/features/storefront/modules/common/components/vape/status-dot"
 import { Metadata } from "next"
+import { complianceReasonLines } from "@/features/storefront/modules/checkout/lib/compliance-reasons"
 
 export const metadata = {
   title: "Checkout",
-};
-
-const BLOCKER_STATES: Record<string, string> = {
-  ACTIVE_MERCHANT_PROFILE_REQUIRED: "Sales paused: store setup isn't complete.",
-  KILL_SWITCH_ENABLED: "Sales paused by the store.",
-  LAUNCH_JURISDICTION_REQUIRED: "Sales paused: no sales region is open yet.",
-  STORE_POLICIES_REQUIRED: "Sales paused: store policies aren't published yet.",
 };
 
 export async function CheckoutPage() {
@@ -33,7 +27,7 @@ export async function CheckoutPage() {
   if (!cart || blockers.length || bagEmpty) {
     const reasons = [
       ...(bagEmpty ? ["Your bag is empty."] : []),
-      ...blockers.map((code) => BLOCKER_STATES[code] || "Sales paused."),
+      ...complianceReasonLines(blockers),
     ];
     return (
       <main className="mx-auto flex min-h-[50vh] w-full max-w-[1320px] flex-col justify-center gap-5 px-4 py-16 sm:px-6 sm:py-24">

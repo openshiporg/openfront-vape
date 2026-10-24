@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
@@ -90,11 +90,13 @@ interface OrderPageClientProps {
   fieldModes?: Record<string, unknown>;
   fieldPositions?: Record<string, unknown>;
   uiConfig?: Record<string, unknown>;
+  compliance?: ReactNode;
 }
 
 export function OrderPageClient({
   order,
   listKey,
+  compliance,
 }: OrderPageClientProps) {
   const [showComments, setShowComments] = useState(false);
   const [editDrawerConfig, setEditDrawerConfig] = useState<{
@@ -161,7 +163,7 @@ export function OrderPageClient({
 
   return (
     <div>
-      <div className="max-w-6xl space-y-8 p-4 pb-10 md:p-6">
+      <div className="max-w-6xl space-y-8 p-4 pb-24 sm:pb-10 md:p-6">
         <div className="space-y-3">
           <Link
             href="/dashboard/platform/orders"
@@ -339,6 +341,8 @@ export function OrderPageClient({
               </section>
             )}
 
+            {compliance}
+
             <section>
               <SectionTitle
                 meta={
@@ -381,7 +385,17 @@ export function OrderPageClient({
               <SectionTitle>Customer</SectionTitle>
               <ListBand>
                 <div className="px-4 py-3">
-                  <div className="text-sm font-medium text-foreground">{order.user?.name || "Guest"}</div>
+                  {order.user?.id ? (
+                    <Link
+                      href={`/dashboard/platform/users/${order.user.id}`}
+                      className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline underline-offset-4"
+                    >
+                      {order.user.name || order.user.email}
+                      <ArrowUpRight className="size-3.5" />
+                    </Link>
+                  ) : (
+                    <div className="text-sm font-medium text-foreground">Guest</div>
+                  )}
                   <div className="mt-0.5 font-mono text-xs tabular-nums text-muted-foreground">
                     {order.user?.orders?.length || 1} order{order.user?.orders?.length !== 1 ? "s" : ""}
                   </div>

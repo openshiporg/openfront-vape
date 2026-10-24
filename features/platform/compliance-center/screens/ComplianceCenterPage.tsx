@@ -14,12 +14,12 @@ import { PROVIDER_PURPOSE_LABELS } from '@/features/keystone/regulated/labels';
 const linkClass = 'inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline';
 
 const resources = [
-  ['Merchant authority', 'Profiles, licenses, PACT, kill switch', '/dashboard/regulated-merchant-profiles'],
-  ['Jurisdictions & policies', 'Authority sources and rule sets', '/dashboard/jurisdictions'],
-  ['Product evidence', 'Classifications and authorizations', '/dashboard/regulated-product-classifications'],
-  ['Provider approvals', 'Identity, registry, tax, payment, carrier', '/dashboard/provider-approvals'],
-  ['Decision ledger', 'Decisions and events', '/dashboard/compliance-decisions'],
-  ['Reports', 'Report runs and receipts', '/dashboard/compliance-report-runs'],
+  ['Merchant authority', 'Profiles, licenses, PACT, kill switch', '/dashboard/platform/merchant-profiles'],
+  ['Jurisdictions & policies', 'Authority sources and rule sets', '/dashboard/platform/jurisdictions'],
+  ['Product evidence', 'Classifications and authorizations', '/dashboard/platform/product-evidence'],
+  ['Provider approvals', 'Identity, registry, tax, payment, carrier', '/dashboard/platform/provider-approvals'],
+  ['Decision ledger', 'Decisions and events', '/dashboard/platform/compliance-ledger'],
+  ['Reports', 'Report runs and receipts', '/dashboard/platform/compliance-reports'],
 ] as const;
 
 const breadcrumbs = [
@@ -28,8 +28,8 @@ const breadcrumbs = [
   { type: 'page' as const, label: 'Compliance Center' },
 ];
 
-const PROFILES = '/dashboard/regulated-merchant-profiles';
-const APPROVALS = '/dashboard/provider-approvals';
+const PROFILES = '/dashboard/platform/merchant-profiles';
+const APPROVALS = '/dashboard/platform/provider-approvals';
 
 type Blocker = { title: string; detail: string; href: string; action: string; purpose?: string };
 
@@ -39,8 +39,8 @@ const BLOCKERS: Record<string, Blocker> = {
   KILL_SWITCH_ENABLED: { title: 'Kill switch on', detail: 'Every active profile has its kill switch on.', href: PROFILES, action: 'Profiles' },
   LAUNCH_JURISDICTION_REQUIRED: { title: 'No launch jurisdiction', detail: 'Add a launch jurisdiction to the active merchant profile.', href: PROFILES, action: 'Profiles' },
   EXACTLY_ONE_ACTIVE_MERCHANT_PROFILE_REQUIRED: { title: 'Merchant profile incomplete', detail: 'Exactly one current profile needs PACT registration, an origin, enabled categories and a launch jurisdiction, with the kill switch off.', href: PROFILES, action: 'Profiles' },
-  ACTIVE_REVIEWED_POLICY_REQUIRED: { title: 'No active policy', detail: 'Activate a reviewed rule set that is in its effective dates.', href: '/dashboard/regulated-rule-sets', action: 'Rule sets' },
-  CURRENT_PRODUCT_AND_FEDERAL_AUTHORITY_REQUIRED: { title: 'No sellable product evidence', detail: 'Approve a product classification with marketing review and a current federal authorization.', href: '/dashboard/regulated-product-classifications', action: 'Classifications' },
+  ACTIVE_REVIEWED_POLICY_REQUIRED: { title: 'No active policy', detail: 'Activate a reviewed rule set that is in its effective dates.', href: '/dashboard/platform/jurisdictions', action: 'Rule sets' },
+  CURRENT_PRODUCT_AND_FEDERAL_AUTHORITY_REQUIRED: { title: 'No sellable product evidence', detail: 'Approve a product classification with marketing review and a current federal authorization.', href: '/dashboard/platform/product-evidence', action: 'Classifications' },
 };
 
 const PROVIDERS = PROVIDER_PURPOSE_LABELS;

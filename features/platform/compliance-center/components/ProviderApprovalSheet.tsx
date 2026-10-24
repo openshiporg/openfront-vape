@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Checks, ErrorLine, EvidenceFile, Field, selectClass } from '@/features/platform/components/compliance-form';
 import { Button } from '@/components/ui/button';
 import { SectionTitle } from '@/features/platform/components/vape-ui';
 import { Pill, Track } from '@/features/platform/components/vape-primitives';
@@ -16,49 +16,6 @@ import {
   PROVIDER_PURPOSE_LABELS,
 } from '@/features/keystone/regulated/labels';
 import { createProviderApproval, getApprovalOptions, type ApprovalInput, type ApprovalOptions } from '../actions/approvals';
-
-const selectClass =
-  'h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring';
-
-async function sha256(file: File) {
-  const buffer = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
-  return Array.from(new Uint8Array(buffer), byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
-      {children}
-    </div>
-  );
-}
-
-function Checks({ label, options, value, onChange }: {
-  label: string;
-  options: Array<[string, string]>;
-  value: string[];
-  onChange: (value: string[]) => void;
-}) {
-  return (
-    <fieldset className="space-y-1.5">
-      <legend className="text-xs text-muted-foreground">{label}</legend>
-      <div className="grid max-h-48 gap-1 overflow-y-auto rounded-md border border-input p-2 sm:grid-cols-2">
-        {options.map(([key, text]) => (
-          <label key={key} className="flex min-h-8 items-center gap-2 text-sm text-foreground">
-            <input
-              type="checkbox"
-              checked={value.includes(key)}
-              onChange={event => onChange(event.target.checked ? [...value, key] : value.filter(item => item !== key))}
-            />
-            {text}
-          </label>
-        ))}
-        {options.length === 0 && <span className="text-sm text-muted-foreground">None</span>}
-      </div>
-    </fieldset>
-  );
-}
 
 const STATUSES = ['review', 'active'] as const;
 
@@ -195,20 +152,7 @@ export function AddApprovalButton({ purpose, children, className }: { purpose: s
                 <Field id="pa-reference" label="Approval reference">
                   <Input id="pa-reference" required value={value.approvalReference} onChange={event => set({ approvalReference: event.target.value })} />
                 </Field>
-                <Field id="pa-evidence" label="Evidence document">
-                  <Input
-                    id="pa-evidence"
-                    type="file"
-                    className="h-10 cursor-pointer pt-2 text-xs"
-                    onChange={async event => {
-                      const file = event.target.files?.[0];
-                      set({ evidenceDigest: file ? await sha256(file) : '' });
-                    }}
-                  />
-                  <p className="truncate font-mono text-[11px] text-muted-foreground">
-                    {value.evidenceDigest ? `SHA-256 ${value.evidenceDigest}` : 'No file'}
-                  </p>
-                </Field>
+                <EvidenceFile id="pa-evidence" label="Evidence document" digest={value.evidenceDigest} onRecord={false} onDigest={evidenceDigest => set({ evidenceDigest })} />
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field id="pa-from" label="Effective from">
                     <Input id="pa-from" type="date" value={value.effectiveAt} onChange={event => set({ effectiveAt: event.target.value })} />
@@ -229,7 +173,7 @@ export function AddApprovalButton({ purpose, children, className }: { purpose: s
                 </div>
               </section>
 
-              {error && <p role="alert" className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+              <ErrorLine message={error} />
               <Button type="submit" disabled={pending || !value.evidenceDigest} className="h-10 w-full rounded-full">
                 {pending ? 'Saving…' : 'Record approval'}
               </Button>

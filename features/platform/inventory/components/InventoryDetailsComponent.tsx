@@ -43,12 +43,16 @@ export function InventoryDetailsComponent({ inventory, list }: InventoryDetailsC
           <div className="flex w-full items-start justify-between gap-3 border-b border-border px-4 py-3 md:px-6">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <Link
-                  href={`/dashboard/platform/inventory/${inventory.id}`}
-                  className="font-mono text-sm font-medium tabular-nums text-foreground hover:underline underline-offset-4"
-                >
-                  {inventory.sku || 'No SKU'}
-                </Link>
+                {inventory.product?.id ? (
+                  <Link
+                    href={`/dashboard/platform/products/${inventory.product.id}`}
+                    className="font-mono text-sm font-medium tabular-nums text-foreground hover:underline underline-offset-4"
+                  >
+                    {inventory.sku || 'No SKU'}
+                  </Link>
+                ) : (
+                  <span className="font-mono text-sm font-medium tabular-nums text-foreground">{inventory.sku || 'No SKU'}</span>
+                )}
                 <span className="inline-flex items-baseline gap-1.5 text-xs text-muted-foreground">
                   <Dot tone={config.tone} />
                   {config.label}

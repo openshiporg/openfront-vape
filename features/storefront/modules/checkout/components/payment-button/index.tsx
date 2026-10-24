@@ -8,6 +8,7 @@ import { useElements, useStripe } from "@stripe/react-stripe-js"
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js"
 import React, { useState } from "react"
 import ErrorMessage from "../error-message"
+import { checkoutErrorText } from "../../lib/compliance-reasons"
 import { RiLoader2Fill } from "@remixicon/react"
 import { useRouter } from "next/navigation"
 
@@ -32,13 +33,17 @@ interface PaymentButtonProps {
     };
   };
   "data-testid": string;
+  // Compliance denied or unchecked: the order can't be placed.
+  blocked?: boolean;
 }
 
 const PaymentButton: React.FC<PaymentButtonProps> = ({
   cart,
   "data-testid": dataTestId,
+  blocked = false,
 }) => {
   const notReady =
+    blocked ||
     !cart ||
     !cart.shippingAddress ||
     !cart.billingAddress ||
@@ -95,10 +100,11 @@ const StripePaymentButton: React.FC<StripePaymentButtonProps> = ({
       const result = await placeOrder(paymentSessionId)
       if (result && typeof result === 'object' && 'success' in result && result.success && 'redirectTo' in result) {
         router.push(result.redirectTo as string)
+      } else if (result && typeof result === 'object' && 'error' in result && typeof result.error === 'string') {
+        setErrorMessage(result.error)
       }
     } catch (err: any) {
-      console.error('Payment error:', err);
-      setErrorMessage(err.message)
+      setErrorMessage(checkoutErrorText(err))
     } finally {
       setSubmitting(false)
     }
@@ -195,9 +201,11 @@ const ManualTestPaymentButton = ({ notReady, cart, "data-testid": dataTestId }: 
       const result = await placeOrder(paymentSessionId)
       if (result && typeof result === 'object' && 'success' in result && result.success && 'redirectTo' in result) {
         router.push(result.redirectTo as string)
+      } else if (result && typeof result === 'object' && 'error' in result && typeof result.error === 'string') {
+        setErrorMessage(result.error)
       }
     } catch (err: any) {
-      setErrorMessage(err.message)
+      setErrorMessage(checkoutErrorText(err))
     } finally {
       setSubmitting(false)
     }
@@ -260,10 +268,11 @@ const PayPalPaymentButton: React.FC<PayPalPaymentButtonProps> = ({
       const result = await placeOrder(paymentSessionId)
       if (result && typeof result === 'object' && 'success' in result && result.success && 'redirectTo' in result) {
         router.push(result.redirectTo as string)
+      } else if (result && typeof result === 'object' && 'error' in result && typeof result.error === 'string') {
+        setErrorMessage(result.error)
       }
     } catch (err: any) {
-      console.error('Payment error:', err);
-      setErrorMessage(err.message)
+      setErrorMessage(checkoutErrorText(err))
     } finally {
       setSubmitting(false)
     }

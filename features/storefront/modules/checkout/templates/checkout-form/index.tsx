@@ -6,6 +6,7 @@ import Payment from "@/features/storefront/modules/checkout/components/payment";
 import Review from "@/features/storefront/modules/checkout/components/review";
 import { listCartPaymentMethods } from "@/features/storefront/lib/data/payment";
 import { getCartShippingOptions } from "@/features/storefront/lib/data/shipping";
+import { getCheckoutCompliance } from "@/features/storefront/lib/data/compliance";
 
 interface CheckoutFormProps {
   cart: {
@@ -20,6 +21,7 @@ interface CheckoutFormProps {
         isSelected: boolean;
         status?: string;
         paymentProvider: {
+          id?: string;
           code: string;
         };
       }>;
@@ -59,12 +61,20 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
     );
   }
 
+  // Re-evaluated on every render, so address, delivery, payment and bag changes refresh it.
+  const selectedSession = cart.paymentCollection?.paymentSessions?.find((session) => session.isSelected);
+  const compliance = selectedSession
+    ? await getCheckoutCompliance("checkout", selectedSession.paymentProvider?.id)
+    : cart.shippingAddress
+      ? await getCheckoutCompliance("shipping")
+      : null;
+
   return (
     <div className="flex w-full flex-col gap-8">
       <Addresses cart={cart} customer={customer} />
       <Shipping cart={cart} availableShippingMethods={availableShippingMethods} />
       <Payment cart={cart} availablePaymentMethods={availablePaymentMethods} />
-      <Review cart={cart} />
+      <Review cart={cart} compliance={compliance} />
     </div>
   );
 }

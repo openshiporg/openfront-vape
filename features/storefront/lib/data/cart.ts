@@ -18,6 +18,7 @@ import {
   submittedShippingAddressMatchesSaved,
 } from "./address-update-validation";
 import { requireConfirmedShippingSelection } from "./shipping-update-result";
+import { checkoutErrorMessage } from "./compliance";
 
 const CART_QUERY = gql`
   query GetCart($cartId: ID!) {
@@ -1364,7 +1365,7 @@ export async function placeOrder(paymentSessionId?: string) {
 
     return completeActiveCart;
   } catch (error) {
-    console.error("Error placing order:", error);
-    throw error;
+    // Regulated denials and payment failures come back as customer lines, not raw GraphQL text.
+    return { success: false as const, error: await checkoutErrorMessage(error) };
   }
 }

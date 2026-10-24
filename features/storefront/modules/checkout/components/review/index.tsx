@@ -2,9 +2,11 @@
 
 import PaymentButton from "../payment-button"
 import StepHeader from "../step-header"
+import CompliancePanel, { complianceBlocksOrder } from "../compliance-panel"
+import type { CheckoutCompliance } from "../../lib/compliance-reasons"
 import { useSearchParams } from "next/navigation"
 
-const Review = ({ cart }: { cart: any }) => {
+const Review = ({ cart, compliance }: { cart: any; compliance: CheckoutCompliance | null }) => {
   const searchParams = useSearchParams() ?? new URLSearchParams()
 
   const isOpen = searchParams.get("step") === "review"
@@ -37,7 +39,8 @@ const Review = ({ cart }: { cart: any }) => {
           <p className="text-[13px] leading-[18px] text-vp-ink-3">
             By placing this order you accept the Terms of Use, Terms of Sale, Returns Policy and Privacy Policy.
           </p>
-          <PaymentButton cart={cart} data-testid="submit-order-button" />
+          <CompliancePanel compliance={compliance} />
+          <PaymentButton cart={cart} blocked={complianceBlocksOrder(compliance)} data-testid="submit-order-button" />
         </div>
       )}
     </section>

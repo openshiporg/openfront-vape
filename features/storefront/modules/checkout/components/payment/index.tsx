@@ -1,6 +1,8 @@
 "use client";
 import { isStripe, paymentInfoMap, isStripeSandbox, isPayPalSandbox } from "@/features/storefront/lib/constants";
-import { initiatePaymentSession } from "@/features/storefront/lib/data/payment";
+import { getCheckoutCompliance, startCheckoutPayment } from "@/features/storefront/lib/data/compliance";
+import CompliancePanel from "../compliance-panel";
+import { checkoutErrorText, type CheckoutCompliance } from "../../lib/compliance-reasons";
 import { CreditCard } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -104,6 +106,34 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
     });
   };
 
+  // Pre-payment check for the chosen method; re-runs when the method or the bag changes.
+  const selectedProviderId = availablePaymentMethods?.find((method) => method.code === selectedPaymentMethod)?.id;
+  const hasShipping = (cart?.shippingMethods?.length ?? 0) > 0;
+  const [compliance, setCompliance] = useState<CheckoutCompliance | null>(null);
+  const [complianceLoading, setComplianceLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !hasShipping || !selectedProviderId) {
+      setCompliance(null);
+      return;
+    }
+    let current = true;
+    setComplianceLoading(true);
+    getCheckoutCompliance("payment", selectedProviderId)
+      .then((result) => {
+        if (current) setCompliance(result);
+      })
+      .catch(() => {
+        if (current) setCompliance({ state: "unavailable", purpose: "payment", reasonCodes: [], lines: ["We couldn't check this order. Please try again."] });
+      })
+      .finally(() => {
+        if (current) setComplianceLoading(false);
+      });
+    return () => {
+      current = false;
+    };
+  }, [isOpen, hasShipping, selectedProviderId, cart?.total, cart?.shippingMethods]);
+
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
@@ -118,7 +148,11 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
         );
 
       if (!hasExistingSelectedSession) {
-        await initiatePaymentSession(cart.id, selectedPaymentMethod);
+        const started = await startCheckoutPayment(selectedPaymentMethod);
+        if (!started.ok) {
+          setError(started.error);
+          return;
+        }
       }
 
       if (!shouldInputCard) {
@@ -130,7 +164,7 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
         );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(checkoutErrorText(err));
     } finally {
       setIsLoading(false);
     }
@@ -231,6 +265,8 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
             <p data-testid="payment-method-summary">Gift card</p>
           </StepFact>
         )}
+
+        <CompliancePanel compliance={compliance} loading={complianceLoading} />
 
         <div>
           <button

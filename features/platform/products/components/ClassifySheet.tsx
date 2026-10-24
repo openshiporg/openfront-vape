@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useTransition, type ReactNode } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { ErrorLine, EvidenceFile, Field, Options, selectClass } from '@/features/platform/components/compliance-form'
 import { Button } from '@/components/ui/button'
 import { Dot, ListBand, SectionTitle } from '@/features/platform/components/vape-ui'
 import { Pill, Track } from '@/features/platform/components/vape-primitives'
@@ -26,62 +26,6 @@ import {
   type ClassificationInput,
   type ClassifyForm,
 } from '../actions/classify'
-
-const selectClass =
-  'h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring'
-
-async function sha256(file: File) {
-  const buffer = await crypto.subtle.digest('SHA-256', await file.arrayBuffer())
-  return Array.from(new Uint8Array(buffer), byte => byte.toString(16).padStart(2, '0')).join('')
-}
-
-function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
-      {children}
-    </div>
-  )
-}
-
-function Options({ id, labels, value, onChange, disabled }: {
-  id: string
-  labels: Record<string, string>
-  value: string
-  onChange: (value: string) => void
-  disabled?: boolean
-}) {
-  return (
-    <select id={id} className={selectClass} value={value} disabled={disabled} onChange={event => onChange(event.target.value)}>
-      {Object.entries(labels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-    </select>
-  )
-}
-
-function EvidenceFile({ id, label, onDigest, digest, onRecord }: {
-  id: string
-  label: string
-  digest: string
-  onRecord: boolean
-  onDigest: (digest: string) => void
-}) {
-  return (
-    <Field id={id} label={label}>
-      <Input
-        id={id}
-        type="file"
-        className="h-10 cursor-pointer pt-2 text-xs"
-        onChange={async event => {
-          const file = event.target.files?.[0]
-          onDigest(file ? await sha256(file) : '')
-        }}
-      />
-      <p className="truncate font-mono text-[11px] text-muted-foreground">
-        {digest ? `SHA-256 ${digest}` : onRecord ? 'On file' : 'No file'}
-      </p>
-    </Field>
-  )
-}
 
 const emptyClassification: ClassificationInput = {
   category: 'e_liquid',
@@ -114,11 +58,6 @@ const emptyAuthorization: AuthorizationInput = {
 }
 
 const EDITABLE_STATUSES = ['draft', 'review', 'approved'] as const
-
-function ErrorLine({ message }: { message: string }) {
-  if (!message) return null
-  return <p role="alert" className="text-xs text-red-600 dark:text-red-400">{message}</p>
-}
 
 function AuthorizationForm({ form, onSaved }: { form: ClassifyForm; onSaved: () => void }) {
   const [value, setValue] = useState<AuthorizationInput>(emptyAuthorization)
