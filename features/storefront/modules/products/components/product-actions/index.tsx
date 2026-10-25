@@ -235,7 +235,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           type="button"
           onClick={handleAddToCart}
           disabled={disabled || isAdding || ((!inStock || !variant || !isValidVariant) && !hasOnlyOneVariant)}
-          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-vp-ink text-[16px] font-medium text-white transition-opacity disabled:bg-vp-well disabled:text-vp-ink-3"
+          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-vp-ink text-[16px] font-medium text-vp-on-ink transition-opacity disabled:bg-vp-well disabled:text-vp-ink-3"
           data-testid="add-product-button"
         >
           {isAdding && <RiLoader2Fill className="size-4 animate-spin" />}

@@ -45,7 +45,7 @@ export async function CheckoutPage() {
         <div>
           <LocalizedClientLink
             href={bagEmpty ? "/store" : "/cart"}
-            className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+            className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink transition-opacity hover:opacity-90"
           >
             {bagEmpty ? "Shop all" : "Back to bag"}
           </LocalizedClientLink>

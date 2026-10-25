@@ -24,7 +24,7 @@ export default async function Nav() {
 
   return (
     <div className="sticky top-0 inset-x-0 z-50">
-      <div className="bg-vp-ink text-white/80">
+      <div className="border-b border-vp-line bg-vp-well text-vp-ink-2">
         <div className="mx-auto flex h-8 max-w-[1320px] items-center justify-between px-4 sm:px-6 text-[12px]">
           <span className="font-vp-mono tracking-[0.08em] uppercase">21+ only</span>
           <span className="hidden sm:inline">Adult signature may be required on delivery</span>

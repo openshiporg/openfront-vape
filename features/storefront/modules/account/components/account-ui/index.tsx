@@ -14,7 +14,7 @@ export const fieldClass =
 export const labelClass = "text-[13px] leading-[18px] font-medium text-vp-ink-2"
 
 export const primaryButtonClass =
-  "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white transition-opacity hover:bg-vp-ink hover:opacity-90 disabled:cursor-not-allowed disabled:bg-vp-well disabled:text-vp-ink-3 disabled:opacity-100"
+  "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink transition-opacity hover:bg-vp-ink hover:opacity-90 disabled:cursor-not-allowed disabled:bg-vp-well disabled:text-vp-ink-3 disabled:opacity-100"
 
 export const secondaryButtonClass =
   "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-well px-6 text-[15px] font-medium text-vp-ink transition-colors hover:bg-vp-line disabled:cursor-not-allowed disabled:text-vp-ink-3"

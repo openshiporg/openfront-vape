@@ -66,7 +66,7 @@ export default function AgeGate({ storeName, confirmed }: { storeName: string; c
                 type="button"
                 autoFocus
                 onClick={confirm}
-                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink text-[15px] font-medium text-white"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink text-[15px] font-medium text-vp-on-ink"
               >
                 Yes, I am 21+
               </button>

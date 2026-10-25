@@ -39,46 +39,49 @@
   }
 }
 
-/* Vape storefront: "spec sheet" tokens. See docs/design/vape-redesign-2026-10-22.md.
-   --vp-h is set per store from the saved logo colour on the .vape-sf wrapper. */
+/* Vape storefront: the spec sheet at night. See docs/design/vape-redesign-2026-10-22.md.
+   A deep teal-black ground, bone ink, and the saved logo colour (--vp-h, set on the
+   .vape-sf wrapper) as a soft lifted accent. vp-on-ink is the text on an ink fill. */
 @theme inline {
-  --color-vp-bg: #f1f2ef;
-  --color-vp-surface: #ffffff;
-  --color-vp-well: #e6e8e4;
-  --color-vp-ink: #141816;
-  --color-vp-ink-2: #525955;
-  --color-vp-ink-3: #878d89;
-  --color-vp-line: #d9dcd7;
-  --color-vp-accent: hsl(var(--vp-h, 178) 46% 34%);
-  --color-vp-tint: hsl(var(--vp-h, 178) 38% 90%);
-  --color-vp-danger: #b4232a;
-  --color-vp-ok: #1f7a4d;
-  --color-vp-warn: #a86411;
+  --color-vp-bg: #0e1413;
+  --color-vp-surface: #1b2322;
+  --color-vp-well: #161e1d;
+  --color-vp-ink: #eceee9;
+  --color-vp-ink-2: #b5bcb8;
+  --color-vp-ink-3: #838c88;
+  --color-vp-line: #263130;
+  --color-vp-on-ink: #0e1413;
+  --color-vp-accent: hsl(var(--vp-h, 178) 48% 64%);
+  --color-vp-tint: hsl(var(--vp-h, 178) 32% 19%);
+  --color-vp-danger: #f08a8e;
+  --color-vp-ok: #6fd3a0;
+  --color-vp-warn: #e9b56b;
   --font-vp: var(--vp-font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-vp-mono: var(--vp-font-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 @layer base {
   .vape-sf {
-    --sf-background: #f1f2ef;
-    --sf-foreground: #141816;
-    --sf-card: #ffffff;
-    --sf-card-foreground: #141816;
-    --sf-popover: #ffffff;
-    --sf-popover-foreground: #141816;
-    --sf-primary: #141816;
-    --sf-primary-foreground: #f8f9f7;
-    --sf-secondary: #e6e8e4;
-    --sf-secondary-foreground: #141816;
-    --sf-muted: #e6e8e4;
-    --sf-muted-foreground: #525955;
-    --sf-accent: #e6e8e4;
-    --sf-accent-foreground: #141816;
-    --sf-border: #d9dcd7;
-    --sf-input: #d9dcd7;
-    --sf-ring: hsl(var(--vp-h, 178) 46% 34%);
-    background-color: #f1f2ef;
-    color: #141816;
+    --sf-background: #0e1413;
+    --sf-foreground: #eceee9;
+    --sf-card: #1b2322;
+    --sf-card-foreground: #eceee9;
+    --sf-popover: #1b2322;
+    --sf-popover-foreground: #eceee9;
+    --sf-primary: #eceee9;
+    --sf-primary-foreground: #0e1413;
+    --sf-secondary: #161e1d;
+    --sf-secondary-foreground: #eceee9;
+    --sf-muted: #161e1d;
+    --sf-muted-foreground: #b5bcb8;
+    --sf-accent: #161e1d;
+    --sf-accent-foreground: #eceee9;
+    --sf-border: #263130;
+    --sf-input: #263130;
+    --sf-ring: hsl(var(--vp-h, 178) 48% 64%);
+    background-color: #0e1413;
+    color: #eceee9;
+    color-scheme: dark;
     font-family: var(--vp-font-sans), ui-sans-serif, system-ui, sans-serif;
   }
 
@@ -97,8 +100,8 @@
     gap: 2px;
     padding: 3px;
     border-radius: 999px;
-    background: #e6e8e4;
-    box-shadow: inset 0 1px 2px rgb(20 24 22 / 0.08);
+    background: #0a0f0e;
+    box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(255 255 255 / 0.04);
   }
   .vp-pill {
     display: inline-flex;
@@ -110,27 +113,27 @@
     border-radius: 999px;
     font-size: 13px;
     font-weight: 500;
-    color: #525955;
+    color: #b5bcb8;
     white-space: nowrap;
     transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
   }
-  .vp-pill:hover { color: #141816; }
+  .vp-pill:hover { color: #eceee9; }
   .vp-pill[data-active="true"] {
-    background: #ffffff;
-    color: #141816;
-    box-shadow: 0 1px 2px rgb(20 24 22 / 0.12), 0 0 0 0.5px rgb(20 24 22 / 0.06);
+    background: #26302e;
+    color: #eceee9;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
   }
   .vp-pill:disabled,
-  .vp-pill[aria-disabled="true"] { color: #b3b8b4; text-decoration: line-through; cursor: not-allowed; }
-  .vp-pill:focus-visible { outline: 2px solid hsl(var(--vp-h, 178) 46% 34%); outline-offset: 1px; }
+  .vp-pill[aria-disabled="true"] { color: #56605d; text-decoration: line-through; cursor: not-allowed; }
+  .vp-pill:focus-visible { outline: 2px solid hsl(var(--vp-h, 178) 48% 64%); outline-offset: 1px; }
   @media (max-width: 639px) {
     .vp-pill { min-height: 40px; }
   }
 
   .vp-band {
-    border-radius: 18px;
-    background: #e6e8e4;
-    box-shadow: inset 0 1px 2px rgb(20 24 22 / 0.06);
+    border-radius: 14px;
+    background: #121a19;
+    box-shadow: inset 0 0 0 1px #263130;
   }
 
   .vp-dot {
@@ -141,7 +144,7 @@
     flex: none;
     transform: translateY(-0.1em);
   }
-  .vp-pill[data-active="true"]:disabled { color: #141816; text-decoration: none; cursor: default; }
+  .vp-pill[data-active="true"]:disabled { color: #eceee9; text-decoration: none; cursor: default; }
 
   /* Horizontal scrollers (segmented tracks on phone) */
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }

@@ -125,7 +125,7 @@ export default function MobileActions({
               setIsOpen(false)
             }}
             disabled={!inStock || !variant || !!isAdding}
-            className="inline-flex h-14 w-full items-center justify-center rounded-full bg-vp-ink text-[16px] font-medium text-white disabled:bg-vp-well disabled:text-vp-ink-3"
+            className="inline-flex h-14 w-full items-center justify-center rounded-full bg-vp-ink text-[16px] font-medium text-vp-on-ink disabled:bg-vp-well disabled:text-vp-ink-3"
           >
             {actionLabel}
           </button>
@@ -163,7 +163,7 @@ export default function MobileActions({
             type="button"
             onClick={handleAddToCart}
             disabled={!inStock || !variant || !!isAdding}
-            className="inline-flex h-12 items-center rounded-full bg-vp-ink px-5 text-[14px] font-medium text-white disabled:bg-vp-well disabled:text-vp-ink-3"
+            className="inline-flex h-12 items-center rounded-full bg-vp-ink px-5 text-[14px] font-medium text-vp-on-ink disabled:bg-vp-well disabled:text-vp-ink-3"
           >
             {actionLabel}
           </button>

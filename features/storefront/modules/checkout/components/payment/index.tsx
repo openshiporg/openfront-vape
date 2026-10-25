@@ -75,9 +75,9 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
         base: {
           fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif",
           fontSize: "16px",
-          color: "#141816",
+          color: "#eceee9",
           "::placeholder": {
-            color: "#878d89",
+            color: "#838c88",
           },
         },
       },

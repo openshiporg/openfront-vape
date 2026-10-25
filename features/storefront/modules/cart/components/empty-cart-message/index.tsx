@@ -9,7 +9,7 @@ const EmptyCartMessage = () => {
       </h1>
       <LocalizedClientLink
         href="/store"
-        className="mt-2 inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+        className="mt-2 inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink transition-opacity hover:opacity-90"
       >
         Shop all
       </LocalizedClientLink>

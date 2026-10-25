@@ -48,7 +48,7 @@ const Summary = ({ cart }: SummaryProps) => {
       <LocalizedClientLink
         href={`/checkout?step=${cart?.checkoutStep ?? 'address'}`}
         data-testid="checkout-button"
-        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-vp-ink text-[16px] font-medium text-white transition-opacity hover:opacity-90"
+        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-vp-ink text-[16px] font-medium text-vp-on-ink transition-opacity hover:opacity-90"
       >
         <LinkStatus />
         Check out

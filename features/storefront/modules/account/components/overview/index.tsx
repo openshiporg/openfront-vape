@@ -89,7 +89,7 @@ const Overview = ({ user, orders }: OverviewProps) => {
               <span className="text-[15px] text-vp-ink-2" data-testid="no-orders-message">No orders yet</span>
               <LocalizedClientLink
                 href="/store"
-                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-white"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink"
               >
                 Shop all
               </LocalizedClientLink>

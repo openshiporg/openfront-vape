@@ -109,7 +109,7 @@ const SideMenu = ({
               <LocalizedClientLink
                 href="/cart"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink text-[15px] font-medium text-white"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink text-[15px] font-medium text-vp-on-ink"
                 data-testid="cart-link"
               >
                 Bag

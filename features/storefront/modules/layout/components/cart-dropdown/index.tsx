@@ -168,7 +168,7 @@ const CartDropdown = ({
                   </div>
                   <LocalizedClientLink
                     href="/cart"
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-ink text-[15px] font-medium text-white"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-ink text-[15px] font-medium text-vp-on-ink"
                   >
                     <LinkStatus />
                     View bag
@@ -182,7 +182,7 @@ const CartDropdown = ({
                 <LocalizedClientLink
                   href="/store"
                   onClick={close}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-vp-ink px-5 text-[14px] font-medium text-white"
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-vp-ink px-5 text-[14px] font-medium text-vp-on-ink"
                 >
                   Shop all
                 </LocalizedClientLink>
