@@ -1,17 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { MoreVertical } from "lucide-react";
-import { Dot, type DotTone } from "../../components/vape-ui";
+import { StatusWord, Td, Th, Tr, type DotTone } from "../../components/vape-ui";
 import Link from "next/link";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
+import {
+  ActionsCell,
+  ExpandRow,
+  ExpandToggle,
+  Facts,
+  rowIconClass,
+  type QueueItem,
+} from "../../regions/components/config-kit";
 
 interface ShippingOption {
   id: string;
@@ -44,6 +45,32 @@ interface ShippingOption {
   updatedAt?: string;
 }
 
+export const SHIPPING_OPTION_COLUMNS = 7;
+
+export function ShippingOptionTableHead() {
+  return (
+    <tr>
+      <Th>Option</Th>
+      <Th>Status</Th>
+      <Th align="right">Price</Th>
+      <Th priority={2}>Region</Th>
+      <Th priority={3}>Provider</Th>
+      <Th priority={3}>Profile</Th>
+      <Th align="right"><span className="sr-only">Actions</span></Th>
+    </tr>
+  );
+}
+
+/** Options that cannot quote at checkout: no region, no provider, or a flat rate without an amount. */
+export function shippingOptionAttention(option: ShippingOption): QueueItem[] {
+  const base = { id: option.id, record: option.name, serial: option.uniqueKey, fixLabel: "Edit" };
+  const items: QueueItem[] = [];
+  if (!option.region) items.push({ ...base, tone: "danger", state: "No region", issue: "Not assigned to a region" });
+  if (!option.fulfillmentProvider) items.push({ ...base, tone: "warn", state: "No provider", issue: "No fulfillment provider" });
+  if (option.priceType === "flat_rate" && !option.amount) items.push({ ...base, tone: "warn", state: "No price", issue: "Flat rate with no amount" });
+  return items;
+}
+
 interface ShippingOptionDetailsComponentProps {
   shippingOption: ShippingOption;
   list: any;
@@ -54,6 +81,8 @@ export function ShippingOptionDetailsComponent({
   list,
 }: ShippingOptionDetailsComponentProps) {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const detailId = `shipping-option-${shippingOption.id}-detail`;
 
   // Format price display
   const formatPrice = () => {
@@ -85,116 +114,64 @@ export function ShippingOptionDetailsComponent({
 
   return (
     <>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={shippingOption.id} className="border-0">
-          <div className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                <Dot tone={status.tone} />
-                <Link
-                  href={`/dashboard/shipping-options/${shippingOption.id}`}
-                  className="text-sm font-semibold text-foreground hover:underline"
-                >
-                  {shippingOption.name}
-                </Link>
-                <span className="font-mono text-sm tabular-nums text-foreground">{formatPrice()}</span>
-                <span className="text-xs text-muted-foreground">{status.label}</span>
-              </div>
+      <Tr>
+        <Td className="max-w-[16rem]">
+          <Link
+            href={`/dashboard/shipping-options/${shippingOption.id}`}
+            className="font-medium text-foreground hover:underline"
+          >
+            {shippingOption.name}
+          </Link>
+          <div className="mt-0.5 truncate font-mono text-[12px] text-muted-foreground">{shippingOption.uniqueKey}</div>
+        </Td>
+        <Td>
+          <StatusWord tone={status.tone}>{status.label}</StatusWord>
+        </Td>
+        <Td align="right" className="whitespace-nowrap">
+          {formatPrice()}
+          <div className="text-[12px] capitalize text-muted-foreground">{shippingOption.priceType.replace('_', ' ')}</div>
+        </Td>
+        <Td priority={2}>
+          {shippingOption.region ? (
+            <>
+              {shippingOption.region.name}{" "}
+              <span className="font-mono text-[12px] uppercase text-muted-foreground">{shippingOption.region.code}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </Td>
+        <Td priority={3} className="text-muted-foreground">{shippingOption.fulfillmentProvider?.name ?? "—"}</Td>
+        <Td priority={3} className="text-muted-foreground">{shippingOption.shippingProfile?.name ?? "—"}</Td>
+        <ActionsCell>
+          <button
+            type="button"
+            className={rowIconClass}
+            onClick={() => setIsEditDrawerOpen(true)}
+            aria-label="Edit"
+          >
+            <MoreVertical />
+          </button>
+          <ExpandToggle open={open} onToggle={() => setOpen(!open)} controls={detailId} label="shipping option details" />
+        </ActionsCell>
+      </Tr>
 
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="font-mono tabular-nums">{shippingOption.uniqueKey}</span>
-                <span className="capitalize">{shippingOption.priceType.replace('_', ' ')}</span>
-                {shippingOption.region && (
-                  <span>
-                    {shippingOption.region.name}{" "}
-                    <span className="font-mono uppercase tabular-nums">{shippingOption.region.code}</span>
-                  </span>
-                )}
-                {shippingOption.fulfillmentProvider && <span>{shippingOption.fulfillmentProvider.name}</span>}
-                {shippingOption.shippingProfile && <span>{shippingOption.shippingProfile.name}</span>}
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                onClick={() => setIsEditDrawerOpen(true)}
-                aria-label="Edit"
-              >
-                <MoreVertical className="stroke-muted-foreground" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                asChild
-              >
-                <AccordionTrigger className="justify-center py-0" />
-              </Button>
-            </div>
-          </div>
-
-          <AccordionContent className="pb-0">
-            <div className="grid gap-5 border-t border-border bg-background/60 px-4 py-4 sm:grid-cols-3">
-              <section>
-                <h4 className="mb-2 text-xs font-semibold text-foreground">Pricing</h4>
-                <dl className="space-y-2 text-sm">
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Type</dt>
-                    <dd className="mt-0.5 capitalize text-foreground">{shippingOption.priceType.replace('_', ' ')}</dd>
-                  </div>
-                  {shippingOption.amount && (
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Base amount</dt>
-                      <dd className="mt-0.5 font-mono tabular-nums text-foreground">{formatPrice()}</dd>
-                    </div>
-                  )}
-                </dl>
-              </section>
-
-              <section>
-                <h4 className="mb-2 text-xs font-semibold text-foreground">Configuration</h4>
-                <dl className="space-y-2 text-sm">
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Return option</dt>
-                    <dd className="mt-0.5 text-foreground">{shippingOption.isReturn ? 'Yes' : 'No'}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Admin only</dt>
-                    <dd className="mt-0.5 text-foreground">{shippingOption.adminOnly ? 'Yes' : 'No'}</dd>
-                  </div>
-                </dl>
-              </section>
-
-              <section>
-                <h4 className="mb-2 text-xs font-semibold text-foreground">Relationships</h4>
-                <dl className="space-y-2 text-sm">
-                  {shippingOption.region && (
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Region</dt>
-                      <dd className="mt-0.5 text-foreground">{shippingOption.region.name}</dd>
-                    </div>
-                  )}
-                  {shippingOption.fulfillmentProvider && (
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Provider</dt>
-                      <dd className="mt-0.5 text-foreground">{shippingOption.fulfillmentProvider.name}</dd>
-                    </div>
-                  )}
-                  {shippingOption.shippingProfile && (
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Profile</dt>
-                      <dd className="mt-0.5 text-foreground">{shippingOption.shippingProfile.name}</dd>
-                    </div>
-                  )}
-                </dl>
-              </section>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      {open && (
+        <ExpandRow id={detailId} colSpan={SHIPPING_OPTION_COLUMNS}>
+          <Facts
+            facts={[
+              { label: "Price type", value: <span className="capitalize">{shippingOption.priceType.replace('_', ' ')}</span> },
+              { label: "Base amount", value: shippingOption.amount ? formatPrice() : '—' },
+              { label: "Return option", value: shippingOption.isReturn ? 'Yes' : 'No' },
+              { label: "Admin only", value: shippingOption.adminOnly ? 'Yes' : 'No' },
+              { label: "Region", value: shippingOption.region?.name ?? '—' },
+              { label: "Provider", value: shippingOption.fulfillmentProvider?.name ?? '—' },
+              { label: "Profile", value: shippingOption.shippingProfile?.name ?? '—' },
+              { label: "Key", value: shippingOption.uniqueKey, mono: true },
+            ]}
+          />
+        </ExpandRow>
+      )}
 
       {/* Edit Shipping Option Drawer */}
       <EditItemDrawerClientWrapper

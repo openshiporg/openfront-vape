@@ -89,7 +89,7 @@ export function DateRangePicker({ onDateChange, defaultValue }: DateRangePickerP
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="h-10 justify-start rounded-full bg-background px-4 font-mono text-sm tabular-nums">
+        <Button variant="outline" className="h-10 justify-start rounded-[4px] bg-background px-3 text-sm tabular-nums">
           {mounted ? formatDateRange(date) : "Date range"}
         </Button>
       </PopoverTrigger>

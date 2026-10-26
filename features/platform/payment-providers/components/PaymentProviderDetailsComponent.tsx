@@ -1,29 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { Count, Dot, ListBand, Pill, Track } from "../../components/vape-ui";
+import { Count, Pill, StatusWord, Td, Th, Tr, Track, type DotTone } from "../../components/vape-ui";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
 import { ItemPagination } from "../../orders/components/ItemPagination";
-
-const statusColors = {
-  "active": "emerald",
-  "inactive": "zinc"
-} as const;
+import {
+  ActionsCell,
+  ExpandRow,
+  ExpandToggle,
+  RowMenu,
+  SubTable,
+  formatDate,
+  type QueueItem,
+} from "../../regions/components/config-kit";
 
 interface PaymentProvider {
   id: string;
@@ -54,6 +45,35 @@ interface PaymentProviderDetailsComponentProps {
   list: any;
 }
 
+
+export const PAYMENT_PROVIDER_COLUMNS = 5;
+
+export function PaymentProviderTableHead() {
+  return (
+    <tr>
+      <Th>Provider</Th>
+      <Th>Status</Th>
+      <Th priority={2} align="right">Regions</Th>
+      <Th priority={3}>Created</Th>
+      <Th align="right"><span className="sr-only">Actions</span></Th>
+    </tr>
+  );
+}
+
+export function paymentProviderStatus(provider: PaymentProvider): { tone: DotTone; label: string } {
+  if (!provider.isInstalled) return { tone: "danger", label: "Not installed" };
+  if (!provider.regions?.length) return { tone: "warn", label: "No regions" };
+  return { tone: "ok", label: "Installed" };
+}
+
+/** Providers that cannot take a payment: not installed, or installed in no region. */
+export function paymentProviderAttention(provider: PaymentProvider): QueueItem | null {
+  const base = { id: provider.id, record: provider.name, serial: provider.code, fixLabel: "Edit" };
+  if (!provider.isInstalled) return { ...base, tone: "danger", state: "Not installed", issue: "Checkout cannot use this provider" };
+  if (!provider.regions?.length) return { ...base, tone: "warn", state: "No regions", issue: "Installed but not offered in any region" };
+  return null;
+}
+
 type TabType = 'regions';
 
 export function PaymentProviderDetailsComponent({
@@ -61,6 +81,7 @@ export function PaymentProviderDetailsComponent({
   list,
 }: PaymentProviderDetailsComponentProps) {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('regions');
   const [currentPage, setCurrentPage] = useState(1);
   const [editRegionId, setEditRegionId] = useState('');
@@ -84,134 +105,116 @@ export function PaymentProviderDetailsComponent({
     setCurrentPage(1);
   };
 
-  const rowIcon = "size-10 shrink-0 rounded-full sm:size-8 [&_svg]:size-4";
+  const status = paymentProviderStatus(paymentprovider);
+  const detailId = `paymentprovider-${paymentprovider.id}-detail`;
 
   return (
     <>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={paymentprovider.id} className="border-0">
-          <div className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                <Dot tone={paymentprovider.isInstalled ? "ok" : "muted"} />
-                <Link
-                  href={`/dashboard/payment-providers/${paymentprovider.id}`}
-                  className="text-sm font-semibold text-foreground hover:underline"
+      <Tr>
+        <Td className="max-w-[16rem]">
+          <Link
+            href={`/dashboard/payment-providers/${paymentprovider.id}`}
+            className="font-medium text-foreground hover:underline"
+          >
+            {paymentprovider.name}
+          </Link>
+          <div className="mt-0.5 truncate font-mono text-[12px] text-muted-foreground">{paymentprovider.code}</div>
+        </Td>
+        <Td>
+          <StatusWord tone={status.tone}>{status.label}</StatusWord>
+        </Td>
+        <Td priority={2} align="right">{regions.length}</Td>
+        <Td priority={3} className="whitespace-nowrap tabular-nums text-muted-foreground">{formatDate(paymentprovider.createdAt) ?? "—"}</Td>
+        <ActionsCell>
+          <RowMenu>
+            <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
+              Edit Payment Provider
+            </DropdownMenuItem>
+          </RowMenu>
+          <ExpandToggle open={open} onToggle={() => setOpen(!open)} controls={detailId} label="regions" />
+        </ActionsCell>
+      </Tr>
+
+      {open && (
+        <ExpandRow id={detailId} colSpan={PAYMENT_PROVIDER_COLUMNS}>
+          {regions.length > 0 ? (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Track label="Provider details">
+                  {tabs.map((tab) => (
+                    <Pill
+                      key={tab.key}
+                      active={activeTab === tab.key}
+                      onClick={() => {
+                        setActiveTab(tab.key);
+                        resetPage();
+                      }}
+                    >
+                      Regions <Count>{tab.count}</Count>
+                    </Pill>
+                  ))}
+                </Track>
+                {activeTabData && activeTabData.count > itemsPerPage && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] tabular-nums text-muted-foreground">
+                      {Math.min((currentPage - 1) * itemsPerPage + 1, activeTabData.count)}–{Math.min(currentPage * itemsPerPage, activeTabData.count)} of {activeTabData.count}
+                    </span>
+                    <ItemPagination
+                      currentPage={currentPage}
+                      totalItems={activeTabData.count}
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {activeTabData && activeTab === 'regions' && (
+                <SubTable
+                  head={
+                    <>
+                      <Th>Region</Th>
+                      <Th priority={2}>Currency</Th>
+                      <Th align="right">Countries</Th>
+                      <Th align="right"><span className="sr-only">Actions</span></Th>
+                    </>
+                  }
                 >
-                  {paymentprovider.name}
-                </Link>
-                <span className="text-xs text-muted-foreground">{paymentprovider.isInstalled ? "Installed" : "Not installed"}</span>
-              </div>
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="font-mono tabular-nums">{paymentprovider.code}</span>
-                {regions.length > 0 && (
-                  <span>
-                    <span className="font-mono tabular-nums">{regions.length}</span> region{regions.length !== 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className={rowIcon} aria-label="Actions">
-                    <MoreVertical className="stroke-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
-                    Edit Payment Provider
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button variant="ghost" size="icon" className={rowIcon} asChild>
-                <AccordionTrigger className="justify-center py-0" />
-              </Button>
-            </div>
-          </div>
-          <AccordionContent className="pb-0">
-            {regions.length > 0 && (
-              <div className="space-y-3 border-t border-border bg-background/60 px-4 py-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Track label="Provider details">
-                    {tabs.map((tab) => (
-                      <Pill
-                        key={tab.key}
-                        active={activeTab === tab.key}
-                        onClick={() => {
-                          setActiveTab(tab.key);
-                          resetPage();
-                        }}
-                      >
-                        Regions <Count>{tab.count}</Count>
-                      </Pill>
+                  {regions
+                    .slice(
+                      (currentPage - 1) * itemsPerPage,
+                      currentPage * itemsPerPage
+                    )
+                    .map((region, index) => (
+                      <Tr key={index}>
+                        <Td>
+                          {region.name}{" "}
+                          <span className="font-mono text-[12px] uppercase text-muted-foreground">{region.code}</span>
+                        </Td>
+                        <Td priority={2} className="font-mono text-muted-foreground">
+                          {region.currency ? `${region.currency.symbol} ${region.currency.code}` : "—"}
+                        </Td>
+                        <Td align="right">{region.countries?.length ?? 0}</Td>
+                        <ActionsCell>
+                          <RowMenu>
+                            <DropdownMenuItem onClick={() => {
+                              setEditRegionId(region.id);
+                              setEditRegionOpen(true);
+                            }}>
+                              Edit Region
+                            </DropdownMenuItem>
+                          </RowMenu>
+                        </ActionsCell>
+                      </Tr>
                     ))}
-                  </Track>
-                  {activeTabData && activeTabData.count > itemsPerPage && (
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                        {Math.min((currentPage - 1) * itemsPerPage + 1, activeTabData.count)}–{Math.min(currentPage * itemsPerPage, activeTabData.count)} / {activeTabData.count}
-                      </span>
-                      <ItemPagination
-                        currentPage={currentPage}
-                        totalItems={activeTabData.count}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={setCurrentPage}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {activeTabData && activeTab === 'regions' && (
-                  <ListBand>
-                    {regions
-                      .slice(
-                        (currentPage - 1) * itemsPerPage,
-                        currentPage * itemsPerPage
-                      )
-                      .map((region, index) => (
-                        <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-baseline gap-2 text-sm">
-                              <span className="truncate text-foreground">{region.name}</span>
-                              <span className="font-mono text-xs uppercase tabular-nums text-muted-foreground">{region.code}</span>
-                            </div>
-                            <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                              {region.currency && (
-                                <span className="font-mono tabular-nums">{region.currency.symbol} {region.currency.code}</span>
-                              )}
-                              {region.countries && region.countries.length > 0 && (
-                                <span>
-                                  <span className="font-mono tabular-nums">{region.countries.length}</span> countr{region.countries.length === 1 ? 'y' : 'ies'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className={rowIcon} aria-label="Actions">
-                                <MoreVertical className="stroke-muted-foreground" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => {
-                                setEditRegionId(region.id);
-                                setEditRegionOpen(true);
-                              }}>
-                                Edit Region
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      ))}
-                  </ListBand>
-                )}
-              </div>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+                </SubTable>
+              )}
+            </div>
+          ) : (
+            <p className="py-2 text-center text-[13px] text-muted-foreground">Not assigned to any region</p>
+          )}
+        </ExpandRow>
+      )}
 
       {/* Edit Payment Provider Drawer */}
       <EditItemDrawerClientWrapper

@@ -1,132 +1,98 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit, Trash } from "lucide-react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Edit, Trash } from "lucide-react";
 import Link from "next/link";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
-import { Dot } from "../../components/vape-ui";
+import { StatusWord, Td, Th, Tr } from "../../components/vape-ui";
 import { Country } from "../actions/country-actions";
+import { ActionsCell, ExpandRow, ExpandToggle, Facts, RowMenu, formatDate } from "./config-kit";
 
 interface CountryDetailsComponentProps {
   country: Country;
   list: any;
 }
 
+export const COUNTRY_COLUMNS = 6;
+
+export function CountryTableHead() {
+  return (
+    <tr>
+      <Th>Country</Th>
+      <Th>Status</Th>
+      <Th priority={2}>Region</Th>
+      <Th priority={2}>ISO3</Th>
+      <Th priority={3}>Created</Th>
+      <Th align="right"><span className="sr-only">Actions</span></Th>
+    </tr>
+  );
+}
+
 export function CountryDetailsComponent({ country, list }: CountryDetailsComponentProps) {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const statusTone = country.region ? "ok" : "muted";
   const statusText = country.region ? "Assigned" : "Unassigned";
+  const detailId = `region-country-${country.id}-detail`;
 
   return (
     <>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={country.id} className="border-0">
-          <div className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                <Dot tone={statusTone} />
-                <Link
-                  href={`/dashboard/platform/regions?tab=countries&focus=${country.id}`}
-                  className="text-sm font-semibold text-foreground hover:underline"
-                >
-                  {country.displayName}
-                </Link>
-                <span className="font-mono text-xs uppercase tabular-nums text-muted-foreground">{country.iso2}</span>
-                <span className="text-xs text-muted-foreground">{statusText}</span>
-              </div>
-
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="font-mono uppercase tabular-nums">{country.iso3}</span>
-                <span className="font-mono tabular-nums">#{country.numCode}</span>
-                {country.region && <span className="text-foreground">{country.region.name}</span>}
-                <span className="font-mono tabular-nums">
-                  {new Date(country.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                    aria-label="Actions"
-                  >
-                    <MoreVertical className="stroke-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Country
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">
-                    <Trash className="w-4 h-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                asChild
-              >
-                <AccordionTrigger className="justify-center py-0" />
-              </Button>
-            </div>
+      <Tr>
+        <Td className="max-w-[16rem]">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="w-6 shrink-0 font-mono text-[12px] uppercase text-muted-foreground">{country.iso2}</span>
+            <Link
+              href={`/dashboard/platform/regions?tab=countries&focus=${country.id}`}
+              className="truncate font-medium text-foreground hover:underline"
+            >
+              {country.displayName}
+            </Link>
           </div>
+        </Td>
+        <Td>
+          <StatusWord tone={statusTone}>{statusText}</StatusWord>
+        </Td>
+        <Td priority={2}>
+          {country.region ? (
+            <>
+              {country.region.name}{" "}
+              <span className="font-mono text-[12px] text-muted-foreground">{country.region.currency.code}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </Td>
+        <Td priority={2} className="font-mono uppercase text-muted-foreground">{country.iso3}</Td>
+        <Td priority={3} className="whitespace-nowrap tabular-nums text-muted-foreground">{formatDate(country.createdAt)}</Td>
+        <ActionsCell>
+          <RowMenu>
+            <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Country
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive">
+              <Trash className="w-4 h-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </RowMenu>
+          <ExpandToggle open={open} onToggle={() => setOpen(!open)} controls={detailId} label="country details" />
+        </ActionsCell>
+      </Tr>
 
-          <AccordionContent className="pb-0">
-            <div className="border-t border-border bg-background/60 px-4 py-4">
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
-                <div>
-                  <dt className="text-xs text-muted-foreground">Full name</dt>
-                  <dd className="mt-0.5 text-foreground">{country.name}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">ISO3</dt>
-                  <dd className="mt-0.5 font-mono uppercase tabular-nums text-foreground">{country.iso3}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Numeric code</dt>
-                  <dd className="mt-0.5 font-mono tabular-nums text-foreground">{country.numCode}</dd>
-                </div>
-                {country.region && (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Region</dt>
-                    <dd className="mt-0.5 text-foreground">
-                      {country.region.name}{" "}
-                      <span className="font-mono tabular-nums text-muted-foreground">{country.region.currency.code}</span>
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      {open && (
+        <ExpandRow id={detailId} colSpan={COUNTRY_COLUMNS}>
+          <Facts
+            facts={[
+              { label: "Full name", value: country.name },
+              { label: "ISO3", value: country.iso3?.toUpperCase(), mono: true },
+              { label: "Numeric code", value: country.numCode, mono: true },
+              ...(country.region ? [{ label: "Region", value: `${country.region.name} (${country.region.currency.code})` }] : []),
+            ]}
+          />
+        </ExpandRow>
+      )}
 
       <EditItemDrawerClientWrapper
         listKey="countries"

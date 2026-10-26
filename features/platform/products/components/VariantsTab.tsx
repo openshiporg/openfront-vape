@@ -613,10 +613,8 @@ export function VariantsTab({ product: initialProduct }: VariantsTab2Props) {
         <Pill active={activeTab === "drift"} onClick={() => setActiveTab("drift")}>
           Changes
           {(variantsToDelete.length > 0 || variantsToCreate.length > 0) && (
-            <span className="inline-flex items-baseline gap-1.5 font-mono text-[11px] tabular-nums">
-              <span className="text-red-600 dark:text-red-400">-{variantsToDelete.length}</span>
-              <span className="text-muted-foreground">{unchangedVariants.length}</span>
-              <span className="text-emerald-600 dark:text-emerald-400">+{variantsToCreate.length}</span>
+            <span className="text-[11px] tabular-nums text-muted-foreground">
+              {variantsToCreate.length} added · {variantsToDelete.length} removed
             </span>
           )}
         </Pill>
@@ -652,11 +650,11 @@ export function VariantsTab({ product: initialProduct }: VariantsTab2Props) {
                     <button
                       type="button"
                       key={filter}
-                      className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-foreground px-3 text-xs font-medium text-background max-sm:min-h-10"
+                      className="inline-flex min-h-8 items-center gap-1.5 rounded-[4px] bg-foreground px-3 text-xs font-medium text-background max-sm:min-h-10"
                       onClick={() => handleOptionFilter(option, value)}
                     >
                       <span className="opacity-70">{option}</span>
-                      <span className="font-mono tabular-nums">{value}</span>
+                      <span>{value}</span>
                       <X className="size-3" />
                     </button>
                   );
@@ -721,7 +719,7 @@ export const VariantForm = ({ variant, onChange, onSave, onCancel }: any) => (
   <div className="flex flex-col">
     <div>
       <div className="p-4 border-b">
-        <h3 className="font-medium text-sm mb-1">Edit Variant</h3>
+        <h3 className="font-medium text-sm mb-1">Edit variant</h3>
         <p className="text-muted-foreground text-xs">
           Update variant properties
         </p>

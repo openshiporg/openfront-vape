@@ -63,7 +63,7 @@ export function CreateRegionDrawer({ open, onClose, mode }: CreateRegionDrawerPr
               <DrawerDescription className="sr-only">Create region</DrawerDescription>
             </div>
             <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="size-10 rounded-full" aria-label="Close">
+              <Button variant="ghost" size="icon" className="size-10 rounded-[4px]" aria-label="Close">
                 <X className="w-4 h-4" />
               </Button>
             </DrawerClose>
@@ -108,7 +108,7 @@ export function CreateRegionDrawer({ open, onClose, mode }: CreateRegionDrawerPr
               />
             </div>
 
-            <div className="flex min-h-10 items-center gap-3 rounded-xl bg-muted/40 px-4 py-2 ring-1 ring-inset ring-border/60">
+            <div className="flex min-h-10 items-center gap-3 rounded-md border bg-muted/40 px-4 py-2">
               <Switch
                 id="automaticTaxes"
                 checked={formData.automaticTaxes}
@@ -122,14 +122,14 @@ export function CreateRegionDrawer({ open, onClose, mode }: CreateRegionDrawerPr
                 type="button"
                 variant="ghost"
                 onClick={onClose}
-                className="h-10 flex-1 rounded-full bg-muted hover:bg-muted/80"
+                className="h-10 flex-1 rounded-[4px] bg-muted hover:bg-muted/80"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading || !formData.name || !formData.code}
-                className="h-10 flex-1 rounded-full"
+                className="h-10 flex-1 rounded-[4px]"
               >
                 {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Create Region

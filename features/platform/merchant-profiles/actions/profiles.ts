@@ -15,6 +15,7 @@ export type ProfileRow = {
   pactRegistered: boolean;
   origin: string | null;
   launchCount: number;
+  categoryCount: number;
   effectiveAt: string | null;
   expiresAt: string | null;
 };
@@ -123,7 +124,7 @@ export async function listProfiles(status: string, search: string): Promise<Load
         where: where as any,
         orderBy: [{ createdAt: 'desc' }],
         take: 100,
-        query: 'id legalName complianceOwner status killSwitch pactRegistered effectiveAt expiresAt originJurisdiction { code } launchJurisdictionsCount',
+        query: 'id legalName complianceOwner status killSwitch pactRegistered enabledCategories effectiveAt expiresAt originJurisdiction { code } launchJurisdictionsCount',
       }),
       context.query.RegulatedMerchantProfile.count({ where: searchWhere as any }),
       ...STATUSES.map(value => context.query.RegulatedMerchantProfile.count({ where: { ...searchWhere, status: { equals: value } } as any })),
@@ -140,6 +141,7 @@ export async function listProfiles(status: string, search: string): Promise<Load
           pactRegistered: Boolean(item.pactRegistered),
           origin: item.originJurisdiction?.code || null,
           launchCount: item.launchJurisdictionsCount || 0,
+          categoryCount: Array.isArray(item.enabledCategories) ? item.enabledCategories.length : 0,
           effectiveAt: item.effectiveAt,
           expiresAt: item.expiresAt,
         })),

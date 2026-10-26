@@ -216,7 +216,7 @@ export function ShippingTabs({
                   value={selectedTab}
                   onValueChange={setSelectedTab}
                 >
-                  <SelectTrigger className="gap-6 [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0 text-sm font-medium h-9 max-sm:h-10 rounded-full text-foreground bg-background shadow-xs">
+                  <SelectTrigger className="gap-6 [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0 text-sm font-medium h-9 max-sm:h-10 rounded-[4px] text-foreground bg-background">
                     <SelectValue placeholder="Select shipping method" />
                   </SelectTrigger>
                   <SelectContent>

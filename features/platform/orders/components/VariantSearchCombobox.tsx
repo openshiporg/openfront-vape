@@ -235,7 +235,7 @@ export function VariantSearchCombobox({
                                   <Badge 
                                     variant="outline" 
                                     className={cn(
-                                      "text-xs",
+                                      "rounded-[4px] text-xs",
                                       inventoryStatus.color === "green" && "border-green-200 text-green-700",
                                       inventoryStatus.color === "yellow" && "border-yellow-200 text-yellow-700",
                                       inventoryStatus.color === "red" && "border-red-200 text-red-700",

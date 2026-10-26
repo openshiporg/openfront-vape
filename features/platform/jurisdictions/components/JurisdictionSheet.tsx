@@ -112,7 +112,7 @@ export function JurisdictionSheetButton({ jurisdiction, children, className, var
             </section>
 
             <ErrorLine message={error} />
-            <Button type="submit" disabled={pending} className="h-10 w-full rounded-full">
+            <Button type="submit" disabled={pending} className="h-10 w-full rounded-[4px]">
               {pending ? 'Saving…' : editing ? 'Save jurisdiction' : 'Create draft'}
             </Button>
           </form>

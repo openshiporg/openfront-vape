@@ -1,29 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { Count, Dot, ListBand, Pill, Track } from "../../components/vape-ui";
+import { Count, Pill, StatusWord, Td, Th, Tr, Track, type DotTone } from "../../components/vape-ui";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
 import { ItemPagination } from "../../orders/components/ItemPagination";
-
-const statusColors = {
-  "active": "emerald",
-  "inactive": "zinc"
-} as const;
+import {
+  ActionsCell,
+  ExpandRow,
+  ExpandToggle,
+  RowMenu,
+  SubTable,
+  formatDate,
+  type QueueItem,
+} from "../../regions/components/config-kit";
 
 interface ShippingProvider {
   id: string;
@@ -55,6 +46,38 @@ interface ShippingProviderDetailsComponentProps {
   list: any;
 }
 
+
+export const SHIPPING_PROVIDER_COLUMNS = 6;
+
+export function ShippingProviderTableHead() {
+  return (
+    <tr>
+      <Th>Provider</Th>
+      <Th>Status</Th>
+      <Th priority={2}>Connection</Th>
+      <Th priority={2} align="right">Regions</Th>
+      <Th priority={3}>Created</Th>
+      <Th align="right"><span className="sr-only">Actions</span></Th>
+    </tr>
+  );
+}
+
+export function shippingProviderStatus(provider: ShippingProvider): { tone: DotTone; label: string } {
+  if (provider.isActive === false) return { tone: "muted", label: "Inactive" };
+  if (!provider.accessToken) return { tone: "danger", label: "Not connected" };
+  if (!provider.regions?.length) return { tone: "warn", label: "No regions" };
+  return { tone: "ok", label: "Active" };
+}
+
+/** Active providers with no API key or no regions cannot rate or label shipments. */
+export function shippingProviderAttention(provider: ShippingProvider): QueueItem | null {
+  const base = { id: provider.id, record: provider.name, fixLabel: "Edit" };
+  if (provider.isActive === false) return null;
+  if (!provider.accessToken) return { ...base, tone: "danger", state: "Not connected", issue: "No API key, rates and labels fail" };
+  if (!provider.regions?.length) return { ...base, tone: "warn", state: "No regions", issue: "Not assigned to any region" };
+  return null;
+}
+
 type TabType = 'regions';
 
 export function ShippingProviderDetailsComponent({
@@ -62,6 +85,7 @@ export function ShippingProviderDetailsComponent({
   list,
 }: ShippingProviderDetailsComponentProps) {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('regions');
   const [currentPage, setCurrentPage] = useState(1);
   const [editRegionId, setEditRegionId] = useState('');
@@ -85,144 +109,116 @@ export function ShippingProviderDetailsComponent({
     setCurrentPage(1);
   };
 
-  const rowIcon = "size-10 shrink-0 rounded-full sm:size-8 [&_svg]:size-4";
+  const status = shippingProviderStatus(shippingprovider);
+  const detailId = `shippingprovider-${shippingprovider.id}-detail`;
 
   return (
     <>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={shippingprovider.id} className="border-0">
-          <div className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                {shippingprovider.isActive !== undefined && (
-                  <Dot tone={shippingprovider.isActive ? "ok" : "muted"} />
+      <Tr>
+        <Td className="max-w-[16rem]">
+          <Link
+            href={`/dashboard/shipping-providers/${shippingprovider.id}`}
+            className="font-medium text-foreground hover:underline"
+          >
+            {shippingprovider.name}
+          </Link>
+        </Td>
+        <Td>
+          <StatusWord tone={status.tone}>{status.label}</StatusWord>
+        </Td>
+        <Td priority={2} className="text-muted-foreground">{shippingprovider.accessToken ? "API key set" : "No API key"}</Td>
+        <Td priority={2} align="right">{regions.length}</Td>
+        <Td priority={3} className="whitespace-nowrap tabular-nums text-muted-foreground">{formatDate(shippingprovider.createdAt)}</Td>
+        <ActionsCell>
+          <RowMenu>
+            <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
+              Edit Shipping Provider
+            </DropdownMenuItem>
+          </RowMenu>
+          <ExpandToggle open={open} onToggle={() => setOpen(!open)} controls={detailId} label="regions" />
+        </ActionsCell>
+      </Tr>
+
+      {open && (
+        <ExpandRow id={detailId} colSpan={SHIPPING_PROVIDER_COLUMNS}>
+          {regions.length > 0 ? (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Track label="Provider details">
+                  {tabs.map((tab) => (
+                    <Pill
+                      key={tab.key}
+                      active={activeTab === tab.key}
+                      onClick={() => {
+                        setActiveTab(tab.key);
+                        resetPage();
+                      }}
+                    >
+                      Regions <Count>{tab.count}</Count>
+                    </Pill>
+                  ))}
+                </Track>
+                {activeTabData && activeTabData.count > itemsPerPage && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] tabular-nums text-muted-foreground">
+                      {Math.min((currentPage - 1) * itemsPerPage + 1, activeTabData.count)}–{Math.min(currentPage * itemsPerPage, activeTabData.count)} of {activeTabData.count}
+                    </span>
+                    <ItemPagination
+                      currentPage={currentPage}
+                      totalItems={activeTabData.count}
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
                 )}
-                <Link
-                  href={`/dashboard/shipping-providers/${shippingprovider.id}`}
-                  className="text-sm font-semibold text-foreground hover:underline"
+              </div>
+
+              {activeTabData && activeTab === 'regions' && (
+                <SubTable
+                  head={
+                    <>
+                      <Th>Region</Th>
+                      <Th priority={2}>Currency</Th>
+                      <Th align="right">Countries</Th>
+                      <Th align="right"><span className="sr-only">Actions</span></Th>
+                    </>
+                  }
                 >
-                  {shippingprovider.name}
-                </Link>
-                {shippingprovider.isActive !== undefined && (
-                  <span className="text-xs text-muted-foreground">{shippingprovider.isActive ? "Active" : "Inactive"}</span>
-                )}
-              </div>
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="font-mono tabular-nums">
-                  {new Date(shippingprovider.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-                {regions.length > 0 && (
-                  <span>
-                    <span className="font-mono tabular-nums">{regions.length}</span> region{regions.length !== 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className={rowIcon} aria-label="Actions">
-                    <MoreVertical className="stroke-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
-                    Edit Shipping Provider
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button variant="ghost" size="icon" className={rowIcon} asChild>
-                <AccordionTrigger className="justify-center py-0" />
-              </Button>
-            </div>
-          </div>
-          <AccordionContent className="pb-0">
-            {regions.length > 0 && (
-              <div className="space-y-3 border-t border-border bg-background/60 px-4 py-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Track label="Provider details">
-                    {tabs.map((tab) => (
-                      <Pill
-                        key={tab.key}
-                        active={activeTab === tab.key}
-                        onClick={() => {
-                          setActiveTab(tab.key);
-                          resetPage();
-                        }}
-                      >
-                        Regions <Count>{tab.count}</Count>
-                      </Pill>
+                  {regions
+                    .slice(
+                      (currentPage - 1) * itemsPerPage,
+                      currentPage * itemsPerPage
+                    )
+                    .map((region, index) => (
+                      <Tr key={index}>
+                        <Td>
+                          {region.name}{" "}
+                          <span className="font-mono text-[12px] uppercase text-muted-foreground">{region.code}</span>
+                        </Td>
+                        <Td priority={2} className="font-mono text-muted-foreground">
+                          {region.currency ? `${region.currency.symbol} ${region.currency.code}` : "—"}
+                        </Td>
+                        <Td align="right">{region.countries?.length ?? 0}</Td>
+                        <ActionsCell>
+                          <RowMenu>
+                            <DropdownMenuItem onClick={() => {
+                              setEditRegionId(region.id);
+                              setEditRegionOpen(true);
+                            }}>
+                              Edit Region
+                            </DropdownMenuItem>
+                          </RowMenu>
+                        </ActionsCell>
+                      </Tr>
                     ))}
-                  </Track>
-                  {activeTabData && activeTabData.count > itemsPerPage && (
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                        {Math.min((currentPage - 1) * itemsPerPage + 1, activeTabData.count)}–{Math.min(currentPage * itemsPerPage, activeTabData.count)} / {activeTabData.count}
-                      </span>
-                      <ItemPagination
-                        currentPage={currentPage}
-                        totalItems={activeTabData.count}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={setCurrentPage}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {activeTabData && activeTab === 'regions' && (
-                  <ListBand>
-                    {regions
-                      .slice(
-                        (currentPage - 1) * itemsPerPage,
-                        currentPage * itemsPerPage
-                      )
-                      .map((region, index) => (
-                        <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-baseline gap-2 text-sm">
-                              <span className="truncate text-foreground">{region.name}</span>
-                              <span className="font-mono text-xs uppercase tabular-nums text-muted-foreground">{region.code}</span>
-                            </div>
-                            <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                              {region.currency && (
-                                <span className="font-mono tabular-nums">{region.currency.symbol} {region.currency.code}</span>
-                              )}
-                              {region.countries && region.countries.length > 0 && (
-                                <span>
-                                  <span className="font-mono tabular-nums">{region.countries.length}</span> countr{region.countries.length === 1 ? 'y' : 'ies'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className={rowIcon} aria-label="Actions">
-                                <MoreVertical className="stroke-muted-foreground" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => {
-                                setEditRegionId(region.id);
-                                setEditRegionOpen(true);
-                              }}>
-                                Edit Region
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      ))}
-                  </ListBand>
-                )}
-              </div>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+                </SubTable>
+              )}
+            </div>
+          ) : (
+            <p className="py-2 text-center text-[13px] text-muted-foreground">Not assigned to any region</p>
+          )}
+        </ExpandRow>
+      )}
 
       {/* Edit Shipping Provider Drawer */}
       <EditItemDrawerClientWrapper

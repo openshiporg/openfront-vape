@@ -182,7 +182,7 @@ export function ProfileSheet({
               </section>
 
               <ErrorLine message={error} />
-              <Button type="submit" disabled={pending} className="h-10 w-full rounded-full">
+              <Button type="submit" disabled={pending} className="h-10 w-full rounded-[4px]">
                 {pending ? 'Saving…' : profileId ? 'Save profile' : 'Create draft'}
               </Button>
             </form>

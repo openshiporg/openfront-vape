@@ -8,11 +8,13 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ListBand, PageTitle } from '@/features/platform/components/vape-ui'
+import { ListBand, PageTitle, SectionTitle, buttonClass } from '@/features/platform/components/vape-ui'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar } from '../../components/PlatformFilterBar'
 import { StatusTabs } from '../components/StatusTabs'
-import { OrderDetailsComponent } from '../components/OrderDetailsComponent'
+import { OrderQueue, OrderTable } from '../components/OrderTable'
+import { isHeld, isReadyToShip } from '../lib/order-state'
+import { cn } from '@/lib/utils'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { useDashboard } from '../../../dashboard/context/DashboardProvider'
@@ -57,7 +59,7 @@ function EmptyStateSearch({ onResetFilters }: { onResetFilters: () => void }) {
         <button
           type="button"
           onClick={onResetFilters}
-          className="inline-flex min-h-9 items-center rounded-full bg-background px-4 text-sm font-medium text-foreground shadow-xs ring-1 ring-border max-sm:min-h-10"
+          className={cn(buttonClass.base, buttonClass.outline)}
         >
           Reset filters
         </button>
@@ -135,6 +137,7 @@ export function OrderListPageClient({
     shipping
     tax
     fulfillmentStatus
+    paymentDetails
     currency {
       id
       code
@@ -297,8 +300,8 @@ export function OrderListPageClient({
     <PageTitle
       title="Orders"
       meta={statusCounts ? (
-        <span className="font-mono tabular-nums">
-          {statusCounts.pending} pending · {statusCounts.requires_action} need action
+        <span className="tabular-nums">
+          {statusCounts.requires_action} held · {statusCounts.pending} open · {statusCounts.all} total
         </span>
       ) : undefined}
     />
@@ -309,25 +312,55 @@ export function OrderListPageClient({
   const isFiltered = hasFilters
   const isEmpty = data?.count === 0 && !isFiltered
 
+  // "Needs you" queue from the orders on this page: held first, then paid and unfulfilled, oldest first.
+  const items: any[] = data?.items ?? []
+  const byOldest = (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  const queue = [
+    ...items.filter(isHeld).sort(byOldest),
+    ...items.filter(isReadyToShip).sort(byOldest),
+  ]
+  const heldCount = items.filter(isHeld).length
+  const shipCount = queue.length - heldCount
+
   return (
     <PageContainer title="Orders" header={header} breadcrumbs={breadcrumbs}>
+      {!error && queue.length > 0 && (
+        <section className="px-4 pt-2 md:px-6" aria-labelledby="orders-queue-title">
+          <SectionTitle
+            meta={
+              <span>
+                {heldCount} held · {shipCount} to ship
+              </span>
+            }
+          >
+            <span id="orders-queue-title">Needs you</span>
+          </SectionTitle>
+          <OrderQueue orders={queue} />
+          {statusCounts && statusCounts.requires_action > heldCount && (
+            <p className="mt-2 text-[12px] text-muted-foreground">
+              {statusCounts.requires_action} held orders in total; this queue shows the ones on this page.
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* Status Tabs - abstracted status filtering */}
+      {statusCounts && <StatusTabs statusCounts={statusCounts} />}
+
       {/* Filter Bar - includes search, filters, sorting, field selection, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar list={list} />
       </div>
-
-      {/* Status Tabs - abstracted status filtering */}
-      {statusCounts && <StatusTabs statusCounts={statusCounts} />}
 
       {/* Active Filters */}
       <div className="px-4 md:px-6">
         <FilterList list={list} />
       </div>
 
-      {/* Data table - full width */}
+      {/* Data table */}
       {error ? (
         <div className="px-4 md:px-6">
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="rounded-md">
             <AlertDescription>
               Failed to load items: {error}
             </AlertDescription>
@@ -343,12 +376,10 @@ export function OrderListPageClient({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 border-t border-border">
-            {data?.items?.map((order: any) => (
-              <OrderDetailsComponent key={order.id} order={order} list={list} />
-            ))}
+          <div className={cn("px-4 pb-4 md:px-6", isFetching && !isLoading && "opacity-70 transition-opacity")}>
+            <OrderTable orders={items} />
           </div>
-          
+
           {/* Pagination */}
           {data && data.count > pageSize && (
             <div className="px-4 md:px-6 py-4">

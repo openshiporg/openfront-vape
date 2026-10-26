@@ -93,7 +93,7 @@ const PendingPriceForm = ({ region, initialPrice, onSave, onCancel }: PriceFormP
   return (
     <div className="flex flex-col">
       <div className="p-4 border-b bg-muted/40">
-        <h3 className="font-medium text-sm mb-1">Set Price (Pending)</h3>
+        <h3 className="font-medium text-sm mb-1">Set price (pending)</h3>
         <p className="text-muted-foreground text-xs">
           {region.name} • {region.currency.code.toUpperCase()}
           {region.taxRate ? ` • ${(region.taxRate * 100).toFixed(0)}% tax` : ""}
@@ -115,7 +115,7 @@ const PendingPriceForm = ({ region, initialPrice, onSave, onCancel }: PriceFormP
                   setAmount(val);
                 }
               }}
-              className="peer ps-5 pe-10 h-9 font-mono text-sm tabular-nums"
+              className="peer ps-5 pe-10 h-9 text-sm tabular-nums"
               placeholder="Enter price"
             />
             <span className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 text-xs">
@@ -138,7 +138,7 @@ const PendingPriceForm = ({ region, initialPrice, onSave, onCancel }: PriceFormP
                   setCompareAmount(val);
                 }
               }}
-              className="peer ps-5 pe-10 h-9 font-mono text-sm tabular-nums"
+              className="peer ps-5 pe-10 h-9 text-sm tabular-nums"
               placeholder="0.00"
             />
             <span className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 text-xs">
@@ -158,7 +158,7 @@ const PendingPriceForm = ({ region, initialPrice, onSave, onCancel }: PriceFormP
         </PopoverClose>
         <PopoverClose asChild>
           <Button size="sm" onClick={handleSave}>
-            Set Price
+            Set price
           </Button>
         </PopoverClose>
       </div>
@@ -175,7 +175,7 @@ function PendingVariantCard({
   renderOptionValue = (ov) => (
     <Badge
       color="zinc"
-      className="rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] font-medium tabular-nums"
+      className="rounded-[4px] bg-muted px-1.5 py-0.5 text-[12px] font-medium"
     >
       <span className="mr-1 font-sans opacity-70">{ov.option}</span>
       {ov.label}
@@ -232,15 +232,15 @@ function PendingVariantCard({
   };
 
   return (
-    <div className="rounded-xl border border-dashed border-border bg-background">
+    <div className="rounded-md border border-dashed border-border bg-background">
       <div className="p-4">
         <div className="flex justify-between">
           <div className="flex gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-dashed bg-background">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-dashed bg-background">
               <Package className="h-6 w-6 text-foreground/60" />
             </div>
             <div>
-              <div className="font-mono text-sm font-medium tabular-nums">{variant.title}</div>
+              <div className="text-sm font-medium">{variant.title}</div>
               <div>
                 {variant.productOptionValues?.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -257,7 +257,7 @@ function PendingVariantCard({
                 )}
               </div>
               <div className="space-y-0.5 mt-2">
-                <div className="text-[11px] font-medium text-muted-foreground">
+                <div className="text-[12px] font-medium text-muted-foreground">
                   Prices (Pending)
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -279,9 +279,9 @@ function PendingVariantCard({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-7 cursor-pointer flex items-center gap-1 px-2.5 rounded-full font-mono text-xs tabular-nums hover:bg-accent border-dashed"
+                              className="h-7 cursor-pointer flex items-center gap-1 px-2.5 rounded-[4px] text-xs tabular-nums hover:bg-accent border-dashed"
                             >
-                              <span className="font-mono uppercase text-[10px] text-muted-foreground mr-0.5">
+                              <span className="text-[11px] text-muted-foreground mr-0.5">
                                 {region.currency.code}
                               </span>
                               <span>
@@ -332,9 +332,9 @@ function PendingVariantCard({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 gap-1 border border-dashed px-2.5 rounded-full text-xs"
+                            className="h-7 gap-1 border border-dashed px-2.5 rounded-[4px] text-xs"
                           >
-                            <span className="font-mono uppercase text-[10px] text-muted-foreground mr-0.5">
+                            <span className="text-[11px] text-muted-foreground mr-0.5">
                               {region.currency.code}
                             </span>
                             Add
@@ -367,7 +367,7 @@ function PendingVariantCard({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="size-8 rounded-full [&_svg]:size-3.5 max-sm:size-10"
+                    className="size-8 rounded-[4px] [&_svg]:size-3.5 max-sm:size-10"
                   >
                     <MoreHorizontal />
                   </Button>
@@ -375,7 +375,7 @@ function PendingVariantCard({
                 <PopoverContent className="w-80 p-0" align="end">
                   <div className="flex flex-col">
                     <div className="p-4 border-b">
-                      <h3 className="font-medium text-sm mb-1">Edit Variant</h3>
+                      <h3 className="font-medium text-sm mb-1">Edit variant</h3>
                       <p className="text-muted-foreground text-xs">
                         Update variant properties
                       </p>
@@ -471,7 +471,7 @@ function PendingVariantCard({
                 variant="outline"
                 size="icon"
                 onClick={() => onDelete?.(variant)}
-                className="size-8 rounded-full [&_svg]:size-4 text-muted-foreground hover:text-destructive max-sm:size-10"
+                className="size-8 rounded-[4px] [&_svg]:size-4 text-muted-foreground hover:text-destructive max-sm:size-10"
               >
                 <X />
               </Button>
@@ -530,26 +530,26 @@ export function VariantDriftCard({
           {localVariants.length > 0 && (
             <Pill active={activeTab === "added"} onClick={() => setActiveTab("added")}>
               <Dot tone="ok" className="translate-y-0" />
-              <span className="font-mono tabular-nums">{localVariants.length}</span> added
+              <span className="tabular-nums">{localVariants.length}</span> added
             </Pill>
           )}
           {variantsToDelete.length > 0 && (
             <Pill active={activeTab === "removed"} onClick={() => setActiveTab("removed")}>
               <Dot tone="danger" className="translate-y-0" />
-              <span className="font-mono tabular-nums">{variantsToDelete.length}</span> removed
+              <span className="tabular-nums">{variantsToDelete.length}</span> removed
             </Pill>
           )}
           {unchangedVariants.length > 0 && (
             <Pill active={activeTab === "unchanged"} onClick={() => setActiveTab("unchanged")}>
               <Dot tone="muted" className="translate-y-0" />
-              <span className="font-mono tabular-nums">{unchangedVariants.length}</span> unchanged
+              <span className="tabular-nums">{unchangedVariants.length}</span> unchanged
             </Pill>
           )}
         </Track>
         <Button
           onClick={() => onSaveChanges(localVariants)}
           size="sm"
-          className="h-9 rounded-full px-4 max-sm:h-10"
+          className="h-9 rounded-[4px] px-4 max-sm:h-10"
         >
           Accept
         </Button>
@@ -593,14 +593,14 @@ export function VariantDriftCard({
                 {unchangedVariants.map((variant: any) => (
                   <div
                     key={variant.id}
-                    className="rounded-xl bg-background p-4 ring-1 ring-border"
+                    className="rounded-md bg-background p-4 border"
                   >
                     <div className="flex gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-background">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border bg-background">
                         <Package className="h-6 w-6 text-foreground/60" />
                       </div>
                       <div className="space-y-2">
-                        <div className="font-mono text-sm font-medium tabular-nums">
+                        <div className="text-sm font-medium">
                           {variant.title}
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -609,7 +609,7 @@ export function VariantDriftCard({
                               <Badge
                                 key={i}
                                 color="zinc"
-                                className="rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] font-medium tabular-nums"
+                                className="rounded-[4px] bg-muted px-1.5 py-0.5 text-[12px] font-medium"
                               >
                                 <span className="mr-1 font-sans opacity-70">
                                   {ov.productOption.title}

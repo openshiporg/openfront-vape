@@ -93,6 +93,7 @@ export async function OrderListPage({ searchParams }: PageProps) {
     'tax',
     'currency',
     'fulfillmentStatus',
+    'paymentDetails',
     'user',
     'shippingAddress',
     'billingAddress',
@@ -116,6 +117,7 @@ export async function OrderListPage({ searchParams }: PageProps) {
     shipping
     tax
     fulfillmentStatus
+    paymentDetails
     currency {
       id
       code

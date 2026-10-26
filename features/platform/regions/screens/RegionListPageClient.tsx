@@ -8,13 +8,15 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus } from 'lucide-react'
+import Link from 'next/link'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
-import { RegionDetailsComponent } from '../components/RegionDetailsComponent'
+import { DataTable, PageTitle } from '../../components/vape-ui'
+import { NeedsYouQueue, collectQueue } from '../../regions/components/config-kit'
+import { RegionDetailsComponent, RegionTableHead, regionAttention } from '../components/RegionDetailsComponent'
 import { RegionCreateDrawer } from '../components/RegionCreateDrawer'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
@@ -170,7 +172,18 @@ export function RegionListPageClient({
     { type: 'page' as const, label: 'Markets' }
   ]
 
-  const header = <PageTitle title="Markets" />
+  const header = (
+    <PageTitle
+      title="Markets"
+      tone={salesDisabled ? "danger" : undefined}
+      state={salesDisabled ? "Sales disabled" : undefined}
+      meta={salesDisabled ? (
+        <Link href={`${basePath}/platform/compliance`} className="underline underline-offset-2 hover:text-foreground">
+          Release gate closed. Open Compliance Center
+        </Link>
+      ) : undefined}
+    />
+  )
 
   const customCreateButton = (
     <Button
@@ -187,9 +200,13 @@ export function RegionListPageClient({
   const hasFilters = !!searchString
   const isFiltered = hasFilters
   const isEmpty = data?.count === 0 && !isFiltered
+  const attention = collectQueue(data?.items, regionAttention)
 
   return (
     <PageContainer title="Markets" header={header} breadcrumbs={breadcrumbs}>
+      {/* Needs you: regions that cannot take orders, worst first */}
+      {!error && <NeedsYouQueue listKey="regions" recordLabel="Region" items={attention} />}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -224,11 +241,14 @@ export function RegionListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((region: any) => (
-                <RegionDetailsComponent key={region.id} region={region} list={list} salesDisabled={salesDisabled} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Regions">
+              <thead><RegionTableHead /></thead>
+              <tbody>
+                {data?.items?.map((region: any) => (
+                  <RegionDetailsComponent key={region.id} region={region} list={list} salesDisabled={salesDisabled} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

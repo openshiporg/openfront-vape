@@ -122,7 +122,7 @@ export function LicenseSheet({
 
           {locked && license && (
             <div className="space-y-6 px-4 pb-24 sm:pb-8">
-              <dl className="divide-y divide-border rounded-xl bg-muted/40 ring-1 ring-inset ring-border/60">
+              <dl className="divide-y divide-border rounded-md bg-muted/40 ring-1 ring-inset ring-border/60">
                 <Row label="Status">{MERCHANT_LICENSE_STATUS_LABELS[license.status] || license.status}</Row>
                 <Row label="Jurisdiction">{license.jurisdiction}</Row>
                 <Row label="Type">{license.licenseType}</Row>
@@ -137,9 +137,9 @@ export function LicenseSheet({
               </dl>
               {canManage && USABLE.includes(license.status) && (
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" disabled={pending} className="rounded-full" onClick={() => close('suspended')}>Suspend</Button>
-                  <Button type="button" variant="outline" disabled={pending} className="rounded-full" onClick={() => close('expired')}>Mark expired</Button>
-                  <Button type="button" variant="destructive" disabled={pending} className="rounded-full" onClick={() => close('revoked')}>Revoke</Button>
+                  <Button type="button" variant="outline" disabled={pending} className="rounded-[4px]" onClick={() => close('suspended')}>Suspend</Button>
+                  <Button type="button" variant="outline" disabled={pending} className="rounded-[4px]" onClick={() => close('expired')}>Mark expired</Button>
+                  <Button type="button" variant="destructive" disabled={pending} className="rounded-[4px]" onClick={() => close('revoked')}>Revoke</Button>
                 </div>
               )}
               <ErrorLine message={error} />
@@ -228,7 +228,7 @@ export function LicenseSheet({
               </section>
 
               <ErrorLine message={error} />
-              <Button type="submit" disabled={pending || (!license && !value.evidenceDigest)} className="h-10 w-full rounded-full">
+              <Button type="submit" disabled={pending || (!license && !value.evidenceDigest)} className="h-10 w-full rounded-[4px]">
                 {pending ? 'Saving…' : license ? 'Save licence' : 'Record licence'}
               </Button>
               {!license && !value.evidenceDigest && <p className="text-xs text-muted-foreground">Licence document required</p>}

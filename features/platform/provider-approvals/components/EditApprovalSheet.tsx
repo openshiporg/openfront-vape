@@ -158,7 +158,7 @@ export function EditApprovalSheet({ approval }: { approval: ApprovalDetail }) {
               </section>
 
               <ErrorLine message={error} />
-              <Button type="submit" disabled={pending || (!approval.hasEvidence && !value.evidenceDigest)} className="h-10 w-full rounded-full">
+              <Button type="submit" disabled={pending || (!approval.hasEvidence && !value.evidenceDigest)} className="h-10 w-full rounded-[4px]">
                 {pending ? 'Saving…' : 'Save approval'}
               </Button>
               {!approval.hasEvidence && !value.evidenceDigest && <p className="text-xs text-muted-foreground">Evidence document required</p>}

@@ -59,7 +59,7 @@ function CustomTooltipContent({
   const value = entry.value as number;
 
   return (
-    <div className="bg-popover text-popover-foreground grid min-w-32 items-start gap-1.5 rounded-lg border px-3 py-1.5 text-xs">
+    <div className="bg-popover text-popover-foreground grid min-w-32 items-start gap-1.5 rounded-md border px-3 py-1.5 text-xs">
       <div className="font-medium">{label}</div>
       <div className="grid gap-1.5">
         <div className="flex items-center justify-between gap-3">
@@ -72,7 +72,7 @@ function CustomTooltipContent({
               {metricView === 'revenue' ? 'Revenue' : 'Orders'}
             </span>
           </div>
-          <span className="text-foreground font-mono font-medium tabular-nums">
+          <span className="text-foreground font-medium tabular-nums">
             {metricView === 'revenue' ? `${currencySymbol}${value.toFixed(2)}` : formatNumber(value)}
           </span>
         </div>

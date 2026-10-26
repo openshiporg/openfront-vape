@@ -51,7 +51,7 @@ export function ManualTabContent({
             Carrier
           </h3>
           <Select value={carrier} onValueChange={setCarrier}>
-            <SelectTrigger className="h-9 max-sm:h-10 rounded-lg text-sm bg-background shadow-sm">
+            <SelectTrigger className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
@@ -69,7 +69,7 @@ export function ManualTabContent({
           <Input
             value={trackingNumber}
             onChange={(e) => setTrackingNumber(e.target.value)}
-            className="h-9 max-sm:h-10 rounded-lg text-sm bg-background shadow-sm"
+            className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background"
             placeholder="Tracking number"
           />
         </div>
@@ -95,7 +95,7 @@ export function ManualTabContent({
           onClick={handleManualFulfill}
           size="sm"
           disabled={fulfillmentState.loading || !hasSelectedItems}
-          className="h-9 rounded-full px-4 max-sm:h-10"
+          className="h-9 rounded-[4px] px-4 max-sm:h-10"
         >
           {fulfillmentState.loading ? 'Fulfilling...' : 'Fulfill items'}
         </Button>

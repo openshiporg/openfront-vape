@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ListBand, StatusFilter } from "../../components/vape-ui";
+import { DataTable, StatusFilter } from "../../components/vape-ui";
 import { PlatformEmptyState } from "../../components/PlatformEmptyState";
 import { PlatformFilterBar } from "../../components/PlatformFilterBar";
-import { CountryDetailsComponent } from "./CountryDetailsComponent";
+import { CountryDetailsComponent, CountryTableHead } from "./CountryDetailsComponent";
 import { CreateCountryDrawer } from "./drawers/CreateCountryDrawer";
 import { Country } from "../actions/country-actions";
 
@@ -27,6 +27,12 @@ export function CountryList({ data, statusCounts, list }: CountryListProps) {
 
   return (
     <div className="space-y-2 px-4 pb-6 md:px-6">
+      <StatusFilter
+        className="px-0 pt-0 md:px-0"
+        allCount={statusCounts.all}
+        statuses={statusOptions.map((status) => ({ ...status, count: statusCounts[status.value] }))}
+      />
+
       {/* Filter Bar */}
       <PlatformFilterBar 
         list={list}
@@ -35,24 +41,22 @@ export function CountryList({ data, statusCounts, list }: CountryListProps) {
         createLabel="Add Country"
       />
 
-      <StatusFilter
-        className="px-0 pt-0 md:px-0"
-        allCount={statusCounts.all}
-        statuses={statusOptions.map((status) => ({ ...status, count: statusCounts[status.value] }))}
-      />
 
       {data.items.length === 0 ? (
         <PlatformEmptyState title="No countries" />
       ) : (
-        <ListBand>
-        {data.items.map((country) => (
-          <CountryDetailsComponent
-            key={country.id}
-            country={country}
-            list={list}
-          />
-        ))}
-        </ListBand>
+        <DataTable aria-label="Countries">
+          <thead><CountryTableHead /></thead>
+          <tbody>
+            {data.items.map((country) => (
+              <CountryDetailsComponent
+                key={country.id}
+                country={country}
+                list={list}
+              />
+            ))}
+          </tbody>
+        </DataTable>
       )}
 
       {/* Create Drawer */}

@@ -37,7 +37,7 @@ export function OptionCard({ option, readOnly = false, onUpdate }: { option: Pro
   };
 
   return (
-    <div className="space-y-3 rounded-xl bg-background p-4 ring-1 ring-border">
+    <div className="space-y-3 rounded-md bg-background p-4 border">
       <div className="flex flex-wrap justify-between items-center gap-2">
         {isEditing && !readOnly ? (
           <Input
@@ -49,7 +49,7 @@ export function OptionCard({ option, readOnly = false, onUpdate }: { option: Pro
         ) : (
           <div className="flex items-baseline gap-2.5">
             <h3 className="text-sm font-medium text-foreground">{option?.title || 'Untitled'}</h3>
-            <span className="font-mono text-xs tabular-nums text-muted-foreground">
+            <span className="text-xs tabular-nums text-muted-foreground">
               {(option?.values || []).length} values
             </span>
           </div>
@@ -59,7 +59,7 @@ export function OptionCard({ option, readOnly = false, onUpdate }: { option: Pro
             <Button
               variant="outline"
               size="sm"
-              className="h-8 rounded-full px-3.5 max-sm:h-10"
+              className="h-8 rounded-[4px] px-3.5 max-sm:h-10"
               onClick={() => {
                 if (isEditing) {
                   handleSave();

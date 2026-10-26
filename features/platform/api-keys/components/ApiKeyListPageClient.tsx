@@ -12,12 +12,12 @@ import { PlatformEmptyState } from '@/features/platform/components/PlatformEmpty
 import { PageTitle } from '@/features/platform/components/vape-ui'
 import { PageBreadcrumbs } from "@/features/dashboard/components/PageBreadcrumbs"
 import { PlatformFilterBar } from '@/features/platform/components/PlatformFilterBar'
-import { ListTable } from '@/features/dashboard/components/ListTable'
 import { useSelectedFields } from '@/features/dashboard/hooks/useSelectedFields'
 import { useListItemsQuery } from '@/features/dashboard/hooks/useListItems.query'
 import { buildOrderByClause } from '@/features/dashboard/lib/buildOrderByClause'
 import { buildWhereClause } from '@/features/dashboard/lib/buildWhereClause'
 import { CreateApiKey } from './CreateApiKey'
+import { ApiKeyQueue, ApiKeyRecordsTable } from './ApiKeyRecordsTable'
 
 interface ApiKeyListPageClientProps {
   list: any
@@ -175,8 +175,10 @@ export function ApiKeyListPageClient({
 
       <div className="flex flex-col flex-1 min-h-0">
         <div className="px-4 md:px-6 pt-4 md:pt-6 pb-4">
-          <PageTitle title="API Keys" />
+          <PageTitle title="API keys" />
         </div>
+
+        {!error && data?.items?.length > 0 && <ApiKeyQueue items={data.items} list={list} />}
 
         {/* Platform Filter Bar with custom create button */}
         <div className="px-4 md:px-6">
@@ -221,7 +223,7 @@ export function ApiKeyListPageClient({
             <EmptyStateSearch onResetFilters={handleResetFilters} />
           </div>
         ) : (
-          <ListTable
+          <ApiKeyRecordsTable
             data={data}
             list={list}
             selectedFields={selectedFields}

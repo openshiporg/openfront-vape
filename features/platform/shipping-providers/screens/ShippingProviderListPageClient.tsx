@@ -13,9 +13,10 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { DataTable, PageTitle } from '../../components/vape-ui'
+import { NeedsYouQueue, collectQueue } from '../../regions/components/config-kit'
 import { StatusTabs } from '../components/StatusTabs'
-import { ShippingProviderDetailsComponent } from '../components/ShippingProviderDetailsComponent'
+import { ShippingProviderDetailsComponent, ShippingProviderTableHead, shippingProviderAttention } from '../components/ShippingProviderDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { CreateShippingProviderDrawer } from '../components/drawers/CreateShippingProviderDrawer'
@@ -193,10 +194,17 @@ export function ShippingProviderListPageClient({
   const hasFilters = !!searchString
   const isFiltered = hasFilters
   const isEmpty = data?.count === 0 && !isFiltered
+  const attention = collectQueue(data?.items, shippingProviderAttention)
 
   return (
     <>
     <PageContainer title="Shipping Providers" header={header} breadcrumbs={breadcrumbs}>
+      {/* Needs you: active providers that are not connected or serve no region */}
+      {!error && <NeedsYouQueue listKey="shipping-providers" recordLabel="Provider" items={attention} />}
+
+      {/* Status Tabs */}
+      <StatusTabs regionCounts={regionCounts} />
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -215,9 +223,6 @@ export function ShippingProviderListPageClient({
           }
         />
       </div>
-
-      {/* Status Tabs */}
-      <StatusTabs regionCounts={regionCounts} />
 
       {/* Active Filters */}
       <div className="px-4 md:px-6">
@@ -245,11 +250,14 @@ export function ShippingProviderListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((shippingprovider: any) => (
-                <ShippingProviderDetailsComponent key={shippingprovider.id} shippingprovider={shippingprovider} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Shipping providers">
+              <thead><ShippingProviderTableHead /></thead>
+              <tbody>
+                {data?.items?.map((shippingprovider: any) => (
+                  <ShippingProviderDetailsComponent key={shippingprovider.id} shippingprovider={shippingprovider} list={list} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

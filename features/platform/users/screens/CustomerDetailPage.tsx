@@ -5,7 +5,8 @@ import { ArrowUpRight } from 'lucide-react';
 
 import { PageContainer } from '@/features/dashboard/components/PageContainer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dot, ListBand, PageTitle, SectionTitle, type DotTone } from '@/features/platform/components/vape-ui';
+import { Dot, ListBand, PageTitle, SectionTitle, Stamp, StatusWord, buttonClass, type DotTone } from '@/features/platform/components/vape-ui';
+import { cn } from '@/lib/utils';
 import { getCustomer, type CustomerAddress } from '../actions/customer';
 
 const LIST = '/dashboard/platform/users';
@@ -46,7 +47,7 @@ const day = (value: string | null | undefined) =>
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid gap-1 px-4 py-2.5 text-sm sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4">
+    <div className="grid gap-1 border-border px-4 py-2.5 text-sm sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-4">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="min-w-0 break-words text-foreground">{children || <span className="text-muted-foreground">None</span>}</dd>
     </div>
@@ -97,13 +98,31 @@ export async function CustomerDetailPage({ params }: PageProps) {
   const { attestation } = response;
   const name = customer.name || customer.email;
 
+  // Held orders first (oldest first), then the rest newest first as loaded.
+  const held = customer.orders
+    .filter(order => order.status === 'requires_action')
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const orders = [...held, ...customer.orders.filter(order => order.status !== 'requires_action')];
+
   const header = (
-    <PageTitle
-      title={name}
-      tone={customer.hasAccount ? 'ok' : 'muted'}
-      state={customer.hasAccount ? 'Has account' : 'No account'}
-      meta={<span className="break-all">{customer.email}</span>}
-    />
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <PageTitle
+        title={name}
+        tone={customer.hasAccount ? 'ok' : 'muted'}
+        state={customer.hasAccount ? 'Has account' : 'No account'}
+        meta={
+          <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="break-all">{customer.email}</span>
+            {held.length > 0 && <StatusWord tone="warn">{held.length} held {held.length === 1 ? 'order' : 'orders'}</StatusWord>}
+          </span>
+        }
+      />
+      {held.length > 0 && (
+        <Link href={`/dashboard/platform/orders/${held[0].id}`} className={cn(buttonClass.base, buttonClass.primary)}>
+          Review order #{held[0].displayId}
+        </Link>
+      )}
+    </div>
   );
 
   return (
@@ -113,13 +132,13 @@ export async function CustomerDetailPage({ params }: PageProps) {
           <div className="min-w-0">
             <SectionTitle>Profile</SectionTitle>
             <ListBand>
-              <dl className="divide-y divide-border">
+              <dl className="divide-y divide-border md:grid md:grid-cols-2 md:divide-y-0 md:[&>div]:border-b md:[&>div:nth-last-child(-n+2)]:border-b-0 md:[&>div:nth-child(odd)]:border-r">
                 <Row label="Name">{customer.name}</Row>
                 <Row label="Email">{customer.email}</Row>
-                <Row label="Phone">{customer.phone && <span className="font-mono tabular-nums">{customer.phone}</span>}</Row>
+                <Row label="Phone">{customer.phone && <span className="tabular-nums">{customer.phone}</span>}</Row>
                 <Row label="Role">{customer.role?.name}</Row>
                 <Row label="Customer groups">{customer.customerGroups.map(group => group.name).join(', ')}</Row>
-                <Row label="Joined"><span className="font-mono tabular-nums">{day(customer.createdAt)}</span></Row>
+                <Row label="Joined"><span className="tabular-nums">{day(customer.createdAt)}</span></Row>
               </dl>
             </ListBand>
           </div>
@@ -129,16 +148,13 @@ export async function CustomerDetailPage({ params }: PageProps) {
             <ListBand>
               <div className="px-4 py-3">
                 {attestation.state === 'attested' && (
-                  <span className="flex items-baseline gap-2.5 text-sm font-medium text-foreground">
-                    <Dot tone="ok" />
-                    Attested <span className="font-mono tabular-nums">{day(attestation.occurredAt)}</span>
+                  <span className="flex flex-wrap items-center gap-2.5 text-sm text-foreground">
+                    <Stamp tone="ok">Attested</Stamp>
+                    <span className="tabular-nums text-muted-foreground">{day(attestation.occurredAt)}</span>
                   </span>
                 )}
                 {attestation.state === 'none' && (
-                  <span className="flex items-baseline gap-2.5 text-sm font-medium text-foreground">
-                    <Dot tone="warn" />
-                    No attestation
-                  </span>
+                  <Stamp tone="warn">No attestation</Stamp>
                 )}
                 {attestation.state === 'unavailable' && (
                   <span className="flex items-baseline gap-2.5 text-sm text-muted-foreground">
@@ -161,7 +177,7 @@ export async function CustomerDetailPage({ params }: PageProps) {
           <SectionTitle meta={customer.orders.length}>Orders</SectionTitle>
           <ListBand>
             {customer.orders.length === 0 && <Empty>No orders</Empty>}
-            {customer.orders.map(order => (
+            {orders.map(order => (
               <Link
                 key={order.id}
                 href={`/dashboard/platform/orders/${order.id}`}
@@ -172,7 +188,7 @@ export async function CustomerDetailPage({ params }: PageProps) {
                   <span className="font-mono text-sm font-medium tabular-nums text-foreground">#{order.displayId}</span>
                   <span className="truncate text-xs text-muted-foreground">{ORDER_LABELS[order.status] || statusLabel(order.status)}</span>
                 </span>
-                <span className="flex shrink-0 items-baseline gap-3 font-mono text-xs tabular-nums text-muted-foreground">
+                <span className="flex shrink-0 items-baseline gap-3 text-xs tabular-nums text-muted-foreground">
                   <span className="max-sm:hidden">{day(order.createdAt)}</span>
                   {order.total && <span className="text-sm text-foreground">{order.total}</span>}
                 </span>
@@ -197,7 +213,7 @@ export async function CustomerDetailPage({ params }: PageProps) {
                     {rest.map(line => (
                       <span key={line} className="block break-words text-xs text-muted-foreground">{line}</span>
                     ))}
-                    {address.phone && <span className="block font-mono text-xs tabular-nums text-muted-foreground">{address.phone}</span>}
+                    {address.phone && <span className="block text-xs tabular-nums text-muted-foreground">{address.phone}</span>}
                   </div>
                 );
               })}
@@ -215,7 +231,7 @@ export async function CustomerDetailPage({ params }: PageProps) {
                     <span className="font-mono text-sm tabular-nums text-foreground">{cart.id.slice(-8)}</span>
                     <span className="text-xs text-muted-foreground">{cart.status === 'COMPLETED' ? 'Ordered' : 'Open'}</span>
                   </span>
-                  <span className="flex shrink-0 items-baseline gap-3 font-mono text-xs tabular-nums text-muted-foreground">
+                  <span className="flex shrink-0 items-baseline gap-3 text-xs tabular-nums text-muted-foreground">
                     <span>{cart.lineItemsCount} items</span>
                     {cart.order ? (
                       <Link href={`/dashboard/platform/orders/${cart.order.id}`} className="inline-flex items-center gap-0.5 text-foreground hover:underline underline-offset-4">
@@ -246,7 +262,7 @@ export async function CustomerDetailPage({ params }: PageProps) {
                       </span>
                       <span className="shrink-0 text-xs text-muted-foreground">{statusLabel(account.status)}</span>
                     </span>
-                    <span className="mt-1 flex flex-wrap gap-x-4 pl-[1.125rem] font-mono text-xs tabular-nums text-muted-foreground">
+                    <span className="mt-1 flex flex-wrap gap-x-4 pl-[1.125rem] text-xs tabular-nums text-muted-foreground">
                       {account.formattedTotal && <span>Owed {account.formattedTotal}</span>}
                       {account.formattedCreditLimit && <span>Limit {account.formattedCreditLimit}</span>}
                     </span>
@@ -266,7 +282,7 @@ export async function CustomerDetailPage({ params }: PageProps) {
                       <span className="truncate font-mono text-sm tabular-nums text-foreground">{invoice.invoiceNumber}</span>
                       <span className="text-xs text-muted-foreground">{statusLabel(invoice.status)}</span>
                     </span>
-                    <span className="flex shrink-0 items-baseline gap-3 font-mono text-xs tabular-nums text-muted-foreground">
+                    <span className="flex shrink-0 items-baseline gap-3 text-xs tabular-nums text-muted-foreground">
                       <span className="max-sm:hidden">{day(invoice.dueDate || invoice.createdAt)}</span>
                       {invoice.formattedTotal && <span className="text-sm text-foreground">{invoice.formattedTotal}</span>}
                     </span>

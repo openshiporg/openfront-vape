@@ -13,9 +13,10 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { DataTable, PageTitle } from '../../components/vape-ui'
+import { NeedsYouQueue, collectQueue } from '../../regions/components/config-kit'
 import { StatusTabs } from '../components/StatusTabs'
-import { GiftCardDetailsComponent } from '../components/GiftCardDetailsComponent'
+import { GiftCardDetailsComponent, GiftCardTableHead, giftCardAttention } from '../components/GiftCardDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { CreateItemDrawerClientWrapper } from '@/features/platform/components/CreateItemDrawerClientWrapper'
@@ -182,10 +183,19 @@ export function GiftCardListPageClient({
   const hasFilters = !!searchString
   const isFiltered = hasFilters
   const isEmpty = data?.count === 0 && !isFiltered
+  const attention = collectQueue(data?.items, giftCardAttention)
 
   return (
     <>
     <PageContainer title="Gift Cards" header={header} breadcrumbs={breadcrumbs}>
+      {/* Needs you: enabled cards that expired or expire soon with balance left */}
+      {!error && <NeedsYouQueue listKey="gift-cards" recordLabel="Gift card" items={attention} />}
+
+      {/* Status Tabs */}
+      {statusCounts && (
+        <StatusTabs statusCounts={statusCounts} />
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -204,11 +214,6 @@ export function GiftCardListPageClient({
           }
         />
       </div>
-
-      {/* Status Tabs */}
-      {statusCounts && (
-        <StatusTabs statusCounts={statusCounts} />
-      )}
 
       {/* Active Filters */}
       <div className="px-4 md:px-6">
@@ -236,11 +241,14 @@ export function GiftCardListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((giftcard: any) => (
-                <GiftCardDetailsComponent key={giftcard.id} giftcard={giftcard} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Gift cards">
+              <thead><GiftCardTableHead /></thead>
+              <tbody>
+                {data?.items?.map((giftcard: any) => (
+                  <GiftCardDetailsComponent key={giftcard.id} giftcard={giftcard} list={list} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

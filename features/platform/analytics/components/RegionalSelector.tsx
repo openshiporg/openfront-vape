@@ -45,7 +45,7 @@ export function RegionalSelector({ regions, selectedRegion, className }: Regiona
 
   return (
     <Select value={selectedRegion || 'all'} onValueChange={handleRegionChange}>
-      <SelectTrigger className={`h-10 rounded-full bg-background ${className ?? ''}`}>
+      <SelectTrigger className={`h-10 rounded-[4px] bg-background ${className ?? ''}`}>
         <SelectValue placeholder="All regions">
           {getDisplayValue()}
         </SelectValue>

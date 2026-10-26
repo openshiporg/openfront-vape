@@ -244,7 +244,7 @@ export default function ApiKeyTable({ data }: ApiKeyTableProps) {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="size-10 rounded-full p-0 sm:size-8">
+              <Button variant="ghost" className="size-10 rounded-[4px] p-0 sm:size-8">
                 <span className="sr-only">Open menu</span>
                 <MoreVerticalIcon className="h-4 w-4" />
               </Button>

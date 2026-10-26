@@ -406,7 +406,7 @@ export function OrdersCreatePage() {
                     {orderCreationMode === "draft" ? (
                       <Button
                         onClick={handleCreateDraftOrder}
-                        className="h-11 w-full rounded-full"
+                        className="h-11 w-full rounded-[4px]"
                         disabled={isCreatingOrder}
                       >
                         {isCreatingOrder ? "Creating Order..." : "Create Draft Order"}
@@ -414,7 +414,7 @@ export function OrdersCreatePage() {
                     ) : (
                       <Button
                         onClick={handlePlaceOrder}
-                        className="h-11 w-full rounded-full"
+                        className="h-11 w-full rounded-[4px]"
                         disabled={isCreatingOrder || !selectedPaymentMethod}
                       >
                         {isCreatingOrder ? "Processing Payment..." : "Place Order"}
@@ -544,7 +544,7 @@ export function OrdersCreatePage() {
             {selectedCustomer && selectedShippingAddress && lineItems.length > 0 && !cartId && (
               <Button
                 onClick={handleCreateCart}
-                className="h-11 w-full rounded-full"
+                className="h-11 w-full rounded-[4px]"
               >
                 Create Cart
               </Button>

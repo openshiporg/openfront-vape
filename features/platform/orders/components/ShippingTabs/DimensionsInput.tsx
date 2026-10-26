@@ -35,7 +35,7 @@ export function DimensionsInput({ dimensions, setDimensions }: DimensionsInputPr
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <div className="inline-flex -space-x-px rounded-lg shadow-sm shadow-black/5 rtl:space-x-reverse">
+        <div className="inline-flex -space-x-px rounded-md rtl:space-x-reverse">
           <Button
             variant="outline"
             className={`h-6 px-1.5 text-xs rounded-none shadow-none first:rounded-s-lg last:rounded-e-lg focus-visible:z-10 ${
@@ -60,7 +60,7 @@ export function DimensionsInput({ dimensions, setDimensions }: DimensionsInputPr
         {(['length', 'width', 'height'] as const).map((dimension) => (
           <div
             key={dimension}
-            className="relative inline-flex h-7 items-center overflow-hidden whitespace-nowrap rounded-lg border border-input text-sm shadow-sm shadow-black/5"
+            className="relative inline-flex h-7 items-center overflow-hidden whitespace-nowrap rounded-[4px] border border-input text-sm"
           >
             <input
               type="number"

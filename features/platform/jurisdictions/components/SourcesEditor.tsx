@@ -45,7 +45,7 @@ export function SourcesEditor({ id, label, titleLabel, value, onChange, disabled
               type="button"
               aria-label={`Remove ${index + 1}`}
               onClick={() => onChange(value.filter((_, position) => position !== index))}
-              className="col-start-2 row-start-1 inline-flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground sm:col-start-auto sm:row-start-auto"
+              className="col-start-2 row-start-1 inline-flex size-10 items-center justify-center rounded-[4px] text-muted-foreground hover:bg-muted hover:text-foreground sm:col-start-auto sm:row-start-auto"
             >
               <X className="size-4" />
             </button>
@@ -57,7 +57,7 @@ export function SourcesEditor({ id, label, titleLabel, value, onChange, disabled
         <button
           type="button"
           onClick={() => onChange([...value, { title: '', url: '' }])}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-muted px-3 text-[13px] font-medium text-foreground hover:bg-muted/70"
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-[4px] bg-muted px-3 text-[13px] font-medium text-foreground hover:bg-muted/70"
         >
           <Plus className="size-3.5" />
           Add

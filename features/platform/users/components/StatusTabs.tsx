@@ -4,8 +4,8 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Count, Dot, Pill, Track, type DotTone } from "../../components/vape-ui";
 
 const statusConfig: Record<"withAccount" | "withoutAccount", { label: string; tone: DotTone }> = {
-  withAccount: { label: "With Account", tone: "ok" },
-  withoutAccount: { label: "Without Account", tone: "muted" },
+  withAccount: { label: "With account", tone: "ok" },
+  withoutAccount: { label: "Without account", tone: "muted" },
 };
 
 interface StatusTabsProps {
@@ -22,8 +22,8 @@ export function StatusTabs({ statusCounts }: StatusTabsProps) {
   const pathname = usePathname();
 
   const statuses = [
-    { value: "withAccount", label: "With Account", count: statusCounts.withAccount },
-    { value: "withoutAccount", label: "Without Account", count: statusCounts.withoutAccount },
+    { value: "withAccount", label: "With account", count: statusCounts.withAccount },
+    { value: "withoutAccount", label: "Without account", count: statusCounts.withoutAccount },
   ] as const;
 
   // Get current status from URL

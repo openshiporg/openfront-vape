@@ -5,7 +5,8 @@ import type { ReactNode } from 'react';
 
 import { PageContainer } from '@/features/dashboard/components/PageContainer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dot, ListBand, PageTitle, SectionTitle } from '@/features/platform/components/vape-ui';
+import { Dot, ListBand, PageTitle, SectionTitle, buttonClass } from '@/features/platform/components/vape-ui';
+import { cn } from '@/lib/utils';
 import { REPORT_STATUS_LABELS, REPORT_TYPE_LABELS } from '@/features/keystone/regulated/labels';
 import { outLinkClass } from '@/features/platform/compliance-ledger/components/LinkTrack';
 import { ORDERS_PATH, REPORTS_PATH, dateTime, eventLabel, label, periodText, reasonLabel, shortId, stateTone } from '@/features/platform/compliance-ledger/lib/format';
@@ -77,7 +78,7 @@ export async function ComplianceReportPage({ params }: { params: Promise<{ id: s
       <div className="space-y-8 px-4 pb-24 sm:pb-10 md:px-6">
         {canManage && SUBMITTABLE.has(report.status) && (
           <div className="flex flex-wrap gap-2">
-            <RecordSubmissionButton reportId={report.id} />
+            <RecordSubmissionButton reportId={report.id} className={cn(buttonClass.base, buttonClass.primary)} />
           </div>
         )}
 

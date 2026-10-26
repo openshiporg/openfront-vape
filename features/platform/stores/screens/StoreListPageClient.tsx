@@ -9,11 +9,12 @@ import React, { useState, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PlatformEmptyState } from '../../components/PlatformEmptyState'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { DataTable, PageTitle } from '../../components/vape-ui'
+import { NeedsYouQueue, collectQueue } from '../../regions/components/config-kit'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar } from '../../components/PlatformFilterBar'
 import { StatusTabs } from '../../components/StatusTabs'
-import { StoreDetailsComponent } from '../components/StoreDetailsComponent'
+import { StoreDetailsComponent, StoreTableHead, storeAttention } from '../components/StoreDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { useDashboard } from '../../../dashboard/context/DashboardProvider'
@@ -163,13 +164,12 @@ export function StoreListPageClient({
   const hasFilters = !!searchString
   const isFiltered = hasFilters
   const isEmpty = data?.count === 0 && !isFiltered
+  const attention = collectQueue(data?.items, storeAttention)
 
   return (
     <PageContainer title="Stores" header={header} breadcrumbs={breadcrumbs}>
-      {/* Filter Bar - includes search, filters, sorting, and create button */}
-      <div className="px-4 md:px-6">
-        <PlatformFilterBar list={list} />
-      </div>
+      {/* Needs you: stores missing a default currency */}
+      {!error && <NeedsYouQueue listKey="stores" recordLabel="Store" items={attention} />}
 
       {/* Status Tabs */}
       {statusCounts && (
@@ -188,6 +188,11 @@ export function StoreListPageClient({
             entityName="Stores"
           />
       )}
+
+      {/* Filter Bar - includes search, filters, sorting, and create button */}
+      <div className="px-4 md:px-6">
+        <PlatformFilterBar list={list} />
+      </div>
 
       {/* Active Filters */}
       <div className="px-4 md:px-6">
@@ -215,11 +220,14 @@ export function StoreListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((store: any) => (
-                <StoreDetailsComponent key={store.id} store={store} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Stores">
+              <thead><StoreTableHead /></thead>
+              <tbody>
+                {data?.items?.map((store: any) => (
+                  <StoreDetailsComponent key={store.id} store={store} list={list} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

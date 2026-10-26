@@ -61,7 +61,7 @@ export async function OrderManagementSystemPage({ searchParams }: PageProps) {
             </div>
             <Link
               href="/dashboard/platform/apps"
-              className="group flex min-h-11 items-center justify-between gap-4 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-background/60"
+              className="group flex min-h-11 items-center justify-between gap-4 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
             >
               Apps
               <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />

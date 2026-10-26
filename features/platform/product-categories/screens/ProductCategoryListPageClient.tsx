@@ -13,10 +13,11 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { PageTitle } from '../../components/vape-ui'
 import { CreateItemDrawerClientWrapper } from '@/features/platform/components/CreateItemDrawerClientWrapper'
 import { StatusTabs } from '../components/StatusTabs'
 import { ProductCategoryDetailsComponent } from '../components/ProductCategoryDetailsComponent'
+import { GroupQueue, GroupTable, type QueueRow } from '../components/CatalogGroupTable'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { useDashboard } from '../../../dashboard/context/DashboardProvider'
@@ -169,10 +170,10 @@ export function ProductCategoryListPageClient({
   const breadcrumbs = [
     { type: 'link' as const, label: 'Dashboard', href: basePath },
     { type: 'page' as const, label: 'Platform' },
-    { type: 'page' as const, label: 'Product Categories' }
+    { type: 'page' as const, label: 'Product categories' }
   ]
 
-  const header = <PageTitle title="Product Categories" />
+  const header = <PageTitle title="Product categories" meta={statusCounts ? <span className="tabular-nums">{statusCounts.active} active · {statusCounts.inactive} inactive</span> : undefined} />
 
   // Check if we have any active filters (search or actual filters)
   const hasFilters = !!searchString
@@ -180,7 +181,25 @@ export function ProductCategoryListPageClient({
   const isEmpty = data?.count === 0 && !isFiltered
 
   return (
-    <PageContainer title="Product Categories" header={header} breadcrumbs={breadcrumbs}>
+    <PageContainer title="Product categories" header={header} breadcrumbs={breadcrumbs}>
+      {/* Needs you: live categories with nothing in them, hidden ones still holding products */}
+      {!error && (
+        <div className="px-4 pb-4 empty:hidden md:px-6">
+          <GroupQueue
+            title="Needs attention"
+            rows={(data?.items || []).flatMap<QueueRow>((category: any) => {
+              const count = category.products?.length || 0
+              const published = (category.products || []).filter((product: any) => product.status === 'published').length
+              const href = `/dashboard/product-categories/${category.id}`
+              if (category.isActive && count === 0) return [{ id: category.id, title: category.title, href, reason: 'Active with no products', tone: 'warn', state: 'Active' }]
+              if (category.isActive && published === 0) return [{ id: category.id, title: category.title, href, reason: 'No published products', tone: 'warn', state: 'Active' }]
+              if (!category.isActive && published > 0) return [{ id: category.id, title: category.title, href, reason: `Inactive, hiding ${published} published product${published !== 1 ? 's' : ''}`, tone: 'muted', state: 'Inactive' }]
+              return []
+            })}
+          />
+        </div>
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -229,11 +248,11 @@ export function ProductCategoryListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
+            <GroupTable label="Product categories" extraColumn="Parent">
               {data?.items?.map((productcategory: any) => (
                 <ProductCategoryDetailsComponent key={productcategory.id} productcategory={productcategory} list={list} />
               ))}
-            </ListBand>
+            </GroupTable>
           </div>
           
           {/* Pagination */}

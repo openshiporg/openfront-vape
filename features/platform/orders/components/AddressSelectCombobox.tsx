@@ -301,7 +301,7 @@ export function AddressSelectCombobox({
 
       {/* Create Address Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:rounded-md sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Create New Address</DialogTitle>
             <DialogDescription>

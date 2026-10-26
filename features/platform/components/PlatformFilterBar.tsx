@@ -25,7 +25,7 @@ const PLATFORM_CREATE_PATHS = new Set(["orders", "products"])
 
 /** Class for a feature's own create button passed as `customCreateButton`. */
 export const platformCreateButtonClass =
-  "h-10 rounded-full px-3 text-[13px] font-medium lg:w-auto lg:px-4 [&_svg]:size-4"
+  "h-10 rounded-[4px] px-3 text-[13px] font-medium lg:w-auto lg:px-4 [&_svg]:size-4"
 
 interface PlatformFilterBarProps {
   list: any
@@ -93,7 +93,7 @@ export function PlatformFilterBar({
     : `${basePath}/${list.path}/create`
 
   const control =
-    "h-10 rounded-full border-0 bg-muted px-3 text-[13px] font-medium text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] hover:bg-muted/80 dark:bg-muted/60 lg:w-auto lg:px-4 [&_svg]:size-4"
+    "h-10 rounded-[4px] border border-input bg-background px-3 text-[13px] font-medium text-foreground hover:bg-muted lg:w-auto lg:px-4 [&_svg]:size-4"
   const create = platformCreateButtonClass
 
   return (
@@ -111,7 +111,7 @@ export function PlatformFilterBar({
           >
             <Input
               type="search"
-              className="h-10 w-full rounded-full border-0 bg-muted pl-10 text-sm shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] placeholder:text-muted-foreground/80 focus-visible:bg-background dark:bg-muted/60"
+              className="h-10 w-full rounded-[4px] border border-input bg-background pl-10 text-sm placeholder:text-muted-foreground/80"
               value={searchString}
               onChange={(e) => setSearchString(e.target.value)}
               placeholder={searchPlaceholder}

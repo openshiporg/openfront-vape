@@ -13,9 +13,10 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { DataTable, PageTitle } from '../../components/vape-ui'
+import { NeedsYouQueue, collectQueue } from '../../regions/components/config-kit'
 import { StatusTabs } from '../components/StatusTabs'
-import { PriceListDetailsComponent } from '../components/PriceListDetailsComponent'
+import { PriceListDetailsComponent, PriceListTableHead, priceListAttention } from '../components/PriceListDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { CreateItemDrawerClientWrapper } from '@/features/platform/components/CreateItemDrawerClientWrapper'
@@ -170,10 +171,19 @@ export function PriceListListPageClient({
   const hasFilters = !!searchString
   const isFiltered = hasFilters
   const isEmpty = data?.count === 0 && !isFiltered
+  const attention = collectQueue(data?.items, priceListAttention)
 
   return (
     <>
     <PageContainer title="Price Lists" header={header} breadcrumbs={breadcrumbs}>
+      {/* Needs you: active lists past or near their end, drafts past their start */}
+      {!error && <NeedsYouQueue listKey="price-lists" recordLabel="Price list" items={attention} />}
+
+      {/* Status Tabs */}
+      {statusCounts && (
+        <StatusTabs statusCounts={statusCounts} />
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -192,11 +202,6 @@ export function PriceListListPageClient({
           }
         />
       </div>
-
-      {/* Status Tabs */}
-      {statusCounts && (
-        <StatusTabs statusCounts={statusCounts} />
-      )}
 
       {/* Active Filters */}
       <div className="px-4 md:px-6">
@@ -224,11 +229,14 @@ export function PriceListListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((pricelist: any) => (
-                <PriceListDetailsComponent key={pricelist.id} pricelist={pricelist} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Price lists">
+              <thead><PriceListTableHead /></thead>
+              <tbody>
+                {data?.items?.map((pricelist: any) => (
+                  <PriceListDetailsComponent key={pricelist.id} pricelist={pricelist} list={list} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

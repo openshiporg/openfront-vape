@@ -1,24 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { MoreVertical } from "lucide-react";
 import Link from "next/link";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
 import { ItemPagination } from "../../orders/components/ItemPagination";
-import { Count, Dot, ListBand, Pill, Track, type DotTone } from "../../components/vape-ui";
+import { Count, Pill, StatusWord, Td, Th, Tr, Track, type DotTone } from "../../components/vape-ui";
+import { ActionsCell, ExpandRow, ExpandToggle, RowMenu, SubTable, formatDate, type QueueItem } from "./config-kit";
 
 interface Region {
   id: string;
@@ -68,38 +56,48 @@ function regionStatus(region: Region, salesDisabled: boolean): { tone: DotTone; 
   return { tone: "ok", label: "Active" };
 }
 
-type TabType = 'currency' | 'countries' | 'payment' | 'fulfillment';
-
-interface TabContentProps {
-  items: any[];
-  currentPage: number;
-  itemsPerPage: number;
-  renderItem: (item: any, index: number) => React.ReactNode;
+/** What stops a region from taking orders, worst first; null when it is ready. */
+export function regionAttention(region: Region): QueueItem | null {
+  const missing: string[] = [];
+  if (!region.countries?.length) missing.push("no countries");
+  if (!region.paymentProviders?.length) missing.push("no payment provider");
+  else if (!region.paymentProviders.some((provider) => provider.isInstalled)) missing.push("payment provider not installed");
+  if (!region.fulfillmentProviders?.length) missing.push("no fulfillment provider");
+  if (missing.length === 0) return null;
+  const blocksCheckout = !!region.countries?.length;
+  const first = missing[0];
+  return {
+    id: region.id,
+    record: region.name,
+    serial: region.code?.toUpperCase(),
+    tone: blocksCheckout ? "danger" : "warn",
+    state: first.charAt(0).toUpperCase() + first.slice(1),
+    issue: blocksCheckout
+      ? `Checkout blocked: ${missing.join(", ")}`
+      : `Unused: ${missing.join(", ")}`,
+    fixLabel: "Edit region",
+    listKey: "regions",
+  };
 }
 
-function TabContent({ items, currentPage, itemsPerPage, renderItem }: TabContentProps) {
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedItems = items.slice(startIndex, endIndex);
+export const REGION_COLUMNS = 8;
 
+export function RegionTableHead() {
   return (
-    <div className="space-y-2 py-4">
-      {items.length > itemsPerPage && (
-        <div className="text-xs text-muted-foreground">
-          Showing {startIndex + 1}-{Math.min(endIndex, items.length)} of{" "}
-          {items.length} items
-        </div>
-      )}
-      <ListBand>
-        {paginatedItems.map((item, index) => (
-          <div key={index} className="px-3 py-2">
-            {renderItem(item, index)}
-          </div>
-        ))}
-      </ListBand>
-    </div>
+    <tr>
+      <Th>Region</Th>
+      <Th>Status</Th>
+      <Th priority={2}>Currency</Th>
+      <Th priority={2} align="right">Countries</Th>
+      <Th priority={3} align="right">Tax</Th>
+      <Th priority={3} align="right">Payment</Th>
+      <Th priority={3} align="right">Fulfillment</Th>
+      <Th align="right"><span className="sr-only">Actions</span></Th>
+    </tr>
   );
 }
+
+type TabType = 'currency' | 'countries' | 'payment' | 'fulfillment';
 
 export function RegionDetailsComponent({
   region,
@@ -107,6 +105,7 @@ export function RegionDetailsComponent({
   salesDisabled = false,
 }: RegionDetailsComponentProps) {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('currency');
   const [currentPages, setCurrentPages] = useState<Record<TabType, number>>({
     currency: 1,
@@ -183,67 +182,46 @@ export function RegionDetailsComponent({
     payment: 'Payment Providers',
     fulfillment: 'Fulfillment Providers',
   };
-  const rowIcon = "size-10 shrink-0 rounded-full sm:size-8 [&_svg]:size-4";
+  const detailId = `region-${region.id}-detail`;
 
   return (
     <>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={region.id} className="border-0">
-          <div className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                <Dot tone={status.tone} />
-                <Link
-                  href={`/dashboard/regions/${region.id}`}
-                  className="text-sm font-semibold text-foreground hover:underline"
-                >
-                  {region.name}
-                </Link>
-                <span className="font-mono text-xs uppercase tabular-nums text-muted-foreground">{region.code}</span>
-                <span className="text-xs text-muted-foreground">{status.label}</span>
-              </div>
-
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="font-mono tabular-nums text-foreground">
-                  {region.currency.symbol} {region.currency.code.toUpperCase()}
-                </span>
-                <span>
-                  <span className="font-mono tabular-nums">{region.countries.length}</span>{" "}
-                  {region.countries.length === 1 ? 'country' : 'countries'}
-                </span>
-                <span>
-                  Tax <span className="font-mono tabular-nums">{(region.taxRate * 100).toFixed(1)}%</span>
-                </span>
-                <span className="font-mono tabular-nums">
-                  {new Date(region.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className={rowIcon} aria-label="Actions">
-                    <MoreVertical className="stroke-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
-                    Edit Region
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button variant="ghost" size="icon" className={rowIcon} asChild>
-                <AccordionTrigger className="justify-center py-0" />
-              </Button>
-            </div>
+      <Tr>
+        <Td className="max-w-[16rem]">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <Link
+              href={`/dashboard/regions/${region.id}`}
+              className="truncate font-medium text-foreground hover:underline"
+            >
+              {region.name}
+            </Link>
+            <span className="shrink-0 font-mono text-[12px] uppercase text-muted-foreground">{region.code}</span>
           </div>
-          <AccordionContent className="pb-0">
-            <div className="space-y-3 border-t border-border bg-background/60 px-4 py-4">
+        </Td>
+        <Td>
+          <StatusWord tone={status.tone}>{status.label}</StatusWord>
+        </Td>
+        <Td priority={2} className="whitespace-nowrap font-mono">
+          {region.currency.symbol} {region.currency.code.toUpperCase()}
+        </Td>
+        <Td priority={2} align="right">{region.countries.length}</Td>
+        <Td priority={3} align="right">{(region.taxRate * 100).toFixed(1)}%</Td>
+        <Td priority={3} align="right" className={paymentProviders.length ? undefined : "text-muted-foreground"}>{paymentProviders.length}</Td>
+        <Td priority={3} align="right" className={fulfillmentProviders.length ? undefined : "text-muted-foreground"}>{fulfillmentProviders.length}</Td>
+        <ActionsCell>
+          <RowMenu>
+            <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
+              Edit Region
+            </DropdownMenuItem>
+          </RowMenu>
+          <ExpandToggle open={open} onToggle={() => setOpen(!open)} controls={detailId} label="region details" />
+        </ActionsCell>
+      </Tr>
+
+      {open && (
+        <ExpandRow id={detailId} colSpan={REGION_COLUMNS}>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               {tabs.length > 0 && (
                 <Track label="Region details">
                   {tabs.map((tab) => (
@@ -257,147 +235,122 @@ export function RegionDetailsComponent({
                   ))}
                 </Track>
               )}
+              {activeTabData && activeTabData.count > itemsPerPage && (
+                <ItemPagination
+                  currentPage={currentPages[activeTab]}
+                  totalItems={activeTabData.count}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={(newPage) => handlePageChange(activeTab, newPage)}
+                />
+              )}
+            </div>
 
-              {activeTabData && (
-                <>
-                  {activeTabData.count > itemsPerPage && (
-                    <div className="flex justify-end">
-                      <ItemPagination
-                        currentPage={currentPages[activeTab]}
-                        totalItems={activeTabData.count}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={(newPage) => handlePageChange(activeTab, newPage)}
-                      />
-                    </div>
-                  )}
+            {activeTabData && activeTab === 'currency' && (
+              <SubTable head={<><Th>Currency</Th><Th priority={2}>Taxes</Th><Th align="right">Tax rate</Th><Th align="right"><span className="sr-only">Actions</span></Th></>}>
+                {currencyData.slice(
+                  (currentPages.currency - 1) * itemsPerPage,
+                  currentPages.currency * itemsPerPage
+                ).map((currency, index) => (
+                  <Tr key={index}>
+                    <Td className="font-mono">
+                      <span className="text-muted-foreground">{currency.symbol}</span> {currency.code.toUpperCase()}
+                    </Td>
+                    <Td priority={2} className="text-muted-foreground">{currency.automaticTaxes ? 'Automatic taxes' : 'No automatic taxes'}</Td>
+                    <Td align="right">{(currency.taxRate * 100).toFixed(1)}%</Td>
+                    <ActionsCell>
+                      <RowMenu>
+                        <DropdownMenuItem onClick={() => setEditCurrencyOpen(true)}>
+                          Edit Currency
+                        </DropdownMenuItem>
+                      </RowMenu>
+                    </ActionsCell>
+                  </Tr>
+                ))}
+              </SubTable>
+            )}
 
-                  <ListBand>
-                    {activeTab === 'currency' &&
-                      currencyData.slice(
-                        (currentPages.currency - 1) * itemsPerPage,
-                        currentPages.currency * itemsPerPage
-                      ).map((currency, index) => (
-                        <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-baseline gap-2 text-sm">
-                              <span className="font-mono tabular-nums text-muted-foreground">{currency.symbol}</span>
-                              <span className="font-mono font-medium tabular-nums text-foreground">{currency.code.toUpperCase()}</span>
-                            </div>
-                            <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                              <span>Tax <span className="font-mono tabular-nums">{(currency.taxRate * 100).toFixed(1)}%</span></span>
-                              <span>{currency.automaticTaxes ? 'Automatic taxes' : 'No automatic taxes'}</span>
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className={rowIcon} aria-label="Actions">
-                        <MoreVertical className="stroke-muted-foreground" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditCurrencyOpen(true)}>
-                        Edit Currency
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                        </div>
-                      ))}
-
-                    {activeTab === 'countries' &&
-                      region.countries.slice(
-                        (currentPages.countries - 1) * itemsPerPage,
-                        currentPages.countries * itemsPerPage
-                      ).map((country, index) => (
-                        <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
-                          <div className="flex min-w-0 flex-1 items-baseline gap-2.5 text-sm">
-                            <span className="w-6 shrink-0 font-mono text-xs uppercase tabular-nums text-muted-foreground">{country.iso2}</span>
-                            <span className="truncate text-foreground">{country.displayName}</span>
-                          </div>
-                          <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className={rowIcon} aria-label="Actions">
-                        <MoreVertical className="stroke-muted-foreground" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => {
+            {activeTabData && activeTab === 'countries' && (
+              <SubTable head={<><Th>Country</Th><Th align="right"><span className="sr-only">Actions</span></Th></>}>
+                {region.countries.slice(
+                  (currentPages.countries - 1) * itemsPerPage,
+                  currentPages.countries * itemsPerPage
+                ).map((country, index) => (
+                  <Tr key={index}>
+                    <Td>
+                      <span className="mr-2 inline-block w-6 font-mono text-[12px] uppercase text-muted-foreground">{country.iso2}</span>
+                      {country.displayName}
+                    </Td>
+                    <ActionsCell>
+                      <RowMenu>
+                        <DropdownMenuItem onClick={() => {
                           setEditCountryId(country.id);
                           setEditCountryOpen(true);
                         }}>
-                        Edit Country
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                        </div>
-                      ))}
+                          Edit Country
+                        </DropdownMenuItem>
+                      </RowMenu>
+                    </ActionsCell>
+                  </Tr>
+                ))}
+              </SubTable>
+            )}
 
-                    {activeTab === 'payment' &&
-                      paymentProviders.slice(
-                        (currentPages.payment - 1) * itemsPerPage,
-                        currentPages.payment * itemsPerPage
-                      ).map((provider, index) => (
-                        <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-baseline gap-2 text-sm">
-                              <Dot tone={provider.isInstalled ? "ok" : "danger"} />
-                              <span className="truncate text-foreground">{provider.name}</span>
-                            </div>
-                            <div className="mt-0.5 text-xs text-muted-foreground">
-                              {provider.isInstalled ? 'Installed' : 'Not installed'}
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className={rowIcon} aria-label="Actions">
-                        <MoreVertical className="stroke-muted-foreground" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => {
+            {activeTabData && activeTab === 'payment' && (
+              <SubTable head={<><Th>Payment provider</Th><Th>Status</Th><Th align="right"><span className="sr-only">Actions</span></Th></>}>
+                {paymentProviders.slice(
+                  (currentPages.payment - 1) * itemsPerPage,
+                  currentPages.payment * itemsPerPage
+                ).map((provider, index) => (
+                  <Tr key={index}>
+                    <Td>{provider.name}</Td>
+                    <Td>
+                      <StatusWord tone={provider.isInstalled ? "ok" : "danger"}>
+                        {provider.isInstalled ? 'Installed' : 'Not installed'}
+                      </StatusWord>
+                    </Td>
+                    <ActionsCell>
+                      <RowMenu>
+                        <DropdownMenuItem onClick={() => {
                           setEditPaymentId(provider.id);
                           setEditPaymentOpen(true);
                         }}>
-                        Edit Payment Provider
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                        </div>
-                      ))}
+                          Edit Payment Provider
+                        </DropdownMenuItem>
+                      </RowMenu>
+                    </ActionsCell>
+                  </Tr>
+                ))}
+              </SubTable>
+            )}
 
-                    {activeTab === 'fulfillment' &&
-                      fulfillmentProviders.slice(
-                        (currentPages.fulfillment - 1) * itemsPerPage,
-                        currentPages.fulfillment * itemsPerPage
-                      ).map((provider, index) => (
-                        <div key={index} className="flex items-center justify-between gap-3 px-3 py-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm text-foreground">{provider.name}</div>
-                            <div className="mt-0.5 truncate font-mono text-xs text-muted-foreground">{provider.code}</div>
-                          </div>
-                          <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className={rowIcon} aria-label="Actions">
-                        <MoreVertical className="stroke-muted-foreground" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => {
+            {activeTabData && activeTab === 'fulfillment' && (
+              <SubTable head={<><Th>Fulfillment provider</Th><Th priority={2}>Code</Th><Th align="right"><span className="sr-only">Actions</span></Th></>}>
+                {fulfillmentProviders.slice(
+                  (currentPages.fulfillment - 1) * itemsPerPage,
+                  currentPages.fulfillment * itemsPerPage
+                ).map((provider, index) => (
+                  <Tr key={index}>
+                    <Td>{provider.name}</Td>
+                    <Td priority={2} className="font-mono text-muted-foreground">{provider.code}</Td>
+                    <ActionsCell>
+                      <RowMenu>
+                        <DropdownMenuItem onClick={() => {
                           setEditFulfillmentId(provider.id);
                           setEditFulfillmentOpen(true);
                         }}>
-                        Edit Fulfillment Provider
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                        </div>
-                      ))}
-                  </ListBand>
-                </>
-              )}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+                          Edit Fulfillment Provider
+                        </DropdownMenuItem>
+                      </RowMenu>
+                    </ActionsCell>
+                  </Tr>
+                ))}
+              </SubTable>
+            )}
+
+            <p className="text-[12px] tabular-nums text-muted-foreground">Created {formatDate(region.createdAt)}</p>
+          </div>
+        </ExpandRow>
+      )}
 
       {/* Edit Region Drawer */}
       <EditItemDrawerClientWrapper

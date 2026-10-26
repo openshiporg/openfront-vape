@@ -30,7 +30,15 @@ export type ExpiringItem = {
 
 export type OverviewData = {
   orders: Section<{ count: number; capped: boolean; latest: OverviewOrder[] }>;
-  blocked: Section<{ count: number; capped: boolean; products: BlockedProduct[] }>;
+  blocked: Section<{
+    count: number;
+    capped: boolean;
+    products: BlockedProduct[];
+    /** Products whose every blocked variant simply has no classification yet; one queue, one fix. */
+    unclassified?: { products: number; variants: number };
+    /** Products blocked for another reason (pending, rejected, expired classification), first 8. */
+    other?: BlockedProduct[];
+  }>;
   expiring: Section<ExpiringItem[]>;
   decisions: Section<Record<'allow' | 'deny' | 'manual_review', number>>;
 };
@@ -110,7 +118,15 @@ export async function getOverview(): Promise<OverviewData | null> {
           products.push({ id: product.id, title: product.title, variants });
         }
       }
-      return { count: products.length, capped: rows.length === LIMIT, products: products.slice(0, 8) };
+      const onlyMissing = products.filter(product => product.variants.every(variant => variant.state === 'missing'));
+      const other = products.filter(product => product.variants.some(variant => variant.state !== 'missing'));
+      return {
+        count: products.length,
+        capped: rows.length === LIMIT,
+        products: products.slice(0, 8),
+        unclassified: { products: onlyMissing.length, variants: onlyMissing.reduce((sum, product) => sum + product.variants.length, 0) },
+        other: other.slice(0, 8),
+      };
     }),
 
     section('evidence', async () => {

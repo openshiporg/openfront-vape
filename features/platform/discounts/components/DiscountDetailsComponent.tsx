@@ -1,23 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit, Trash } from "lucide-react";
-import { Dot, ListBand, SectionTitle } from "../../components/vape-ui";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Edit, Trash } from "lucide-react";
 import Link from "next/link";
+import { StatusWord, Td, Th, Tr, type DotTone } from "../../components/vape-ui";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
+import {
+  ActionsCell,
+  ExpandRow,
+  ExpandToggle,
+  Facts,
+  RowMenu,
+  SubTable,
+  daysUntil,
+  formatDate,
+  type QueueItem,
+} from "../../regions/components/config-kit";
 import { Discount } from "../actions";
 
 interface DiscountDetailsComponentProps {
@@ -25,180 +24,161 @@ interface DiscountDetailsComponentProps {
   list: any;
 }
 
+export const DISCOUNT_COLUMNS = 7;
+
+export function DiscountTableHead() {
+  return (
+    <tr>
+      <Th>Code</Th>
+      <Th>Status</Th>
+      <Th priority={2}>Value</Th>
+      <Th priority={2} align="right">Uses</Th>
+      <Th priority={3}>Ends</Th>
+      <Th priority={3}>Created</Th>
+      <Th align="right"><span className="sr-only">Actions</span></Th>
+    </tr>
+  );
+}
+
+function isExhausted(discount: Discount) {
+  return !!discount.usageLimit && (discount.usageCount || 0) >= discount.usageLimit;
+}
+
+export function discountStatus(discount: Discount): { tone: DotTone; label: string } {
+  if (discount.isDisabled) return { tone: "muted", label: "Disabled" };
+  if (discount.endsAt && new Date(discount.endsAt) <= new Date()) return { tone: "danger", label: "Expired" };
+  if (isExhausted(discount)) return { tone: "danger", label: "Used up" };
+  if (discount.startsAt && new Date(discount.startsAt) > new Date()) return { tone: "info", label: "Scheduled" };
+  return { tone: "ok", label: "Active" };
+}
+
+/** Why an enabled discount needs the operator, if it does. */
+export function discountAttention(discount: Discount): QueueItem | null {
+  if (discount.isDisabled) return null;
+  const base = { id: discount.id, record: discount.code, fixLabel: "Edit" };
+  const status = discountStatus(discount);
+  if (status.label === "Expired") {
+    return { ...base, tone: "danger", state: "Expired", issue: `Ended ${formatDate(discount.endsAt)}, still enabled` };
+  }
+  if (status.label === "Used up") {
+    return { ...base, tone: "danger", state: "Used up", issue: `Usage limit ${discount.usageLimit} reached, still enabled` };
+  }
+  if (!discount.discountRule) {
+    return { ...base, tone: "warn", state: "No rule", issue: "No discount rule set" };
+  }
+  const days = daysUntil(discount.endsAt);
+  if (days !== null && days <= 7) {
+    return { ...base, tone: "warn", state: "Ending soon", issue: `Ends in ${days} ${days === 1 ? "day" : "days"}` };
+  }
+  if (discount.usageLimit && (discount.usageCount || 0) / discount.usageLimit >= 0.9) {
+    return { ...base, tone: "warn", state: "Near limit", issue: `${discount.usageCount || 0} of ${discount.usageLimit} uses` };
+  }
+  return null;
+}
+
 export function DiscountDetailsComponent({ discount, list }: DiscountDetailsComponentProps) {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  const isActive = !discount.isDisabled && (!discount.endsAt || new Date(discount.endsAt) > new Date());
-  const statusTone = isActive ? "ok" : discount.isDisabled ? "muted" : "danger";
-  const statusText = isActive ? "Active" : discount.isDisabled ? "Disabled" : "Expired";
-
-  const usagePercentage = discount.usageLimit ? (discount.usageCount || 0) / discount.usageLimit * 100 : 0;
+  const status = discountStatus(discount);
+  const detailId = `discount-${discount.id}-detail`;
 
   const valueLabel = discount.discountRule
     ? discount.discountRule.type === 'percentage'
-      ? `${discount.discountRule.value}%`
+      ? `${discount.discountRule.value}% off`
       : discount.discountRule.type === 'fixed'
-      ? `$${discount.discountRule.value}`
+      ? `$${discount.discountRule.value} off`
       : 'Free shipping'
     : null;
 
   return (
     <>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={discount.id} className="border-0">
-          <div className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                <Dot tone={statusTone} />
-                <Link
-                  href={`/dashboard/platform/discounts?focus=${discount.id}`}
-                  className="font-mono text-sm font-semibold tabular-nums text-foreground hover:underline"
+      <Tr>
+        <Td className="max-w-[14rem]">
+          <Link
+            href={`/dashboard/platform/discounts?focus=${discount.id}`}
+            className="font-mono text-[13px] font-semibold text-foreground hover:underline"
+          >
+            {discount.code}
+          </Link>
+          {discount.discountRule?.description && (
+            <div className="mt-0.5 truncate text-[12px] text-muted-foreground">{discount.discountRule.description}</div>
+          )}
+        </Td>
+        <Td>
+          <StatusWord tone={status.tone}>{status.label}</StatusWord>
+        </Td>
+        <Td priority={2} className="whitespace-nowrap tabular-nums">{valueLabel ?? <span className="text-muted-foreground">No rule</span>}</Td>
+        <Td priority={2} align="right" className="whitespace-nowrap">
+          {discount.usageCount || 0}
+          {discount.usageLimit ? <span className="text-muted-foreground"> / {discount.usageLimit}</span> : null}
+        </Td>
+        <Td priority={3} className="whitespace-nowrap tabular-nums text-muted-foreground">{formatDate(discount.endsAt) ?? "No end"}</Td>
+        <Td priority={3} className="whitespace-nowrap tabular-nums text-muted-foreground">{formatDate(discount.createdAt)}</Td>
+        <ActionsCell>
+          <RowMenu>
+            <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Discount
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive">
+              <Trash className="w-4 h-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </RowMenu>
+          <ExpandToggle open={open} onToggle={() => setOpen(!open)} controls={detailId} label="discount details" />
+        </ActionsCell>
+      </Tr>
+
+      {open && (
+        <ExpandRow id={detailId} colSpan={DISCOUNT_COLUMNS}>
+          <div className="space-y-4">
+            <Facts
+              facts={[
+                { label: "Type", value: <span className="capitalize">{discount.discountRule?.type || '—'}</span> },
+                {
+                  label: "Value",
+                  value: discount.discountRule?.value
+                    ? discount.discountRule.type === 'percentage'
+                      ? `${discount.discountRule.value}%`
+                      : `$${discount.discountRule.value}`
+                    : '—',
+                },
+                { label: "Uses", value: `${discount.usageCount || 0}${discount.usageLimit ? ` of ${discount.usageLimit}` : ''}` },
+                { label: "Stackable", value: discount.stackable ? "Yes" : "No" },
+                { label: "Starts", value: formatDate(discount.startsAt) ?? '—' },
+                { label: "Ends", value: formatDate(discount.endsAt) ?? 'No end' },
+                { label: "Created", value: formatDate(discount.createdAt) },
+              ]}
+            />
+
+            {discount.orders && discount.orders.length > 0 && (
+              <div>
+                <div className="mb-2 text-[12px] font-medium text-muted-foreground">
+                  Recent orders <span className="tabular-nums">{discount.orders.length}</span>
+                </div>
+                <SubTable
+                  head={
+                    <>
+                      <Th>Order</Th>
+                      <Th>Customer</Th>
+                      <Th align="right">Total</Th>
+                    </>
+                  }
                 >
-                  {discount.code}
-                </Link>
-                <span className="text-xs text-muted-foreground">{statusText}</span>
-                {discount.discountRule && (
-                  <span className="text-xs capitalize text-muted-foreground">{discount.discountRule.type}</span>
-                )}
+                  {discount.orders.slice(0, 5).map((order) => (
+                    <Tr key={order.id}>
+                      <Td className="font-mono">#{order.displayId}</Td>
+                      <Td className="max-w-[12rem] truncate text-muted-foreground">{order.user?.name}</Td>
+                      <Td align="right">{order.currency?.symbol}{order.total}</Td>
+                    </Tr>
+                  ))}
+                </SubTable>
               </div>
-
-              {discount.discountRule?.description && (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {discount.discountRule.description}
-                </p>
-              )}
-
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                {valueLabel && (
-                  <span className="font-mono tabular-nums text-foreground">{valueLabel} off</span>
-                )}
-                <span>
-                  <span className="font-mono tabular-nums">{discount.usageCount || 0}</span>
-                  {discount.usageLimit ? <> / <span className="font-mono tabular-nums">{discount.usageLimit}</span></> : null} uses
-                </span>
-                {discount.orders && discount.orders.length > 0 && (
-                  <span><span className="font-mono tabular-nums">{discount.orders.length}</span> orders</span>
-                )}
-                <span className="font-mono tabular-nums">
-                  {new Date(discount.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                    aria-label="Actions"
-                  >
-                    <MoreVertical className="stroke-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Discount
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">
-                    <Trash className="w-4 h-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                asChild
-              >
-                <AccordionTrigger className="justify-center py-0" />
-              </Button>
-            </div>
+            )}
           </div>
-
-          <AccordionContent className="pb-0">
-            <div className="space-y-4 border-t border-border bg-background/60 px-4 py-4">
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
-                <div>
-                  <dt className="text-xs text-muted-foreground">Type</dt>
-                  <dd className="mt-0.5 capitalize text-foreground">{discount.discountRule?.type || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Value</dt>
-                  <dd className="mt-0.5 font-mono tabular-nums text-foreground">
-                    {discount.discountRule?.value
-                      ? discount.discountRule.type === 'percentage'
-                        ? `${discount.discountRule.value}%`
-                        : `$${discount.discountRule.value}`
-                      : '—'
-                    }
-                  </dd>
-                </div>
-                {discount.startsAt && (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Starts</dt>
-                    <dd className="mt-0.5 font-mono tabular-nums text-foreground">
-                      {new Date(discount.startsAt).toLocaleDateString()}
-                    </dd>
-                  </div>
-                )}
-                {discount.endsAt && (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Ends</dt>
-                    <dd className="mt-0.5 font-mono tabular-nums text-foreground">
-                      {new Date(discount.endsAt).toLocaleDateString()}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-
-              {discount.usageLimit && (
-                <div className="space-y-1.5">
-                  <div className="flex items-baseline justify-between text-xs">
-                    <span className="text-muted-foreground">Usage</span>
-                    <span className="font-mono tabular-nums text-foreground">
-                      {discount.usageCount || 0} / {discount.usageLimit}
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-muted shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)]">
-                    <div
-                      className="h-1.5 rounded-full bg-foreground transition-all"
-                      style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {discount.orders && discount.orders.length > 0 && (
-                <div>
-                  <SectionTitle meta={discount.orders.length}>Recent orders</SectionTitle>
-                  <ListBand className="max-h-48 overflow-y-auto">
-                    {discount.orders.slice(0, 5).map((order) => (
-                      <div key={order.id} className="flex items-baseline justify-between gap-3 px-3 py-2 text-sm">
-                        <span className="flex min-w-0 items-baseline gap-2">
-                          <span className="font-mono tabular-nums text-foreground">#{order.displayId}</span>
-                          <span className="truncate text-muted-foreground">{order.user.name}</span>
-                        </span>
-                        <span className="font-mono tabular-nums text-foreground">
-                          {order.currency.symbol}{order.total}
-                        </span>
-                      </div>
-                    ))}
-                  </ListBand>
-                </div>
-              )}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        </ExpandRow>
+      )}
 
       <EditItemDrawerClientWrapper
         listKey="discounts"

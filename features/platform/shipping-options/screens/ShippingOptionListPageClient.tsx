@@ -6,9 +6,10 @@ import { PageContainer } from "../../../dashboard/components/PageContainer";
 import { Pagination } from "../../../dashboard/components/Pagination";
 import { PlatformFilterBar, platformCreateButtonClass } from "../../components/PlatformFilterBar";
 import { PlatformEmptyState } from "../../components/PlatformEmptyState";
-import { ListBand, PageTitle } from "../../components/vape-ui";
+import { DataTable, PageTitle } from "../../components/vape-ui";
+import { NeedsYouQueue, collectQueue } from "../../regions/components/config-kit";
 import { StatusTabs } from "../components/StatusTabs";
-import { ShippingOptionDetailsComponent } from "../components/ShippingOptionDetailsComponent";
+import { ShippingOptionDetailsComponent, ShippingOptionTableHead, shippingOptionAttention } from "../components/ShippingOptionDetailsComponent";
 import { CreateItemDrawerClientWrapper } from "../../components/CreateItemDrawerClientWrapper";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -190,6 +191,17 @@ export function ShippingOptionListPageClient({
     <>
       <PageContainer title="Shipping Options" header={<PageTitle title="Shipping Options" />}>
         <div>
+          {/* Needs you: options that cannot quote at checkout */}
+          <NeedsYouQueue
+            listKey="shipping-options"
+            recordLabel="Shipping option"
+            items={collectQueue(initialData.items as any[], shippingOptionAttention)}
+            className="mb-4"
+          />
+
+          {/* Status Tabs */}
+          <StatusTabs regionCounts={regionCounts} />
+
           {/* Filter Bar */}
           <div className="px-4 md:px-6">
             <PlatformFilterBar 
@@ -209,21 +221,21 @@ export function ShippingOptionListPageClient({
             />
           </div>
 
-          {/* Status Tabs */}
-          <StatusTabs regionCounts={regionCounts} />
-
           {/* Shipping Options List */}
           <div className="px-4 md:px-6 pb-6">
             {initialData.items.length > 0 ? (
-              <ListBand>
-                {initialData.items.map((shippingOption) => (
-                  <ShippingOptionDetailsComponent
-                    key={shippingOption.id}
-                    shippingOption={shippingOption}
-                    list={list}
-                  />
-                ))}
-              </ListBand>
+              <DataTable aria-label="Shipping options">
+                <thead><ShippingOptionTableHead /></thead>
+                <tbody>
+                  {initialData.items.map((shippingOption) => (
+                    <ShippingOptionDetailsComponent
+                      key={shippingOption.id}
+                      shippingOption={shippingOption}
+                      list={list}
+                    />
+                  ))}
+                </tbody>
+              </DataTable>
             ) : (
               <PlatformEmptyState title="No shipping options" />
             )}

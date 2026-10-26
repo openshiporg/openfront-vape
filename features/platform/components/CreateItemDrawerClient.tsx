@@ -90,7 +90,7 @@ export function CreateItemDrawerClient({
             <Button 
               type="button" 
               variant="ghost" 
-              className="h-10 rounded-full bg-muted px-4 hover:bg-muted/80 dark:bg-muted/60"
+              className="h-10 rounded-[4px] border border-input bg-background px-4 hover:bg-muted"
               onClick={onClose}
               disabled={createItem.state === 'loading'}
             >
@@ -99,7 +99,7 @@ export function CreateItemDrawerClient({
             <Button 
               type="submit" 
               disabled={createItem.state === 'loading'}
-              className="h-10 min-w-[120px] rounded-full px-4"
+              className="h-10 min-w-[120px] rounded-[4px] px-4"
             >
               {createItem.state === 'loading' ? (
                 <>

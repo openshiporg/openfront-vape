@@ -11,8 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
-import { CountryDetailsComponent } from '../components/CountryDetailsComponent'
+import { DataTable, PageTitle } from '../../components/vape-ui'
+import { CountryDetailsComponent, CountryTableHead } from '../components/CountryDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { useDashboard } from '../../../dashboard/context/DashboardProvider'
@@ -194,11 +194,14 @@ export function CountryListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((country: any) => (
-                <CountryDetailsComponent key={country.id} country={country} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Countries">
+              <thead><CountryTableHead /></thead>
+              <tbody>
+                {data?.items?.map((country: any) => (
+                  <CountryDetailsComponent key={country.id} country={country} list={list} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

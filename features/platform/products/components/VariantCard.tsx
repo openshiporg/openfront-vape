@@ -138,11 +138,11 @@ const PriceForm = ({ region, initialPrice, onSave, onCancel }: PriceFormProps) =
     <div className="flex flex-col">
       <div className="p-4 border-b">
         <h3 className="font-medium text-sm mb-1">
-          {initialPrice ? "Update Price" : "Add Price"}
+          {initialPrice ? "Update price" : "Add price"}
         </h3>
         <p className="text-muted-foreground text-xs">
           {region.name} · <span className="font-mono">{region.currency.code.toUpperCase()}</span>
-          {region.taxRate ? <span className="font-mono tabular-nums">{` · ${(region.taxRate * 100).toFixed(0)}% tax`}</span> : ""}
+          {region.taxRate ? <span className="tabular-nums">{` · ${(region.taxRate * 100).toFixed(0)}% tax`}</span> : ""}
         </p>
       </div>
       <div className="p-4 space-y-4">
@@ -158,7 +158,7 @@ const PriceForm = ({ region, initialPrice, onSave, onCancel }: PriceFormProps) =
                   setAmount(val);
                 }
               }}
-              className="peer ps-5 pe-10 h-9 font-mono text-sm tabular-nums"
+              className="peer ps-5 pe-10 h-9 text-sm tabular-nums"
               placeholder="0.00"
             />
             <span className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 text-xs">
@@ -181,7 +181,7 @@ const PriceForm = ({ region, initialPrice, onSave, onCancel }: PriceFormProps) =
                   setCompareAmount(val);
                 }
               }}
-              className="peer ps-5 pe-10 h-9 font-mono text-sm tabular-nums"
+              className="peer ps-5 pe-10 h-9 text-sm tabular-nums"
               placeholder="0.00"
             />
             <span className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 text-xs">
@@ -204,7 +204,7 @@ const PriceForm = ({ region, initialPrice, onSave, onCancel }: PriceFormProps) =
             onClick={handleSave}
             size="sm"
           >
-            {initialPrice ? "Update Price" : "Add Price"}
+            {initialPrice ? "Update price" : "Add price"}
           </Button>
         </PopoverClose>
       </div>
@@ -228,13 +228,13 @@ export function VariantCard({
       type="button"
       data-active={selectedFilters.includes(`${ov.option}:${ov.value}`)}
       className={cn(
-        "inline-flex min-h-6 items-center gap-1 rounded-full bg-muted px-2 text-[11px] font-medium text-foreground hover:bg-muted/70",
+        "inline-flex min-h-6 items-center gap-1 rounded-[4px] bg-muted px-2 text-[11px] font-medium text-foreground hover:bg-muted/70",
         "data-[active=true]:bg-foreground data-[active=true]:text-background"
       )}
       onClick={() => onOptionFilter?.(ov.option, ov.value)}
     >
       <span className="opacity-70">{ov.option}</span>
-      <span className="font-mono tabular-nums">{ov.label}</span>
+      <span>{ov.label}</span>
     </button>
   ),
 }: VariantCardProps) {
@@ -272,7 +272,7 @@ export function VariantCard({
     <Accordion
       type="single"
       collapsible
-      className="rounded-xl bg-background ring-1 ring-border"
+      className="rounded-md bg-background border"
     >
       <AccordionItem value="details" className="border-0">
         <div className="p-4">
@@ -280,7 +280,7 @@ export function VariantCard({
             <div className="flex min-w-0 gap-3">
               <Select value={variant.primaryImage?.id || "none"} onValueChange={handleImageSelect}>
                 <SelectPrimitive.Trigger className={cn(
-                  "flex h-12 w-12 shrink-0 rounded-lg border border-input bg-background focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 p-0 overflow-hidden items-center justify-center"
+                  "flex h-12 w-12 shrink-0 rounded-md border border-input bg-background focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 p-0 overflow-hidden items-center justify-center"
                 )}>
                   <SelectValue>
                     {variant.primaryImage?.image?.url ? (
@@ -300,15 +300,15 @@ export function VariantCard({
                     )}
                   </SelectValue>
                 </SelectPrimitive.Trigger>
-                <SelectContent className="border-border dark:border-blue-700">
+                <SelectContent className="border-border">
                   <SelectItem value="none">
                     <span className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded border border-border bg-muted flex items-center justify-center">
                         <Package className="h-4 w-4 text-foreground" />
                       </div>
                       <span>
-                        <span className="block font-medium text-gray-900 dark:text-gray-100">
-                          No Image
+                        <span className="block font-medium text-foreground">
+                          No image
                         </span>
                         <span className="text-muted-foreground mt-0.5 block text-xs">
                           Use product default
@@ -339,8 +339,8 @@ export function VariantCard({
                           )}
                         </div>
                         <span>
-                          <span className="block font-medium text-gray-900 dark:text-gray-100">
-                            {image.altText || 'Untitled Image'}
+                          <span className="block font-medium text-foreground">
+                            {image.altText || 'Untitled image'}
                           </span>
                           <span className="text-muted-foreground mt-0.5 block text-xs">
                             {image.imagePath || 'Product image'}
@@ -354,11 +354,11 @@ export function VariantCard({
               <div className="min-w-0 space-y-2">
                 <div>
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                    <span className="font-mono text-sm font-medium tabular-nums text-foreground">{variant.title}</span>
+                    <span className="text-sm font-medium text-foreground">{variant.title}</span>
                     {variant.manageInventory ? (
                       <span className="inline-flex items-baseline gap-1.5 text-xs text-muted-foreground">
                         <Dot tone={(variant.inventoryQuantity || 0) <= 0 ? "danger" : "ok"} />
-                        <span className="font-mono tabular-nums text-foreground">{variant.inventoryQuantity || 0}</span>
+                        <span className="tabular-nums text-foreground">{variant.inventoryQuantity || 0}</span>
                         in stock
                       </span>
                     ) : (
@@ -386,7 +386,7 @@ export function VariantCard({
                   )}
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-[11px] font-medium text-muted-foreground">
+                  <div className="text-[12px] font-medium text-muted-foreground">
                     Prices
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -408,9 +408,9 @@ export function VariantCard({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-7 cursor-pointer flex items-center gap-1 rounded-full px-2.5 font-mono text-xs tabular-nums hover:bg-accent max-sm:h-9"
+                                className="h-7 cursor-pointer flex items-center gap-1 rounded-[4px] px-2.5 text-xs tabular-nums hover:bg-accent max-sm:h-9"
                               >
-                                <span className="uppercase text-[10px] text-muted-foreground mr-0.5">
+                                <span className="text-[11px] text-muted-foreground mr-0.5">
                                   {region.currency.code}
                                 </span>
                                 <span>
@@ -455,9 +455,9 @@ export function VariantCard({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-7 gap-1 rounded-full border-dashed bg-transparent px-2.5 text-xs hover:bg-muted max-sm:h-9"
+                              className="h-7 gap-1 rounded-[4px] border-dashed bg-transparent px-2.5 text-xs hover:bg-muted max-sm:h-9"
                             >
-                              <span className="font-mono uppercase text-[10px] text-muted-foreground mr-0.5">
+                              <span className="text-[11px] text-muted-foreground mr-0.5">
                                 {region.currency.code}
                               </span>
                               Add
@@ -484,12 +484,12 @@ export function VariantCard({
                     <Button
                       variant="outline"
                       size="icon"
-                      className="size-8 rounded-full [&_svg]:size-3.5 max-sm:size-10"
+                      className="size-8 rounded-[4px] [&_svg]:size-3.5 max-sm:size-10"
                     >
                       <MoreHorizontal />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0 bg-white dark:bg-slate-950 border shadow-lg" align="end">
+                  <PopoverContent className="w-80 p-0 bg-popover border shadow-lg" align="end">
                     <VariantForm
                       variant={currentVariant}
                       onChange={setCurrentVariant}
@@ -502,7 +502,7 @@ export function VariantCard({
               <Button
                 variant="outline"
                 size="icon"
-                className="size-8 rounded-full [&_svg]:size-3.5 max-sm:size-10"
+                className="size-8 rounded-[4px] [&_svg]:size-3.5 max-sm:size-10"
                 asChild
               >
                 <AccordionTrigger className="py-0" />
@@ -514,7 +514,7 @@ export function VariantCard({
         <AccordionContent className="px-4 pb-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-3">
             <div className="space-y-1">
-              <div className="text-[11px] font-medium text-muted-foreground">
+              <div className="text-[12px] font-medium text-muted-foreground">
                 SKU
               </div>
               <div className="font-mono text-sm tabular-nums font-medium">
@@ -522,11 +522,11 @@ export function VariantCard({
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] font-medium text-muted-foreground">
+              <div className="text-[12px] font-medium text-muted-foreground">
                 Stock
               </div>
               {variant.manageInventory ? (
-                <div className="font-mono text-sm tabular-nums font-medium">
+                <div className="text-sm tabular-nums font-medium">
                   {variant.inventoryQuantity || "0"}
                 </div>
               ) : (
@@ -534,7 +534,7 @@ export function VariantCard({
               )}
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] font-medium text-muted-foreground">
+              <div className="text-[12px] font-medium text-muted-foreground">
                 Barcode
               </div>
               <div className="font-mono text-sm tabular-nums">
@@ -542,19 +542,19 @@ export function VariantCard({
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] font-medium text-muted-foreground">
+              <div className="text-[12px] font-medium text-muted-foreground">
                 EAN
               </div>
               <div className="font-mono text-sm tabular-nums">{variant.ean || "-"}</div>
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] font-medium text-muted-foreground">
+              <div className="text-[12px] font-medium text-muted-foreground">
                 UPC
               </div>
               <div className="font-mono text-sm tabular-nums">{variant.upc || "-"}</div>
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] font-medium text-muted-foreground">
+              <div className="text-[12px] font-medium text-muted-foreground">
                 Material
               </div>
               <div className="text-sm">{variant.material || "-"}</div>

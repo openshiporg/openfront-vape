@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger 
 } from '@/components/ui/alert-dialog'
 import { ArrowUpRight, Check, Copy, RotateCcw, Trash2 } from 'lucide-react'
-import { Dot, ListBand, SectionTitle } from '@/features/platform/components/vape-ui'
+import { Dot, ListBand, SectionTitle, Stamp, StatusWord, buttonClass } from '@/features/platform/components/vape-ui'
 import { productStatusConfig } from '../components/StatusBadge'
 import { toast } from 'sonner'
 import { updateItemAction, deleteItemAction } from '../../../dashboard/actions/item-actions'
@@ -75,7 +75,7 @@ function DeleteButton({ list, value, onError }: { list: any; value: Record<strin
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm" className="rounded-full">
+        <Button variant="ghost" size="sm" className="rounded-[4px] text-destructive hover:bg-destructive/10 hover:text-destructive">
           <Trash2 className="size-3.5" />
           Delete
         </Button>
@@ -252,7 +252,19 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
 
   const savedStatus = productStatusConfig[item.status as keyof typeof productStatusConfig]
   const variantCount = Array.isArray(item.productVariants) ? (item.productVariants as unknown[]).length : undefined
-  const panel = 'rounded-xl bg-muted/40 p-4 ring-1 ring-inset ring-border/60 md:p-5'
+  const panel = 'rounded-md bg-muted/40 p-4 border md:p-5'
+
+  const releaseStamp = !compliance
+    ? null
+    : !compliance.regulated
+      ? { tone: 'muted' as const, label: 'Exempt' }
+      : !compliance.publishIssue
+        ? { tone: 'ok' as const, label: 'Cleared' }
+        : { tone: 'danger' as const, label: 'Blocked' }
+  // First variant whose evidence is missing, unapproved or lapsed: the next thing to fix
+  const nextFixVariant = compliance?.publishIssue && compliance.regulated
+    ? compliance.variants.find(variant => !variant.classification || variant.classification.status !== 'approved' || !variant.classification.current || !variant.classification.federalAuthorized) ?? null
+    : null
 
   if (!item || Object.keys(item).length === 0) {
     return (
@@ -274,19 +286,19 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
               <div className="flex items-center gap-2">
                 {!list.hideDelete && <DeleteButton list={list} value={value} onError={setErrorDialogValue} />}
                 {hasChanges && (
-                  <Button variant="outline" size="sm" className="rounded-full" onClick={handleReset}>
+                  <Button variant="outline" size="sm" className="rounded-[4px]" onClick={handleReset}>
                     <RotateCcw className="size-3.5" />
                     Reset
                   </Button>
                 )}
                 <Button
                   size="sm"
-                  className="rounded-full"
+                  className="rounded-[4px]"
                   onClick={handleSave}
                   disabled={!hasChanges || loading || saveState === 'saving'}
                 >
                   <Check className="size-3.5" />
-                  Save Changes
+                  Save changes
                 </Button>
               </div>
             }
@@ -294,27 +306,45 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
         </div>
 
         <main className="max-w-6xl p-4 md:p-6">
-          <div className="mb-8 flex flex-col gap-1">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">{pageLabel}</h1>
-              {savedStatus && (
-                <span className="inline-flex items-baseline gap-1.5 text-sm text-muted-foreground">
-                  <Dot tone={savedStatus.tone} />
-                  {savedStatus.label}
-                </span>
-              )}
-              {hasChanges && (
-                <span className="inline-flex items-baseline gap-1.5 text-sm text-muted-foreground">
-                  <Dot tone="warn" />
-                  Unsaved changes
-                </span>
-              )}
+          <div className="mb-6 flex flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="text-2xl font-semibold tracking-[-0.015em] text-foreground">{pageLabel}</h1>
+              {savedStatus && <StatusWord tone={savedStatus.tone}>{savedStatus.label}</StatusWord>}
+              {releaseStamp && <Stamp tone={releaseStamp.tone}>{releaseStamp.label}</Stamp>}
+              {hasChanges && <StatusWord tone="warn">Unsaved changes</StatusWord>}
             </div>
-            <div className="flex flex-wrap gap-x-3 font-mono text-sm tabular-nums text-muted-foreground">
-              {typeof item.handle === 'string' && item.handle && <span>/{item.handle}</span>}
+            <div className="flex flex-wrap gap-x-3 text-[13px] tabular-nums text-muted-foreground">
+              {typeof item.handle === 'string' && item.handle && <span className="font-mono">/{item.handle}</span>}
               {variantCount !== undefined && <span>{variantCount} variants</span>}
             </div>
           </div>
+
+          {compliance && (
+            <div
+              role={compliance.publishIssue ? 'alert' : undefined}
+              className="mb-8 flex flex-col gap-3 rounded-md border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-[14px] font-medium text-foreground">
+                  {!compliance.publishIssue
+                    ? item.status === 'published' ? 'On sale' : 'Evidence cleared, ready to publish'
+                    : item.status === 'published' ? 'Published but blocked from sale' : 'Blocked from publishing'}
+                </p>
+                {compliance.publishIssue && (
+                  <p className="text-[13px] text-muted-foreground">{compliance.publishIssue}</p>
+                )}
+              </div>
+              {nextFixVariant && (
+                <button
+                  type="button"
+                  onClick={() => setClassifyVariantId(nextFixVariant.id)}
+                  className={`${buttonClass.base} ${buttonClass.outline} self-start sm:self-auto`}
+                >
+                  {nextFixVariant.classification ? 'Review' : 'Classify'} {nextFixVariant.title}
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col items-start gap-8 lg:flex-row">
             <div className="w-full min-w-0 flex-1 space-y-8">

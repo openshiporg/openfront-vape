@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { X, CheckCircle2, Loader2 } from "lucide-react";
-import { Dot, ListBand } from "../../../components/vape-ui";
+import { DataTable, StatusWord, Td, Th, Tr } from "../../../components/vape-ui";
 import { POPULAR_REGIONS } from "../../constants/popular-regions";
 import { createPopularRegion } from "../../actions/popular-regions";
 
@@ -70,7 +70,7 @@ export function PopularRegionsDrawer({
               <DrawerDescription className="sr-only">Popular regions</DrawerDescription>
             </div>
             <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="size-10 rounded-full" aria-label="Close">
+              <Button variant="ghost" size="icon" className="size-10 rounded-[4px]" aria-label="Close">
                 <X className="w-4 h-4" />
               </Button>
             </DrawerClose>
@@ -78,60 +78,71 @@ export function PopularRegionsDrawer({
         </DrawerHeader>
 
         <ScrollArea className="flex-1 px-4 pb-6 md:px-6">
-          <ListBand>
-            {POPULAR_REGIONS.map((template) => {
-              const isCreating = creatingRegion === template.name;
-              const isCreated = createdRegions.has(template.name);
+          <DataTable aria-label="Popular regions">
+            <thead>
+              <tr>
+                <Th>Region</Th>
+                <Th priority={2}>Countries</Th>
+                <Th priority={2} align="right">Currencies</Th>
+                <Th priority={2} align="right">Tax</Th>
+                <Th priority={3}>Default currency</Th>
+                <Th align="right"><span className="sr-only">Create</span></Th>
+              </tr>
+            </thead>
+            <tbody>
+              {POPULAR_REGIONS.map((template) => {
+                const isCreating = creatingRegion === template.name;
+                const isCreated = createdRegions.has(template.name);
 
-              return (
-                <div
-                  key={template.name}
-                  className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                      <Dot tone={isCreated ? "ok" : "muted"} />
-                      <span className="text-sm font-semibold text-foreground">{template.name}</span>
-                      {isCreated && <span className="text-xs text-muted-foreground">Created</span>}
-                    </div>
-                    {template.description && (
-                      <p className="mt-1 text-sm text-muted-foreground">{template.description}</p>
-                    )}
-                    <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span><span className="font-mono tabular-nums">{template.countries.length}</span> countries</span>
-                      <span><span className="font-mono tabular-nums">{template.currencies.length}</span> currencies</span>
-                      <span>Tax <span className="font-mono tabular-nums">{template.taxRate}%</span></span>
-                      <span>Default <span className="font-mono tabular-nums text-foreground">{template.defaultCurrency}</span></span>
-                    </div>
-                    <div className="mt-1 font-mono text-xs uppercase tabular-nums text-muted-foreground">
-                      {template.countries.slice(0, 4).map((country) => country.iso2).join(" ")}
-                      {template.countries.length > 4 && ` +${template.countries.length - 4}`}
-                    </div>
-                  </div>
-
-                  <Button
-                    onClick={() => handleCreateRegion(template.name)}
-                    disabled={isCreating || isCreated}
-                    size="sm"
-                    className={`h-10 shrink-0 rounded-full px-4 sm:h-8 ${isCreated ? "bg-muted text-foreground hover:bg-muted" : ""}`}
-                    variant={isCreated ? "secondary" : "default"}
-                  >
-                    {isCreating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {isCreated ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        Created
-                      </>
-                    ) : isCreating ? (
-                      "Creating..."
-                    ) : (
-                      "Create Region"
-                    )}
-                  </Button>
-                </div>
-              );
-            })}
-          </ListBand>
+                return (
+                  <Tr key={template.name}>
+                    <Td className="max-w-[18rem]">
+                      <div className="font-medium text-foreground">{template.name}</div>
+                      {template.description && (
+                        <div className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">{template.description}</div>
+                      )}
+                      {isCreated && (
+                        <div className="mt-1">
+                          <StatusWord tone="ok">Created</StatusWord>
+                        </div>
+                      )}
+                    </Td>
+                    <Td priority={2} className="whitespace-nowrap">
+                      <span className="tabular-nums">{template.countries.length}</span>
+                      <span className="ml-2 font-mono text-[12px] uppercase text-muted-foreground">
+                        {template.countries.slice(0, 4).map((country) => country.iso2).join(" ")}
+                        {template.countries.length > 4 && ` +${template.countries.length - 4}`}
+                      </span>
+                    </Td>
+                    <Td priority={2} align="right">{template.currencies.length}</Td>
+                    <Td priority={2} align="right">{template.taxRate}%</Td>
+                    <Td priority={3} className="font-mono">{template.defaultCurrency}</Td>
+                    <Td align="right" className="w-px whitespace-nowrap py-1">
+                      <Button
+                        onClick={() => handleCreateRegion(template.name)}
+                        disabled={isCreating || isCreated}
+                        size="sm"
+                        className={`h-10 shrink-0 rounded-[4px] px-3 sm:h-8 ${isCreated ? "bg-muted text-foreground hover:bg-muted" : ""}`}
+                        variant={isCreated ? "secondary" : "default"}
+                      >
+                        {isCreating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        {isCreated ? (
+                          <>
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                            Created
+                          </>
+                        ) : isCreating ? (
+                          "Creating..."
+                        ) : (
+                          "Create Region"
+                        )}
+                      </Button>
+                    </Td>
+                  </Tr>
+                );
+              })}
+            </tbody>
+          </DataTable>
         </ScrollArea>
       </DrawerContent>
     </Drawer>

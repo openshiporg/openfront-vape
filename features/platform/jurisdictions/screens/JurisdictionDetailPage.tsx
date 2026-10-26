@@ -4,7 +4,7 @@ import { ArrowUpRight } from 'lucide-react';
 
 import { PageContainer } from '@/features/dashboard/components/PageContainer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dot, ListBand, PageTitle, SectionTitle } from '@/features/platform/components/vape-ui';
+import { Dot, ListBand, PageTitle, SectionTitle, Stamp } from '@/features/platform/components/vape-ui';
 import {
   AUTHORIZATION_STATUS_LABELS,
   AUTHORIZATION_TYPE_LABELS,
@@ -99,15 +99,56 @@ export async function JurisdictionDetailPage({ params }: PageProps) {
       <div className="space-y-10 px-4 pb-24 sm:pb-10 md:px-6">
         <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-wrap items-start gap-2">
-            <JurisdictionSheetButton jurisdiction={jurisdiction} variant="outline" className="h-9 rounded-full px-4 text-[13px]">
+            <JurisdictionSheetButton jurisdiction={jurisdiction} variant="outline" className="h-9 rounded-[4px] px-4 text-[13px]">
               Edit
             </JurisdictionSheetButton>
             <JurisdictionStatusActions id={jurisdiction.id} status={jurisdiction.status} />
           </div>
-          <span className="inline-flex items-baseline gap-1.5 text-sm text-muted-foreground">
-            <Dot tone={policyState.tone} />
-            {policyState.label}
-          </span>
+          <Stamp tone={policyState.tone} serial={jurisdiction.code}>{policyState.label}</Stamp>
+        </section>
+
+        <section>
+          <div className="mb-2 flex items-center justify-between gap-3 border-b border-foreground/15 pb-2">
+            <h2 className="text-[15px] font-semibold text-foreground">
+              Rule sets <span className="ml-1 text-[13px] font-normal tabular-nums text-muted-foreground">{jurisdiction.ruleSets.length}</span>
+            </h2>
+            <RuleSetSheetButton jurisdictionId={jurisdiction.id} mode="create" variant="default" className="h-9 rounded-[4px] px-4 text-[13px]">
+              New rule set
+            </RuleSetSheetButton>
+          </div>
+          <ListBand>
+            {jurisdiction.ruleSets.length === 0 && <Empty>No rule sets</Empty>}
+            {jurisdiction.ruleSets.map(set => {
+              const types = Array.from(new Set(set.rules.map((rule: any) => rule?.type).filter(Boolean)));
+              return (
+                <div key={set.id} className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-sm font-medium text-foreground">
+                      <span className="break-words">{set.packName}</span>
+                      <Stamp tone={RULE_SET_TONES[set.status] || 'muted'} serial={`v${set.version}`}>{regulatedLabel(RULE_SET_STATUS_LABELS, set.status)}</Stamp>
+                      {set.id === inForceId && <Stamp tone="ok">In force</Stamp>}
+                    </div>
+                    <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs">
+                      <Meta label="Effective"><span className="font-mono tabular-nums">{formatDay(set.effectiveAt) || 'None'} to {formatDay(set.expiresAt) || 'None'}</span></Meta>
+                      <Meta label="Approved">
+                        {set.approvedAt ? <span className="font-mono tabular-nums">{formatDay(set.approvedAt)}</span> : 'No'}
+                        {set.reviewer && <span className="text-muted-foreground"> by {set.reviewer}</span>}
+                      </Meta>
+                      <Meta label="Signature">{set.hasSignature ? 'On file' : 'None'}</Meta>
+                      <Meta label="Hash"><span className="font-mono" title={set.policyHash}>{set.policyHash.slice(0, 12)}</span></Meta>
+                    </dl>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {set.rules.length} {set.rules.length === 1 ? 'rule' : 'rules'}
+                      {types.length > 0 && `: ${types.map(type => RULE_TYPE_LABELS[type as string] || String(type)).join(', ')}`}
+                    </p>
+                  </div>
+                  <div>
+                    <RuleSetActions jurisdictionId={jurisdiction.id} ruleSet={set} />
+                  </div>
+                </div>
+              );
+            })}
+          </ListBand>
         </section>
 
         <section className="grid gap-10 lg:grid-cols-2">
@@ -148,6 +189,7 @@ export async function JurisdictionDetailPage({ params }: PageProps) {
                       <Link key={child.id} href={`${BASE}/${child.id}`} className={`${linkClass} text-sm text-foreground`}>
                         <Dot tone={JURISDICTION_TONES[child.status] || 'muted'} />
                         <span className="font-mono">{child.code}</span>
+                        <span className="text-xs text-muted-foreground">{regulatedLabel(JURISDICTION_STATUS_LABELS, child.status)}</span>
                         <ArrowUpRight className="size-3 text-muted-foreground" />
                       </Link>
                     ))}
@@ -156,54 +198,6 @@ export async function JurisdictionDetailPage({ params }: PageProps) {
               )}
             </ListBand>
           </div>
-        </section>
-
-        <section>
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <h2 className="text-sm font-semibold text-foreground">
-              Rule sets <span className="ml-1 font-mono text-xs font-normal tabular-nums text-muted-foreground">{jurisdiction.ruleSets.length}</span>
-            </h2>
-            <RuleSetSheetButton jurisdictionId={jurisdiction.id} mode="create" variant="default" className="h-9 rounded-full px-4 text-[13px]">
-              New rule set
-            </RuleSetSheetButton>
-          </div>
-          <ListBand>
-            {jurisdiction.ruleSets.length === 0 && <Empty>No rule sets</Empty>}
-            {jurisdiction.ruleSets.map(set => {
-              const types = Array.from(new Set(set.rules.map((rule: any) => rule?.type).filter(Boolean)));
-              return (
-                <div key={set.id} className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-sm font-medium text-foreground">
-                      <Dot tone={RULE_SET_TONES[set.status] || 'muted'} />
-                      <span className="break-words">{set.packName}</span>
-                      <span className="font-mono text-xs text-muted-foreground">v{set.version}</span>
-                      <span className="text-xs font-normal text-muted-foreground">{regulatedLabel(RULE_SET_STATUS_LABELS, set.status)}</span>
-                      {set.id === inForceId && (
-                        <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">In force</span>
-                      )}
-                    </div>
-                    <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1 pl-[1.125rem] text-xs">
-                      <Meta label="Effective"><span className="font-mono tabular-nums">{formatDay(set.effectiveAt) || 'None'} to {formatDay(set.expiresAt) || 'None'}</span></Meta>
-                      <Meta label="Approved">
-                        {set.approvedAt ? <span className="font-mono tabular-nums">{formatDay(set.approvedAt)}</span> : 'No'}
-                        {set.reviewer && <span className="text-muted-foreground"> by {set.reviewer}</span>}
-                      </Meta>
-                      <Meta label="Signature">{set.hasSignature ? 'On file' : 'None'}</Meta>
-                      <Meta label="Hash"><span className="font-mono" title={set.policyHash}>{set.policyHash.slice(0, 12)}</span></Meta>
-                    </dl>
-                    <p className="mt-1 pl-[1.125rem] text-xs text-muted-foreground">
-                      {set.rules.length} {set.rules.length === 1 ? 'rule' : 'rules'}
-                      {types.length > 0 && `: ${types.map(type => RULE_TYPE_LABELS[type as string] || String(type)).join(', ')}`}
-                    </p>
-                  </div>
-                  <div className="pl-[1.125rem] lg:pl-0">
-                    <RuleSetActions jurisdictionId={jurisdiction.id} ruleSet={set} />
-                  </div>
-                </div>
-              );
-            })}
-          </ListBand>
         </section>
 
         <section className="grid gap-10 lg:grid-cols-2">
@@ -215,9 +209,10 @@ export async function JurisdictionDetailPage({ params }: PageProps) {
                 <div key={license.id} className="px-4 py-3">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <span className="inline-flex min-w-0 items-baseline gap-2.5 text-sm font-medium text-foreground">
-                      <Dot tone={USABLE_LICENSE.has(license.status) ? 'ok' : license.status === 'draft' ? 'muted' : 'warn'} />
                       <span className="break-words">{license.licenseType}</span>
-                      <span className="font-mono text-xs text-muted-foreground">{license.licenseNumber}</span>
+                      <Stamp tone={USABLE_LICENSE.has(license.status) ? 'ok' : license.status === 'draft' ? 'muted' : 'warn'} serial={license.licenseNumber}>
+                        {regulatedLabel({}, license.status)}
+                      </Stamp>
                     </span>
                     {license.profile && (
                       <Link href={`/dashboard/platform/merchant-profiles/${license.profile.id}`} className={`${linkClass} text-xs font-medium text-foreground`}>
@@ -226,8 +221,8 @@ export async function JurisdictionDetailPage({ params }: PageProps) {
                       </Link>
                     )}
                   </div>
-                  <p className="mt-0.5 pl-[1.125rem] text-xs text-muted-foreground">
-                    {regulatedLabel({}, license.status)} · {license.issuingAuthority}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {license.issuingAuthority}
                     {license.expiresAt && <> · expires <span className="font-mono">{formatDay(license.expiresAt)}</span></>}
                   </p>
                 </div>
@@ -242,9 +237,10 @@ export async function JurisdictionDetailPage({ params }: PageProps) {
                 <div key={authorization.id} className="px-4 py-3">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <span className="inline-flex min-w-0 items-baseline gap-2.5 text-sm font-medium text-foreground">
-                      <Dot tone={authorization.status === 'authorized' ? 'ok' : authorization.status === 'pending' ? 'muted' : 'warn'} />
                       <span className="break-words">{regulatedLabel(AUTHORIZATION_TYPE_LABELS, authorization.authorizationType)}</span>
-                      <span className="font-mono text-xs text-muted-foreground">{authorization.authorizationIdentifier}</span>
+                      <Stamp tone={authorization.status === 'authorized' ? 'ok' : authorization.status === 'pending' ? 'muted' : 'warn'} serial={authorization.authorizationIdentifier}>
+                        {regulatedLabel(AUTHORIZATION_STATUS_LABELS, authorization.status)}
+                      </Stamp>
                     </span>
                     {authorization.product && (
                       <Link href={`/dashboard/platform/products/${authorization.product.id}`} className={`${linkClass} text-xs font-medium text-foreground`}>
@@ -253,8 +249,8 @@ export async function JurisdictionDetailPage({ params }: PageProps) {
                       </Link>
                     )}
                   </div>
-                  <p className="mt-0.5 pl-[1.125rem] text-xs text-muted-foreground">
-                    {regulatedLabel(AUTHORIZATION_STATUS_LABELS, authorization.status)} · {authorization.authority}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {authorization.authority}
                     {authorization.expiresAt && <> · expires <span className="font-mono">{formatDay(authorization.expiresAt)}</span></>}
                   </p>
                 </div>

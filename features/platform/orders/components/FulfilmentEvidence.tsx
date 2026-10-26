@@ -43,7 +43,7 @@ function CancelLabel({ label }: { label: OrderLabel }) {
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex min-h-8 items-center rounded-full bg-background px-3 text-xs font-medium text-foreground shadow-xs ring-1 ring-border disabled:opacity-50 max-sm:min-h-10"
+            className="inline-flex min-h-8 items-center rounded-[4px] bg-background px-3 text-xs font-medium text-foreground ring-1 ring-border disabled:opacity-50 max-sm:min-h-10"
             disabled={pending}
           >
             {pending ? 'Cancelling' : 'Cancel label'}
@@ -56,7 +56,7 @@ function CancelLabel({ label }: { label: OrderLabel }) {
               <Button
                 variant="destructive"
                 size="sm"
-                className="h-8 rounded-full text-xs"
+                className="h-8 rounded-[4px] text-xs"
                 disabled={pending}
                 onClick={() => {
                   setOpen(false);

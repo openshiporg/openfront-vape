@@ -65,7 +65,7 @@ export function ClaimDetailsComponent({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
+                className="size-10 rounded-[4px] sm:size-8 [&_svg]:size-4"
                 aria-label="Edit"
                 onClick={() => setIsEditDrawerOpen(true)}
               >
@@ -74,7 +74,7 @@ export function ClaimDetailsComponent({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
+                className="size-10 rounded-[4px] sm:size-8 [&_svg]:size-4"
                 asChild
               >
                 <AccordionTrigger className="justify-center py-0" />

@@ -1,17 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { MoreVertical } from "lucide-react";
 import Link from "next/link";
-import { Dot, type DotTone } from "../../components/vape-ui";
+import { StatusWord, Td, Th, Tr, type DotTone } from "../../components/vape-ui";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
+import {
+  ActionsCell,
+  ExpandRow,
+  ExpandToggle,
+  Facts,
+  formatDate,
+  rowIconClass,
+} from "../../regions/components/config-kit";
 
 const statusTones: Record<string, DotTone> = {
   active: "ok",
@@ -39,93 +40,86 @@ interface CountryDetailsComponentProps {
   list: any;
 }
 
+export const COUNTRY_COLUMNS = 6;
+
+export function CountryTableHead() {
+  return (
+    <tr>
+      <Th>Country</Th>
+      <Th>Status</Th>
+      <Th priority={2}>Region</Th>
+      <Th priority={2}>ISO3</Th>
+      <Th priority={3}>Created</Th>
+      <Th align="right"><span className="sr-only">Actions</span></Th>
+    </tr>
+  );
+}
+
+function countryStatus(country: Country): { tone: DotTone; label: string } {
+  if (country.status) {
+    return {
+      tone: statusTones[country.status] || "muted",
+      label: country.status.charAt(0).toUpperCase() + country.status.slice(1),
+    };
+  }
+  return country.region ? { tone: "ok", label: "Assigned" } : { tone: "muted", label: "Unassigned" };
+}
+
 export function CountryDetailsComponent({
   country,
   list,
 }: CountryDetailsComponentProps) {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const status = countryStatus(country);
+  const detailId = `country-${country.id}-detail`;
 
   return (
     <>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={country.id} className="border-0">
-          <div className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                {country.status && <Dot tone={statusTones[country.status] || "muted"} />}
-                <Link
-                  href={`/dashboard/countries/${country.id}`}
-                  className="text-sm font-semibold text-foreground hover:underline"
-                >
-                  {country.name || country.displayName}
-                </Link>
-                <span className="font-mono text-xs uppercase tabular-nums text-muted-foreground">{country.iso2}</span>
-                {country.status && <span className="text-xs capitalize text-muted-foreground">{country.status}</span>}
-              </div>
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                {country.region && <span className="text-foreground">{country.region.name}</span>}
-                <span className="font-mono tabular-nums">
-                  {new Date(country.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                onClick={() => setIsEditDrawerOpen(true)}
-                aria-label="Edit"
-              >
-                <MoreVertical className="stroke-muted-foreground" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                asChild
-              >
-                <AccordionTrigger className="justify-center py-0" />
-              </Button>
-            </div>
+      <Tr>
+        <Td className="max-w-[16rem]">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="w-6 shrink-0 font-mono text-[12px] uppercase text-muted-foreground">{country.iso2}</span>
+            <Link
+              href={`/dashboard/countries/${country.id}`}
+              className="truncate font-medium text-foreground hover:underline"
+            >
+              {country.name || country.displayName}
+            </Link>
           </div>
-          <AccordionContent className="pb-0">
-            <div className="border-t border-border bg-background/60 px-4 py-4">
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
-                <div>
-                  <dt className="text-xs text-muted-foreground">Display name</dt>
-                  <dd className="mt-0.5 text-foreground">{country.displayName}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">ISO2</dt>
-                  <dd className="mt-0.5 font-mono uppercase tabular-nums text-foreground">{country.iso2}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">ISO3</dt>
-                  <dd className="mt-0.5 font-mono uppercase tabular-nums text-foreground">{country.iso3}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Region</dt>
-                  <dd className="mt-0.5 text-foreground">{country.region?.name || '—'}</dd>
-                </div>
-                {country.updatedAt && (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Updated</dt>
-                    <dd className="mt-0.5 font-mono tabular-nums text-foreground">
-                      {new Date(country.updatedAt).toLocaleDateString()}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        </Td>
+        <Td>
+          <StatusWord tone={status.tone}>{status.label}</StatusWord>
+        </Td>
+        <Td priority={2}>{country.region?.name ?? <span className="text-muted-foreground">—</span>}</Td>
+        <Td priority={2} className="font-mono uppercase text-muted-foreground">{country.iso3}</Td>
+        <Td priority={3} className="whitespace-nowrap tabular-nums text-muted-foreground">{formatDate(country.createdAt)}</Td>
+        <ActionsCell>
+          <button
+            type="button"
+            className={rowIconClass}
+            onClick={() => setIsEditDrawerOpen(true)}
+            aria-label="Edit"
+          >
+            <MoreVertical />
+          </button>
+          <ExpandToggle open={open} onToggle={() => setOpen(!open)} controls={detailId} label="country details" />
+        </ActionsCell>
+      </Tr>
+
+      {open && (
+        <ExpandRow id={detailId} colSpan={COUNTRY_COLUMNS}>
+          <Facts
+            facts={[
+              { label: "Display name", value: country.displayName },
+              { label: "ISO2", value: country.iso2?.toUpperCase(), mono: true },
+              { label: "ISO3", value: country.iso3?.toUpperCase(), mono: true },
+              { label: "Region", value: country.region?.name || '—' },
+              { label: "Updated", value: formatDate(country.updatedAt) ?? '—' },
+            ]}
+          />
+        </ExpandRow>
+      )}
 
       <EditItemDrawerClientWrapper
         listKey="countries"

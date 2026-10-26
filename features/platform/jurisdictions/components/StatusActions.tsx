@@ -32,7 +32,7 @@ function useAction() {
   return { error, pending, run };
 }
 
-const buttonClass = 'h-9 rounded-full px-4 text-[13px]';
+const buttonClass = 'h-9 rounded-[4px] px-4 text-[13px]';
 
 export function JurisdictionStatusActions({ id, status }: { id: string; status: string }) {
   const { error, pending, run } = useAction();
@@ -136,7 +136,7 @@ function ApproveSheet({ ruleSet, open, onOpenChange, initialStatus }: {
             <p className="text-xs text-muted-foreground">Reviewer: you. Approved at: now.</p>
           </section>
           <ErrorLine message={error} />
-          <Button type="submit" disabled={pending || !digest} className="h-10 w-full rounded-full">
+          <Button type="submit" disabled={pending || !digest} className="h-10 w-full rounded-[4px]">
             {pending ? 'Saving…' : status === 'active' ? 'Approve and activate' : 'Approve'}
           </Button>
           {!digest && <p className="text-xs text-muted-foreground">Signed policy document required</p>}
@@ -150,7 +150,7 @@ export function RuleSetActions({ jurisdictionId, ruleSet }: { jurisdictionId: st
   const { error, pending, run } = useAction();
   const [approve, setApprove] = useState<'approved' | 'active' | null>(null);
   const { status } = ruleSet;
-  const ghost = 'h-8 rounded-full px-3 text-[13px]';
+  const ghost = 'h-8 rounded-[4px] px-3 text-[13px]';
 
   return (
     <div className="space-y-1.5">

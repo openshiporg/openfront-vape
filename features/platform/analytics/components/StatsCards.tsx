@@ -43,10 +43,10 @@ export function StatsCards({ data, loading = false }: StatsCardsProps) {
       {data.map((item, index) => (
         <div key={item.name} className={tileClass(index)}>
           <p className="truncate text-xs text-muted-foreground">{item.name}</p>
-          <p className="mt-1 truncate font-mono text-xl font-medium tabular-nums text-foreground md:text-2xl">
+          <p className="mt-1 truncate text-xl font-semibold tabular-nums text-foreground md:text-2xl">
             {item.value}
           </p>
-          <p className="mt-1 flex flex-wrap items-baseline gap-x-2 font-mono text-xs tabular-nums">
+          <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-xs tabular-nums">
             <span
               className={cn(
                 item.changeType === "positive"

@@ -414,7 +414,7 @@ export function ProductCreatePageClient({ listKey, list }: ProductCreatePageClie
     })
   }, [variantMode, defaultVariantRegions])
 
-  const panel = 'rounded-xl bg-muted/40 p-4 ring-1 ring-inset ring-border/60 md:p-5'
+  const panel = 'rounded-md bg-muted/40 p-4 border md:p-5'
   const fieldLabel = 'text-xs font-medium text-muted-foreground'
 
   return (
@@ -426,7 +426,7 @@ export function ProductCreatePageClient({ listKey, list }: ProductCreatePageClie
             actions={
               <Button
                 size="sm"
-                className="rounded-full"
+                className="rounded-[4px]"
                 onClick={prepareCreateDialog}
                 disabled={isCreating}
               >
@@ -606,7 +606,7 @@ export function ProductCreatePageClient({ listKey, list }: ProductCreatePageClie
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-xl bg-background p-4 ring-1 ring-border md:p-5">
+                  <div className="rounded-md bg-background p-4 ring-1 ring-border md:p-5">
                     <VariantsTab product={{}} />
                   </div>
                 )}

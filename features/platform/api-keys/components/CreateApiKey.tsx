@@ -140,7 +140,7 @@ function ScopesMultiSelect({
     <div className="relative" ref={commandRef}>
       <div
         className={cn(
-          "ring-offset-background focus-within:ring-ring flex min-h-11 w-full items-center justify-between rounded-xl bg-muted px-4 py-2 shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] focus-within:ring-2 focus-within:ring-offset-2 text-left",
+          "ring-offset-background focus-within:ring-ring flex min-h-10 w-full items-center justify-between rounded-[4px] border border-input bg-background px-3 py-1.5 focus-within:ring-2 focus-within:ring-offset-2 text-left",
           isDisabled && "cursor-not-allowed opacity-50"
         )}
         onClick={() => {
@@ -154,7 +154,7 @@ function ScopesMultiSelect({
           {value.map((option) => (
             <div
               key={option.value}
-              className="animate-fadeIn bg-background text-foreground relative inline-flex h-7 cursor-default items-center rounded-full ps-2.5 pe-7 font-mono text-xs font-medium shadow-[0_1px_2px_rgb(0_0_0/0.12)] dark:bg-zinc-800 transition-all disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 max-w-full"
+              className="animate-fadeIn bg-background text-foreground relative inline-flex h-7 cursor-default items-center rounded-[2px] border border-border ps-2 pe-7 font-mono text-xs font-medium transition-all disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 max-w-full"
             >
               <span className="overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px]">{option.label}</span>
               {!isDisabled && (
@@ -164,7 +164,7 @@ function ScopesMultiSelect({
                     e.stopPropagation();
                     handleRemove(option);
                   }}
-                  className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute -inset-y-px -end-px flex size-7 items-center justify-center rounded-e-full border border-transparent p-0 outline-hidden transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
+                  className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute -inset-y-px -end-px flex size-7 items-center justify-center rounded-e-[2px] border border-transparent p-0 outline-hidden transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
                 >
                   <XIcon className="h-3 w-3" />
                 </button>
@@ -438,10 +438,10 @@ export function CreateApiKey() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="ghost" className="h-10 rounded-full bg-muted px-4" onClick={handleClose}>
+                <Button type="button" variant="ghost" className="h-10 rounded-[4px] px-4" onClick={handleClose}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading} className="h-10 rounded-full px-4">
+                <Button type="submit" disabled={loading} className="h-10 rounded-[4px] px-4">
                   {loading ? "Creating..." : "Create API Key"}
                 </Button>
               </DialogFooter>
@@ -457,7 +457,7 @@ export function CreateApiKey() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <div className="flex items-center gap-2 rounded-full bg-muted py-1 pl-4 pr-1 shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)]">
+                <div className="flex items-center gap-2 rounded-[4px] border border-input bg-muted/40 py-1 pl-3 pr-1">
                   <span className="text-xs font-medium text-muted-foreground">Key</span>
                   <span className="min-w-0 flex-1 truncate font-mono text-sm tabular-nums text-foreground">
                     {createdToken}
@@ -465,7 +465,7 @@ export function CreateApiKey() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-10 shrink-0 rounded-full bg-background shadow-[0_1px_2px_rgb(0_0_0/0.12)] sm:size-8 dark:bg-zinc-800"
+                    className="size-10 shrink-0 rounded-[4px] border border-input bg-background sm:size-8"
                     onClick={copyToClipboard}
                   >
                     <Copy className="size-4" />
@@ -475,7 +475,7 @@ export function CreateApiKey() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleClose} className="h-10 rounded-full px-4">
+              <Button onClick={handleClose} className="h-10 rounded-[4px] px-4">
                 Done
               </Button>
             </DialogFooter>

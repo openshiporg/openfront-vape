@@ -91,7 +91,7 @@ export function DonutChart({
             {/* Center Total */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <div className="font-mono text-2xl font-semibold tabular-nums">
+                <div className="text-2xl font-semibold tabular-nums">
                   {formatCurrency(calculatedTotal * 100)}
                 </div>
               </div>
@@ -112,10 +112,10 @@ export function DonutChart({
                   </span>
                 </div>
                 <div className="flex flex-col items-end flex-shrink-0">
-                  <span className="font-mono text-sm font-medium tabular-nums text-foreground whitespace-nowrap">
+                  <span className="text-sm font-medium tabular-nums text-foreground whitespace-nowrap">
                     {formatCurrency(item.value * 100)}
                   </span>
-                  <span className="font-mono text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                  <span className="text-xs tabular-nums text-muted-foreground whitespace-nowrap">
                     ({item.percentage.toFixed(1)}%)
                   </span>
                 </div>

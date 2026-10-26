@@ -13,9 +13,9 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { PageTitle, SectionTitle } from '../../components/vape-ui'
 import { StatusTabs } from '../components/StatusTabs'
-import { InvoiceDetailsComponent } from '../components/InvoiceDetailsComponent'
+import { AccountQueue, AccountTable, accountNeed } from '../components/AccountTable'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { CreateItemDrawerClientWrapper } from '@/features/platform/components/CreateItemDrawerClientWrapper'
@@ -173,7 +173,26 @@ export function InvoiceListPageClient({
     { type: 'page' as const, label: 'Business Accounts' }
   ]
 
-  const header = <PageTitle title="Business Accounts" />
+  const items: any[] = data?.items ?? []
+  const queue = items
+    .map((account) => ({ account, need: accountNeed(account) }))
+    .filter((row) => row.need)
+    .sort((a, b) =>
+      a.need!.rank - b.need!.rank ||
+      new Date(a.account.dueDate || a.account.createdAt).getTime() - new Date(b.account.dueDate || b.account.createdAt).getTime()
+    )
+    .map((row) => row.account)
+
+  const header = (
+    <PageTitle
+      title="Business Accounts"
+      meta={statusCounts ? (
+        <span className="tabular-nums">
+          {statusCounts.overdue} overdue · {statusCounts.not_approved} awaiting approval · {statusCounts.all} total
+        </span>
+      ) : undefined}
+    />
+  )
 
   // Check if we have any active filters (search or actual filters)
   const hasFilters = !!searchString
@@ -182,6 +201,20 @@ export function InvoiceListPageClient({
 
   return (
     <PageContainer title="Business Accounts" header={header} breadcrumbs={breadcrumbs}>
+      {!error && queue.length > 0 && (
+        <section className="px-4 pt-2 md:px-6" aria-labelledby="accounts-queue-title">
+          <SectionTitle meta={queue.length}>
+            <span id="accounts-queue-title">Needs you</span>
+          </SectionTitle>
+          <AccountQueue accounts={queue} />
+        </section>
+      )}
+
+      {/* Status Tabs */}
+      {statusCounts && (
+        <StatusTabs statusCounts={statusCounts} />
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -199,11 +232,6 @@ export function InvoiceListPageClient({
         />
       </div>
 
-      {/* Status Tabs */}
-      {statusCounts && (
-        <StatusTabs statusCounts={statusCounts} />
-      )}
-
       {/* Active Filters */}
       <div className="px-4 md:px-6">
         <FilterList list={list} />
@@ -212,7 +240,7 @@ export function InvoiceListPageClient({
       {/* Business Accounts list */}
       {error ? (
         <div className="px-4 md:px-6">
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="rounded-md">
             <AlertDescription>
               Failed to load items: {error}
             </AlertDescription>
@@ -230,11 +258,7 @@ export function InvoiceListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((invoice: any) => (
-                <InvoiceDetailsComponent key={invoice.id} invoice={invoice} list={list} />
-              ))}
-            </ListBand>
+            <AccountTable accounts={items} />
           </div>
           
           {/* Pagination */}

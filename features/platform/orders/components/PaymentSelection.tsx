@@ -98,9 +98,9 @@ export function PaymentSelection({
   }), []);
 
   return (
-    <Card className="bg-muted/10">
+    <Card className="rounded-md shadow-none bg-muted/10">
       <CardHeader className="flex flex-row items-center justify-between px-4 py-3 border-b">
-        <CardTitle className="font-medium uppercase text-xs tracking-wider text-muted-foreground">
+        <CardTitle className="text-[12px] font-medium text-muted-foreground">
           Payment Method
         </CardTitle>
       </CardHeader>
@@ -133,14 +133,14 @@ export function PaymentSelection({
                   >
                     <div className="flex items-center gap-x-3">
                       <div className={cn(
-                        "w-4 h-4 border-2 rounded-full flex items-center justify-center transition-colors",
+                        "w-4 h-4 border-2 rounded-[4px] flex items-center justify-center transition-colors",
                         {
                           "border-primary": selectedProviderId === provider.code,
                           "border-border": selectedProviderId !== provider.code,
                         }
                       )}>
                         {selectedProviderId === provider.code && (
-                          <div className="w-2 h-2 bg-primary rounded-full" />
+                          <div className="w-2 h-2 bg-primary rounded-[1px]" />
                         )}
                       </div>
                       <span className="text-sm font-normal">
@@ -231,7 +231,7 @@ export function PaymentSelection({
             )}
 
             {sendEmailLink && (
-              <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-md border border-blue-200">
+              <div className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-md border">
                 <Mail className="h-4 w-4 inline mr-2" />
                 A payment link will be sent to the customer's email. They can complete the order at their convenience.
               </div>

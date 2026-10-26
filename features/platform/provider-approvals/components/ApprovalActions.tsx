@@ -9,10 +9,10 @@ export function ApprovalActions({ approval }: { approval: ApprovalDetail }) {
   const run = (action: string) => () => transitionProviderApproval(approval.id, action)
   const actions: TransitionAction[] = []
   if (approval.status === 'unconfigured') {
-    actions.push({ key: 'review', label: 'Submit for review', done: 'Submitted for review', run: run('review') })
+    actions.push({ key: 'review', label: 'Submit for review', done: 'Submitted for review', primary: true, run: run('review') })
   }
   if (['unconfigured', 'review'].includes(approval.status)) {
-    actions.push({ key: 'activate', label: 'Activate', done: 'Approval active', run: run('activate') })
+    actions.push({ key: 'activate', label: 'Activate', done: 'Approval active', primary: approval.status === 'review', run: run('activate') })
   }
   if (approval.status === 'active') {
     actions.push({ key: 'suspend', label: 'Suspend', done: 'Approval suspended', danger: true, run: run('suspend') })

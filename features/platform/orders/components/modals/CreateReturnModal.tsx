@@ -171,7 +171,7 @@ export const CreateReturnModal = ({ isOpen, onClose, order }: CreateReturnModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:rounded-md sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Return</DialogTitle>
           <DialogDescription>
@@ -194,7 +194,7 @@ export const CreateReturnModal = ({ isOpen, onClose, order }: CreateReturnModalP
                 const maxQuantity = lineItem.quantity || 0;
                 
                 return (
-                  <div key={lineItem.id} className="border rounded-lg p-4 space-y-3">
+                  <div key={lineItem.id} className="border rounded-md p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 space-y-1">
                         <div className="font-medium">{lineItem.title}</div>
@@ -204,7 +204,7 @@ export const CreateReturnModal = ({ isOpen, onClose, order }: CreateReturnModalP
                           </div>
                         )}
                         {lineItem.sku && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="rounded-[4px] text-xs">
                             {lineItem.sku}
                           </Badge>
                         )}

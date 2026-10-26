@@ -47,7 +47,7 @@ export function AddOptionPopover({ onAdd }: { onAdd: (option: ProductOptionDraft
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="rounded-lg text-sm h-8"
+              className="rounded-md text-sm h-8"
               placeholder="e.g. Size, Color, Material..."
             />
           </div>

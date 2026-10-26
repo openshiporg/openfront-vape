@@ -11,8 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
-import { CurrencyDetailsComponent } from '../components/CurrencyDetailsComponent'
+import { DataTable, PageTitle } from '../../components/vape-ui'
+import { CurrencyDetailsComponent, CurrencyTableHead } from '../components/CurrencyDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { useDashboard } from '../../../dashboard/context/DashboardProvider'
@@ -194,11 +194,14 @@ export function CurrencyListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((currency: any) => (
-                <CurrencyDetailsComponent key={currency.id} currency={currency} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Currencies">
+              <thead><CurrencyTableHead /></thead>
+              <tbody>
+                {data?.items?.map((currency: any) => (
+                  <CurrencyDetailsComponent key={currency.id} currency={currency} list={list} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

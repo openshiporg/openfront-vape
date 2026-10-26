@@ -48,7 +48,7 @@ export function BulkAdjustSheet() {
           setError('');
           setOpen(true);
         }}
-        className="inline-flex h-10 shrink-0 items-center rounded-full bg-background px-4 text-sm font-medium text-foreground shadow-xs ring-1 ring-border hover:bg-background/80"
+        className="inline-flex min-h-8 shrink-0 items-center rounded-[4px] border border-input bg-background px-3 text-[13px] font-medium text-foreground hover:bg-muted max-sm:min-h-10"
       >
         Bulk adjust
       </button>
@@ -123,7 +123,7 @@ export function BulkAdjustSheet() {
             <Button
               type="submit"
               disabled={pending || parsed.rows.length === 0 || parsed.problems.length > 0 || outcomes !== null}
-              className="h-10 w-full rounded-full"
+              className="h-10 w-full rounded-[4px]"
             >
               {pending ? 'Applying' : `Apply ${parsed.rows.length} ${parsed.rows.length === 1 ? 'row' : 'rows'}`}
             </Button>

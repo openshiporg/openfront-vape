@@ -101,13 +101,13 @@ export const ApiKeyDetailsComponent = ({
               {apiKey.scopes.slice(0, 3).map((scope) => (
                 <span
                   key={scope}
-                  className="rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground"
+                  className="rounded-[2px] border border-border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
                 >
                   {scope}
                 </span>
               ))}
               {apiKey.scopes.length > 3 && (
-                <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+                <span className="rounded-[2px] border border-border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
                   +{apiKey.scopes.length - 3}
                 </span>
               )}
@@ -118,7 +118,7 @@ export const ApiKeyDetailsComponent = ({
           <Button
               variant="ghost"
               size="icon"
-              className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
+              className="size-10 rounded-[4px] sm:size-8 [&_svg]:size-4"
               aria-label="Edit"
               onClick={() => setIsEditDrawerOpen(true)}
             >

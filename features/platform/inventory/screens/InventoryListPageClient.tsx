@@ -54,7 +54,7 @@ function EmptyStateSearch({ onResetFilters }: { onResetFilters: () => void }) {
         <button
           type="button"
           onClick={onResetFilters}
-          className="inline-flex min-h-9 items-center rounded-full bg-background px-4 text-sm font-medium text-foreground shadow-xs ring-1 ring-border max-sm:min-h-10"
+          className="inline-flex min-h-9 items-center rounded-[4px] bg-background px-4 text-sm font-medium text-foreground border border-input max-sm:min-h-10"
         >
           Reset filters
         </button>
@@ -213,7 +213,7 @@ export function InventoryListPageClient({
             <Button 
               onClick={() => setIsCreateDrawerOpen(true)}
               size="icon"
-              className="rounded-full lg:px-4 lg:py-2 lg:w-auto"
+              className="rounded-[4px] lg:px-4 lg:py-2 lg:w-auto"
             >
               <CirclePlus />
               <span className="hidden lg:inline">Create {list.singular}</span>

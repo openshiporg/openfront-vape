@@ -5,8 +5,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dot, ListBand, SectionTitle } from "@/features/platform/components/vape-ui";
-import { StatusBadge } from "../components/StatusBadge";
+import {
+  DataTable,
+  Dot,
+  ListBand,
+  SectionTitle,
+  StatusWord,
+  Td,
+  Th,
+  Tr,
+  buttonClass,
+} from "@/features/platform/components/vape-ui";
+import { cn } from "@/lib/utils";
+import {
+  fulfilmentState,
+  isUnfulfilled,
+  orderStatusLabel,
+  orderStatusTone,
+  paymentState,
+  type StateWord,
+} from "../lib/order-state";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
 
 
@@ -31,7 +49,7 @@ interface ExtendedOrder {
     phone?: string;
     orders?: { id: string }[];
   };
-  fulfillmentStatus?: string;
+  fulfillmentStatus?: unknown;
   billingAddress?: ExtendedOrder["shippingAddress"];
   fulfillments?: Array<{
     id: string;
@@ -125,7 +143,25 @@ export function OrderPageClient({
   }
 
   const { lineItems = [] } = order;
-  const paymentCaptured = order.paymentDetails?.[0]?.status === "captured";
+  const pay = paymentState(order.paymentDetails);
+  const ful = fulfilmentState(order.fulfillmentStatus);
+  const paymentCaptured = pay.key === "captured";
+  const closed = order.status === "canceled" || order.status === "archived";
+  const needsFulfilment = !closed && isUnfulfilled(order.fulfillmentStatus);
+  // One headline state in words, in the order an operator acts on it.
+  const headline: StateWord = closed
+    ? { label: orderStatusLabel(order.status), tone: orderStatusTone(order.status) }
+    : order.status === "requires_action"
+      ? { label: "Held, needs action", tone: "warn" }
+      : needsFulfilment && (pay.key === "captured" || pay.key === "authorized")
+        ? { label: ful.key === "partial" ? "Partly shipped, rest ready" : "Paid, ready to ship", tone: "ok" }
+        : needsFulfilment
+          ? { label: "Awaiting payment", tone: "warn" }
+          : ful.key === "shipped" || ful.key === "fulfilled"
+            ? { label: ful.label, tone: "ok" }
+            : { label: orderStatusLabel(order.status), tone: orderStatusTone(order.status) };
+  const humanize = (value: string) =>
+    value.replace(/[_-]+/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
   const formatDate = (value?: string) =>
     value
       ? new Date(value).toLocaleString("en-US", {
@@ -141,8 +177,7 @@ export function OrderPageClient({
   const ship = order.shippingAddress;
   const bill = order.billingAddress;
   const fulfillments = order.fulfillments || [];
-  const editButton =
-    "inline-flex min-h-7 items-center rounded-full bg-muted px-3 text-xs font-medium text-foreground hover:bg-muted/70 max-sm:min-h-10";
+  const editButton = cn(buttonClass.base, buttonClass.ghost, "min-h-7 px-2 text-[12px]");
 
   const renderAddress = (address: NonNullable<ExtendedOrder["shippingAddress"]>) => (
     <div className="space-y-0.5 px-4 py-3 text-sm">
@@ -157,7 +192,7 @@ export function OrderPageClient({
         {address.postalCode && <span className="font-mono tabular-nums">{address.postalCode}</span>}
       </div>
       {address.country?.name && <div className="text-muted-foreground">{address.country.name}</div>}
-      {address.phone && <div className="font-mono text-xs tabular-nums text-muted-foreground">{address.phone}</div>}
+      {address.phone && <div className="text-xs tabular-nums text-muted-foreground">{address.phone}</div>}
     </div>
   );
 
@@ -173,79 +208,111 @@ export function OrderPageClient({
             Orders
           </Link>
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="flex flex-col gap-1">
+            <div className="flex min-w-0 flex-col gap-1">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <h1 className="font-mono text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-                  #{order.displayId}
+                <h1 className="text-2xl font-semibold tracking-[-0.015em] text-foreground">
+                  Order <span className="font-mono tabular-nums">#{order.displayId}</span>
                 </h1>
-                <StatusBadge status={order.status as any} className="text-sm" />
-                {order.fulfillmentStatus && (
-                  <span className="text-sm text-muted-foreground">
-                    {order.fulfillmentStatus.replaceAll("_", " ")}
-                  </span>
-                )}
+                <StatusWord tone={headline.tone} className="text-[14px]">{headline.label}</StatusWord>
               </div>
-              <div className="font-mono text-sm tabular-nums text-muted-foreground">
-                {formatDate(order.createdAt)}
+              <div className="text-[13px] tabular-nums text-muted-foreground">
+                Placed {formatDate(order.createdAt)} · {itemCount} {itemCount === 1 ? "item" : "items"} · {order.total}
               </div>
             </div>
-            <Link
-              href={`/dashboard/platform/orders/${order.id}/fulfill`}
-              className="inline-flex min-h-10 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background hover:bg-foreground/90"
-            >
-              Fulfill items
-            </Link>
+            {!closed && (
+              <Link
+                href={`/dashboard/platform/orders/${order.id}/fulfill`}
+                className={cn(
+                  buttonClass.base,
+                  needsFulfilment ? buttonClass.primary : buttonClass.outline,
+                  "min-h-9"
+                )}
+              >
+                {needsFulfilment ? "Fulfill items" : "View fulfilment"}
+              </Link>
+            )}
           </div>
         </div>
+
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-md border bg-card px-4 py-3 text-[13px] md:grid-cols-4">
+          {[
+            ["Order", <StatusWord key="o" tone={orderStatusTone(order.status)}>{orderStatusLabel(order.status)}</StatusWord>],
+            ["Payment", <StatusWord key="p" tone={pay.tone}>{pay.label}</StatusWord>],
+            ["Fulfilment", <StatusWord key="f" tone={ful.tone}>{ful.label}</StatusWord>],
+            ["Paid", <span key="t" className="tabular-nums text-foreground">{order.formattedTotalPaid ?? "None"}</span>],
+            ["Customer", <span key="c" className="block truncate text-foreground">{order.user?.name || order.email || "Guest"}</span>],
+            ["Ship to", <span key="s" className="block truncate text-foreground">{ship ? [ship.city, ship.province].filter(Boolean).join(", ") || "Address on file" : "No address"}</span>],
+            ["Shipments", <span key="n" className="tabular-nums text-foreground">{fulfillments.filter((f) => !f.canceledAt).length}</span>],
+            ["Total", <span key="g" className="font-medium tabular-nums text-foreground">{order.total}</span>],
+          ].map(([term, value]) => (
+            <div key={term as string} className="min-w-0">
+              <dt className="text-[12px] font-medium text-muted-foreground">{term}</dt>
+              <dd className="mt-0.5 min-w-0">{value}</dd>
+            </div>
+          ))}
+        </dl>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <div className="min-w-0 space-y-8 lg:col-span-8">
             <section>
               <SectionTitle meta={`${itemCount} ${itemCount === 1 ? "item" : "items"}`}>Line items</SectionTitle>
-              <ListBand>
-                {lineItems.length === 0 && (
+              {lineItems.length === 0 ? (
+                <ListBand>
                   <div className="px-4 py-3 text-sm text-muted-foreground">No line items</div>
-                )}
-                {lineItems.map((item) => {
-                  const spec = item.variantTitle || item.variantData?.title;
-                  return (
-                    <div key={item.id} className="flex items-start gap-3 px-4 py-3">
-                      <div className="size-12 shrink-0 overflow-hidden rounded-md bg-muted">
-                        {item.thumbnail && (
-                          <Image
-                            src={item.thumbnail}
-                            alt={item.title}
-                            width={48}
-                            height={48}
-                            className="size-12 object-cover"
-                          />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-foreground">{item.title}</div>
-                        {spec && <div className="font-mono text-xs tabular-nums text-foreground/80">{spec}</div>}
-                        {item.sku && (
-                          <div className="font-mono text-[11px] tabular-nums text-muted-foreground">SKU {item.sku}</div>
-                        )}
-                      </div>
-                      <div className="shrink-0 text-right font-mono tabular-nums">
-                        <div className="text-sm font-medium text-foreground">{item.formattedTotal}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {item.quantity} x {item.formattedUnitPrice}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </ListBand>
+                </ListBand>
+              ) : (
+                <DataTable aria-label="Line items">
+                  <thead>
+                    <tr>
+                      <Th>Item</Th>
+                      <Th priority={2}>SKU</Th>
+                      <Th align="right" priority={2}>Unit</Th>
+                      <Th align="right">Qty</Th>
+                      <Th align="right">Total</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lineItems.map((item) => {
+                      const spec = item.variantTitle || item.variantData?.title;
+                      return (
+                        <Tr key={item.id}>
+                          <Td>
+                            <div className="flex items-center gap-3">
+                              <div className="size-9 shrink-0 overflow-hidden rounded-[4px] bg-muted">
+                                {item.thumbnail && (
+                                  <Image
+                                    src={item.thumbnail}
+                                    alt={item.title}
+                                    width={36}
+                                    height={36}
+                                    className="size-9 object-cover"
+                                  />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-medium text-foreground">{item.title}</div>
+                                {spec && <div className="text-[12px] text-muted-foreground">{spec}</div>}
+                              </div>
+                            </div>
+                          </Td>
+                          <Td priority={2} className="font-mono text-[12px] text-muted-foreground">{item.sku || "None"}</Td>
+                          <Td align="right" priority={2} className="text-muted-foreground">{item.formattedUnitPrice}</Td>
+                          <Td align="right">{item.quantity}</Td>
+                          <Td align="right" className="font-medium text-foreground">{item.formattedTotal}</Td>
+                        </Tr>
+                      );
+                    })}
+                  </tbody>
+                </DataTable>
+              )}
             </section>
 
             <section>
               <SectionTitle
                 meta={
                   <span className="inline-flex items-baseline gap-1.5 font-sans">
-                    <Dot tone={paymentCaptured ? "ok" : "warn"} />
-                    {paymentCaptured ? "Payment complete" : "Payment processing"}
+                    <Dot tone={pay.tone} />
+                    {paymentCaptured ? "Payment complete" : pay.label}
                   </span>
                 }
               >
@@ -259,16 +326,16 @@ export function OrderPageClient({
                 ].map(([name, value]) => (
                   <div key={name} className="flex justify-between gap-4 px-4 py-2.5 text-sm">
                     <span className="text-muted-foreground">{name}</span>
-                    <span className="font-mono tabular-nums text-foreground">{value}</span>
+                    <span className="tabular-nums text-foreground">{value}</span>
                   </div>
                 ))}
                 <div className="flex justify-between gap-4 px-4 py-3 text-sm font-semibold">
                   <span className="text-foreground">Total</span>
-                  <span className="font-mono tabular-nums text-foreground">{order.total}</span>
+                  <span className="tabular-nums text-foreground">{order.total}</span>
                 </div>
                 <div className="flex justify-between gap-4 px-4 py-2.5 text-sm">
                   <span className="text-muted-foreground">Paid</span>
-                  <span className="font-mono tabular-nums text-foreground">{order.formattedTotalPaid}</span>
+                  <span className="tabular-nums text-foreground">{order.formattedTotalPaid}</span>
                 </div>
               </ListBand>
             </section>
@@ -281,13 +348,13 @@ export function OrderPageClient({
                     <div key={fulfillment.id} className="px-4 py-3">
                       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                         <span className="text-sm font-medium text-foreground">
-                          Shipment <span className="font-mono tabular-nums">#{index + 1}</span>
+                          Shipment <span className="tabular-nums">#{index + 1}</span>
                         </span>
                         <span className="inline-flex items-baseline gap-1.5 text-xs text-muted-foreground">
                           <Dot tone={fulfillment.canceledAt ? "danger" : "ok"} />
                           {fulfillment.canceledAt ? "Canceled" : "Fulfilled"}
                         </span>
-                        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                        <span className="text-xs tabular-nums text-muted-foreground">
                           {formatDate(fulfillment.createdAt)}
                         </span>
                       </div>
@@ -297,9 +364,9 @@ export function OrderPageClient({
                             <li key={fi.id} className="flex flex-wrap items-baseline gap-x-2">
                               <span className="text-foreground">{fi.lineItem?.title}</span>
                               {fi.lineItem?.variantTitle && (
-                                <span className="font-mono tabular-nums text-muted-foreground">{fi.lineItem.variantTitle}</span>
+                                <span className="tabular-nums text-muted-foreground">{fi.lineItem.variantTitle}</span>
                               )}
-                              <span className="font-mono tabular-nums text-muted-foreground">x{fi.quantity}</span>
+                              <span className="tabular-nums text-muted-foreground">x{fi.quantity}</span>
                             </li>
                           ))}
                         </ul>
@@ -368,9 +435,9 @@ export function OrderPageClient({
                   <div key={event.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 px-4 py-2.5 text-sm">
                     <span className="flex items-baseline gap-2.5 text-foreground">
                       <Dot tone="muted" />
-                      {event.type}
+                      {humanize(event.type)}
                     </span>
-                    <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                    <span className="text-xs tabular-nums text-muted-foreground">
                       {formatDate(event.createdAt)}
                       {event.user?.name && <span className="font-sans"> by {event.user.name}</span>}
                     </span>
@@ -396,14 +463,14 @@ export function OrderPageClient({
                   ) : (
                     <div className="text-sm font-medium text-foreground">Guest</div>
                   )}
-                  <div className="mt-0.5 font-mono text-xs tabular-nums text-muted-foreground">
+                  <div className="mt-0.5 text-xs tabular-nums text-muted-foreground">
                     {order.user?.orders?.length || 1} order{order.user?.orders?.length !== 1 ? "s" : ""}
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="min-w-0">
                     <div className="truncate text-sm text-foreground">{order.email}</div>
-                    <div className="font-mono text-xs tabular-nums text-muted-foreground">
+                    <div className="text-xs tabular-nums text-muted-foreground">
                       {order.user?.phone || "No phone number"}
                     </div>
                   </div>
@@ -428,7 +495,7 @@ export function OrderPageClient({
                 meta={order.shippingAddress?.id ? (
                   <button
                     type="button"
-                    className={`${editButton} font-sans`}
+                    className={editButton}
                     onClick={() => setEditDrawerConfig({
                       open: true,
                       listKey: "addresses",

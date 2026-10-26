@@ -1,6 +1,6 @@
-import type { DotTone } from '@/features/platform/components/vape-primitives'
+import { Stamp, type DotTone } from '@/features/platform/components/vape-primitives'
 
-const DAY = 24 * 60 * 60 * 1000
+export const DAY = 24 * 60 * 60 * 1000
 
 export const APPROVAL_TONES: Record<string, DotTone> = {
   unconfigured: 'muted',
@@ -23,8 +23,20 @@ export function boundProvider(item: { purpose: string; paymentProvider: { name: 
 }
 
 export function Expiry({ value, now }: { value: string | null; now: number }) {
-  if (!value) return <span className="shrink-0 font-mono text-xs text-muted-foreground">No expiry</span>
+  if (!value) return <span className="shrink-0 whitespace-nowrap font-mono text-[12px] text-muted-foreground">No expiry</span>
   const time = new Date(value).getTime()
-  const tone = time < now ? 'text-red-600 dark:text-red-400' : time <= now + 30 * DAY ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'
-  return <span className={`shrink-0 font-mono text-xs ${tone}`}>{time < now ? 'Expired' : 'Until'} {day(value)}</span>
+  if (time < now) return <Stamp tone="danger" serial={day(value)}>Expired</Stamp>
+  if (time <= now + 30 * DAY) return <Stamp tone="warn" serial={day(value)}>Expiring</Stamp>
+  return <span className="shrink-0 whitespace-nowrap font-mono text-[12px] text-muted-foreground">Until {day(value)}</span>
+}
+
+/** The purposes the compliance center requires an active approval for (regulatedCommerceReadiness). */
+export const REQUIRED_PROVIDER_PURPOSES = ['identity', 'payment', 'tax', 'carrier', 'registry']
+
+/** Same test the readiness query uses: active and inside its effective dates. */
+export function approvalInForce(item: { status: string; effectiveAt: string | null; expiresAt: string | null }, now: number) {
+  if (item.status !== 'active') return false
+  const from = item.effectiveAt ? new Date(item.effectiveAt).getTime() : NaN
+  const to = item.expiresAt ? new Date(item.expiresAt).getTime() : NaN
+  return from <= now && to > now
 }

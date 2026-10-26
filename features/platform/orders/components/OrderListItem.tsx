@@ -88,11 +88,11 @@ export function OrderListItem({ order }: OrderListItemProps) {
             <div className="flex items-center gap-2">
               <Link
                 href={`/dashboard/platform/orders/${order.id}`}
-                className="text-lg font-medium hover:text-blue-600 dark:hover:text-blue-400"
+                className="text-lg font-medium hover:underline underline-offset-4"
               >
                 #{order.displayId}
               </Link>
-              <Badge color={statusInfo.color} className="uppercase text-xs">
+              <Badge color={statusInfo.color} className="rounded-[4px] text-xs">
                 {statusInfo.label}
               </Badge>
             </div>

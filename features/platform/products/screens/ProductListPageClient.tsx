@@ -8,11 +8,12 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ListBand, PageTitle } from '@/features/platform/components/vape-ui'
+import { ListBand, PageTitle, buttonClass } from '@/features/platform/components/vape-ui'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar } from '../../components/PlatformFilterBar'
 import { StatusTabs } from '../components/StatusTabs'
-import { ProductDetailsComponent } from '../components/ProductDetailsComponent'
+import { BlockedQueue, ProductTable } from '../components/ProductTable'
+import type { ComplianceById } from '../components/product-blockers'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { useDashboard } from '../../../dashboard/context/DashboardProvider'
@@ -38,6 +39,7 @@ interface ProductListPageClientProps {
     published: number;
     rejected: number;
   } | null
+  complianceById?: ComplianceById
 }
 
 function EmptyStateDefault() {
@@ -56,7 +58,7 @@ function EmptyStateSearch({ onResetFilters }: { onResetFilters: () => void }) {
         <button
           type="button"
           onClick={onResetFilters}
-          className="inline-flex min-h-9 items-center rounded-full bg-background px-4 text-sm font-medium text-foreground shadow-xs ring-1 ring-border max-sm:min-h-10"
+          className={`${buttonClass.base} ${buttonClass.outline}`}
         >
           Reset filters
         </button>
@@ -71,7 +73,8 @@ export function ProductListPageClient({
   initialData,
   initialError,
   initialSearchParams,
-  statusCounts
+  statusCounts,
+  complianceById = {}
 }: ProductListPageClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams() ?? new URLSearchParams()
@@ -215,8 +218,8 @@ export function ProductListPageClient({
     <PageTitle
       title="Products"
       meta={statusCounts ? (
-        <span className="font-mono tabular-nums">
-          {statusCounts.published} published · {statusCounts.draft} draft
+        <span className="tabular-nums">
+          {statusCounts.published} published · {statusCounts.draft} draft · {statusCounts.proposed} proposed · {statusCounts.rejected} rejected
         </span>
       ) : undefined}
     />
@@ -229,6 +232,13 @@ export function ProductListPageClient({
 
   return (
     <PageContainer title="Products" header={header} breadcrumbs={breadcrumbs}>
+      {/* Needs you: products not on sale, most severe first */}
+      {!error && !isEmpty && (data?.items?.length ?? 0) > 0 && (
+        <div className="px-4 pb-4 md:px-6">
+          <BlockedQueue products={data.items} complianceById={complianceById} />
+        </div>
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar list={list} />
@@ -261,13 +271,11 @@ export function ProductListPageClient({
         </div>
       ) : (
         <>
-          {/* Data table - full width */}
-          <div className="grid grid-cols-1 border-t border-border">
-            {data?.items?.map((product: any) => (
-              <ProductDetailsComponent key={product.id} product={product} list={list} />
-            ))}
+          {/* Full list */}
+          <div className="px-4 md:px-6">
+            <ProductTable products={data?.items || []} complianceById={complianceById} />
           </div>
-          
+
           {/* Pagination */}
           {data && data.count > pageSize && (
             <div className="px-4 md:px-6 py-4">

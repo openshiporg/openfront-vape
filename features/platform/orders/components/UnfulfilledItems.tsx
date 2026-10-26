@@ -4,7 +4,7 @@ import type { UnfulfilledItemProps, UnfulfilledItemsProps } from '../types';
 import { Dot, ListBand, SectionTitle } from '@/features/platform/components/vape-ui';
 
 const stepButton =
-  'inline-flex size-8 items-center justify-center rounded-full bg-background text-foreground shadow-xs ring-1 ring-border disabled:opacity-40 max-sm:size-10';
+  'inline-flex size-8 items-center justify-center rounded-[4px] bg-background text-foreground ring-1 ring-border disabled:opacity-40 max-sm:size-10';
 
 function UnfulfilledItem({
   item,
@@ -32,7 +32,7 @@ function UnfulfilledItem({
             </span>
           </div>
           {item.variantTitle && (
-            <p className="font-mono text-xs tabular-nums text-foreground/80">{item.variantTitle}</p>
+            <p className="text-xs text-foreground/80">{item.variantTitle}</p>
           )}
           {item.sku && (
             <p className="font-mono text-[11px] tabular-nums text-muted-foreground">SKU {item.sku}</p>
@@ -40,7 +40,7 @@ function UnfulfilledItem({
         </div>
       </div>
       <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:gap-2">
-        <div className="text-right font-mono tabular-nums">
+        <div className="text-right tabular-nums">
           <div className="text-sm font-medium text-foreground">{item.formattedTotal}</div>
           <div className="text-xs text-muted-foreground">
             {item.quantity} x {item.formattedUnitPrice}

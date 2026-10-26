@@ -13,10 +13,11 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { PageTitle } from '../../components/vape-ui'
 import { CreateItemDrawerClientWrapper } from '@/features/platform/components/CreateItemDrawerClientWrapper'
 import { StatusTabs } from '../components/StatusTabs'
 import { CollectionDetailsComponent } from '../components/CollectionDetailsComponent'
+import { GroupQueue, GroupTable, type QueueRow } from '../../product-categories/components/CatalogGroupTable'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { useDashboard } from '../../../dashboard/context/DashboardProvider'
@@ -184,6 +185,23 @@ export function CollectionListPageClient({
 
   return (
     <PageContainer title="Collections" header={header} breadcrumbs={breadcrumbs}>
+      {/* Needs you: collections with nothing a customer can buy */}
+      {!error && (
+        <div className="px-4 pb-4 empty:hidden md:px-6">
+          <GroupQueue
+            title="Needs attention"
+            rows={(data?.items || []).flatMap<QueueRow>((collection: any) => {
+              const count = collection.products?.length || 0
+              const published = (collection.products || []).filter((product: any) => product.status === 'published').length
+              const href = `/dashboard/product-collections/${collection.id}`
+              if (count === 0) return [{ id: collection.id, title: collection.title, href, reason: 'No products', tone: 'muted', state: 'Empty' }]
+              if (published === 0) return [{ id: collection.id, title: collection.title, href, reason: `${count} product${count !== 1 ? 's' : ''}, none published`, tone: 'warn', state: 'Nothing published' }]
+              return []
+            })}
+          />
+        </div>
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -228,11 +246,11 @@ export function CollectionListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
+            <GroupTable label="Collections">
               {data?.items?.map((collection: any) => (
                 <CollectionDetailsComponent key={collection.id} collection={collection} list={list} />
               ))}
-            </ListBand>
+            </GroupTable>
           </div>
           
           {/* Pagination */}

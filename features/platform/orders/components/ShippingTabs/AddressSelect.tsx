@@ -195,7 +195,7 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
   return (
     <div className="space-y-2 mt-2">
       {showNewAddress ? (
-        <div className="space-y-4 rounded-lg border p-4 bg-muted/40">
+        <div className="space-y-4 rounded-md border p-4 bg-muted/40">
           <div className="flex items-center justify-between mb-4">
             <Button
               variant="outline"
@@ -216,7 +216,7 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
               <div className="flex-1 min-w-[200px]">
                 <Label className="mb-1.5 block text-xs">First Name</Label>
                 <Input
-                  className="h-9 max-sm:h-10 rounded-lg text-sm bg-background"
+                  className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background"
                   placeholder="John"
                   {...form.register("firstName", { required: true })}
                 />
@@ -224,7 +224,7 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
               <div className="flex-1 min-w-[200px]">
                 <Label className="mb-1.5 block text-xs">Last Name</Label>
                 <Input
-                  className="h-9 max-sm:h-10 rounded-lg text-sm bg-background"
+                  className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background"
                   placeholder="Doe"
                   {...form.register("lastName", { required: true })}
                 />
@@ -234,7 +234,7 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
             <div>
               <Label className="mb-1.5 block text-xs">Company (Optional)</Label>
               <Input
-                className="h-9 max-sm:h-10 rounded-lg text-sm bg-background"
+                className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background"
                 placeholder="Acme Inc."
                 {...form.register("company")}
               />
@@ -243,12 +243,12 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
             <div>
               <Label className="mb-1.5 block text-xs">Street Address</Label>
               <Input
-                className="h-9 max-sm:h-10 rounded-lg text-sm mb-2 bg-background"
+                className="h-9 max-sm:h-10 rounded-[4px] text-sm mb-2 bg-background"
                 placeholder="123 Main Street"
                 {...form.register("address1", { required: true })}
               />
               <Input
-                className="h-9 max-sm:h-10 rounded-lg text-sm bg-background"
+                className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background"
                 placeholder="Suite 100 (Optional)"
                 {...form.register("address2")}
               />
@@ -258,7 +258,7 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
               <div className="flex-1 min-w-[200px]">
                 <Label className="mb-1.5 block text-xs">City</Label>
                 <Input
-                  className="h-9 max-sm:h-10 rounded-lg text-sm bg-background"
+                  className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background"
                   placeholder="San Francisco"
                   {...form.register("city", { required: true })}
                 />
@@ -266,7 +266,7 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
               <div className="w-[100px]">
                 <Label className="mb-1.5 block text-xs">State</Label>
                 <Input
-                  className="h-9 max-sm:h-10 rounded-lg text-sm bg-background"
+                  className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background"
                   placeholder="CA"
                   {...form.register("province", { required: true })}
                 />
@@ -274,7 +274,7 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
               <div className="w-[120px]">
                 <Label className="mb-1.5 block text-xs">ZIP Code</Label>
                 <Input
-                  className="h-9 max-sm:h-10 rounded-lg text-sm bg-background"
+                  className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background"
                   placeholder="94105"
                   {...form.register("postalCode", { required: true })}
                 />
@@ -286,7 +286,7 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
                   onValueChange={(value) => form.setValue("country", value)}
                   value={form.watch("country")}
                 >
-                  <SelectTrigger className="h-9 max-sm:h-10 rounded-lg text-sm">
+                  <SelectTrigger className="h-9 max-sm:h-10 rounded-[4px] text-sm">
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
                   <SelectContent>
@@ -314,7 +314,7 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
             <div>
               <Label className="mb-1.5 block text-xs">Phone Number</Label>
               <Input
-                className="h-9 max-sm:h-10 rounded-lg text-sm bg-background"
+                className="h-9 max-sm:h-10 rounded-[4px] text-sm bg-background"
                 placeholder="(555) 123-4567"
                 {...form.register("phone")}
               />
@@ -352,17 +352,17 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
               addresses.map((address) => (
                 <div
                   key={address.id}
-                  className={`relative flex w-full items-start gap-2 rounded-lg border-2 p-4 shadow-sm transition-colors ${
+                  className={`relative flex w-full items-start gap-2 rounded-md border p-3 transition-colors ${
                     value === address.id
-                      ? 'border-blue-500 bg-blue-50/30 dark:bg-blue-950/20 dark:border-blue-400'
-                      : 'border-zinc-200 bg-zinc-50/20 dark:border-zinc-700 dark:bg-zinc-800/20'
+                      ? 'border-foreground bg-muted/40'
+                      : 'border-border bg-background'
                   }`}
                 >
                   <RadioGroupItem
                     value={address.id}
                     id={`${id}-${address.id}`}
                     aria-describedby={`${id}-${address.id}-description`}
-                    className="order-1 after:absolute after:inset-0 border-zinc-300 text-transparent data-[state=checked]:border-blue-500 data-[state=checked]:text-blue-500 dark:border-zinc-600 dark:data-[state=checked]:border-blue-400 dark:data-[state=checked]:text-blue-400"
+                    className="order-1 after:absolute after:inset-0 border-input text-transparent data-[state=checked]:border-foreground data-[state=checked]:text-foreground"
                   />
                   <div className="grid grow gap-1">
                     <Label
@@ -398,16 +398,16 @@ export function AddressSelect({ value, onChange }: AddressSelectProps) {
             )}
 
             <div
-              className={`relative flex w-full items-start gap-2 rounded-lg border-2 p-4 shadow-sm transition-colors ${
+              className={`relative flex w-full items-start gap-2 rounded-md border p-3 transition-colors ${
                 value === "new"
-                  ? 'border-blue-500 bg-blue-50/30 dark:bg-blue-950/20 dark:border-blue-400'
-                  : 'border-zinc-200 bg-zinc-50/20 dark:border-zinc-700 dark:bg-zinc-800/20'
+                  ? 'border-foreground bg-muted/40'
+                  : 'border-border bg-background'
               }`}
             >
               <RadioGroupItem
                 value="new"
                 id={`${id}-new`}
-                className="order-1 after:absolute after:inset-0 border-zinc-300 text-transparent data-[state=checked]:border-blue-500 data-[state=checked]:text-blue-500 dark:border-zinc-600 dark:data-[state=checked]:border-blue-400 dark:data-[state=checked]:text-blue-400"
+                className="order-1 after:absolute after:inset-0 border-input text-transparent data-[state=checked]:border-foreground data-[state=checked]:text-foreground"
               />
               <div className="grid grow gap-1">
                 <Label

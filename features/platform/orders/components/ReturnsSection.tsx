@@ -110,7 +110,7 @@ export const ReturnsSection = ({ order, returns, totalItems }: ReturnsSectionPro
                     type="button"
                     aria-label="Return actions"
                     disabled={isUpdating === returnItem.id}
-                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50 max-sm:size-10"
+                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-[4px] text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50 max-sm:size-10"
                   >
                     <MoreVertical className="size-3.5" />
                   </button>

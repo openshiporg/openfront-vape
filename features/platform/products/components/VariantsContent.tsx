@@ -112,13 +112,13 @@ export const VariantsContent = ({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
                     <Dot tone={stockTone(variant)} />
-                    <span className="font-mono text-sm tabular-nums text-foreground">{variant.title}</span>
+                    <span className="text-sm tabular-nums text-foreground">{variant.title}</span>
                   </div>
                   {variant.sku && (
                     <div className="pl-[18px] font-mono text-[11px] tabular-nums text-muted-foreground">SKU {variant.sku}</div>
                   )}
                 </div>
-                <div className="shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                <div className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
                   {variant.manageInventory ? (
                     <><span className="text-sm text-foreground">{variant.inventoryQuantity || 0}</span> in stock</>
                   ) : (
@@ -130,14 +130,14 @@ export const VariantsContent = ({
                     <button
                       type="button"
                       aria-label="Variant actions"
-                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground max-sm:size-10"
+                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-[4px] text-muted-foreground hover:bg-muted hover:text-foreground max-sm:size-10"
                     >
                       <MoreVertical className="size-3.5" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleEditItem(variant.id)}>
-                      Edit Variant
+                      Edit variant
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -151,7 +151,7 @@ export const VariantsContent = ({
             {paginatedItems.map((entry: any) => (
               <span
                 key={entry.id}
-                className="inline-flex min-h-7 items-center rounded-full bg-background px-3 text-xs font-medium text-foreground ring-1 ring-border"
+                className="inline-flex min-h-7 items-center rounded-[4px] bg-background px-3 text-xs font-medium text-foreground border"
               >
                 {entry.title}
               </span>
@@ -160,7 +160,7 @@ export const VariantsContent = ({
         )}
 
         {totalItems > itemsPerPage && (
-          <div className="font-mono text-xs tabular-nums text-muted-foreground">
+          <div className="text-xs tabular-nums text-muted-foreground">
             {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems}
           </div>
         )}

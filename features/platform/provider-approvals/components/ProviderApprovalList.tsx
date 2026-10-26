@@ -6,12 +6,13 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Search } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
-import { Count, Dot, ListBand, Pill, StatusFilter, Track } from '@/features/platform/components/vape-ui'
+import { buttonClass, DataTable, ListBand, SectionTitle, Stamp, StatusFilter, Td, Th, Tr, type DotTone } from '@/features/platform/components/vape-ui'
 import { PlatformEmptyState } from '@/features/platform/components/PlatformEmptyState'
 import { AddApprovalButton } from '@/features/platform/compliance-center/components/ProviderApprovalSheet'
 import { PROVIDER_APPROVAL_STATUS_LABELS, PROVIDER_PURPOSE_LABELS, regulatedLabel } from '@/features/keystone/regulated/labels'
 import type { ApprovalRow } from '../actions/provider-approvals'
-import { APPROVAL_TONES, boundProvider, Expiry } from './approval-display'
+import { recordSerial } from '@/features/platform/product-evidence/lib/serial'
+import { APPROVAL_TONES, approvalInForce, boundProvider, DAY, day, Expiry, REQUIRED_PROVIDER_PURPOSES } from './approval-display'
 
 const STATUS_PARAM = '!status_matches'
 
@@ -24,6 +25,30 @@ function currentStatus(searchParams: { get(name: string): string | null } | null
   } catch {
     return 'all'
   }
+}
+
+type Slot = { purpose: string; tone: DotTone; state: string; rank: number; pending: ApprovalRow | null }
+
+/** Required purposes with no approval in force, and in-force ones about to lapse, most severe first. */
+function missingSlots(approvals: ApprovalRow[], now: number): Slot[] {
+  const slots: Slot[] = []
+  for (const purpose of REQUIRED_PROVIDER_PURPOSES) {
+    const mine = approvals.filter(item => item.purpose === purpose)
+    const current = mine.filter(item => approvalInForce(item, now))
+    if (current.length) {
+      const soonest = current.reduce((a, b) => ((a.expiresAt || '') < (b.expiresAt || '') ? a : b))
+      const ends = soonest.expiresAt ? new Date(soonest.expiresAt).getTime() : Infinity
+      if (ends <= now + 30 * DAY) slots.push({ purpose, tone: 'warn', state: `Expires ${day(soonest.expiresAt)}`, rank: 2, pending: soonest })
+      continue
+    }
+    const pending = mine.find(item => item.status === 'review') || mine.find(item => item.status === 'unconfigured')
+      || mine.find(item => item.status === 'active') || null
+    const state = !pending ? 'Missing'
+      : pending.status === 'active' ? 'Outside its dates'
+      : regulatedLabel(PROVIDER_APPROVAL_STATUS_LABELS, pending.status)
+    slots.push({ purpose, tone: pending ? 'warn' : 'danger', state, rank: pending ? 1 : 0, pending })
+  }
+  return slots.sort((a, b) => a.rank - b.rank)
 }
 
 export function ProviderApprovalList({ approvals }: { approvals: ApprovalRow[] }) {
@@ -46,6 +71,7 @@ export function ProviderApprovalList({ approvals }: { approvals: ApprovalRow[] }
     router.push(query ? `${pathname}?${query}` : pathname || "")
   }
 
+  const slots = missingSlots(approvals, now)
   const byPurpose = purpose === 'all' ? approvals : approvals.filter(item => item.purpose === purpose)
   const needle = search.toLowerCase()
   const rows = byPurpose.filter(item =>
@@ -55,76 +81,132 @@ export function ProviderApprovalList({ approvals }: { approvals: ApprovalRow[] }
   const filtered = Boolean(search) || status !== 'all' || purpose !== 'all'
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 px-4 md:px-6 lg:flex-row lg:items-center lg:justify-between">
-        <Track label="Purpose">
-          <Pill active={purpose === 'all'} onClick={() => setParams({ purpose: null })}>
-            All purposes <Count>{approvals.length}</Count>
-          </Pill>
-          {Object.entries(PROVIDER_PURPOSE_LABELS).map(([key, label]) => (
-            <Pill key={key} active={purpose === key} onClick={() => setParams({ purpose: key })}>
-              {label} <Count>{approvals.filter(item => item.purpose === key).length}</Count>
-            </Pill>
-          ))}
-        </Track>
-        <div className="flex items-center gap-2">
-          <label className="relative block w-full lg:w-60">
-            <span className="sr-only">Search</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search" className="h-10 rounded-full pl-9" />
-          </label>
-          <AddApprovalButton
-            purpose={purpose === 'all' ? 'identity' : purpose}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <Plus className="size-4" />
-            Add approval
-          </AddApprovalButton>
+    <div className="space-y-8 px-4 md:px-6">
+      <section>
+        <SectionTitle meta={`${REQUIRED_PROVIDER_PURPOSES.length - slots.filter(slot => slot.rank < 2).length} of ${REQUIRED_PROVIDER_PURPOSES.length} in force`}>
+          Required providers
+        </SectionTitle>
+        {slots.length === 0 ? (
+          <ListBand><div className="px-4 py-3 text-sm text-muted-foreground">Every required provider has an approval in force</div></ListBand>
+        ) : (
+          <DataTable>
+            <thead>
+              <tr>
+                <Th>Purpose</Th>
+                <Th>State</Th>
+                <Th priority={2}>Record</Th>
+                <Th align="right"><span className="sr-only">Fix</span></Th>
+              </tr>
+            </thead>
+            <tbody>
+              {slots.map(slot => (
+                <Tr key={slot.purpose}>
+                  <Td className="font-medium text-foreground">{regulatedLabel(PROVIDER_PURPOSE_LABELS, slot.purpose)}</Td>
+                  <Td><Stamp tone={slot.tone}>{slot.state}</Stamp></Td>
+                  <Td priority={2} className="font-mono text-[12px] text-muted-foreground">
+                    {slot.pending ? slot.pending.providerCode || recordSerial(slot.pending.id) : 'No record'}
+                  </Td>
+                  <Td align="right">
+                    {slot.pending && slot.rank === 1 ? (
+                      <Link href={`/dashboard/platform/provider-approvals/${slot.pending.id}`} className={`${buttonClass.base} ${buttonClass.outline}`}>
+                        Finish approval
+                      </Link>
+                    ) : (
+                      <AddApprovalButton purpose={slot.purpose} className={`${buttonClass.base} ${buttonClass.outline}`}>
+                        <Plus />
+                        {slot.rank === 2 ? 'Renew' : 'Add approval'}
+                      </AddApprovalButton>
+                    )}
+                  </Td>
+                </Tr>
+              ))}
+            </tbody>
+          </DataTable>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <SectionTitle meta={rows.length}>All approvals</SectionTitle>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <StatusFilter
+            className="min-w-0 p-0 md:px-0"
+            allCount={byPurpose.length}
+            statuses={Object.entries(PROVIDER_APPROVAL_STATUS_LABELS).map(([value, label]) => ({
+              value, label, tone: APPROVAL_TONES[value], count: byPurpose.filter(item => item.status === value).length,
+            }))}
+          />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <label className="relative block w-full sm:w-56">
+              <span className="sr-only">Search</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Code, reference or provider" className="h-10 rounded-[4px] pl-9" />
+            </label>
+            <label className="flex shrink-0 items-center gap-2">
+              <span className="text-[12px] font-medium text-muted-foreground">Purpose</span>
+              <select
+                aria-label="Purpose"
+                className="h-10 min-w-0 rounded-[4px] border border-input bg-background px-2.5 text-[13px] text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                value={purpose}
+                onChange={event => setParams({ purpose: event.target.value === 'all' ? null : event.target.value })}
+              >
+                <option value="all">All purposes ({approvals.length})</option>
+                {Object.entries(PROVIDER_PURPOSE_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label} ({approvals.filter(item => item.purpose === key).length})</option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
-      </div>
 
-      <StatusFilter
-        className="py-0"
-        allCount={byPurpose.length}
-        statuses={Object.entries(PROVIDER_APPROVAL_STATUS_LABELS).map(([value, label]) => ({
-          value, label, tone: APPROVAL_TONES[value], count: byPurpose.filter(item => item.status === value).length,
-        }))}
-      />
-
-      <div className="px-4 md:px-6">
         {rows.length ? (
-          <ListBand>
-            {rows.map(item => {
-              const provider = boundProvider(item)
-              return (
-                <Link key={item.id} href={`/dashboard/platform/provider-approvals/${item.id}`} className="block space-y-1.5 px-4 py-3 transition-colors hover:bg-muted/60">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <span className="flex min-w-0 items-baseline gap-2.5 text-sm font-medium text-foreground">
-                      <Dot tone={APPROVAL_TONES[item.status] || 'muted'} />
-                      <span className="truncate">{regulatedLabel(PROVIDER_PURPOSE_LABELS, item.purpose)}</span>
-                      <span className="shrink-0 font-mono text-xs font-normal text-muted-foreground">{item.providerCode}</span>
-                      <span className="shrink-0 text-xs font-normal text-muted-foreground">{regulatedLabel(PROVIDER_APPROVAL_STATUS_LABELS, item.status)}</span>
-                    </span>
-                    <Expiry value={item.expiresAt} now={now} />
-                  </div>
-                  <p className="flex flex-wrap gap-x-4 gap-y-1 pl-[1.125rem] text-xs text-muted-foreground">
-                    {provider && <span>{provider.label}: <span className="text-foreground">{provider.name || 'Not bound'}</span></span>}
-                    <span>Product types: <span className="font-mono text-foreground">{item.coveredCategories.length}</span></span>
-                    <span>Jurisdictions: <span className="font-mono text-foreground">{item.coveredJurisdictionCodes.length}</span></span>
-                    <span>Capabilities: <span className="font-mono text-foreground">{item.capabilities.length}</span></span>
-                    {item.profile && <span className="truncate">{item.profile.legalName}</span>}
-                  </p>
-                </Link>
-              )
-            })}
-          </ListBand>
+          <DataTable>
+            <thead>
+              <tr>
+                <Th>Purpose</Th>
+                <Th priority={2}>Provider</Th>
+                <Th>Status</Th>
+                <Th priority={2}>Expiry</Th>
+                <Th priority={3}>Profile</Th>
+                <Th priority={3}>Serial</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(item => {
+                const provider = boundProvider(item)
+                return (
+                  <Tr key={item.id}>
+                    <Td>
+                      <Link href={`/dashboard/platform/provider-approvals/${item.id}`} className="flex min-h-10 min-w-0 flex-col justify-center underline-offset-4 hover:underline md:min-h-0">
+                        <span className="truncate font-medium text-foreground">{regulatedLabel(PROVIDER_PURPOSE_LABELS, item.purpose)}</span>
+                        <span className="truncate font-mono text-[12px] text-muted-foreground md:hidden">{item.providerCode}</span>
+                      </Link>
+                    </Td>
+                    <Td priority={2}>
+                      <span className="flex min-w-0 flex-col">
+                        <span className="truncate font-mono text-[12px] text-foreground">{item.providerCode}</span>
+                        {provider && <span className="truncate text-[12px] text-muted-foreground">{provider.name || `${provider.label} not bound`}</span>}
+                      </span>
+                    </Td>
+                    <Td>
+                      <Stamp tone={APPROVAL_TONES[item.status] || 'muted'} serial={recordSerial(item.id)}>
+                        {regulatedLabel(PROVIDER_APPROVAL_STATUS_LABELS, item.status)}
+                      </Stamp>
+                    </Td>
+                    <Td priority={2}><Expiry value={item.expiresAt} now={now} /></Td>
+                    <Td priority={3} className="max-w-[12rem] truncate text-muted-foreground">{item.profile?.legalName || 'No profile'}</Td>
+                    <Td priority={3} className="font-mono text-[12px] text-muted-foreground">{item.approvalReference}</Td>
+                  </Tr>
+                )
+              })}
+            </tbody>
+          </DataTable>
         ) : (
           <PlatformEmptyState
             title={filtered ? 'No matching approvals' : 'No provider approvals'}
             onReset={filtered ? () => { setSearch(''); setParams({ [STATUS_PARAM]: null, purpose: null }) } : undefined}
           />
         )}
-      </div>
+      </section>
     </div>
   )
 }

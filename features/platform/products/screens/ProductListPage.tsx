@@ -10,6 +10,8 @@ import { buildWhereClause } from '../../../dashboard/lib/buildWhereClause'
 import { notFound } from 'next/navigation'
 import { ProductListPageClient } from './ProductListPageClient'
 import { getProducts, getProductStatusCounts } from '../actions'
+import { getProductCompliance } from '../actions/compliance'
+import type { ComplianceById } from '../components/product-blockers'
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -102,8 +104,34 @@ export async function ProductListPage({ searchParams }: PageProps) {
     statusCounts = statusCountsResponse.data
   }
 
+  // Release state per product on this page, from the same check that gates publishing
+  const complianceById: ComplianceById = {}
+  await Promise.all(
+    fetchedData.items.map(async (product: any) => {
+      try {
+        const compliance = await getProductCompliance(product.id)
+        if (!compliance) {
+          complianceById[product.id] = null
+          return
+        }
+        const statuses = compliance.variants.map(variant => variant.classification?.status ?? null)
+        complianceById[product.id] = {
+          regulated: compliance.regulated,
+          publishIssue: compliance.publishIssue,
+          pendingReview:
+            statuses.length > 0 &&
+            statuses.every(status => status !== null && status !== 'rejected' && status !== 'revoked') &&
+            statuses.some(status => status === 'draft' || status === 'review'),
+        }
+      } catch {
+        complianceById[product.id] = null
+      }
+    })
+  )
+
   return (
     <ProductListPageClient
+      complianceById={complianceById}
       list={enhancedList}
       initialData={fetchedData}
       initialError={error || undefined}

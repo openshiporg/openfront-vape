@@ -58,7 +58,7 @@ export function AdminPaymentSelection({
               <div className="flex items-center gap-x-4">
                 <div
                   className={cn(
-                    "w-4 h-4 border-2 rounded-full flex items-center justify-center transition-colors",
+                    "w-4 h-4 border-2 rounded-[4px] flex items-center justify-center transition-colors",
                     {
                       "border-primary": selectedPaymentMethod === method.code,
                       "border-border": selectedPaymentMethod !== method.code,
@@ -66,7 +66,7 @@ export function AdminPaymentSelection({
                   )}
                 >
                   {selectedPaymentMethod === method.code && (
-                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <div className="w-2 h-2 bg-primary rounded-[1px]" />
                   )}
                 </div>
                 <span className="text-sm font-normal">

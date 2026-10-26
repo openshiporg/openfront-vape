@@ -69,7 +69,7 @@ function RuleRow({ draft, index, onChange, onRemove, disabled }: {
             type="button"
             aria-label={`Remove rule ${index + 1}`}
             onClick={onRemove}
-            className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="inline-flex size-8 items-center justify-center rounded-[4px] text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="size-4" />
           </button>
@@ -165,7 +165,7 @@ export function RulesEditor({ value, onChange, disabled }: {
 
       {value.mode === 'rows' ? (
         <>
-          <div className="divide-y divide-border rounded-xl bg-muted/40 ring-1 ring-inset ring-border/60">
+          <div className="divide-y divide-border rounded-md bg-muted/40 ring-1 ring-inset ring-border/60">
             {value.drafts.map((draft, index) => (
               <RuleRow
                 key={draft.key}
@@ -186,7 +186,7 @@ export function RulesEditor({ value, onChange, disabled }: {
               <button
                 type="button"
                 onClick={() => setDrafts([...value.drafts, newRuleDraft(addType, value.drafts)])}
-                className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-muted px-4 text-[13px] font-medium text-foreground hover:bg-muted/70"
+                className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-[4px] bg-muted px-4 text-[13px] font-medium text-foreground hover:bg-muted/70"
               >
                 <Plus className="size-3.5" />
                 Add rule

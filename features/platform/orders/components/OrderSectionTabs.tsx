@@ -84,7 +84,7 @@ export const OrderSectionTabs = ({ order }: OrderSectionTabsProps) => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-foreground">{item.title}</div>
-                    {spec && <div className="font-mono text-xs tabular-nums text-foreground/80">{spec}</div>}
+                    {spec && <div className="text-xs text-foreground/80">{spec}</div>}
                     {(sku || item.variantData?.barcode) && (
                       <div className="font-mono text-[11px] tabular-nums text-muted-foreground">
                         {sku && <>SKU {sku}</>}
@@ -105,7 +105,7 @@ export const OrderSectionTabs = ({ order }: OrderSectionTabsProps) => {
                       <button
                         type="button"
                         aria-label="Line item actions"
-                        className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground max-sm:size-10"
+                        className="inline-flex size-8 shrink-0 items-center justify-center rounded-[4px] text-muted-foreground hover:bg-muted hover:text-foreground max-sm:size-10"
                       >
                         <MoreVertical className="size-3.5" />
                       </button>

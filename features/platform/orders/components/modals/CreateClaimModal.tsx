@@ -283,7 +283,7 @@ export const CreateClaimModal = ({ isOpen, onClose, order }: CreateClaimModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:rounded-md sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Claim</DialogTitle>
           <DialogDescription>
@@ -299,21 +299,21 @@ export const CreateClaimModal = ({ isOpen, onClose, order }: CreateClaimModalPro
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Claim Type Selection */}
-            <Card>
+            <Card className="rounded-md shadow-none">
               <CardHeader>
                 <CardTitle className="text-base">Claim Type</CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4">
                 <div 
-                  className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                  className={`border rounded-md p-3 cursor-pointer transition-colors ${
                     claimType === 'refund' 
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-foreground bg-muted/40' 
+                      : 'border-border hover:border-foreground/40'
                   }`}
                   onClick={() => setClaimType('refund')}
                 >
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-blue-600" />
+                    <DollarSign className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">Refund</div>
                       <div className="text-sm text-muted-foreground">
@@ -324,15 +324,15 @@ export const CreateClaimModal = ({ isOpen, onClose, order }: CreateClaimModalPro
                 </div>
                 
                 <div 
-                  className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                  className={`border rounded-md p-3 cursor-pointer transition-colors ${
                     claimType === 'replace' 
-                      ? 'border-green-500 bg-green-50 dark:bg-green-950' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-foreground bg-muted/40' 
+                      : 'border-border hover:border-foreground/40'
                   }`}
                   onClick={() => setClaimType('replace')}
                 >
                   <div className="flex items-center space-x-2">
-                    <Package2 className="h-5 w-5 text-green-600" />
+                    <Package2 className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">Replace</div>
                       <div className="text-sm text-muted-foreground">
@@ -354,7 +354,7 @@ export const CreateClaimModal = ({ isOpen, onClose, order }: CreateClaimModalPro
                 const isUploading = uploadingImages.has(lineItem.id);
                 
                 return (
-                  <Card key={lineItem.id}>
+                  <Card key={lineItem.id} className="rounded-md shadow-none">
                     <CardContent className="p-4 space-y-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 space-y-1">
@@ -365,7 +365,7 @@ export const CreateClaimModal = ({ isOpen, onClose, order }: CreateClaimModalPro
                             </div>
                           )}
                           {lineItem.sku && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="rounded-[4px] text-xs">
                               {lineItem.sku}
                             </Badge>
                           )}
@@ -476,10 +476,10 @@ export const CreateClaimModal = ({ isOpen, onClose, order }: CreateClaimModalPro
                           {/* Image Upload */}
                           <div className="space-y-2">
                             <Label>Images (Optional)</Label>
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                            <div className="border border-dashed border-border rounded-md p-4">
                               <div className="text-center">
-                                <ImageIcon className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                                <div className="text-sm text-gray-600 mb-2">
+                                <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                                <div className="text-sm text-muted-foreground mb-2">
                                   Upload images to support your claim
                                 </div>
                                 <label className="cursor-pointer">
@@ -529,7 +529,7 @@ export const CreateClaimModal = ({ isOpen, onClose, order }: CreateClaimModalPro
                                       <button
                                         type="button"
                                         onClick={() => removeImage(lineItem.id, imageUrl)}
-                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-[4px] p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                       >
                                         <X className="h-3 w-3" />
                                       </button>
@@ -551,7 +551,7 @@ export const CreateClaimModal = ({ isOpen, onClose, order }: CreateClaimModalPro
                                     <Badge
                                       key={tag.id}
                                       variant={isSelected ? "default" : "outline"}
-                                      className="cursor-pointer"
+                                      className="rounded-[4px] cursor-pointer"
                                       onClick={() => toggleTag(lineItem.id, tag.id)}
                                     >
                                       {tag.value}

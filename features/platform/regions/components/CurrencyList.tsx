@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ListBand, StatusFilter } from "../../components/vape-ui";
+import { DataTable, StatusFilter } from "../../components/vape-ui";
 import { PlatformEmptyState } from "../../components/PlatformEmptyState";
 import { PlatformFilterBar } from "../../components/PlatformFilterBar";
-import { CurrencyDetailsComponent } from "./CurrencyDetailsComponent";
+import { CurrencyDetailsComponent, CurrencyTableHead } from "./CurrencyDetailsComponent";
 import { CreateCurrencyDrawer } from "./drawers/CreateCurrencyDrawer";
 import { Currency } from "../actions/currency-actions";
 
@@ -27,6 +27,12 @@ export function CurrencyList({ data, statusCounts, list }: CurrencyListProps) {
 
   return (
     <div className="space-y-2 px-4 pb-6 md:px-6">
+      <StatusFilter
+        className="px-0 pt-0 md:px-0"
+        allCount={statusCounts.all}
+        statuses={statusOptions.map((status) => ({ ...status, count: statusCounts[status.value] }))}
+      />
+
       {/* Filter Bar */}
       <PlatformFilterBar 
         list={list}
@@ -35,24 +41,22 @@ export function CurrencyList({ data, statusCounts, list }: CurrencyListProps) {
         createLabel="Add Currency"
       />
 
-      <StatusFilter
-        className="px-0 pt-0 md:px-0"
-        allCount={statusCounts.all}
-        statuses={statusOptions.map((status) => ({ ...status, count: statusCounts[status.value] }))}
-      />
 
       {data.items.length === 0 ? (
         <PlatformEmptyState title="No currencies" />
       ) : (
-        <ListBand>
-        {data.items.map((currency) => (
-          <CurrencyDetailsComponent
-            key={currency.id}
-            currency={currency}
-            list={list}
-          />
-        ))}
-        </ListBand>
+        <DataTable aria-label="Currencies">
+          <thead><CurrencyTableHead /></thead>
+          <tbody>
+            {data.items.map((currency) => (
+              <CurrencyDetailsComponent
+                key={currency.id}
+                currency={currency}
+                list={list}
+              />
+            ))}
+          </tbody>
+        </DataTable>
       )}
 
       {/* Create Drawer */}

@@ -32,7 +32,7 @@ export function ProfileSearch() {
         placeholder="Search"
         value={value}
         onChange={event => setValue(event.target.value)}
-        className="h-10 rounded-full pl-9"
+        className="h-10 rounded-[4px] pl-9"
       />
     </form>
   );

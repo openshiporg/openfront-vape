@@ -72,7 +72,7 @@ export function ProviderActionsInline({
           <DropdownMenuContent>
             <DropdownMenuItem
               onClick={() => onProviderToggle(provider.id)}
-              className="gap-2 font-medium tracking-wide text-xs"
+              className="gap-2 font-medium text-xs"
             >
               <Plus className="h-3.5 w-3.5" />
               {provider?.isActive ? 'DEACTIVATE' : 'ACTIVATE'}
@@ -83,14 +83,14 @@ export function ProviderActionsInline({
                 // For now, we'll just show a toast since we need to implement a proper edit dialog
                 toast.info('Edit provider functionality needs to be implemented');
               }}
-              className="gap-2 font-medium tracking-wide text-xs"
+              className="gap-2 font-medium text-xs"
             >
               <PenSquare className="h-3.5 w-3.5" />
               EDIT PROVIDER
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setIsDeleteDialogOpen(true)}
-              className="gap-2 font-medium tracking-wide text-xs text-red-600"
+              className="gap-2 font-medium text-xs text-red-600"
             >
               <Trash2 className="h-3.5 w-3.5" />
               DELETE PROVIDER
@@ -100,7 +100,7 @@ export function ProviderActionsInline({
       )}
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:rounded-md">
           <DialogHeader>
             <DialogTitle>Delete Provider</DialogTitle>
             <DialogDescription>

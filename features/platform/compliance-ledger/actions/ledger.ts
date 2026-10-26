@@ -30,7 +30,7 @@ const SPECS: Record<LedgerTab, Spec> = {
     states: ['allow', 'deny', 'manual_review'],
     base: {},
     orderBy: { issuedAt: 'desc' },
-    query: `id purpose result reasonCodes policyPack policyVersion issuedAt expiresAt revokedAt cart { id } ${ORDER} jurisdiction { code }`,
+    query: `id purpose result reasonCodes ruleIds policyPack policyVersion issuedAt expiresAt revokedAt cart { id } ${ORDER} jurisdiction { code } events(orderBy: [{ occurredAt: asc }], take: 1) { actorId }`,
   },
   age: {
     list: 'AgeVerificationAttempt',
@@ -98,6 +98,28 @@ export async function getLedger(input: LedgerQuery): Promise<LedgerResult> {
     return { success: true, items: rows, count, total, counts };
   } catch (error) {
     return failure(error, spec.list);
+  }
+}
+
+export type AttentionResult = { success: true; items: any[]; capped: boolean } | { success: false; error: string };
+
+const ATTENTION_LIMIT = 50;
+
+/** Today's (UTC) denials and manual-review decisions, newest first: the ledger's work queue. */
+export async function getTodayAttention(): Promise<AttentionResult> {
+  const context = await sessionContext();
+  if (!context.session?.itemId) return { success: false, error: 'Sign in again to view compliance records.' };
+  const todayIso = `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
+  try {
+    const items = await (context.query as any).ComplianceDecision.findMany({
+      where: { issuedAt: { gte: todayIso }, result: { in: ['deny', 'manual_review'] } },
+      orderBy: [{ issuedAt: 'desc' }],
+      take: ATTENTION_LIMIT,
+      query: SPECS.decisions.query,
+    });
+    return { success: true, items: [...items], capped: items.length === ATTENTION_LIMIT };
+  } catch (error) {
+    return failure(error, 'ComplianceDecision');
   }
 }
 

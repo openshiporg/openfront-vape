@@ -1,17 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { MoreVertical } from "lucide-react";
 import Link from "next/link";
-import { Dot, type DotTone } from "../../components/vape-ui";
+import { StatusWord, Td, Th, Tr, type DotTone } from "../../components/vape-ui";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
+import {
+  ActionsCell,
+  ExpandRow,
+  ExpandToggle,
+  Facts,
+  formatDate,
+  rowIconClass,
+} from "../../regions/components/config-kit";
 
 const statusTones: Record<string, DotTone> = {
   active: "ok",
@@ -35,81 +36,75 @@ interface CurrencyDetailsComponentProps {
   list: any;
 }
 
+export const CURRENCY_COLUMNS = 6;
+
+export function CurrencyTableHead() {
+  return (
+    <tr>
+      <Th>Currency</Th>
+      <Th>Code</Th>
+      <Th priority={2}>Symbol</Th>
+      <Th priority={2}>Minor units</Th>
+      <Th priority={3}>Created</Th>
+      <Th align="right"><span className="sr-only">Actions</span></Th>
+    </tr>
+  );
+}
+
 export function CurrencyDetailsComponent({
   currency,
   list,
 }: CurrencyDetailsComponentProps) {
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const detailId = `currency-${currency.id}-detail`;
 
   return (
     <>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={currency.id} className="border-0">
-          <div className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                {currency.status && <Dot tone={statusTones[currency.status] || "muted"} />}
-                <Link
-                  href={`/dashboard/currencies/${currency.id}`}
-                  className="text-sm font-semibold text-foreground hover:underline"
-                >
-                  {currency.name}
-                </Link>
-                <span className="font-mono text-xs uppercase tabular-nums text-muted-foreground">{currency.code}</span>
-                {currency.status && <span className="text-xs capitalize text-muted-foreground">{currency.status}</span>}
-              </div>
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span>Symbol <span className="font-mono tabular-nums text-foreground">{currency.symbol}</span></span>
-                <span className="font-mono tabular-nums">
-                  {new Date(currency.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
+      <Tr>
+        <Td className="max-w-[16rem]">
+          <Link
+            href={`/dashboard/currencies/${currency.id}`}
+            className="font-medium text-foreground hover:underline"
+          >
+            {currency.name}
+          </Link>
+          {currency.status && (
+            <div className="mt-0.5">
+              <StatusWord tone={statusTones[currency.status] || "muted"} className="text-[12px]">
+                {currency.status.charAt(0).toUpperCase() + currency.status.slice(1)}
+              </StatusWord>
             </div>
+          )}
+        </Td>
+        <Td className="font-mono uppercase">{currency.code}</Td>
+        <Td priority={2} className="tabular-nums">{currency.symbol}</Td>
+        <Td priority={2} className="text-muted-foreground">{currency.noDivisionCurrency ? "None" : "Yes"}</Td>
+        <Td priority={3} className="whitespace-nowrap tabular-nums text-muted-foreground">{formatDate(currency.createdAt)}</Td>
+        <ActionsCell>
+          <button
+            type="button"
+            className={rowIconClass}
+            onClick={() => setIsEditDrawerOpen(true)}
+            aria-label="Edit"
+          >
+            <MoreVertical />
+          </button>
+          <ExpandToggle open={open} onToggle={() => setOpen(!open)} controls={detailId} label="currency details" />
+        </ActionsCell>
+      </Tr>
 
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                onClick={() => setIsEditDrawerOpen(true)}
-                aria-label="Edit"
-              >
-                <MoreVertical className="stroke-muted-foreground" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                asChild
-              >
-                <AccordionTrigger className="justify-center py-0" />
-              </Button>
-            </div>
-          </div>
-          <AccordionContent className="pb-0">
-            <div className="border-t border-border bg-background/60 px-4 py-4">
-              <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                <div className="min-w-0">
-                  <dt className="text-xs text-muted-foreground">ID</dt>
-                  <dd className="mt-0.5 truncate font-mono text-xs tabular-nums text-foreground">{currency.id}</dd>
-                </div>
-                {currency.updatedAt && (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Updated</dt>
-                    <dd className="mt-0.5 font-mono tabular-nums text-foreground">
-                      {new Date(currency.updatedAt).toLocaleDateString()}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      {open && (
+        <ExpandRow id={detailId} colSpan={CURRENCY_COLUMNS}>
+          <Facts
+            facts={[
+              { label: "Native symbol", value: currency.symbolNative },
+              { label: "Record ID", value: currency.id, mono: true },
+              { label: "Updated", value: formatDate(currency.updatedAt) ?? '—' },
+            ]}
+          />
+        </ExpandRow>
+      )}
 
       <EditItemDrawerClientWrapper
         listKey="currencies"

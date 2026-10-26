@@ -22,7 +22,7 @@ import { updateStoreSettings } from '../actions';
 import { toast } from 'sonner';
 import { Code } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ListBand, SectionTitle } from '@/features/platform/components/vape-ui';
+import { ListBand, SectionTitle, StatusWord } from '@/features/platform/components/vape-ui';
 import {
   POLICY_PAGES,
   readStoreBusiness,
@@ -108,21 +108,72 @@ export function StoreSettingsPageClient({
   const selectedIcon = LOGO_ICONS.find((icon) => icon.lightSvg === logoIcon);
   const selectedHue = HUE_PRESETS.find((preset) => preset.value.toString() === logoColor);
 
-  const field = 'h-10 rounded-lg bg-background';
-  const area = 'min-h-24 rounded-lg bg-background';
+  // Required before a regulated store can sell (mirrors missingStoreInfo), in form order.
+  const blankRequired: Array<{ id: string; label: string; section: string }> = [
+    ...(name.trim() ? [] : [{ id: 'store-name', label: 'Store name', section: 'Brand' }]),
+    ...(business.legalName.trim() ? [] : [{ id: 'business-legalName', label: 'Legal name', section: 'Business' }]),
+    ...(licenses.split('\n').some((line) => line.trim())
+      ? []
+      : [{ id: 'business-licenses', label: 'Licence numbers', section: 'Business' }]),
+    ...POLICY_PAGES.filter((page) => !policies[page.key].trim()).map((page) => ({
+      id: `policy-${page.key}`,
+      label: page.title,
+      section: 'Policies',
+    })),
+  ];
+  const requiredIds = new Set(blankRequired.map((item) => item.id));
+  const focusField = (id: string) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    element.focus({ preventScroll: true });
+  };
+
+  const field = 'h-10 rounded-[4px] bg-background';
+  const area = 'min-h-24 rounded-[4px] bg-background';
   const row = 'grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center';
   const rowTop = 'grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-start';
   const square =
-    'flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-background p-0 shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.06)] transition-colors hover:bg-background/80 focus:outline-none focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-800';
+    'flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-[4px] border border-input bg-background p-0 transition-colors hover:bg-muted focus:outline-none focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50';
+  const requiredMark = (id: string) =>
+    requiredIds.has(id) ? <span className="ml-1.5 text-[12px] font-medium text-[oklch(0.52_0.17_27)]">Required</span> : null;
 
   return (
     <div className="grid max-w-5xl gap-8 px-4 pb-10 md:px-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="min-w-0 space-y-8">
+        <section aria-label="Blank required fields">
+          <SectionTitle meta={blankRequired.length || undefined}>Needs you</SectionTitle>
+          <ListBand>
+            {blankRequired.length === 0 ? (
+              <div className="px-4 py-3">
+                <StatusWord tone="ok">All required fields filled</StatusWord>
+              </div>
+            ) : (
+              blankRequired.map((item) => (
+                <div key={item.id} className="flex items-center justify-between gap-3 px-4 py-2">
+                  <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                    <StatusWord tone="warn">Blank</StatusWord>
+                    <span className="text-sm font-medium text-foreground">{item.label}</span>
+                    <span className="text-[12px] text-muted-foreground">{item.section}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => focusField(item.id)}
+                    className="inline-flex min-h-8 shrink-0 items-center rounded-[4px] border border-input bg-background px-3 text-[13px] font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring max-sm:min-h-10"
+                  >
+                    Fill
+                  </button>
+                </div>
+              ))
+            )}
+          </ListBand>
+        </section>
+
         <section>
           <SectionTitle>Brand</SectionTitle>
           <ListBand>
             <div className="grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
-              <Label htmlFor="store-name" className="text-sm text-muted-foreground">Store name</Label>
+              <Label htmlFor="store-name" className="text-sm text-muted-foreground">Store name{requiredMark('store-name')}</Label>
               <Input
                 id="store-name"
                 value={name}
@@ -177,7 +228,7 @@ export function StoreSettingsPageClient({
                     <Button
                       variant="ghost"
                       type="button"
-                      className="ml-auto h-10 shrink-0 rounded-full bg-muted px-3 text-[13px] font-medium shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] hover:bg-muted/80 dark:bg-muted/60 [&_svg]:size-4"
+                      className="ml-auto h-10 shrink-0 rounded-[4px] border border-input bg-background px-3 text-[13px] font-medium hover:bg-muted [&_svg]:size-4"
                     >
                       <Code className="stroke-muted-foreground" />
                       <span className="hidden sm:inline">SVG</span>
@@ -197,7 +248,7 @@ export function StoreSettingsPageClient({
                         <div
                           dangerouslySetInnerHTML={{ __html: logoIcon }}
                           style={{ filter: `hue-rotate(${logoColor}deg)` }}
-                          className="flex items-center justify-center rounded-lg bg-muted p-2 [&>svg]:h-8 [&>svg]:w-8"
+                          className="flex items-center justify-center rounded-[4px] bg-muted p-2 [&>svg]:h-8 [&>svg]:w-8"
                         />
                       </div>
                     </div>
@@ -217,7 +268,7 @@ export function StoreSettingsPageClient({
                   <SelectPrimitive.Trigger aria-label="Logo colour" className={square}>
                     <SelectValue>
                       <div
-                        className="h-6 w-6 rounded-full"
+                        className="h-6 w-6 rounded-[2px]"
                         style={{
                           background: `hsl(${(240 + parseInt(logoColor)) % 360}, 70%, 50%)`
                         }}
@@ -231,10 +282,10 @@ export function StoreSettingsPageClient({
                           key={preset.value}
                           value={preset.value.toString()}
                           aria-label={preset.name}
-                          className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg p-0 [&>span:first-child]:hidden"
+                          className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-[4px] p-0 [&>span:first-child]:hidden"
                         >
                           <div
-                            className="h-6 w-6 rounded-full"
+                            className="h-6 w-6 rounded-[2px]"
                             style={{
                               background: `hsl(${(240 + preset.value) % 360}, 70%, 50%)`
                             }}
@@ -287,7 +338,7 @@ export function StoreSettingsPageClient({
               ] as const
             ).map((item) => (
               <div key={item.key} className={row}>
-                <Label htmlFor={`business-${item.key}`} className="text-sm text-muted-foreground">{item.label}</Label>
+                <Label htmlFor={`business-${item.key}`} className="text-sm text-muted-foreground">{item.label}{requiredMark(`business-${item.key}`)}</Label>
                 <Input
                   id={`business-${item.key}`}
                   type={item.type}
@@ -310,7 +361,7 @@ export function StoreSettingsPageClient({
             </div>
             <div className={rowTop}>
               <Label htmlFor="business-licenses" className="text-sm sm:pt-2.5 text-muted-foreground">
-                Licences
+                Licences{requiredMark('business-licenses')}
               </Label>
               <Textarea
                 id="business-licenses"
@@ -329,7 +380,7 @@ export function StoreSettingsPageClient({
             {POLICY_PAGES.map((page) => (
               <div key={page.key} className={rowTop}>
                 <Label htmlFor={`policy-${page.key}`} className="text-sm sm:pt-2.5 text-muted-foreground">
-                  {page.title}
+                  {page.title}{requiredMark(`policy-${page.key}`)}
                   <span className="block font-mono text-xs">/policies/{page.slug}</span>
                 </Label>
                 <Textarea
@@ -347,9 +398,9 @@ export function StoreSettingsPageClient({
         <Button
           onClick={handleSave}
           disabled={isLoading}
-          className="h-11 w-full rounded-full px-6 sm:h-10 sm:w-auto"
+          className="h-11 w-full rounded-[4px] px-6 sm:h-10 sm:w-auto"
         >
-          {isLoading ? 'Saving...' : 'Save Settings'}
+          {isLoading ? 'Saving...' : 'Save settings'}
         </Button>
       </div>
 
@@ -371,7 +422,7 @@ export function StoreSettingsPageClient({
           {(homepageTitle || homepageDescription) && (
             <div className="px-4 py-4">
               {homepageTitle && (
-                <p className="text-lg font-semibold leading-tight tracking-[-0.02em] text-foreground">{homepageTitle}</p>
+                <p className="text-lg font-semibold leading-tight text-foreground">{homepageTitle}</p>
               )}
               {homepageDescription && (
                 <p className="mt-1.5 text-sm text-muted-foreground">{homepageDescription}</p>

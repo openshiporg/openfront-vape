@@ -88,7 +88,7 @@ export function ProductDetailsComponent({
   const stockTone =
     trackedVariants.length === 0 ? "muted" : totalInventory <= 0 ? "danger" : "ok";
   const iconButton =
-    "inline-flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground [&_svg]:size-3.5 max-sm:size-10";
+    "inline-flex size-8 items-center justify-center rounded-[4px] bg-muted text-muted-foreground hover:text-foreground [&_svg]:size-3.5 max-sm:size-10";
 
   return (
     <>

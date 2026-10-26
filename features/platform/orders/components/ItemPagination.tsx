@@ -47,11 +47,11 @@ export const ItemPagination = ({
   const colorClasses = "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 focus:ring-zinc-700 dark:bg-zinc-950 dark:border-zinc-900 dark:text-zinc-300 dark:hover:text-white dark:hover:bg-zinc-700 dark:focus:ring-zinc-500";
 
   return (
-    <div className="h-7 shadow-sm flex items-center border rounded-sm overflow-hidden">
+    <div className="h-7 flex items-center border rounded-sm overflow-hidden">
       <button
         onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className={`border-0 h-full flex border-r items-center gap-1.5 pr-1.5 pl-1.5 uppercase text-xs p-[.15rem] font-medium focus:z-10 focus:ring-2 disabled:opacity-50 disabled:pointer-events-none ${colorClasses}`}
+        className={`border-0 h-full flex border-r items-center gap-1.5 pr-1.5 pl-1.5 text-xs p-[.15rem] font-medium focus:z-10 focus:ring-2 disabled:opacity-50 disabled:pointer-events-none ${colorClasses}`}
       >
         <ArrowLeft className="w-4 h-4" />
       </button>
@@ -81,7 +81,7 @@ export const ItemPagination = ({
       <button
         onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className={`border-0 h-full flex border-l items-center gap-1.5 pr-1.5 pl-1.5 uppercase text-xs p-[.15rem] font-medium focus:z-10 focus:ring-2 disabled:opacity-50 disabled:pointer-events-none ${colorClasses}`}
+        className={`border-0 h-full flex border-l items-center gap-1.5 pr-1.5 pl-1.5 text-xs p-[.15rem] font-medium focus:z-10 focus:ring-2 disabled:opacity-50 disabled:pointer-events-none ${colorClasses}`}
       >
         <ArrowRight className="w-4 h-4" />
       </button>

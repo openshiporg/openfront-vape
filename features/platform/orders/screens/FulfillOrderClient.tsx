@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { Dot, ListBand } from '@/features/platform/components/vape-ui';
+import { Dot, ListBand, StatusWord } from '@/features/platform/components/vape-ui';
 import { Button } from '@/components/ui/button';
 import { UnfulfilledItems } from '../components/UnfulfilledItems';
 import { FulfillmentHistory } from '../components/FulfillmentHistory';
@@ -86,16 +86,15 @@ export function FulfillOrderClient({ order, evidence }: FulfillOrderClientProps)
           </Link>
           <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">Fulfill order</h1>
-              <span className="inline-flex items-baseline gap-1.5 text-sm text-muted-foreground">
-                <Dot tone={isFullyFulfilled ? 'ok' : 'warn'} />
-                {isFullyFulfilled ? 'Fulfilled' : (
-                  <><span className="font-mono tabular-nums">{unfulfilledItems.length}</span> unfulfilled</>
-                )}
-              </span>
+              <h1 className="text-2xl font-semibold tracking-[-0.015em] text-foreground">
+                Fulfill order <span className="font-mono tabular-nums">#{order.displayId}</span>
+              </h1>
+              <StatusWord tone={isFullyFulfilled ? 'ok' : 'warn'} className="text-[14px]">
+                {isFullyFulfilled ? 'Fulfilled' : `${unfulfilledItems.length} unfulfilled`}
+              </StatusWord>
             </div>
-            <div className="font-mono text-sm tabular-nums text-muted-foreground">
-              {new Date(order.createdAt).toLocaleDateString("en-US", {
+            <div className="text-[13px] tabular-nums text-muted-foreground">
+              Placed {new Date(order.createdAt).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "short",
                 day: "numeric",
@@ -119,7 +118,7 @@ export function FulfillOrderClient({ order, evidence }: FulfillOrderClientProps)
                     <PopoverTrigger asChild>
                       <button
                         type="button"
-                        className="inline-flex min-h-9 items-center rounded-full bg-background px-4 text-sm font-medium text-foreground shadow-xs ring-1 ring-border disabled:opacity-50 max-sm:min-h-10"
+                        className="inline-flex min-h-9 items-center rounded-[4px] bg-background px-4 text-sm font-medium text-foreground ring-1 ring-border disabled:opacity-50 max-sm:min-h-10"
                         disabled={isLoading}
                       >
                         Start over
@@ -134,7 +133,7 @@ export function FulfillOrderClient({ order, evidence }: FulfillOrderClientProps)
                           <Button
                             variant="destructive"
                             size="sm"
-                            className="h-8 rounded-full text-xs"
+                            className="h-8 rounded-[4px] text-xs"
                             onClick={handleCancelAll}
                             disabled={isLoading}
                           >

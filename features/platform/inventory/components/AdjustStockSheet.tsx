@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ErrorLine, Field, textareaClass } from '@/features/platform/components/compliance-form';
-import { Pill, Track } from '@/features/platform/components/vape-primitives';
+import { Pill, Track, buttonClass } from '@/features/platform/components/vape-primitives';
 import { adjustStock } from '../actions/adjust';
 
 const REASONS = ['Received', 'Count correction', 'Damaged', 'Expired', 'Returned to supplier', 'Recall', 'Other'];
@@ -43,7 +43,7 @@ export function AdjustStockSheet({ variant }: { variant: { id: string; title: st
           reset();
           setOpen(true);
         }}
-        className="inline-flex min-h-8 items-center rounded-full bg-background px-3 text-xs font-medium text-foreground shadow-xs ring-1 ring-border hover:bg-background/80 max-sm:min-h-10"
+        className={`${buttonClass.base} ${buttonClass.ghost} border border-transparent hover:border-input`}
       >
         Adjust stock
       </button>
@@ -51,9 +51,9 @@ export function AdjustStockSheet({ variant }: { variant: { id: string; title: st
         <SheetContent className="w-full overflow-y-auto sm:max-w-md">
           <SheetHeader className="pb-2">
             <SheetTitle>Adjust stock</SheetTitle>
-            <SheetDescription className="break-words font-mono text-xs tabular-nums">
+            <SheetDescription className="break-words text-xs">
               {variant.title}
-              {variant.sku ? ` ${variant.sku}` : ''}
+              {variant.sku ? <span className="ml-1 font-mono">{variant.sku}</span> : null}
             </SheetDescription>
           </SheetHeader>
           <form
@@ -117,7 +117,7 @@ export function AdjustStockSheet({ variant }: { variant: { id: string; title: st
             </div>
 
             <ErrorLine message={error} />
-            <Button type="submit" disabled={pending || !valid} className="h-10 w-full rounded-full">
+            <Button type="submit" disabled={pending || !valid} className="h-10 w-full rounded-[4px]">
               {pending ? 'Saving' : 'Save adjustment'}
             </Button>
           </form>

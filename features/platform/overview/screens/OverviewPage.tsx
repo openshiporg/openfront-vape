@@ -3,14 +3,13 @@ import { ArrowUpRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { PageContainer } from '@/features/dashboard/components/PageContainer';
-import { Dot, ListBand, PageTitle, SectionTitle, type DotTone } from '@/features/platform/components/vape-ui';
+import { DataTable, ListBand, PageTitle, SectionTitle, Stamp, StatusWord, Td, Th, Tr } from '@/features/platform/components/vape-ui';
 import { CLASSIFICATION_STATUS_LABELS } from '@/features/keystone/regulated/labels';
 import { getComplianceReadiness } from '@/features/platform/compliance-center/actions/getReadiness';
-import { outLinkClass } from '@/features/platform/compliance-ledger/components/LinkTrack';
-import { LEDGER_PATH, ORDERS_PATH, dateTime, day, label, reasonLabel } from '@/features/platform/compliance-ledger/lib/format';
+import { LaunchSteps, ReleaseBar, fixClass } from '@/features/platform/compliance-center/components/ReleaseBar';
+import { COMPLIANCE_PATH, EVIDENCE_PATH, launchSteps } from '@/features/platform/compliance-center/lib/blockers';
+import { LEDGER_PATH, ORDERS_PATH, dateTime, day, label } from '@/features/platform/compliance-ledger/lib/format';
 import { getOverview, type Section } from '../actions/overview';
-
-const COMPLIANCE_PATH = '/dashboard/platform/compliance';
 
 const breadcrumbs = [
   { type: 'link' as const, label: 'Dashboard', href: '/dashboard' },
@@ -18,19 +17,22 @@ const breadcrumbs = [
   { type: 'page' as const, label: 'Overview' },
 ];
 
+const STEP_LIMIT = 6;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 function Unavailable() {
-  return <div className="px-4 py-3 text-sm text-muted-foreground">Unable to load</div>;
+  return <ListBand><div className="px-4 py-3 text-[13px] text-muted-foreground">Unable to load</div></ListBand>;
 }
 
 function None({ children }: { children: ReactNode }) {
-  return <div className="px-4 py-3 text-sm text-muted-foreground">{children}</div>;
+  return <ListBand><div className="px-4 py-3 text-[13px] text-muted-foreground">{children}</div></ListBand>;
 }
 
 function OutLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link href={href} className={outLinkClass}>
+    <Link href={href} className={fixClass}>
       {children}
-      <ArrowUpRight className="size-3" />
+      <ArrowUpRight />
     </Link>
   );
 }
@@ -39,29 +41,37 @@ const count = <T,>(section: Section<T>, pick: (value: T) => number, capped?: (va
   section.ok ? `${pick(section.value)}${capped?.(section.value) ? '+' : ''}` : undefined;
 
 function daysLeft(value: string) {
-  const days = Math.ceil((new Date(value).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+  const days = Math.ceil((new Date(value).getTime() - Date.now()) / DAY_MS);
   return days <= 1 ? '1 day' : `${days} days`;
 }
 
-/** Hide the broader profile check when the gate already names the profile problem. */
-function visibleBlockers(codes: string[]) {
-  const gateProfileCode = codes.some(code => ['ACTIVE_MERCHANT_PROFILE_REQUIRED', 'KILL_SWITCH_ENABLED'].includes(code));
-  return Array.from(new Set(codes)).filter(code => !(gateProfileCode && code === 'EXACTLY_ONE_ACTIVE_MERCHANT_PROFILE_REQUIRED'));
+/** Variant states for one product, grouped: "2 not classified, 1 pending". */
+function variantSummary(variants: Array<{ state: string }>) {
+  const groups = new Map<string, number>();
+  for (const variant of variants) groups.set(variant.state, (groups.get(variant.state) || 0) + 1);
+  return [...groups.entries()]
+    .map(([state, total]) => `${total} ${state === 'missing' ? 'not classified' : label(CLASSIFICATION_STATUS_LABELS, state).toLowerCase()}`)
+    .join(', ');
+}
+
+/** The worst classification state among a product's blocked variants, as a stamp. */
+function classificationStamp(variants: Array<{ state: string }>) {
+  const has = (state: string) => variants.some(variant => variant.state === state);
+  if (has('revoked')) return { tone: 'danger' as const, word: 'Revoked' };
+  if (has('rejected')) return { tone: 'danger' as const, word: 'Rejected' };
+  // Approved yet still blocked means the approval is outside its effective dates
+  if (has('approved')) return { tone: 'danger' as const, word: 'Out of date' };
+  if (has('review')) return { tone: 'warn' as const, word: 'In review' };
+  if (has('draft')) return { tone: 'warn' as const, word: 'Draft' };
+  return { tone: 'warn' as const, word: 'Not classified' };
 }
 
 export async function OverviewPage() {
   const [readiness, overview] = await Promise.all([getComplianceReadiness(), getOverview()]);
 
   const ready = readiness.success ? readiness.data.launchReady : null;
-  const blockers = readiness.success ? visibleBlockers(readiness.data.blockers) : [];
-  const tone: DotTone = ready === null ? 'muted' : ready ? 'ok' : 'danger';
-  const header = (
-    <PageTitle
-      title="Overview"
-      tone={tone}
-      state={ready === null ? 'Sales status unavailable' : ready ? 'Sales enabled' : 'Sales disabled'}
-    />
-  );
+  const steps = readiness.success ? launchSteps(readiness.data.blockers, { profiles: readiness.data.profiles }) : [];
+  const header = <PageTitle title="Overview" meta={ready === false ? `${steps.length} ${steps.length === 1 ? 'step' : 'steps'} before sales open` : undefined} />;
 
   const empty = { ok: false } as const;
   const orders = overview?.orders ?? empty;
@@ -69,66 +79,147 @@ export async function OverviewPage() {
   const expiring = overview?.expiring ?? empty;
   const decisions = overview?.decisions ?? empty;
 
+  const unclassified = blocked.ok ? blocked.value.unclassified : undefined;
+  const otherBlocked = blocked.ok ? (blocked.value.other ?? blocked.value.products) : [];
+
   return (
     <PageContainer title="Overview" header={header} breadcrumbs={breadcrumbs}>
-      <div className="space-y-10 px-4 pb-24 sm:pb-10 md:px-6">
+      <div className="space-y-8 px-4 pb-24 sm:pb-10 md:px-6">
+        <ReleaseBar
+          ready={ready}
+          steps={steps}
+          profiles={readiness.success ? readiness.data.profiles : []}
+          canStop={readiness.success ? readiness.data.canStop : false}
+        />
+
         <section>
-          <SectionTitle meta={readiness.success ? blockers.length : undefined}>Blockers</SectionTitle>
-          <ListBand>
-            {!readiness.success && <Unavailable />}
-            {readiness.success && blockers.length === 0 && (
-              <div className="flex items-baseline gap-2.5 px-4 py-3 text-sm text-foreground">
-                <Dot tone="ok" />
-                All checks pass
-              </div>
-            )}
-            {blockers.slice(0, 5).map(code => (
-              <div key={code} className="flex items-baseline justify-between gap-4 px-4 py-3">
-                <span className="flex min-w-0 items-baseline gap-2.5 text-sm font-medium text-foreground">
-                  <Dot tone="warn" />
-                  {reasonLabel(code)}
-                </span>
-                <OutLink href={COMPLIANCE_PATH}>Compliance Center</OutLink>
-              </div>
-            ))}
-            {blockers.length > 5 && (
-              <div className="flex items-baseline justify-between gap-4 px-4 py-3 text-sm text-muted-foreground">
-                <span>{blockers.length - 5} more</span>
-                <OutLink href={COMPLIANCE_PATH}>View all</OutLink>
-              </div>
-            )}
-          </ListBand>
+          <SectionTitle meta={readiness.success ? steps.length : undefined}>Launch steps</SectionTitle>
+          {!readiness.success ? <Unavailable /> : <LaunchSteps steps={steps} limit={STEP_LIMIT} />}
+          {steps.length > STEP_LIMIT && (
+            <div className="mt-2 flex items-center justify-between gap-4 text-[13px] text-muted-foreground">
+              <span>{steps.length - STEP_LIMIT} more</span>
+              <OutLink href={COMPLIANCE_PATH}>All steps in Compliance Center</OutLink>
+            </div>
+          )}
         </section>
 
-        <section className="grid gap-10 lg:grid-cols-2">
-          <div>
+        <section className="grid gap-8 lg:grid-cols-2">
+          <div className="min-w-0">
+            <SectionTitle meta={count(blocked, value => value.count, value => value.capped)}>Blocked from publishing</SectionTitle>
+            {!blocked.ok ? <Unavailable /> : blocked.value.count === 0 ? <None>No blocked draft products</None> : (
+              <DataTable>
+                <thead>
+                  <tr>
+                    <Th>Product</Th>
+                    <Th>Classification</Th>
+                    <Th align="right"><span className="sr-only">Fix</span></Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {unclassified && unclassified.products > 0 && (
+                    <Tr>
+                      <Td className="min-w-0">
+                        <span className="block font-medium text-foreground">
+                          {unclassified.products} {unclassified.products === 1 ? 'product' : 'products'}
+                        </span>
+                        <span className="block text-[12px] text-muted-foreground">
+                          {unclassified.variants} {unclassified.variants === 1 ? 'variant' : 'variants'} with no classification
+                        </span>
+                      </Td>
+                      <Td><Stamp tone="warn">Not classified</Stamp></Td>
+                      <Td align="right"><OutLink href={EVIDENCE_PATH}>Classify</OutLink></Td>
+                    </Tr>
+                  )}
+                  {otherBlocked.map(product => {
+                    const stamp = classificationStamp(product.variants);
+                    return (
+                    <Tr key={product.id}>
+                      <Td className="min-w-0">
+                        <span className="block break-words font-medium text-foreground">{product.title}</span>
+                        <span className="block text-[12px] text-muted-foreground">{variantSummary(product.variants)}</span>
+                      </Td>
+                      <Td><Stamp tone={stamp.tone}>{stamp.word}</Stamp></Td>
+                      <Td align="right"><OutLink href={`/dashboard/platform/products/${product.id}`}>Product</OutLink></Td>
+                    </Tr>
+                    );
+                  })}
+                </tbody>
+              </DataTable>
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <SectionTitle meta={expiring.ok ? expiring.value.length : undefined}>Evidence expiring in 30 days</SectionTitle>
+            {!expiring.ok ? <Unavailable /> : expiring.value.length === 0 ? <None>Nothing expiring</None> : (
+              <DataTable>
+                <thead>
+                  <tr>
+                    <Th>Record</Th>
+                    <Th>Expires</Th>
+                    <Th align="right"><span className="sr-only">Open</span></Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expiring.value.slice(0, 10).map(item => {
+                    const urgent = new Date(item.expiresAt).getTime() - Date.now() < 7 * DAY_MS;
+                    return (
+                      <Tr key={`${item.kind}-${item.id}`}>
+                        <Td className="min-w-0">
+                          <span className="block break-words font-medium text-foreground">{item.title}</span>
+                          <span className="block text-[12px] text-muted-foreground">{item.detail}</span>
+                        </Td>
+                        <Td className="whitespace-nowrap">
+                          <Stamp tone={urgent ? 'danger' : 'warn'} serial={<span title={dateTime(item.expiresAt)}>{day(item.expiresAt)}</span>}>
+                            {daysLeft(item.expiresAt)}
+                          </Stamp>
+                        </Td>
+                        <Td align="right"><OutLink href={item.href}>Open</OutLink></Td>
+                      </Tr>
+                    );
+                  })}
+                </tbody>
+              </DataTable>
+            )}
+            {expiring.ok && expiring.value.length > 10 && (
+              <p className="mt-2 text-[13px] text-muted-foreground">{expiring.value.length - 10} more</p>
+            )}
+          </div>
+        </section>
+
+        <section className="grid gap-8 lg:grid-cols-2">
+          <div className="min-w-0">
             <SectionTitle meta={count(orders, value => value.count, value => value.capped)}>Orders to fulfill</SectionTitle>
-            <ListBand>
-              {!orders.ok && <Unavailable />}
-              {orders.ok && orders.value.latest.length === 0 && <None>No paid orders waiting</None>}
-              {orders.ok && orders.value.latest.map(order => (
-                <Link
-                  key={order.id}
-                  href={`${ORDERS_PATH}/${order.id}`}
-                  className="flex items-baseline justify-between gap-4 px-4 py-3 transition-colors hover:bg-background/60"
-                >
-                  <span className="min-w-0">
-                    <span className="flex items-baseline gap-2.5 text-sm font-medium text-foreground">
-                      <Dot tone={order.fulfillmentStatus?.status === 'partially_fulfilled' ? 'warn' : 'info'} />
-                      #{order.displayId}
-                    </span>
-                    <span className="block truncate pl-[1.125rem] text-xs text-muted-foreground">
-                      {order.email}
-                      {order.fulfillmentStatus?.status === 'partially_fulfilled' && ' · Partially fulfilled'}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-right">
-                    {order.total && <span className="block font-mono text-sm tabular-nums text-foreground">{order.total}</span>}
-                    <span className="block font-mono text-[11px] tabular-nums text-muted-foreground">{day(order.createdAt)}</span>
-                  </span>
-                </Link>
-              ))}
-            </ListBand>
+            {!orders.ok ? <Unavailable /> : orders.value.latest.length === 0 ? <None>No paid orders waiting</None> : (
+              <DataTable>
+                <thead>
+                  <tr>
+                    <Th>Order</Th>
+                    <Th>Status</Th>
+                    <Th priority={2}>Customer</Th>
+                    <Th align="right">Total</Th>
+                    <Th priority={3} align="right">Placed</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.value.latest.map(order => {
+                    const partial = order.fulfillmentStatus?.status === 'partially_fulfilled';
+                    return (
+                      <Tr key={order.id}>
+                        <Td>
+                          <Link href={`${ORDERS_PATH}/${order.id}`} className="inline-flex min-h-8 items-center font-mono text-[12px] font-medium text-foreground underline-offset-4 hover:underline max-sm:min-h-10">
+                            #{order.displayId}
+                          </Link>
+                        </Td>
+                        <Td><StatusWord tone={partial ? 'warn' : 'info'}>{partial ? 'Partially fulfilled' : 'To fulfill'}</StatusWord></Td>
+                        <Td priority={2}><span className="block max-w-[14rem] truncate">{order.email}</span></Td>
+                        <Td align="right" className="font-mono text-[12px]">{order.total || ''}</Td>
+                        <Td priority={3} align="right" className="font-mono text-[12px]">{day(order.createdAt)}</Td>
+                      </Tr>
+                    );
+                  })}
+                </tbody>
+              </DataTable>
+            )}
             {orders.ok && orders.value.count > 0 && (
               <div className="mt-2 flex justify-end">
                 <OutLink href={ORDERS_PATH}>All orders</OutLink>
@@ -136,81 +227,26 @@ export async function OverviewPage() {
             )}
           </div>
 
-          <div>
+          <div className="min-w-0">
             <SectionTitle meta={count(decisions, value => value.allow + value.deny + value.manual_review)}>Decisions today</SectionTitle>
-            {!decisions.ok ? (
-              <ListBand><Unavailable /></ListBand>
-            ) : (
-              <ListBand className="grid grid-cols-3 divide-x divide-y-0">
+            {!decisions.ok ? <Unavailable /> : (
+              <ListBand>
                 {([
-                  ['allow', 'Allowed', 'ok'],
                   ['deny', 'Denied', 'danger'],
-                  ['manual_review', 'Review', 'warn'],
-                ] as const).map(([key, text, dot]) => (
+                  ['manual_review', 'Manual review', 'warn'],
+                  ['allow', 'Allowed', 'ok'],
+                ] as const).map(([key, text, tone]) => (
                   <Link
                     key={key}
                     href={`${LEDGER_PATH}?tab=decisions&${new URLSearchParams({ '!status_matches': JSON.stringify([key]) }).toString()}`}
-                    className="min-w-0 px-4 py-3 transition-colors hover:bg-background/60"
+                    className="flex min-h-10 items-center justify-between gap-4 px-4 py-2 transition-colors hover:bg-muted/40"
                   >
-                    <span className="flex items-baseline gap-1.5 text-xs text-muted-foreground">
-                      <Dot tone={dot} />
-                      {text}
-                    </span>
-                    <span className="mt-1 block font-mono text-2xl font-medium tabular-nums text-foreground">{decisions.value[key]}</span>
+                    <Stamp tone={decisions.value[key] > 0 ? tone : 'muted'}>{text}</Stamp>
+                    <span className="font-mono text-[14px] tabular-nums text-foreground">{decisions.value[key]}</span>
                   </Link>
                 ))}
               </ListBand>
             )}
-          </div>
-        </section>
-
-        <section className="grid gap-10 lg:grid-cols-2">
-          <div>
-            <SectionTitle meta={count(blocked, value => value.count, value => value.capped)}>Blocked from publishing</SectionTitle>
-            <ListBand>
-              {!blocked.ok && <Unavailable />}
-              {blocked.ok && blocked.value.products.length === 0 && <None>No blocked draft products</None>}
-              {blocked.ok && blocked.value.products.map(product => (
-                <div key={product.id} className="flex items-baseline justify-between gap-4 px-4 py-3">
-                  <span className="min-w-0">
-                    <span className="flex items-baseline gap-2.5 text-sm font-medium text-foreground">
-                      <Dot tone="warn" />
-                      <span className="min-w-0 break-words">{product.title}</span>
-                    </span>
-                    <span className="block pl-[1.125rem] text-xs text-muted-foreground">
-                      {product.variants.slice(0, 3).map(variant =>
-                        `${variant.label}: ${variant.state === 'missing' ? 'Not classified' : label(CLASSIFICATION_STATUS_LABELS, variant.state)}`,
-                      ).join(', ')}
-                      {product.variants.length > 3 && ` +${product.variants.length - 3}`}
-                    </span>
-                  </span>
-                  <OutLink href={`/dashboard/platform/products/${product.id}`}>Product</OutLink>
-                </div>
-              ))}
-            </ListBand>
-          </div>
-
-          <div>
-            <SectionTitle meta={expiring.ok ? expiring.value.length : undefined}>Evidence expiring in 30 days</SectionTitle>
-            <ListBand>
-              {!expiring.ok && <Unavailable />}
-              {expiring.ok && expiring.value.length === 0 && <None>Nothing expiring</None>}
-              {expiring.ok && expiring.value.slice(0, 10).map(item => (
-                <div key={`${item.kind}-${item.id}`} className="flex items-baseline justify-between gap-4 px-4 py-3">
-                  <span className="min-w-0">
-                    <span className="flex items-baseline gap-2.5 text-sm font-medium text-foreground">
-                      <Dot tone={new Date(item.expiresAt).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 ? 'danger' : 'warn'} />
-                      <span className="min-w-0 break-words">{item.title}</span>
-                    </span>
-                    <span className="block pl-[1.125rem] text-xs text-muted-foreground">
-                      {item.detail} · <span className="font-mono tabular-nums" title={dateTime(item.expiresAt)}>{day(item.expiresAt)}</span> ({daysLeft(item.expiresAt)})
-                    </span>
-                  </span>
-                  <OutLink href={item.href}>Open</OutLink>
-                </div>
-              ))}
-              {expiring.ok && expiring.value.length > 10 && <None>{expiring.value.length - 10} more</None>}
-            </ListBand>
           </div>
         </section>
       </div>

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ListBand, StatusFilter } from "../../components/vape-ui";
+import { DataTable, StatusFilter } from "../../components/vape-ui";
+import { NeedsYouQueue, collectQueue } from "./config-kit";
 import { PlatformEmptyState } from "../../components/PlatformEmptyState";
 import { PlatformFilterBar } from "../../components/PlatformFilterBar";
-import { RegionDetailsComponent } from "./RegionDetailsComponent";
+import { RegionDetailsComponent, RegionTableHead, regionAttention } from "./RegionDetailsComponent";
 import { CreateItemDrawerClientWrapper } from "@/features/platform/components/CreateItemDrawerClientWrapper";
 import { PopularRegionsDrawer } from "./drawers/PopularRegionsDrawer";
 import { CreateRegionDropdown } from "./CreateRegionDropdown";
@@ -45,12 +46,12 @@ export function RegionList({ data, statusCounts, list }: RegionListProps) {
 
   return (
     <div className="space-y-2 px-4 pb-6 md:px-6">
-      {/* Filter Bar with Custom Create Button */}
-      <PlatformFilterBar 
-        list={list}
-        customCreateButton={
-          <CreateRegionDropdown onCreateClick={handleCreateClick} />
-        }
+      {/* Needs you: regions that cannot take orders, worst first */}
+      <NeedsYouQueue
+        listKey="regions"
+        recordLabel="Region"
+        items={collectQueue(data.items, regionAttention)}
+        className="px-0 pb-4 md:px-0"
       />
 
       <StatusFilter
@@ -59,18 +60,30 @@ export function RegionList({ data, statusCounts, list }: RegionListProps) {
         statuses={statusOptions.map((status) => ({ ...status, count: statusCounts[status.value] }))}
       />
 
+      {/* Filter Bar with Custom Create Button */}
+      <PlatformFilterBar 
+        list={list}
+        customCreateButton={
+          <CreateRegionDropdown onCreateClick={handleCreateClick} />
+        }
+      />
+
+
       {data.items.length === 0 ? (
         <PlatformEmptyState title="No regions" />
       ) : (
-        <ListBand>
-        {data.items.map((region) => (
-          <RegionDetailsComponent
-            key={region.id}
-            region={region}
-            list={list}
-          />
-        ))}
-        </ListBand>
+        <DataTable aria-label="Regions">
+          <thead><RegionTableHead /></thead>
+          <tbody>
+            {data.items.map((region) => (
+              <RegionDetailsComponent
+                key={region.id}
+                region={region}
+                list={list}
+              />
+            ))}
+          </tbody>
+        </DataTable>
       )}
 
       {/* Create Drawers */}

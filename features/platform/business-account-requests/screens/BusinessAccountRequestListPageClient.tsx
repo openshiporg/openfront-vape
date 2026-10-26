@@ -13,9 +13,9 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { DataTable, PageTitle, SectionTitle, Th } from '../../components/vape-ui'
 import { StatusTabs } from '../components/StatusTabs'
-import { BusinessAccountRequestDetailsComponent } from '../components/BusinessAccountRequestDetailsComponent'
+import { BusinessAccountRequestDetailsComponent, requestNeed } from '../components/BusinessAccountRequestDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { CreateItemDrawerClientWrapper } from '@/features/platform/components/CreateItemDrawerClientWrapper'
@@ -183,7 +183,25 @@ export function BusinessAccountRequestListPageClient({
     { type: 'page' as const, label: 'Account Requests' }
   ]
 
-  const header = <PageTitle title="Account Requests" />
+  const items: any[] = data?.items ?? []
+  // Pending reviews first, then requests waiting on more info; oldest first within each.
+  const queue = items
+    .filter((request) => requestNeed(request))
+    .sort((a, b) =>
+      Number(b.status === 'pending') - Number(a.status === 'pending') ||
+      new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
+    )
+
+  const header = (
+    <PageTitle
+      title="Account Requests"
+      meta={statusCounts ? (
+        <span className="tabular-nums">
+          {statusCounts.pending} to review · {statusCounts.requires_info} waiting on info · {statusCounts.all} total
+        </span>
+      ) : undefined}
+    />
+  )
 
   // Check if we have any active filters (search or actual filters)
   const hasFilters = !!searchString
@@ -192,6 +210,36 @@ export function BusinessAccountRequestListPageClient({
 
   return (
     <PageContainer title="Account Requests" header={header} breadcrumbs={breadcrumbs}>
+      {!error && queue.length > 0 && (
+        <section className="px-4 pt-2 md:px-6" aria-labelledby="requests-queue-title">
+          <SectionTitle meta={queue.length}>
+            <span id="requests-queue-title">Needs you</span>
+          </SectionTitle>
+          <DataTable aria-label="Account requests needing action">
+            <thead>
+              <tr>
+                <Th>Business</Th>
+                <Th>Needs</Th>
+                <Th priority={2}>Contact</Th>
+                <Th align="right" priority={2}>Requested credit</Th>
+                <Th priority={2}>Waiting</Th>
+                <Th align="right"><span className="sr-only">Next step</span></Th>
+              </tr>
+            </thead>
+            <tbody>
+              {queue.map((request: any) => (
+                <BusinessAccountRequestDetailsComponent key={request.id} businessAccountRequest={request} list={list} variant="queue" />
+              ))}
+            </tbody>
+          </DataTable>
+        </section>
+      )}
+
+      {/* Status Tabs */}
+      {statusCounts && (
+        <StatusTabs statusCounts={statusCounts} />
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -209,11 +257,6 @@ export function BusinessAccountRequestListPageClient({
         />
       </div>
 
-      {/* Status Tabs */}
-      {statusCounts && (
-        <StatusTabs statusCounts={statusCounts} />
-      )}
-
       {/* Active Filters */}
       <div className="px-4 md:px-6">
         <FilterList list={list} />
@@ -222,7 +265,7 @@ export function BusinessAccountRequestListPageClient({
       {/* Users list */}
       {error ? (
         <div className="px-4 md:px-6">
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="rounded-md">
             <AlertDescription>
               Failed to load items: {error}
             </AlertDescription>
@@ -240,11 +283,25 @@ export function BusinessAccountRequestListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((user: any) => (
-                <BusinessAccountRequestDetailsComponent key={user.id} businessAccountRequest={user} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Account requests">
+              <thead>
+                <tr>
+                  <Th>Business</Th>
+                  <Th priority={3}>Type</Th>
+                  <Th priority={2}>Contact</Th>
+                  <Th>Status</Th>
+                  <Th align="right" priority={2}>Requested</Th>
+                  <Th align="right" priority={3}>Approved</Th>
+                  <Th priority={2}>Submitted</Th>
+                  <Th className="w-20"><span className="sr-only">Actions</span></Th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((request: any) => (
+                  <BusinessAccountRequestDetailsComponent key={request.id} businessAccountRequest={request} list={list} variant="row" />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

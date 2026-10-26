@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
-import { Pill, Track } from '@/features/platform/components/vape-primitives';
 import { PlatformEmptyState } from '@/features/platform/components/PlatformEmptyState';
 import { JURISDICTION_LEVEL_LABELS } from '@/features/keystone/regulated/labels';
 
@@ -29,7 +28,7 @@ export function JurisdictionFilters({ level, search }: { level: string; search: 
   return (
     <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
       <form
-        className="relative w-full sm:w-64"
+        className="relative w-full min-w-0 sm:w-64"
         onSubmit={event => {
           event.preventDefault();
           update({ search: text.trim() });
@@ -40,18 +39,26 @@ export function JurisdictionFilters({ level, search }: { level: string; search: 
           type="search"
           aria-label="Search jurisdictions"
           placeholder="Code or name"
-          className="h-10 rounded-full pl-9"
+          className="h-10 rounded-[4px] pl-9"
           value={text}
           onChange={event => setText(event.target.value)}
           onBlur={() => text.trim() !== search && update({ search: text.trim() })}
         />
       </form>
-      <Track label="Level">
-        <Pill active={!level} onClick={() => update({ level: '' })}>All levels</Pill>
-        {Object.entries(JURISDICTION_LEVEL_LABELS).map(([value, label]) => (
-          <Pill key={value} active={level === value} onClick={() => update({ level: value })}>{label}</Pill>
-        ))}
-      </Track>
+      <label className="flex shrink-0 items-center gap-2">
+        <span className="text-[12px] font-medium text-muted-foreground">Level</span>
+        <select
+          aria-label="Level"
+          className="h-10 rounded-[4px] border border-input bg-background px-2.5 text-[13px] text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          value={level}
+          onChange={event => update({ level: event.target.value })}
+        >
+          <option value="">All levels</option>
+          {Object.entries(JURISDICTION_LEVEL_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }

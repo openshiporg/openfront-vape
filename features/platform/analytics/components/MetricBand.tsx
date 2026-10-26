@@ -16,7 +16,7 @@ export function MetricBand({
           ? rows.map((row) => (
               <div key={row.label} className="flex items-baseline justify-between gap-4 px-4 py-3">
                 <span className="text-sm text-muted-foreground">{row.label}</span>
-                <span className="font-mono text-base font-medium tabular-nums text-foreground">{row.value}</span>
+                <span className="text-base font-medium tabular-nums text-foreground">{row.value}</span>
               </div>
             ))
           : [0, 1, 2, 3].map((i) => (
@@ -50,12 +50,12 @@ export function ChartPanel({
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
           {value !== undefined && (
-            <div className="mt-1 font-mono text-2xl font-medium tabular-nums text-foreground">{value}</div>
+            <div className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{value}</div>
           )}
         </div>
         {control}
       </div>
-      <div className="rounded-xl bg-background p-4 ring-1 ring-border">{children}</div>
+      <div className="rounded-md border bg-card p-4">{children}</div>
     </section>
   );
 }

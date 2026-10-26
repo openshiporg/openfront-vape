@@ -13,7 +13,8 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import Link from 'next/link'
+import { DataTable, ListBand, PageTitle, SectionTitle, StatusWord, Th } from '../../components/vape-ui'
 import { StatusTabs } from '../components/StatusTabs'
 import { UserDetailsComponent } from '../components/UserDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
@@ -228,6 +229,19 @@ export function UserListPageClient({
 
   const header = <PageTitle title="Users" />
 
+  // Customers on this page with orders held for action, oldest held order first.
+  const heldQueue = (data?.items || [])
+    .map((user: any) => {
+      const held = (user.orders || []).filter((order: any) => order.status === 'requires_action')
+      const oldest = held.reduce(
+        (min: any, order: any) => (!min || new Date(order.createdAt) < new Date(min.createdAt) ? order : min),
+        null
+      )
+      return { user, held, oldest }
+    })
+    .filter((entry: any) => entry.held.length > 0)
+    .sort((a: any, b: any) => new Date(a.oldest.createdAt).getTime() - new Date(b.oldest.createdAt).getTime())
+
   // Check if we have any active filters (search or actual filters)
   const hasFilters = !!searchString
   const isFiltered = hasFilters
@@ -235,6 +249,34 @@ export function UserListPageClient({
 
   return (
     <PageContainer title="Users" header={header} breadcrumbs={breadcrumbs}>
+      {heldQueue.length > 0 && (
+        <section aria-label="Customers with held orders" className="px-4 pb-6 md:px-6">
+          <SectionTitle meta={heldQueue.length}>Needs you</SectionTitle>
+          <ListBand>
+            {heldQueue.map(({ user, held, oldest }: any) => (
+              <div key={user.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-2.5">
+                <span className="flex min-w-0 flex-wrap items-baseline gap-x-2.5">
+                  <StatusWord tone="warn">{held.length} held</StatusWord>
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {user.name || user.email}
+                  </span>
+                  <span className="font-mono text-[12px] text-muted-foreground">#{oldest.displayId}</span>
+                  <span className="text-[12px] tabular-nums text-muted-foreground">
+                    since {new Date(oldest.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
+                  </span>
+                </span>
+                <Link
+                  href={`/dashboard/platform/orders/${oldest.id}`}
+                  className="inline-flex min-h-8 items-center rounded-[4px] border border-input bg-background px-3 text-[13px] font-medium text-foreground hover:bg-muted max-sm:min-h-10"
+                >
+                  Review order
+                </Link>
+              </div>
+            ))}
+          </ListBand>
+        </section>
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -283,11 +325,24 @@ export function UserListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((user: any) => (
-                <UserDetailsComponent key={user.id} user={user} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Users">
+              <thead>
+                <tr>
+                  <Th>Name</Th>
+                  <Th priority={2}>Email</Th>
+                  <Th priority={2}>Role</Th>
+                  <Th>Status</Th>
+                  <Th align="right" priority={3}>Orders</Th>
+                  <Th priority={3}>Joined</Th>
+                  <Th align="right"><span className="sr-only">Actions</span></Th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.items?.map((user: any) => (
+                  <UserDetailsComponent key={user.id} user={user} list={list} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

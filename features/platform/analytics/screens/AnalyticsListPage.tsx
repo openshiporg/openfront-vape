@@ -27,13 +27,15 @@ import {
   Region,
 } from "../lib/analyticsHelpers";
 import { PageBreadcrumbs } from "@/features/dashboard/components/PageBreadcrumbs";
-import { Dot, ListBand, PageTitle } from "@/features/platform/components/vape-ui";
+import { Dot, ListBand, PageTitle, SectionTitle } from "@/features/platform/components/vape-ui";
 import { StatsCards } from "../components/StatsCards";
 import { DateRangePickerWrapper } from "../components/DateRangePickerWrapper";
 import { RegionalTabs } from "../components/RegionalTabs";
 import { RegionalSelector } from "../components/RegionalSelector";
 import { ConvertToTabs } from "../components/ConvertToTabs";
 import { AnalyticsClientWrapper } from "../components/AnalyticsClientWrapper";
+import { RevenueBlockers, SalesNow, type HeldOrder, type SalesWindow } from "../components/RevenueBlockers";
+import { getOverview } from "@/features/platform/overview/actions/overview";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -81,6 +83,7 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
       categoryResponse,
       fulfillmentResponse,
       regionsResponse,
+      overview,
     ] = await Promise.all([
       getSalesOverview(startDate, endDate, previousStartDate, previousEndDate, selectedRegion),
       getCustomerAnalytics(startDate, endDate, selectedRegion),
@@ -90,6 +93,10 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
       getCategoryPerformance(startDate, endDate, selectedRegion),
       getFulfillmentAnalytics(startDate, endDate, selectedRegion),
       getRegionsAndCurrencies(),
+      getOverview().catch((error) => {
+        console.error("Overview data error:", error);
+        return null;
+      }),
     ]);
 
     // Check for errors
@@ -391,6 +398,41 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
       },
     ];
 
+    // Sales right now: today and the last 7 days, from the orders already loaded.
+    // Preset periods always end today and cover at least 7 days; custom ranges may not.
+    const salesWindows: SalesWindow[] = [];
+    if (salesData && !(customStartDate && customEndDate)) {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const weekStart = new Date(startOfToday);
+      weekStart.setDate(weekStart.getDate() - 6);
+      const windowFigure = (label: string, since: Date): SalesWindow => {
+        const orders = (salesData.orders || []).filter(
+          (order: any) => new Date(order.createdAt).getTime() >= since.getTime()
+        );
+        let revenue = calculateSalesMetrics(orders).totalRevenue;
+        if (!selectedRegion && conversionCurrency !== 'usd') {
+          revenue = convertCurrency(revenue, 'usd', conversionCurrency);
+        }
+        return { label, value: `${currencySymbol}${(revenue / 100).toFixed(2)}`, orders: orders.length };
+      };
+      salesWindows.push(windowFigure("Today", startOfToday), windowFigure("Last 7 days", weekStart));
+    }
+
+    // Orders held for action in this period, oldest first.
+    const heldOrders: HeldOrder[] = ((salesData?.orders || []) as any[])
+      .filter((order) => order.status === "requires_action")
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      .slice(0, 10)
+      .map((order) => ({
+        id: order.id,
+        displayId: order.displayId,
+        total: typeof order.total === "string" ? order.total : null,
+        createdAt: order.createdAt,
+        email: order.user?.email ?? null,
+      }));
+    const blockedProducts = overview?.blocked.ok ? overview.blocked.value : null;
+
     const dashboardData = {
       salesMetrics,
       customerMetrics,
@@ -451,7 +493,13 @@ export async function AnalyticsListPage({ searchParams }: PageProps) {
             )}
           </div>
 
+          <div className="space-y-6 px-4 pb-8 md:px-6">
+            <SalesNow windows={salesWindows} />
+            <RevenueBlockers blocked={blockedProducts} held={heldOrders} />
+          </div>
+
           <div className="px-4 md:px-6">
+            <SectionTitle meta={selectedPeriod === "12m" ? "12 months" : customStartDate && customEndDate ? "Custom range" : `${selectedPeriod.replace("d", "")} days`}>Period</SectionTitle>
             <StatsCards
               data={statsData}
               loading={!salesMetrics && !cartMetrics}

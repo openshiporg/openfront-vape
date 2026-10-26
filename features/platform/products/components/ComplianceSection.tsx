@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 
-import { Dot, ListBand, SectionTitle } from '@/features/platform/components/vape-ui'
+import { Dot, ListBand, SectionTitle, Stamp } from '@/features/platform/components/vape-ui'
 import type { DotTone } from '@/features/platform/components/vape-primitives'
 import type { ProductCompliance, VariantCompliance } from '../actions/compliance'
 import {
@@ -51,16 +51,15 @@ function VariantRow({ variant, onClassify }: { variant: VariantCompliance; onCla
 
   return (
     <div className="px-4 py-3 text-sm">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="inline-flex min-w-0 items-baseline gap-2">
-          <Dot tone={state.tone} />
-          <span className="truncate font-medium text-foreground">{variant.title}</span>
-          <span className="shrink-0 text-xs text-muted-foreground">{state.label}</span>
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex min-w-0 flex-col items-start gap-1">
+          <span className="max-w-full truncate font-medium text-foreground">{variant.title}</span>
+          <Stamp tone={state.tone}>{state.label}</Stamp>
         </span>
         <button
           type="button"
           onClick={() => onClassify(variant.id)}
-          className="inline-flex min-h-8 shrink-0 items-center rounded-full bg-background px-3 text-xs font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.08)] max-sm:min-h-10"
+          className="inline-flex min-h-8 shrink-0 items-center rounded-[4px] border border-input bg-background px-3 text-xs font-medium text-foreground hover:bg-muted max-sm:min-h-10"
         >
           {classification ? 'Edit' : 'Classify'}
         </button>
@@ -108,10 +107,7 @@ export function ComplianceSection({ compliance, onClassify }: { compliance: Prod
       </SectionTitle>
       <ListBand>
         <div className="px-4 py-3 text-sm">
-          <span className="inline-flex items-baseline gap-2 font-medium text-foreground">
-            <Dot tone={ready ? 'ok' : 'danger'} />
-            {ready ? 'Ready to publish' : 'Publishing blocked'}
-          </span>
+          <Stamp tone={ready ? 'ok' : 'danger'}>{ready ? 'Ready to publish' : 'Publishing blocked'}</Stamp>
           {compliance.publishIssue && (
             <p className="mt-1 text-xs text-muted-foreground">{compliance.publishIssue}</p>
           )}

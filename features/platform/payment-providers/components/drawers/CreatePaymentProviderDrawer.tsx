@@ -277,7 +277,7 @@ export function CreatePaymentProviderDrawer({
               <Button 
                 type="button" 
                 variant="ghost"
-                className="h-10 rounded-full bg-muted px-4 hover:bg-muted/80"
+                className="h-10 rounded-[4px] bg-muted px-4 hover:bg-muted/80"
                 onClick={handleClose}
                 disabled={loading}
               >
@@ -286,7 +286,7 @@ export function CreatePaymentProviderDrawer({
               <Button 
                 type="submit" 
                 disabled={loading || !isFormValid()}
-                className="h-10 min-w-[120px] rounded-full px-4"
+                className="h-10 min-w-[120px] rounded-[4px] px-4"
               >
                 {loading ? (
                   <>

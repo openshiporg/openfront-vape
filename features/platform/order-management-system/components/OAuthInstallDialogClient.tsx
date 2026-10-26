@@ -89,7 +89,7 @@ export const OAuthInstallDialogClient: React.FC<OAuthInstallDialogClientProps> =
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()} modal>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:rounded-md sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {initialData.success && initialData.app
@@ -105,7 +105,7 @@ export const OAuthInstallDialogClient: React.FC<OAuthInstallDialogClientProps> =
 
         <div className="py-2">
           {!initialData.success ? (
-            <div className="flex items-baseline gap-2.5 rounded-xl bg-muted/40 px-4 py-3 text-sm text-foreground ring-1 ring-inset ring-border/60">
+            <div className="flex items-baseline gap-2.5 rounded-md border bg-muted/40 px-4 py-3 text-sm text-foreground">
               <Dot tone="danger" />
               <span className="text-destructive">{initialData.error}</span>
             </div>
@@ -137,14 +137,14 @@ export const OAuthInstallDialogClient: React.FC<OAuthInstallDialogClientProps> =
             <Button
               variant="ghost"
               onClick={handleClose}
-              className="h-10 flex-1 rounded-full bg-muted"
+              className="h-10 flex-1 rounded-[4px] bg-muted"
             >
               Cancel
             </Button>
             <Button
               onClick={handleAuthorize}
               disabled={isProcessing || !initialData.success}
-              className="h-10 flex-1 rounded-full"
+              className="h-10 flex-1 rounded-[4px]"
             >
               {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Install

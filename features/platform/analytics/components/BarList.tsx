@@ -146,7 +146,7 @@ function BarListInner<T>(
             <p
               className={cn(
                 // base
-                "truncate whitespace-nowrap font-mono text-sm leading-none tabular-nums",
+                "truncate whitespace-nowrap text-sm leading-none tabular-nums",
                 // text color
                 "text-foreground",
               )}

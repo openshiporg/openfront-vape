@@ -13,9 +13,10 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { DataTable, PageTitle } from '../../components/vape-ui'
+import { NeedsYouQueue, collectQueue } from '../../regions/components/config-kit'
 import { StatusTabs } from '../components/StatusTabs'
-import { PaymentProviderDetailsComponent } from '../components/PaymentProviderDetailsComponent'
+import { PaymentProviderDetailsComponent, PaymentProviderTableHead, paymentProviderAttention } from '../components/PaymentProviderDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { CreatePaymentProviderDrawer } from '../components/drawers/CreatePaymentProviderDrawer'
@@ -178,10 +179,17 @@ export function PaymentProviderListPageClient({
   const hasFilters = !!searchString
   const isFiltered = hasFilters
   const isEmpty = data?.count === 0 && !isFiltered
+  const attention = collectQueue(data?.items, paymentProviderAttention)
 
   return (
     <>
     <PageContainer title="Payment Providers" header={header} breadcrumbs={breadcrumbs}>
+      {/* Needs you: providers not installed or offered in no region */}
+      {!error && <NeedsYouQueue listKey={list.key} recordLabel="Provider" items={attention} />}
+
+      {/* Status Tabs */}
+      <StatusTabs regionCounts={regionCounts} />
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -200,9 +208,6 @@ export function PaymentProviderListPageClient({
           }
         />
       </div>
-
-      {/* Status Tabs */}
-      <StatusTabs regionCounts={regionCounts} />
 
       {/* Active Filters */}
       <div className="px-4 md:px-6">
@@ -230,11 +235,14 @@ export function PaymentProviderListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((paymentprovider: any) => (
-                <PaymentProviderDetailsComponent key={paymentprovider.id} paymentprovider={paymentprovider} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Payment providers">
+              <thead><PaymentProviderTableHead /></thead>
+              <tbody>
+                {data?.items?.map((paymentprovider: any) => (
+                  <PaymentProviderDetailsComponent key={paymentprovider.id} paymentprovider={paymentprovider} list={list} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

@@ -116,7 +116,7 @@ function AuthorizationForm({ form, onSaved }: { form: ClassifyForm; onSaved: () 
         </Field>
       </div>
       <ErrorLine message={error} />
-      <Button type="submit" disabled={pending || !value.evidenceDigest} className="h-10 w-full rounded-full">
+      <Button type="submit" disabled={pending || !value.evidenceDigest} className="h-10 w-full rounded-[4px]">
         {pending ? 'Saving…' : 'Add authorization'}
       </Button>
     </form>
@@ -272,7 +272,7 @@ export function ClassifySheet({ variantId, open, onOpenChange, onSaved }: {
 
               <ErrorLine message={error} />
               {!locked && (
-                <Button type="submit" disabled={pending || needsEvidence} className="h-10 w-full rounded-full">
+                <Button type="submit" disabled={pending || needsEvidence} className="h-10 w-full rounded-[4px]">
                   {pending ? 'Saving…' : existing ? 'Save classification' : 'Create classification'}
                 </Button>
               )}

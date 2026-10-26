@@ -36,7 +36,7 @@ export function ProductImage({
   const FallbackIcon = () => (
     <div 
       className={cn(
-        "flex items-center justify-center rounded-md bg-muted shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)]",
+        "flex items-center justify-center rounded-md border border-border bg-muted",
         className
       )}
       style={{ width, height }}

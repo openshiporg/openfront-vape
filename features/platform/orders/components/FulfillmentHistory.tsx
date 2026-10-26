@@ -134,13 +134,13 @@ export function FulfillmentHistory({
         <div className="min-w-0 flex-1">
           <h4 className="text-sm font-medium text-foreground">{item.lineItem.title}</h4>
           {item.lineItem.variantTitle && (
-            <p className="font-mono text-xs tabular-nums text-foreground/80">{item.lineItem.variantTitle}</p>
+            <p className="text-xs text-foreground/80">{item.lineItem.variantTitle}</p>
           )}
           {item.lineItem.sku && (
             <p className="font-mono text-[11px] tabular-nums text-muted-foreground">SKU {item.lineItem.sku}</p>
           )}
         </div>
-        <div className="shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">
+        <div className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
           <span className="text-sm text-foreground">{item.quantity}</span> x {item.lineItem.formattedUnitPrice}
         </div>
       </div>
@@ -155,14 +155,14 @@ export function FulfillmentHistory({
       <SectionTitle meta={filteredFulfillments.length}>Fulfilments</SectionTitle>
       <ListBand>
         <div className="px-4 py-3">
-          <div className="h-1.5 overflow-hidden rounded-full bg-background ring-1 ring-inset ring-border">
-            <div className="h-full rounded-full bg-emerald-500 dark:bg-emerald-400" style={{ width: `${fulfilledPercentage}%` }} />
+          <div className="h-1.5 overflow-hidden rounded-[1px] bg-muted">
+            <div className="h-full bg-[oklch(0.48_0.1_160)] dark:bg-[oklch(0.7_0.12_160)]" style={{ width: `${fulfilledPercentage}%` }} />
           </div>
           <dl className="mt-3 flex items-baseline justify-between gap-4 text-sm">
             <div className="flex items-baseline gap-2">
               <Dot tone="ok" />
               <dt className="text-muted-foreground">Fulfilled</dt>
-              <dd className="font-mono tabular-nums text-foreground">
+              <dd className="tabular-nums text-foreground">
                 {lineItemStats.fulfilled}{' '}
                 <span className="text-muted-foreground">{fulfilledPercentage.toFixed(1)}%</span>
               </dd>
@@ -170,7 +170,7 @@ export function FulfillmentHistory({
             <div className="flex items-baseline gap-2">
               <Dot tone="warn" />
               <dt className="text-muted-foreground">Open</dt>
-              <dd className="font-mono tabular-nums text-foreground">
+              <dd className="tabular-nums text-foreground">
                 {totalUnfulfilled}{' '}
                 <span className="text-muted-foreground">{openPercentage.toFixed(1)}%</span>
               </dd>
@@ -190,7 +190,7 @@ export function FulfillmentHistory({
             <div
               key={fulfillment.id}
               className={cn(
-                'px-4 py-3 transition-opacity duration-200',
+                'px-4 py-2.5 transition-opacity duration-200',
                 fulfillment.canceledAt && !expanded && 'opacity-60 hover:opacity-100'
               )}
             >
@@ -208,7 +208,7 @@ export function FulfillmentHistory({
                       {fulfillment.canceledAt ? 'Cancelled' : 'Fulfilled'}
                     </span>
                   </div>
-                  <div className="mt-0.5 font-mono text-xs tabular-nums text-muted-foreground">
+                  <div className="mt-0.5 text-xs tabular-nums text-muted-foreground">
                     {formatDate(fulfillment.createdAt.toString())}
                   </div>
                 </div>
@@ -217,9 +217,9 @@ export function FulfillmentHistory({
                     type="button"
                     onClick={() => toggleFulfillment(fulfillment.id)}
                     aria-expanded={expanded}
-                    className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-background px-3 text-xs font-medium text-foreground shadow-xs ring-1 ring-border max-sm:min-h-10"
+                    className="inline-flex min-h-8 items-center gap-1.5 rounded-[4px] bg-background px-3 text-xs font-medium text-foreground ring-1 ring-border max-sm:min-h-10"
                   >
-                    <span className="font-mono tabular-nums">{count}</span>
+                    <span className="tabular-nums">{count}</span>
                     {count === 1 ? 'item' : 'items'}
                     {expanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
                   </button>
@@ -244,7 +244,7 @@ export function FulfillmentHistory({
                             <Button
                               variant="destructive"
                               size="sm"
-                              className="h-8 rounded-full text-xs"
+                              className="h-8 rounded-[4px] text-xs"
                               onClick={() => onDelete(fulfillment.id)}
                             >
                               Cancel fulfillment
@@ -297,7 +297,7 @@ export function FulfillmentHistory({
                                   href={label.labelUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-foreground px-3 text-xs font-medium text-background hover:bg-foreground/90"
+                                  className="inline-flex h-8 items-center justify-center gap-1 rounded-[4px] bg-foreground px-3 text-xs font-medium text-background hover:bg-foreground/90"
                                 >
                                   Download label <ArrowUpRight className="size-3" />
                                 </Link>

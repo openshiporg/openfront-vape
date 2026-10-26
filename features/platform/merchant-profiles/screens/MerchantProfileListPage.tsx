@@ -1,12 +1,13 @@
 import Link from 'next/link';
-import { ArrowUpRight, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import { PageContainer } from '@/features/dashboard/components/PageContainer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dot, ListBand, PageTitle, StatusFilter } from '@/features/platform/components/vape-ui';
+import { buttonClass, DataTable, ListBand, PageTitle, SectionTitle, Stamp, StatusFilter, Td, Th, Tr } from '@/features/platform/components/vape-ui';
 import { MERCHANT_PROFILE_STATUS_LABELS } from '@/features/keystone/regulated/labels';
 import { listProfiles } from '../actions/profiles';
 import { PROFILE_STATUS_TONES, day } from '../lib/status';
+import { profileChecks } from '../lib/completeness';
 import { ProfileSheet } from '../components/ProfileSheet';
 import { ProfileEmpty, ProfileSearch } from '../components/ProfileSearch';
 
@@ -50,78 +51,149 @@ export async function MerchantProfileListPage({ searchParams }: PageProps) {
 
   const { profiles, counts, total, canManage } = response.data;
   const activeCount = counts.active || 0;
+  const now = Date.now();
+  const checked = profiles
+    .filter(profile => profile.status !== 'revoked')
+    .map(profile => {
+      const checks = profileChecks({ ...profile, hasOrigin: Boolean(profile.origin) }, now);
+      return { profile, checks, missing: checks.filter(check => !check.ok) };
+    })
+    // Active profiles that fail the gate block sales outright; then the closest to ready
+    .sort((a, b) =>
+      Number(b.profile.status === 'active') - Number(a.profile.status === 'active') ||
+      a.missing.length - b.missing.length);
+  const ready = checked.filter(entry => entry.missing.length === 0).length;
+
   const header = (
-    <PageTitle
-      title="Merchant authority"
-      tone={activeCount ? 'ok' : 'muted'}
-      state={`${activeCount} active`}
-    />
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <PageTitle
+        title="Merchant authority"
+        tone={ready === 1 ? 'ok' : ready > 1 ? 'danger' : activeCount ? 'warn' : 'muted'}
+        state={ready === 1 ? 'Profile ready' : ready > 1 ? `${ready} ready profiles` : 'No ready profile'}
+        meta={`${activeCount} active of ${total}`}
+      />
+      {canManage && (
+        <ProfileSheet className={`${buttonClass.base} ${buttonClass.primary} h-10`}>
+          <Plus />
+          New profile
+        </ProfileSheet>
+      )}
+    </div>
   );
 
   return (
     <PageContainer title="Merchant authority" header={header} breadcrumbs={breadcrumbs}>
-      <StatusFilter
-        className="px-4 py-0 md:px-6"
-        allCount={total}
-        statuses={Object.entries(MERCHANT_PROFILE_STATUS_LABELS).map(([value, label]) => ({
-          value,
-          label,
-          count: counts[value] || 0,
-          tone: PROFILE_STATUS_TONES[value],
-        }))}
-      />
-      <div className="space-y-4 px-4 pb-24 sm:pb-10 md:px-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <ProfileSearch key={search} />
-          {canManage && (
-            <ProfileSheet className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-primary px-4 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">
-              <Plus className="size-4" />
-              New profile
-            </ProfileSheet>
+      <div className="space-y-8 px-4 pb-24 sm:pb-10 md:px-6">
+        <section>
+          <SectionTitle meta={ready > 1 ? 'Sales need exactly one ready profile' : undefined}>Profile completeness</SectionTitle>
+          {checked.length === 0 ? (
+            <ListBand>
+              <div className="px-4 py-6 text-sm text-muted-foreground">
+                No merchant profile. Add one with a legal name, PACT registration, origin, product types and a launch jurisdiction, then activate it.
+              </div>
+            </ListBand>
+          ) : (
+            <DataTable>
+              <thead>
+                <tr>
+                  <Th>Profile</Th>
+                  <Th>Completeness</Th>
+                  <Th priority={2}>Missing</Th>
+                  <Th align="right"><span className="sr-only">Fix</span></Th>
+                </tr>
+              </thead>
+              <tbody>
+                {checked.map(({ profile, checks, missing }) => (
+                  <Tr key={profile.id}>
+                    <Td className="max-w-[16rem]">
+                      <span className="flex min-w-0 flex-col">
+                        <span className="truncate font-medium text-foreground">{profile.legalName}</span>
+                        <span className="text-[12px] text-muted-foreground">{MERCHANT_PROFILE_STATUS_LABELS[profile.status] || profile.status}</span>
+                      </span>
+                    </Td>
+                    <Td>
+                      <Stamp tone={missing.length === 0 ? 'ok' : profile.status === 'active' ? 'danger' : 'warn'} serial={`${checks.length - missing.length}/${checks.length}`}>
+                        {missing.length === 0 ? 'Ready' : 'Incomplete'}
+                      </Stamp>
+                    </Td>
+                    <Td priority={2} className="text-[12px] text-muted-foreground">
+                      {missing.length ? missing.map(check => check.missing).join(', ') : 'Nothing'}
+                    </Td>
+                    <Td align="right">
+                      <Link href={`/dashboard/platform/merchant-profiles/${profile.id}`} className={`${buttonClass.base} ${buttonClass.outline}`}>
+                        {missing.length ? 'Fix' : 'Open'}
+                      </Link>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </DataTable>
           )}
-        </div>
+        </section>
 
-        {profiles.length === 0 ? (
-          <ProfileEmpty filtered={status !== 'all' || Boolean(search)} />
-        ) : (
-          <ListBand>
-            {profiles.map(profile => (
-              <Link
-                key={profile.id}
-                href={`/dashboard/platform/merchant-profiles/${profile.id}`}
-                className="group block px-4 py-3 transition-colors hover:bg-background/60"
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="flex min-w-0 items-baseline gap-2.5 text-sm font-medium text-foreground">
-                    <Dot tone={PROFILE_STATUS_TONES[profile.status] || 'muted'} />
-                    <span className="truncate">{profile.legalName}</span>
-                  </span>
-                  <span className="inline-flex shrink-0 items-baseline gap-2 text-xs text-muted-foreground">
-                    {MERCHANT_PROFILE_STATUS_LABELS[profile.status] || profile.status}
-                    <ArrowUpRight className="size-3.5 self-center transition-colors group-hover:text-foreground" />
-                  </span>
-                </div>
-                <dl className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 pl-[1.125rem] text-xs">
-                  <div className="flex items-baseline gap-1.5">
-                    <dt className="text-muted-foreground">Sales</dt>
-                    <dd className={profile.killSwitch ? 'text-red-600 dark:text-red-400' : 'text-foreground'}>
-                      {profile.killSwitch ? 'Stopped' : 'On'}
-                    </dd>
-                  </div>
-                  <div className="flex gap-1.5"><dt className="text-muted-foreground">PACT</dt><dd className="text-foreground">{profile.pactRegistered ? 'Registered' : 'Not registered'}</dd></div>
-                  <div className="flex gap-1.5"><dt className="text-muted-foreground">Origin</dt><dd className="font-mono text-foreground">{profile.origin || 'None'}</dd></div>
-                  <div className="flex gap-1.5"><dt className="text-muted-foreground">Launch</dt><dd className="font-mono tabular-nums text-foreground">{profile.launchCount}</dd></div>
-                  <div className="flex gap-1.5">
-                    <dt className="text-muted-foreground">Effective</dt>
-                    <dd className="font-mono tabular-nums text-foreground">
+        <section className="space-y-3">
+          <SectionTitle meta={profiles.length}>All profiles</SectionTitle>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <StatusFilter
+              className="min-w-0 p-0 md:px-0"
+              allCount={total}
+              statuses={Object.entries(MERCHANT_PROFILE_STATUS_LABELS).map(([value, label]) => ({
+                value,
+                label,
+                count: counts[value] || 0,
+                tone: PROFILE_STATUS_TONES[value],
+              }))}
+            />
+            <ProfileSearch key={search} />
+          </div>
+
+          {profiles.length === 0 ? (
+            <ProfileEmpty filtered={status !== 'all' || Boolean(search)} />
+          ) : (
+            <DataTable>
+              <thead>
+                <tr>
+                  <Th>Profile</Th>
+                  <Th>Status</Th>
+                  <Th>Sales</Th>
+                  <Th priority={2}>PACT</Th>
+                  <Th priority={3}>Origin</Th>
+                  <Th align="right" priority={3}>Launch</Th>
+                  <Th priority={2}>Effective</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {profiles.map(profile => (
+                  <Tr key={profile.id}>
+                    <Td className="max-w-[16rem]">
+                      <Link
+                        href={`/dashboard/platform/merchant-profiles/${profile.id}`}
+                        className="flex min-h-10 min-w-0 flex-col justify-center underline-offset-4 hover:underline md:min-h-0"
+                      >
+                        <span className="truncate font-medium text-foreground">{profile.legalName}</span>
+                        {profile.complianceOwner && <span className="truncate text-[12px] text-muted-foreground">{profile.complianceOwner}</span>}
+                      </Link>
+                    </Td>
+                    <Td>
+                      <Stamp tone={PROFILE_STATUS_TONES[profile.status] || 'muted'}>
+                        {MERCHANT_PROFILE_STATUS_LABELS[profile.status] || profile.status}
+                      </Stamp>
+                    </Td>
+                    <Td>
+                      <Stamp tone={profile.killSwitch ? 'danger' : 'ok'}>{profile.killSwitch ? 'Stopped' : 'On'}</Stamp>
+                    </Td>
+                    <Td priority={2} className="whitespace-nowrap text-muted-foreground">{profile.pactRegistered ? 'Registered' : 'Not registered'}</Td>
+                    <Td priority={3} className="font-mono text-[12px] text-muted-foreground">{profile.origin || 'None'}</Td>
+                    <Td align="right" priority={3}>{profile.launchCount}</Td>
+                    <Td priority={2} className="whitespace-nowrap font-mono text-[12px] text-muted-foreground">
                       {day(profile.effectiveAt) || 'None'} to {day(profile.expiresAt) || 'None'}
-                    </dd>
-                  </div>
-                </dl>
-              </Link>
-            ))}
-          </ListBand>
-        )}
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </DataTable>
+          )}
+        </section>
       </div>
     </PageContainer>
   );

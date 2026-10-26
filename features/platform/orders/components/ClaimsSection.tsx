@@ -136,7 +136,7 @@ export const ClaimsSection = ({ order, claims, totalItems }: ClaimsSectionProps)
                       type="button"
                       aria-label="Claim actions"
                       disabled={isUpdating === claim.id}
-                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50 max-sm:size-10"
+                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-[4px] text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50 max-sm:size-10"
                     >
                       <MoreVertical className="size-3.5" />
                     </button>

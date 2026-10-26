@@ -52,7 +52,7 @@ function RatesSkeleton() {
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="flex items-center justify-between w-full h-[54px] p-3 border rounded-lg"
+          className="flex items-center justify-between w-full h-[54px] p-3 border rounded-md"
         >
           <div className="space-y-2">
             <Skeleton className="h-4 w-[100px]" />
@@ -321,7 +321,7 @@ export function ProviderTabContent({
                       return (
                         <div
                           key={rate.id}
-                          className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${
+                          className={`flex items-center justify-between p-3 rounded-md border cursor-pointer ${
                             selectedRate?.id === rate.id
                               ? "border-primary bg-primary/5"
                               : "border-border"

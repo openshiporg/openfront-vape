@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 import { PageContainer } from '@/features/dashboard/components/PageContainer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dot, ListBand, PageTitle, StatusFilter } from '@/features/platform/components/vape-ui';
+import { DataTable, PageTitle, SectionTitle, Stamp, Td, Th, Tr } from '@/features/platform/components/vape-ui';
 import {
   ADDRESS_MATCH_LABELS,
   AGE_RESULT_LABELS,
@@ -11,8 +11,9 @@ import {
   DECISION_RESULT_LABELS,
   TAX_QUOTE_STATUS_LABELS,
 } from '@/features/keystone/regulated/labels';
-import { getLedger, type LedgerTab } from '../actions/ledger';
+import { getLedger, getTodayAttention, type LedgerTab } from '../actions/ledger';
 import { FilteredEmpty } from '../components/FilteredEmpty';
+import { LinkSelect } from '../components/LinkSelect';
 import { LinkTrack, OrderLink, Pager } from '../components/LinkTrack';
 import { LEDGER_PATH, PAGE_SIZE, dateTime, filterValue, label, money, pageNumber, reasonLabel, shortId, stateTone } from '../lib/format';
 
@@ -48,137 +49,228 @@ const EMPTY: Record<LedgerTab, string> = {
   attestations: 'No age attestations',
 };
 
-function Row({ tone, title, aside, meta, href }: { tone?: ReturnType<typeof stateTone>; title: ReactNode; aside?: ReactNode; meta?: ReactNode; href?: string }) {
+const Mono = ({ children, className }: { children: ReactNode; className?: string }) => (
+  <span className={`font-mono text-[12px] tabular-nums ${className ?? ''}`}>{children}</span>
+);
+
+/** HH:MM UTC for today's log; the full date and time sit in the title. */
+function clock(value: string | null | undefined) {
+  if (!value) return '';
+  return dateTime(value).slice(11);
+}
+
+function Serial({ id, href }: { id: string; href?: string }) {
+  if (!href) return <Mono className="text-muted-foreground">{shortId(id)}</Mono>;
   return (
-    <div className="px-4 py-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <span className="flex min-w-0 items-baseline gap-2.5 text-sm font-medium text-foreground">
-          {tone && <Dot tone={tone} />}
-          {href ? (
-            <Link href={href} className="min-w-0 break-words underline-offset-4 hover:underline">{title}</Link>
-          ) : (
-            <span className="min-w-0 break-words">{title}</span>
-          )}
-        </span>
-        {aside && <span className="flex shrink-0 items-baseline gap-3">{aside}</span>}
-      </div>
-      {meta && <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 pl-[1.125rem] text-xs text-muted-foreground">{meta}</div>}
-    </div>
+    <Link href={href} className="inline-flex min-h-8 items-center font-mono text-[12px] tabular-nums text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground max-sm:min-h-10">
+      {shortId(id)}
+    </Link>
   );
 }
 
-const Mono = ({ children }: { children: ReactNode }) => <span className="font-mono tabular-nums">{children}</span>;
-
-function Validity({ issuedAt, expiresAt }: { issuedAt?: string; expiresAt?: string }) {
+function Rule({ item }: { item: any }) {
+  const reasons: string[] = Array.isArray(item.reasonCodes) ? item.reasonCodes : [];
+  const ruleIds: string[] = Array.isArray(item.ruleIds) ? item.ruleIds : [];
+  if (!reasons.length && !ruleIds.length) return <span className="text-muted-foreground">None</span>;
   return (
-    <>
-      {issuedAt && <span>Issued <Mono>{dateTime(issuedAt)}</Mono></span>}
-      {expiresAt && <span>Expires <Mono>{dateTime(expiresAt)}</Mono></span>}
-    </>
+    <span className="block max-w-[22rem] truncate" title={[...reasons, ...ruleIds].join(', ')}>
+      {reasons.length ? reasonLabel(reasons[0]) : <Mono>{ruleIds[0]}</Mono>}
+      {reasons.length > 1 && <span className="text-muted-foreground"> +{reasons.length - 1}</span>}
+    </span>
   );
 }
 
-function rows(tab: LedgerTab, items: any[]) {
+function actor(item: any) {
+  const id = Array.isArray(item.events) ? item.events[0]?.actorId : null;
+  return id ? <Mono>{shortId(id)}</Mono> : <span className="text-muted-foreground">System</span>;
+}
+
+/** Decision log: time, decision stamp, rule, jurisdiction, subject, actor, record serial. */
+function DecisionLog({ items, timeOnly }: { items: any[]; timeOnly?: boolean }) {
+  return (
+    <DataTable>
+      <thead>
+        <tr>
+          <Th>Time</Th>
+          <Th>Decision</Th>
+          <Th>Rule</Th>
+          <Th priority={3}>Purpose</Th>
+          <Th priority={2}>Jurisdiction</Th>
+          <Th priority={2}>Subject</Th>
+          <Th priority={3}>Actor</Th>
+          <Th align="right">Record</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map(item => (
+          <Tr key={item.id}>
+            <Td className="whitespace-nowrap">
+              <Mono>
+                <span title={dateTime(item.issuedAt)}>{timeOnly ? clock(item.issuedAt) : dateTime(item.issuedAt)}</span>
+              </Mono>
+            </Td>
+            <Td><Stamp tone={stateTone(item.result)}>{label(DECISION_RESULT_LABELS, item.result)}</Stamp></Td>
+            <Td className="min-w-0"><Rule item={item} /></Td>
+            <Td priority={3} className="whitespace-nowrap">{label(DECISION_PURPOSE_LABELS, item.purpose)}</Td>
+            <Td priority={2}>{item.jurisdiction?.code ? <Mono>{item.jurisdiction.code}</Mono> : <span className="text-muted-foreground">None</span>}</Td>
+            <Td priority={2} className="whitespace-nowrap"><OrderLink order={item.order} cartId={item.cart?.id} /></Td>
+            <Td priority={3}>{actor(item)}</Td>
+            <Td align="right"><Serial id={item.id} href={`${LEDGER_PATH}/${item.id}`} /></Td>
+          </Tr>
+        ))}
+      </tbody>
+    </DataTable>
+  );
+}
+
+function AgeTable({ items }: { items: any[] }) {
+  return (
+    <DataTable>
+      <thead>
+        <tr>
+          <Th>Time</Th>
+          <Th>Result</Th>
+          <Th>Provider</Th>
+          <Th priority={3}>Purpose</Th>
+          <Th priority={2} align="right">Age</Th>
+          <Th priority={3}>Address</Th>
+          <Th priority={3}>Reason</Th>
+          <Th priority={2}>Subject</Th>
+          <Th align="right">Record</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map(item => (
+          <Tr key={item.id}>
+            <Td className="whitespace-nowrap"><Mono>{dateTime(item.issuedAt)}</Mono></Td>
+            <Td><Stamp tone={stateTone(item.result)}>{label(AGE_RESULT_LABELS, item.result)}</Stamp></Td>
+            <Td className="whitespace-nowrap">{item.providerCode}</Td>
+            <Td priority={3} className="whitespace-nowrap">{label(DECISION_PURPOSE_LABELS, item.purpose)}</Td>
+            <Td priority={2} align="right"><Mono>{item.verifiedAge ?? '–'} / {item.thresholdAge}</Mono></Td>
+            <Td priority={3} className="whitespace-nowrap">{label(ADDRESS_MATCH_LABELS, item.addressMatch)}</Td>
+            <Td priority={3}>{item.reasonCode ? reasonLabel(item.reasonCode) : <span className="text-muted-foreground">None</span>}</Td>
+            <Td priority={2} className="whitespace-nowrap"><OrderLink order={item.order} cartId={item.cart?.id} /></Td>
+            <Td align="right"><Serial id={item.id} /></Td>
+          </Tr>
+        ))}
+      </tbody>
+    </DataTable>
+  );
+}
+
+function TaxTable({ items }: { items: any[] }) {
+  return (
+    <DataTable>
+      <thead>
+        <tr>
+          <Th>Time</Th>
+          <Th>Status</Th>
+          <Th priority={2}>Provider</Th>
+          <Th priority={2}>Jurisdiction</Th>
+          <Th align="right">Sales</Th>
+          <Th align="right">Excise</Th>
+          <Th priority={3} align="right">Local</Th>
+          <Th priority={3}>Subject</Th>
+          <Th priority={2} align="right">Record</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map(item => (
+          <Tr key={item.id}>
+            <Td className="whitespace-nowrap"><Mono>{dateTime(item.issuedAt)}</Mono></Td>
+            <Td><Stamp tone={stateTone(item.status)}>{label(TAX_QUOTE_STATUS_LABELS, item.status)}</Stamp></Td>
+            <Td priority={2} className="whitespace-nowrap">{item.providerCode}</Td>
+            <Td priority={2}>{item.jurisdiction?.code ? <Mono>{item.jurisdiction.code}</Mono> : <span className="text-muted-foreground">None</span>}</Td>
+            <Td align="right"><Mono>{money(item.salesTaxAmount, item.currencyCode)}</Mono></Td>
+            <Td align="right"><Mono>{money(item.exciseTaxAmount, item.currencyCode)}</Mono></Td>
+            <Td priority={3} align="right"><Mono>{money(item.localFeeAmount, item.currencyCode)}</Mono></Td>
+            <Td priority={3} className="whitespace-nowrap"><OrderLink order={item.order} cartId={item.cart?.id} /></Td>
+            <Td priority={2} align="right"><Serial id={item.id} /></Td>
+          </Tr>
+        ))}
+      </tbody>
+    </DataTable>
+  );
+}
+
+function CarrierTable({ items }: { items: any[] }) {
+  return (
+    <DataTable>
+      <thead>
+        <tr>
+          <Th>Time</Th>
+          <Th>Result</Th>
+          <Th>Service</Th>
+          <Th priority={2}>Route</Th>
+          <Th priority={3}>Adult signature</Th>
+          <Th priority={3}>Markings</Th>
+          <Th priority={2}>Subject</Th>
+          <Th align="right">Record</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map(item => (
+          <Tr key={item.id}>
+            <Td className="whitespace-nowrap"><Mono>{dateTime(item.issuedAt)}</Mono></Td>
+            <Td><Stamp tone={stateTone(item.result)}>{label(DECISION_RESULT_LABELS, item.result)}</Stamp></Td>
+            <Td className="whitespace-nowrap">{item.carrierCode} {item.serviceCode}</Td>
+            <Td priority={2} className="whitespace-nowrap"><Mono>{item.originJurisdictionCode} → {item.destinationJurisdictionCode}</Mono></Td>
+            <Td priority={3}>{item.adultSignature ? 'Required' : 'Not required'}</Td>
+            <Td priority={3}>
+              {Array.isArray(item.packageMarkings) && item.packageMarkings.length > 0
+                ? item.packageMarkings.join(', ')
+                : <span className="text-muted-foreground">None</span>}
+            </Td>
+            <Td priority={2} className="whitespace-nowrap"><OrderLink order={item.order} cartId={item.cart?.id} /></Td>
+            <Td align="right"><Serial id={item.id} /></Td>
+          </Tr>
+        ))}
+      </tbody>
+    </DataTable>
+  );
+}
+
+function AttestationTable({ items }: { items: any[] }) {
+  return (
+    <DataTable>
+      <thead>
+        <tr>
+          <Th>Time</Th>
+          <Th>Customer</Th>
+          <Th priority={2}>Email</Th>
+          <Th priority={3}>Statement</Th>
+          <Th align="right">Record</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map(item => (
+          <Tr key={item.id}>
+            <Td className="whitespace-nowrap"><Mono>{dateTime(item.occurredAt)}</Mono></Td>
+            <Td className="min-w-0">
+              <span className="block truncate">{item.customer?.name || item.customer?.email || `Customer ${shortId(item.resourceId)}`}</span>
+            </Td>
+            <Td priority={2}>{item.customer?.email || <span className="text-muted-foreground">Hidden</span>}</Td>
+            <Td priority={3}><span className="block max-w-[28rem] truncate">{item.data?.statement || ''}</span></Td>
+            <Td align="right"><Serial id={item.id} /></Td>
+          </Tr>
+        ))}
+      </tbody>
+    </DataTable>
+  );
+}
+
+function Records({ tab, items }: { tab: LedgerTab; items: any[] }) {
   switch (tab) {
     case 'decisions':
-      return items.map(item => {
-        const reasons: string[] = Array.isArray(item.reasonCodes) ? item.reasonCodes : [];
-        return (
-          <Row
-            key={item.id}
-            tone={stateTone(item.result)}
-            href={`${LEDGER_PATH}/${item.id}`}
-            title={`${label(DECISION_PURPOSE_LABELS, item.purpose)} · ${label(DECISION_RESULT_LABELS, item.result)}`}
-            aside={<OrderLink order={item.order} cartId={item.cart?.id} />}
-            meta={
-              <>
-                {reasons.length > 0 && (
-                  <span className="basis-full text-foreground/80">
-                    {reasons.slice(0, 3).map(reasonLabel).join(', ')}
-                    {reasons.length > 3 && ` +${reasons.length - 3}`}
-                  </span>
-                )}
-                {item.jurisdiction?.code && <span>{item.jurisdiction.code}</span>}
-                <Validity issuedAt={item.issuedAt} expiresAt={item.expiresAt} />
-                {item.revokedAt && <span>Revoked <Mono>{dateTime(item.revokedAt)}</Mono></span>}
-              </>
-            }
-          />
-        );
-      });
+      return <DecisionLog items={items} />;
     case 'age':
-      return items.map(item => (
-        <Row
-          key={item.id}
-          tone={stateTone(item.result)}
-          title={`${label(AGE_RESULT_LABELS, item.result)} · ${item.providerCode}`}
-          aside={<OrderLink order={item.order} cartId={item.cart?.id} />}
-          meta={
-            <>
-              <span>{label(DECISION_PURPOSE_LABELS, item.purpose)}</span>
-              <span>Age <Mono>{item.verifiedAge}</Mono> of <Mono>{item.thresholdAge}</Mono></span>
-              <span>Address {label(ADDRESS_MATCH_LABELS, item.addressMatch).toLowerCase()}</span>
-              {item.reasonCode && <span>{reasonLabel(item.reasonCode)}</span>}
-              <span>Consent {item.consentPolicyVersion}</span>
-              <Validity issuedAt={item.issuedAt} expiresAt={item.expiresAt} />
-            </>
-          }
-        />
-      ));
+      return <AgeTable items={items} />;
     case 'tax':
-      return items.map(item => (
-        <Row
-          key={item.id}
-          tone={stateTone(item.status)}
-          title={`${label(TAX_QUOTE_STATUS_LABELS, item.status)} · ${item.providerCode}`}
-          aside={<OrderLink order={item.order} cartId={item.cart?.id} />}
-          meta={
-            <>
-              {item.jurisdiction?.code && <span>{item.jurisdiction.code}</span>}
-              <span>Sales <Mono>{money(item.salesTaxAmount, item.currencyCode)}</Mono></span>
-              <span>Excise <Mono>{money(item.exciseTaxAmount, item.currencyCode)}</Mono></span>
-              <span>Local <Mono>{money(item.localFeeAmount, item.currencyCode)}</Mono></span>
-              <span>Source {item.sourceVersion}</span>
-              <Validity issuedAt={item.issuedAt} expiresAt={item.expiresAt} />
-              {item.committedAt && <span>Committed <Mono>{dateTime(item.committedAt)}</Mono></span>}
-            </>
-          }
-        />
-      ));
+      return <TaxTable items={items} />;
     case 'carrier':
-      return items.map(item => (
-        <Row
-          key={item.id}
-          tone={stateTone(item.result)}
-          title={`${label(DECISION_RESULT_LABELS, item.result)} · ${item.carrierCode} ${item.serviceCode}`}
-          aside={<OrderLink order={item.order} cartId={item.cart?.id} />}
-          meta={
-            <>
-              <span><Mono>{item.originJurisdictionCode}</Mono> to <Mono>{item.destinationJurisdictionCode}</Mono></span>
-              <span>{item.adultSignature ? 'Adult signature' : 'No adult signature'}</span>
-              {Array.isArray(item.packageMarkings) && item.packageMarkings.length > 0 && (
-                <span>Markings {item.packageMarkings.join(', ')}</span>
-              )}
-              <Validity issuedAt={item.issuedAt} expiresAt={item.expiresAt} />
-            </>
-          }
-        />
-      ));
+      return <CarrierTable items={items} />;
     case 'attestations':
-      return items.map(item => (
-        <Row
-          key={item.id}
-          tone="ok"
-          title={item.customer?.name || item.customer?.email || `Customer ${shortId(item.resourceId)}`}
-          aside={<span className="font-mono text-xs tabular-nums text-muted-foreground">{dateTime(item.occurredAt)}</span>}
-          meta={
-            <>
-              {item.customer?.email && item.customer?.name && <span>{item.customer.email}</span>}
-              {item.data?.statement && <span>{item.data.statement}</span>}
-            </>
-          }
-        />
-      ));
+      return <AttestationTable items={items} />;
   }
 }
 
@@ -190,8 +282,14 @@ export async function ComplianceLedgerPage({ searchParams }: { searchParams: Sea
   const purposeValue = filterValue(params.purpose);
   const purpose = purposeValue && DECISION_PURPOSE_LABELS[purposeValue] ? purposeValue : null;
   const page = pageNumber(params.page);
+  const filtered = Boolean(state || purpose);
+  // The default view (decisions, first page, no filters) opens on today's work queue
+  const showQueue = tab === 'decisions' && page === 1 && !filtered;
 
-  const response = await getLedger({ tab, state, purpose, page });
+  const [response, attention] = await Promise.all([
+    getLedger({ tab, state, purpose, page }),
+    showQueue ? getTodayAttention() : Promise.resolve(null),
+  ]);
 
   const query = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams();
@@ -222,53 +320,84 @@ export async function ComplianceLedgerPage({ searchParams }: { searchParams: Sea
     })),
   ];
 
-  const filtered = Boolean(state || purpose);
   const stateLabels = STATE_LABELS[tab];
+  const outcomes = response.success
+    ? [
+        { key: 'all', label: 'All outcomes', count: response.total, href: query({ '!status_matches': null, page: null }), active: !state },
+        ...Object.keys(response.counts).map(value => ({
+          key: value,
+          label: stateLabels[value] || label({}, value),
+          count: response.counts[value],
+          href: query({ '!status_matches': JSON.stringify([value]), page: null }),
+          active: state === value,
+        })),
+      ]
+    : [];
+
+  const attentionItems = attention?.success ? attention.items : [];
+  const denied = attentionItems.filter(item => item.result === 'deny').length;
+  const review = attentionItems.length - denied;
+  const meta = attention?.success
+    ? `Today: ${denied}${attention.capped ? '+' : ''} denied, ${review} in manual review`
+    : undefined;
 
   return (
-    <PageContainer title="Compliance ledger" header={<PageTitle title="Compliance ledger" />} breadcrumbs={breadcrumbs}>
-      <div className="space-y-1 pb-24 sm:pb-10">
-        <div className="px-4 md:px-6">
-          <LinkTrack label="Record type" options={tabs} />
-        </div>
-
-        {!response.success ? (
-          <div className="px-4 py-3 md:px-6">
-            <Alert variant="destructive">
-              <AlertDescription>{response.error}</AlertDescription>
-            </Alert>
-          </div>
-        ) : (
-          <>
-            {tab !== 'attestations' && (
-              <StatusFilter
-                allCount={response.total}
-                statuses={Object.keys(response.counts).map(value => ({
-                  value,
-                  label: stateLabels[value] || value,
-                  count: response.counts[value],
-                  tone: stateTone(value),
-                }))}
-                className="pb-0"
-              />
-            )}
-            {tab === 'decisions' && (
-              <div className="px-4 pt-3 md:px-6">
-                <LinkTrack label="Purpose" options={purposes} />
+    <PageContainer title="Compliance ledger" header={<PageTitle title="Compliance ledger" meta={meta} />} breadcrumbs={breadcrumbs}>
+      <div className="space-y-6 pb-24 sm:pb-10">
+        {showQueue && (
+          <section className="px-4 md:px-6">
+            <SectionTitle meta={attention?.success ? `${attentionItems.length}${attention.capped ? '+' : ''}` : undefined}>
+              Denials and manual reviews today
+            </SectionTitle>
+            {!attention?.success ? (
+              <Alert variant="destructive">
+                <AlertDescription>{attention && !attention.success ? attention.error : 'Unable to load compliance records.'}</AlertDescription>
+              </Alert>
+            ) : attentionItems.length === 0 ? (
+              <div className="flex items-center gap-2.5 rounded-md border bg-card px-4 py-3 text-[13px] text-foreground">
+                <Stamp tone="ok">Clear</Stamp>
+                No denials or manual reviews today
               </div>
+            ) : (
+              <DecisionLog items={attentionItems} timeOnly />
             )}
-            <div className="px-4 pt-4 md:px-6">
-              {response.items.length === 0 ? (
-                <FilteredEmpty title={filtered ? `${EMPTY[tab]} match these filters` : EMPTY[tab]} resetHref={filtered ? `${LEDGER_PATH}?tab=${tab}` : undefined} />
-              ) : (
-                <>
-                  <ListBand>{rows(tab, response.items)}</ListBand>
-                  <Pager page={page} count={response.count} pageSize={PAGE_SIZE} href={number => query({ page: String(number) })} />
-                </>
-              )}
-            </div>
-          </>
+          </section>
         )}
+
+        <section className="space-y-3">
+          <div className="px-4 md:px-6">
+            {showQueue && <h2 className="mb-1 text-[15px] font-semibold text-foreground">All records</h2>}
+            <LinkTrack label="Record type" options={tabs} />
+          </div>
+
+          {!response.success ? (
+            <div className="px-4 md:px-6">
+              <Alert variant="destructive">
+                <AlertDescription>{response.error}</AlertDescription>
+              </Alert>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 md:px-6">
+                {tab !== 'attestations' && <LinkSelect label="Outcome" options={outcomes} />}
+                {tab === 'decisions' && <LinkSelect label="Purpose" options={purposes} />}
+                <span className="ml-auto text-[12px] tabular-nums text-muted-foreground">
+                  {response.count} {response.count === 1 ? 'record' : 'records'}
+                </span>
+              </div>
+              <div className="px-4 md:px-6">
+                {response.items.length === 0 ? (
+                  <FilteredEmpty title={filtered ? `${EMPTY[tab]} match these filters` : EMPTY[tab]} resetHref={filtered ? `${LEDGER_PATH}?tab=${tab}` : undefined} />
+                ) : (
+                  <>
+                    <Records tab={tab} items={response.items} />
+                    <Pager page={page} count={response.count} pageSize={PAGE_SIZE} href={number => query({ page: String(number) })} />
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </section>
       </div>
     </PageContainer>
   );

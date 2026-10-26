@@ -2,11 +2,11 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { pillClass, trackClass } from '@/features/platform/components/vape-primitives';
+import { buttonClass, pillClass, trackClass } from '@/features/platform/components/vape-primitives';
 
 export type LinkOption = { key: string; label: string; href: string; active: boolean; count?: number };
 
-/** Raised pill in a recessed track, as links, for server-rendered option groups. */
+/** Underline tab row as links, for server-rendered option groups: hairline under the row, current choice underlined in ink. */
 export function LinkTrack({ label, options, className }: { label: string; options: LinkOption[]; className?: string }) {
   return (
     <nav aria-label={label} className={cn(trackClass, className)}>
@@ -21,7 +21,7 @@ export function LinkTrack({ label, options, className }: { label: string; option
         >
           {option.label}
           {option.count !== undefined && (
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{option.count}</span>
+            <span className="text-[11px] tabular-nums text-muted-foreground">{option.count}</span>
           )}
         </Link>
       ))}
@@ -48,8 +48,7 @@ export function OrderLink({ order, cartId }: { order?: { id: string; displayId?:
 export function Pager({ page, count, pageSize, href }: { page: number; count: number; pageSize: number; href: (page: number) => string }) {
   const pages = Math.max(1, Math.ceil(count / pageSize));
   if (pages <= 1) return null;
-  const linkClass =
-    'inline-flex min-h-9 items-center rounded-full bg-background px-4 text-[13px] font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.06)] dark:bg-zinc-800';
+  const linkClass = cn(buttonClass.base, buttonClass.outline);
   return (
     <div className="mt-4 flex items-center justify-between gap-3">
       <span className="font-mono text-xs tabular-nums text-muted-foreground">

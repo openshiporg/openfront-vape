@@ -481,7 +481,7 @@ export function MiniStorefront({
                         <div
                           key={product.id}
                           className={cn(
-                            "p-3 rounded-lg border cursor-pointer transition-colors",
+                            "p-3 rounded-md border cursor-pointer transition-colors",
                             selectedProduct?.id === product.id
                               ? "border-primary bg-primary/5"
                               : "border-border hover:border-primary/50"
@@ -727,7 +727,7 @@ export function MiniStorefront({
           <div className="space-y-4">
             <RadioGroup value={selectedShippingOptionId} onValueChange={setSelectedShippingOptionId}>
               {shippingOptions.map((option) => (
-                <div key={option.id} className="flex items-center space-x-3 p-4 rounded-lg border">
+                <div key={option.id} className="flex items-center space-x-3 p-4 rounded-md border">
                   <RadioGroupItem value={option.id} id={option.id} />
                   <Label htmlFor={option.id} className="flex-1 cursor-pointer">
                     <div className="flex justify-between items-center">
@@ -768,7 +768,7 @@ export function MiniStorefront({
           <div className="space-y-4">
             <RadioGroup value={selectedPaymentProvider} onValueChange={setSelectedPaymentProvider}>
               {paymentMethods.map((method) => (
-                <div key={method.id} className="flex items-center space-x-3 p-4 rounded-lg border">
+                <div key={method.id} className="flex items-center space-x-3 p-4 rounded-md border">
                   <RadioGroupItem value={method.id} id={method.id} />
                   <Label htmlFor={method.id} className="flex-1 cursor-pointer">
                     <div>
@@ -875,7 +875,7 @@ export function MiniStorefront({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="overflow-hidden p-0 md:max-h-[600px] md:max-w-[900px] lg:max-w-[1000px]">
+        <DialogContent className="sm:rounded-md overflow-hidden p-0 md:max-h-[600px] md:max-w-[900px] lg:max-w-[1000px]">
           <DialogTitle className="sr-only">Create Draft Order</DialogTitle>
           <DialogDescription className="sr-only">
             Create a new draft order by adding products and customer information.

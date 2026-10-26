@@ -6,17 +6,19 @@ import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
 import { ErrorLine } from '@/features/platform/components/compliance-form'
+import { buttonClass } from '@/features/platform/components/vape-ui'
 
 export type TransitionAction = {
   key: string
   label: string
   done: string
   danger?: boolean
+  /** The record's next step; renders as the one ink button. */
+  primary?: boolean
   run: () => Promise<{ success: true } | { success: false; error: string }>
 }
 
-export const actionClass =
-  'inline-flex min-h-8 items-center rounded-full px-3 text-[13px] font-medium ring-1 ring-inset ring-border bg-background text-foreground transition-colors hover:bg-muted disabled:opacity-50 max-sm:min-h-10'
+export const actionClass = cn(buttonClass.base, buttonClass.outline)
 
 /** Explicit state transitions for a record; a danger action asks once more before it runs. */
 export function TransitionActions({ actions, className, children }: {
@@ -42,7 +44,10 @@ export function TransitionActions({ actions, className, children }: {
               key={action.key}
               type="button"
               disabled={pending}
-              className={cn(actionClass, action.danger && asking && 'bg-red-600 text-white ring-red-600 hover:bg-red-700 dark:bg-red-500')}
+              className={cn(
+                buttonClass.base,
+                action.danger && asking ? buttonClass.danger : action.primary ? buttonClass.primary : buttonClass.outline,
+              )}
               onClick={() => {
                 if (action.danger && !asking) { setConfirming(action.key); return }
                 setConfirming(null)

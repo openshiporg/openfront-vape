@@ -198,7 +198,7 @@ export function LineItemsManager({
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
-                className="h-10 w-full justify-start gap-2 rounded-full text-left text-muted-foreground bg-background hover:bg-background border-input font-normal"
+                className="h-10 w-full justify-start gap-2 rounded-[4px] text-left text-muted-foreground bg-background hover:bg-background border-input font-normal"
               >
                 <Search className="h-4 w-4 text-muted-foreground opacity-70" />
                 <span className="truncate">Search products or variants</span>
@@ -246,7 +246,7 @@ export function LineItemsManager({
                               <div className="flex items-center gap-3">
                                 <span className="font-mono text-sm font-medium tabular-nums">{formatPrice(unitPrice)}</span>
                                 {existingQty > 0 ? (
-                                  <div className="flex h-6 min-w-6 items-center justify-center rounded-full bg-foreground px-1.5 font-mono text-xs tabular-nums text-background">
+                                  <div className="flex h-6 min-w-6 items-center justify-center rounded-[4px] bg-foreground px-1.5 font-mono text-xs tabular-nums text-background">
                                     {existingQty}
                                   </div>
                                 ) : (
@@ -297,7 +297,7 @@ export function LineItemsManager({
                         {item.variant.product.title}
                       </span>
                       {item.variant.title && (
-                        <span className="truncate font-mono text-xs tabular-nums text-foreground/80">
+                        <span className="truncate text-xs text-foreground/80">
                           {item.variant.title}{item.variant.sku ? <span className="text-muted-foreground"> · {item.variant.sku}</span> : ''}
                         </span>
                       )}
@@ -306,12 +306,12 @@ export function LineItemsManager({
                   
                   <div className="flex items-center justify-between gap-4 sm:justify-end">
                     {/* Quantity Control */}
-                    <div className="flex items-center gap-0.5 rounded-full bg-muted p-[3px]">
+                    <div className="flex items-center gap-0.5 rounded-[4px] bg-muted p-[3px]">
                       <button
                         type="button"
                         aria-label="Decrease quantity"
                         onClick={() => updateQuantity(item.id, -1)}
-                        className="inline-flex size-8 items-center justify-center rounded-full bg-background text-foreground shadow-xs max-sm:size-10"
+                        className="inline-flex size-8 items-center justify-center rounded-[4px] bg-background text-foreground max-sm:size-10"
                       >
                         <Minus className="size-3" strokeWidth={3} />
                       </button>
@@ -322,7 +322,7 @@ export function LineItemsManager({
                         type="button"
                         aria-label="Increase quantity"
                         onClick={() => updateQuantity(item.id, 1)}
-                        className="inline-flex size-8 items-center justify-center rounded-full bg-background text-foreground shadow-xs max-sm:size-10"
+                        className="inline-flex size-8 items-center justify-center rounded-[4px] bg-background text-foreground max-sm:size-10"
                       >
                         <Plus className="size-3" strokeWidth={3} />
                       </button>
@@ -344,7 +344,7 @@ export function LineItemsManager({
                         type="button"
                         aria-label="Remove item"
                         onClick={() => removeFromCart(item.id)}
-                        className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-sm:size-10"
+                        className="inline-flex size-8 items-center justify-center rounded-[4px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-sm:size-10"
                         title="Remove item"
                       >
                         <X className="size-4" />

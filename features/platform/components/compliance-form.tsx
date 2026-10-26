@@ -8,10 +8,10 @@ import { Label } from '@/components/ui/label'
 // Form pieces shared by the compliance record sheets and drawers.
 
 export const selectClass =
-  'h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60'
+  'h-10 w-full rounded-[4px] border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60'
 
 export const textareaClass =
-  'min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60'
+  'min-h-24 w-full rounded-[4px] border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60'
 
 /** Evidence documents are hashed in the browser; only the SHA-256 is stored. */
 export async function sha256(file: File) {
@@ -22,7 +22,7 @@ export async function sha256(file: File) {
 export function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
+      <Label htmlFor={id} className="text-[12px] font-medium text-muted-foreground">{label}</Label>
       {children}
     </div>
   )
@@ -56,7 +56,7 @@ export function EvidenceFile({ id, label, digest, onRecord, onDigest }: {
       <Input
         id={id}
         type="file"
-        className="h-10 cursor-pointer pt-2 text-xs"
+        className="h-10 cursor-pointer rounded-[4px] pt-2 text-xs"
         onChange={async event => {
           const file = event.target.files?.[0]
           onDigest(file ? await sha256(file) : '')
@@ -77,7 +77,7 @@ export function Checks({ label, options, value, onChange }: {
 }) {
   return (
     <fieldset className="space-y-1.5">
-      <legend className="text-xs text-muted-foreground">{label}</legend>
+      <legend className="text-[12px] font-medium text-muted-foreground">{label}</legend>
       <div className="grid max-h-48 gap-1 overflow-y-auto rounded-md border border-input p-2 sm:grid-cols-2">
         {options.map(([key, text]) => (
           <label key={key} className="flex min-h-8 items-center gap-2 text-sm text-foreground">

@@ -4,13 +4,19 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ErrorLine, Field } from '@/features/platform/components/compliance-form';
+import { buttonClass } from '@/features/platform/components/vape-ui';
 import { duplicateProfile, resumeSales, setProfileStatus, stopSales } from '../actions/profiles';
 import type { SaveResult } from '@/features/platform/lib/session-context';
 
 type Transition = { status: string; label: string; done: string; variant: 'default' | 'outline' | 'destructive' };
+
+const VARIANT_CLASS: Record<Transition['variant'], string> = {
+  default: `${buttonClass.base} ${buttonClass.primary}`,
+  outline: `${buttonClass.base} ${buttonClass.outline}`,
+  destructive: `${buttonClass.base} ${buttonClass.danger}`,
+};
 
 const TRANSITIONS: Record<string, Transition[]> = {
   draft: [
@@ -60,31 +66,29 @@ export function ProfileStatusActions({ id, status, canManage }: { id: string; st
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         {transitions.map(transition => transition.status === 'revoked' && !confirming ? (
-          <Button key={transition.status} type="button" variant="outline" disabled={pending} className="rounded-full" onClick={() => setConfirming(true)}>
+          <button key={transition.status} type="button" disabled={pending} className={VARIANT_CLASS.outline} onClick={() => setConfirming(true)}>
             Revoke
-          </Button>
+          </button>
         ) : (
-          <Button
+          <button
             key={transition.status}
             type="button"
-            variant={transition.variant}
             disabled={pending}
-            className="rounded-full"
+            className={VARIANT_CLASS[transition.variant]}
             onClick={() => run(() => setProfileStatus(id, status, transition.status), transition.done)}
           >
             {transition.status === 'revoked' ? 'Confirm revoke' : transition.label}
-          </Button>
+          </button>
         ))}
         {revision && (
-          <Button
+          <button
             type="button"
-            variant="outline"
             disabled={pending}
-            className="rounded-full"
+            className={VARIANT_CLASS.outline}
             onClick={() => run(() => duplicateProfile(id), 'New draft recorded', newId => router.push(`/dashboard/platform/merchant-profiles/${newId}`))}
           >
             Record a new revision
-          </Button>
+          </button>
         )}
       </div>
       <ErrorLine message={error} />
@@ -112,9 +116,9 @@ export function KillSwitchControl({ id, killSwitch, canKill }: { id: string; kil
   if (killSwitch) {
     return (
       <div className="space-y-2">
-        <Button type="button" disabled={pending} className="rounded-full" onClick={() => run(() => resumeSales(id), 'Sales resumed')}>
+        <button type="button" disabled={pending} className={VARIANT_CLASS.default} onClick={() => run(() => resumeSales(id), 'Sales resumed')}>
           {pending ? 'Saving…' : 'Resume sales'}
-        </Button>
+        </button>
         {!canKill && <p className="text-xs text-muted-foreground">Kill switch permission required</p>}
         <ErrorLine message={error} />
       </div>
@@ -137,7 +141,7 @@ export function KillSwitchControl({ id, killSwitch, canKill }: { id: string; kil
         <button
           type="submit"
           disabled={pending || length < 10}
-          className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+          className={`${VARIANT_CLASS.destructive} h-10`}
         >
           {pending ? 'Recording…' : 'Stop sales'}
         </button>

@@ -11,9 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
-import { StatusTabs } from '../../components/StatusTabs'
-import { ClaimDetailsComponent } from '../components/ClaimDetailsComponent'
+import { PageTitle, SectionTitle } from '../../components/vape-ui'
+import { ClaimQueue, ClaimTable, claimNeed } from '../components/ClaimTable'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { useDashboard } from '../../../dashboard/context/DashboardProvider'
@@ -100,7 +99,7 @@ export function ClaimListPageClient({
 
   // For claims, use raw GraphQL string to include relationship fields
   const querySelectedFields = `
-    id type createdAt updatedAt
+    id type paymentStatus fulfillmentStatus canceledAt createdAt updatedAt order { id displayId } claimItems { id quantity }
   `
 
   // Use React Query hook with server-side initial data
@@ -157,7 +156,17 @@ export function ClaimListPageClient({
     { type: 'page' as const, label: 'Claims' }
   ]
 
-  const header = <PageTitle title="Claims" />
+  const items: any[] = data?.items ?? []
+  const queue = items
+    .filter((claim) => claimNeed(claim))
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+
+  const header = (
+    <PageTitle
+      title="Claims"
+      meta={data ? <span className="tabular-nums">{queue.length} need action · {data.count} total</span> : undefined}
+    />
+  )
 
   // Check if we have any active filters (search or actual filters)
   const hasFilters = !!searchString
@@ -166,6 +175,15 @@ export function ClaimListPageClient({
 
   return (
     <PageContainer title="Claims" header={header} breadcrumbs={breadcrumbs}>
+      {!error && queue.length > 0 && (
+        <section className="px-4 pt-2 md:px-6" aria-labelledby="claims-queue-title">
+          <SectionTitle meta={queue.length}>
+            <span id="claims-queue-title">Needs you</span>
+          </SectionTitle>
+          <ClaimQueue claims={queue} />
+        </section>
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar list={list} />
@@ -181,7 +199,7 @@ export function ClaimListPageClient({
       {/* Claims list */}
       {error ? (
         <div className="px-4 md:px-6">
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="rounded-md">
             <AlertDescription>
               Failed to load items: {error}
             </AlertDescription>
@@ -199,11 +217,7 @@ export function ClaimListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((claim: any) => (
-                <ClaimDetailsComponent key={claim.id} claim={claim} list={list} />
-              ))}
-            </ListBand>
+            <ClaimTable claims={items} />
           </div>
           
           {/* Pagination */}

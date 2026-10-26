@@ -254,7 +254,7 @@ export function EditItemDrawerClient({
     <>
       <DrawerHeader className="flex-shrink-0">
         <DrawerTitle>Edit {list.singular}</DrawerTitle>
-        <div className="mt-2 flex min-h-10 items-center gap-3 rounded-full bg-muted py-1 pl-4 pr-1 shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] dark:bg-muted/60">
+        <div className="mt-2 flex min-h-10 items-center gap-3 rounded-[4px] border border-border bg-muted/40 py-1 pl-3 pr-1">
           <span className="shrink-0 text-xs font-medium text-muted-foreground">ID</span>
           <span className="min-w-0 flex-1 truncate font-mono text-xs tabular-nums text-foreground">
             {itemId}
@@ -263,7 +263,7 @@ export function EditItemDrawerClient({
             type="button"
             variant="ghost"
             size="icon"
-            className="relative size-8 shrink-0 rounded-full hover:bg-background max-sm:size-10"
+            className="relative size-8 shrink-0 rounded-[4px] hover:bg-background max-sm:size-10"
             onClick={handleCopy}
             disabled={copied}
           >
@@ -307,7 +307,7 @@ export function EditItemDrawerClient({
               {hasChanges && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="Reset changes" className="size-10 rounded-full bg-muted hover:bg-muted/80 dark:bg-muted/60">
+                    <Button variant="ghost" size="icon" aria-label="Reset changes" className="size-10 rounded-[4px] border border-input bg-background hover:bg-muted">
                       <Undo2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
@@ -332,7 +332,7 @@ export function EditItemDrawerClient({
               {!list.hideDelete && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="Delete" className="size-10 rounded-full bg-muted text-destructive hover:bg-muted/80 hover:text-destructive dark:bg-muted/60">
+                    <Button variant="ghost" size="icon" aria-label="Delete" className="size-10 rounded-[4px] border border-input bg-background text-destructive hover:bg-muted hover:text-destructive">
                       <RiDeleteBinLine className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
@@ -361,13 +361,13 @@ export function EditItemDrawerClient({
 
             {/* Save and Cancel buttons on the right */}
             <div className="ml-auto flex gap-2">
-              <Button type="button" variant="ghost" className="h-10 rounded-full bg-muted px-4 hover:bg-muted/80 dark:bg-muted/60" onClick={handleCancel}>
+              <Button type="button" variant="ghost" className="h-10 rounded-[4px] border border-input bg-background px-4 hover:bg-muted" onClick={handleCancel}>
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={saveState === 'saving' || !hasChanges}
-                className="h-10 min-w-[100px] rounded-full px-4"
+                className="h-10 min-w-[100px] rounded-[4px] px-4"
               >
                 {saveState === 'saving' ? (
                   <>

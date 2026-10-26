@@ -35,7 +35,7 @@ export function CreateCurrencyDrawer({ open, onClose }: CreateCurrencyDrawerProp
               <DrawerDescription className="sr-only">Create currency</DrawerDescription>
             </div>
             <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="size-10 rounded-full" aria-label="Close">
+              <Button variant="ghost" size="icon" className="size-10 rounded-[4px]" aria-label="Close">
                 <X className="w-4 h-4" />
               </Button>
             </DrawerClose>
@@ -49,7 +49,7 @@ export function CreateCurrencyDrawer({ open, onClose }: CreateCurrencyDrawerProp
                 Currency creation is not available here.
               </div>
             </ListBand>
-            <Button onClick={handleCreate} className="h-10 w-full rounded-full">
+            <Button onClick={handleCreate} className="h-10 w-full rounded-[4px]">
               Continue
             </Button>
           </div>

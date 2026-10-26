@@ -13,9 +13,9 @@ import { REPORT_STATUS_LABELS, REPORT_TYPE_LABELS } from '@/features/keystone/re
 import { exportInventory } from '@/features/platform/compliance-center/actions/operations';
 import { generateReport, getReportOptions, recordSubmission, type GenerateInput, type ReportOptions } from '../actions/reports';
 
-const primaryClass = 'h-10 rounded-full px-4 text-[13px] font-medium';
+const primaryClass = 'h-10 rounded-[4px] px-4 text-[13px] font-medium';
 const secondaryClass =
-  'inline-flex h-10 items-center justify-center rounded-full bg-background px-4 text-[13px] font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.06)] disabled:opacity-60 dark:bg-zinc-800';
+  'inline-flex h-10 items-center justify-center rounded-[4px] border border-input bg-background px-4 text-[13px] font-medium text-foreground hover:bg-muted disabled:opacity-60';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const monthStart = () => `${today().slice(0, 8)}01`;
@@ -112,7 +112,7 @@ export function GenerateReportButton() {
                 </Field>
               </div>
               <ErrorLine message={error} />
-              <Button type="submit" disabled={pending} className="h-10 w-full rounded-full">
+              <Button type="submit" disabled={pending} className="h-10 w-full rounded-[4px]">
                 {pending ? 'Generating…' : 'Generate report'}
               </Button>
             </form>
@@ -173,7 +173,7 @@ export function RecordSubmissionButton({ reportId, className }: { reportId: stri
               </Track>
             </div>
             <ErrorLine message={error} />
-            <Button type="submit" disabled={pending || !receipt.trim()} className="h-10 w-full rounded-full">
+            <Button type="submit" disabled={pending || !receipt.trim()} className="h-10 w-full rounded-[4px]">
               {pending ? 'Recording…' : 'Record submission'}
             </Button>
           </form>
@@ -194,7 +194,7 @@ export function ExportInventoryButton({ profiles }: { profiles: Array<{ id: stri
   return (
     <div className="flex flex-wrap items-center gap-2">
       {profiles.length > 1 && (
-        <select aria-label="Merchant profile" className={`${selectClass} h-10 w-auto max-w-full rounded-full`} value={profileId} onChange={event => setProfileId(event.target.value)}>
+        <select aria-label="Merchant profile" className={`${selectClass} h-10 w-auto max-w-full rounded-[4px]`} value={profileId} onChange={event => setProfileId(event.target.value)}>
           {profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.legalName}</option>)}
         </select>
       )}

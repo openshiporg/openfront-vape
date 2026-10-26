@@ -160,7 +160,7 @@ export function InvoiceDetailsComponent({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
+                    className="size-10 rounded-[4px] sm:size-8 [&_svg]:size-4"
                     aria-label="Actions"
                   >
                     <MoreVertical className="stroke-muted-foreground" />
@@ -175,7 +175,7 @@ export function InvoiceDetailsComponent({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
+                className="size-10 rounded-[4px] sm:size-8 [&_svg]:size-4"
                 asChild
               >
                 <AccordionTrigger className="justify-center py-0" />
@@ -225,7 +225,7 @@ export function InvoiceDetailsComponent({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-10 shrink-0 rounded-full sm:size-8 [&_svg]:size-4"
+                            className="size-10 shrink-0 rounded-[4px] sm:size-8 [&_svg]:size-4"
                             aria-label="Order actions"
                           >
                             <MoreVertical className="stroke-muted-foreground" />

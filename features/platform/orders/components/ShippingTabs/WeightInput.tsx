@@ -50,7 +50,7 @@ export function WeightInput({ weight, setWeight }: WeightInputProps) {
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <div className="inline-flex -space-x-px rounded-lg shadow-sm shadow-black/5 rtl:space-x-reverse">
+        <div className="inline-flex -space-x-px rounded-md rtl:space-x-reverse">
           <Button
             variant="outline"
             className={`h-6 px-1.5 text-xs rounded-none shadow-none first:rounded-s-lg focus-visible:z-10 ${
@@ -81,7 +81,7 @@ export function WeightInput({ weight, setWeight }: WeightInputProps) {
         </div>
       </div>
       <div>
-        <div className="relative inline-flex h-7 items-center overflow-hidden whitespace-nowrap rounded-lg border border-input text-sm shadow-sm shadow-black/5">
+        <div className="relative inline-flex h-7 items-center overflow-hidden whitespace-nowrap rounded-[4px] border border-input text-sm">
           <input
             type="number"
             value={localWeight.value}

@@ -13,9 +13,10 @@ import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar, platformCreateButtonClass } from '../../components/PlatformFilterBar'
-import { ListBand, PageTitle } from '../../components/vape-ui'
+import { DataTable, PageTitle } from '../../components/vape-ui'
+import { NeedsYouQueue, collectQueue } from '../../regions/components/config-kit'
 import { StatusTabs } from '../components/StatusTabs'
-import { DiscountDetailsComponent } from '../components/DiscountDetailsComponent'
+import { DiscountDetailsComponent, DiscountTableHead, discountAttention } from '../components/DiscountDetailsComponent'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
 import { CreateItemDrawerClientWrapper } from '@/features/platform/components/CreateItemDrawerClientWrapper'
@@ -178,10 +179,19 @@ export function DiscountListPageClient({
   const hasFilters = !!searchString
   const isFiltered = hasFilters
   const isEmpty = data?.count === 0 && !isFiltered
+  const attention = collectQueue(data?.items, discountAttention)
 
   return (
     <>
     <PageContainer title="Discounts" header={header} breadcrumbs={breadcrumbs}>
+      {/* Needs you: enabled discounts that expired, ran out, or end soon */}
+      {!error && <NeedsYouQueue listKey="discounts" recordLabel="Discount" items={attention} />}
+
+      {/* Status Tabs */}
+      {statusCounts && (
+        <StatusTabs statusCounts={statusCounts} />
+      )}
+
       {/* Filter Bar - includes search, filters, sorting, and create button */}
       <div className="px-4 md:px-6">
         <PlatformFilterBar 
@@ -200,11 +210,6 @@ export function DiscountListPageClient({
           }
         />
       </div>
-
-      {/* Status Tabs */}
-      {statusCounts && (
-        <StatusTabs statusCounts={statusCounts} />
-      )}
 
       {/* Active Filters */}
       <div className="px-4 md:px-6">
@@ -232,11 +237,14 @@ export function DiscountListPageClient({
         <>
           {/* Data grid - full width */}
           <div className="px-4 md:px-6 pb-6">
-            <ListBand>
-              {data?.items?.map((discount: any) => (
-                <DiscountDetailsComponent key={discount.id} discount={discount} list={list} />
-              ))}
-            </ListBand>
+            <DataTable aria-label="Discounts">
+              <thead><DiscountTableHead /></thead>
+              <tbody>
+                {data?.items?.map((discount: any) => (
+                  <DiscountDetailsComponent key={discount.id} discount={discount} list={list} />
+                ))}
+              </tbody>
+            </DataTable>
           </div>
           
           {/* Pagination */}

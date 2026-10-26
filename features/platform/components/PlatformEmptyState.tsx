@@ -20,7 +20,7 @@ export function PlatformEmptyState({
           <button
             type="button"
             onClick={onReset}
-            className="inline-flex min-h-10 items-center rounded-full bg-background px-4 text-[13px] font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.06)] transition-colors hover:bg-background/80 dark:bg-zinc-800"
+            className="inline-flex min-h-10 items-center rounded-[4px] border border-input bg-background px-4 text-[13px] font-medium text-foreground transition-colors hover:bg-muted"
           >
             {resetLabel}
           </button>

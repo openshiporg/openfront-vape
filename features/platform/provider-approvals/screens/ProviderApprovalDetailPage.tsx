@@ -5,7 +5,7 @@ import { ArrowUpRight } from 'lucide-react';
 
 import { PageContainer } from '@/features/dashboard/components/PageContainer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ListBand, PageTitle, SectionTitle } from '@/features/platform/components/vape-ui';
+import { ListBand, PageTitle, SectionTitle, Stamp } from '@/features/platform/components/vape-ui';
 import {
   CLASSIFICATION_CATEGORY_LABELS,
   PROVIDER_APPROVAL_STATUS_LABELS,
@@ -39,7 +39,7 @@ function Tags({ values, empty = 'None' }: { values: string[]; empty?: string }) 
   return (
     <div className="flex flex-wrap gap-1.5 px-4 py-3">
       {values.map(value => (
-        <span key={value} className="rounded-full bg-background px-2.5 py-1 text-xs text-foreground ring-1 ring-inset ring-border">{value}</span>
+        <span key={value} className="rounded-[4px] border border-border bg-background px-2 py-0.5 text-[12px] text-foreground">{value}</span>
       ))}
     </div>
   );
@@ -73,7 +73,7 @@ export async function ProviderApprovalDetailPage({ params }: { params: Promise<{
       title={title}
       tone={APPROVAL_TONES[approval.status] || 'muted'}
       state={regulatedLabel(PROVIDER_APPROVAL_STATUS_LABELS, approval.status)}
-      meta={editable ? 'Editable until active' : 'Immutable'}
+      meta={<span><span className="font-mono">{approval.approvalReference || approval.providerCode}</span> · {editable ? 'Editable until active' : 'Immutable'}</span>}
     />
   );
 
@@ -99,7 +99,7 @@ export async function ProviderApprovalDetailPage({ params }: { params: Promise<{
               </Row>
               <Row label="Approval reference"><span className="font-mono">{approval.approvalReference}</span></Row>
               <Row label="Evidence">
-                {approval.hasEvidence ? 'On file' : <span className="text-red-600 dark:text-red-400">Missing</span>}
+                {approval.hasEvidence ? <Stamp tone="ok">On file</Stamp> : <Stamp tone="danger">Missing</Stamp>}
               </Row>
             </ListBand>
           </section>
@@ -116,26 +116,28 @@ export async function ProviderApprovalDetailPage({ params }: { params: Promise<{
           </section>
         </div>
 
-        <section>
-          <SectionTitle meta={approval.coveredCategories.length}>Product types</SectionTitle>
-          <ListBand>
-            <Tags values={approval.coveredCategories.map(value => regulatedLabel(CLASSIFICATION_CATEGORY_LABELS, value))} />
-          </ListBand>
-        </section>
+        <div className="grid gap-8 lg:grid-cols-3">
+          <section>
+            <SectionTitle meta={approval.coveredCategories.length}>Product types</SectionTitle>
+            <ListBand>
+              <Tags values={approval.coveredCategories.map(value => regulatedLabel(CLASSIFICATION_CATEGORY_LABELS, value))} />
+            </ListBand>
+          </section>
 
-        <section>
-          <SectionTitle meta={approval.coveredJurisdictionCodes.length}>Jurisdictions</SectionTitle>
-          <ListBand>
-            <Tags values={approval.coveredJurisdictionCodes.map(code => approval.jurisdictionNames[code] ? `${code} ${approval.jurisdictionNames[code]}` : code)} />
-          </ListBand>
-        </section>
+          <section>
+            <SectionTitle meta={approval.coveredJurisdictionCodes.length}>Jurisdictions</SectionTitle>
+            <ListBand>
+              <Tags values={approval.coveredJurisdictionCodes.map(code => approval.jurisdictionNames[code] ? `${code} ${approval.jurisdictionNames[code]}` : code)} />
+            </ListBand>
+          </section>
 
-        <section>
-          <SectionTitle meta={approval.capabilities.length}>Capabilities</SectionTitle>
-          <ListBand>
-            <Tags values={approval.capabilities} />
-          </ListBand>
-        </section>
+          <section>
+            <SectionTitle meta={approval.capabilities.length}>Capabilities</SectionTitle>
+            <ListBand>
+              <Tags values={approval.capabilities} />
+            </ListBand>
+          </section>
+        </div>
       </div>
     </PageContainer>
   );

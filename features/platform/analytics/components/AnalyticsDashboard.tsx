@@ -118,7 +118,7 @@ export function AnalyticsDashboard({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-background border rounded-lg shadow-lg p-3">
+        <div className="rounded-md border bg-popover p-3 text-popover-foreground">
           <p className="text-sm font-medium">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
@@ -185,7 +185,7 @@ export function AnalyticsDashboard({
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="rounded-md shadow-none">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -200,7 +200,7 @@ export function AnalyticsDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-md shadow-none">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
@@ -215,7 +215,7 @@ export function AnalyticsDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-md shadow-none">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -230,7 +230,7 @@ export function AnalyticsDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-md shadow-none">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -247,7 +247,7 @@ export function AnalyticsDashboard({
       </div>
 
       {/* Revenue Trend Chart */}
-      <Card>
+      <Card className="rounded-md shadow-none">
         <CardHeader>
           <CardTitle>Revenue Trend</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -300,7 +300,7 @@ export function AnalyticsDashboard({
       {/* Charts Grid */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Top Products */}
-        <Card>
+        <Card className="rounded-md shadow-none">
           <CardHeader>
             <CardTitle>Top Products by Revenue</CardTitle>
             <p className="text-sm text-muted-foreground">
@@ -341,7 +341,7 @@ export function AnalyticsDashboard({
         </Card>
 
         {/* Category Performance */}
-        <Card>
+        <Card className="rounded-md shadow-none">
           <CardHeader>
             <CardTitle>Category Performance</CardTitle>
             <p className="text-sm text-muted-foreground">
@@ -376,7 +376,7 @@ export function AnalyticsDashboard({
 
       {/* Additional Metrics */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="rounded-md shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Customer Metrics</CardTitle>
           </CardHeader>
@@ -406,7 +406,7 @@ export function AnalyticsDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-md shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Cart Analytics</CardTitle>
           </CardHeader>
@@ -436,7 +436,7 @@ export function AnalyticsDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-md shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Top Categories</CardTitle>
           </CardHeader>

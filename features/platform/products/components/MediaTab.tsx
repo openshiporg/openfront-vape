@@ -248,7 +248,7 @@ export function MediaTab({ product: initialProduct }: MediaTabProps) {
         onDrop={handleDrop}
         data-dragging={isDragging || undefined}
         data-files={productImages.length > 0 || undefined}
-        className="border-input data-[dragging=true]:bg-accent/50 has-[input:focus]:border-ring has-[input:focus]:ring-ring/50 relative flex min-h-52 flex-col items-center overflow-hidden rounded-xl border border-dashed p-4 transition-colors not-data-[files]:justify-center has-[input:focus]:ring-[3px]"
+        className="border-input data-[dragging=true]:bg-accent/50 has-[input:focus]:border-ring has-[input:focus]:ring-ring/50 relative flex min-h-52 flex-col items-center overflow-hidden rounded-md border border-dashed p-4 transition-colors not-data-[files]:justify-center has-[input:focus]:ring-[3px]"
       >
         <input
           {...getInputProps()}
@@ -258,18 +258,18 @@ export function MediaTab({ product: initialProduct }: MediaTabProps) {
         />
         <div className="flex flex-col items-center justify-center px-4 py-3 text-center">
           <div
-            className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border"
+            className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-[4px] border"
             aria-hidden="true"
           >
             <ImageIcon className="size-4 opacity-60" />
           </div>
           <p className="mb-1.5 text-sm font-medium">Drop your images here</p>
-          <p className="font-mono text-xs tabular-nums text-muted-foreground">
+          <p className="text-xs tabular-nums text-muted-foreground">
             SVG, PNG, JPG, GIF · {maxSizeMB} MB
           </p>
           <Button
             variant="outline"
-            className="mt-4 rounded-full"
+            className="mt-4 rounded-[4px]"
             onClick={openFileDialog}
             disabled={isLoading}
           >
@@ -294,7 +294,7 @@ export function MediaTab({ product: initialProduct }: MediaTabProps) {
         <div className="space-y-2">
           <div className="mb-3 flex items-baseline justify-between gap-3">
             <h3 className="text-sm font-semibold text-foreground">Images</h3>
-            <span className="font-mono text-xs tabular-nums text-muted-foreground">{combinedImages.length}</span>
+            <span className="text-xs tabular-nums text-muted-foreground">{combinedImages.length}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -349,7 +349,7 @@ export function MediaTab({ product: initialProduct }: MediaTabProps) {
                 <Button
                   onClick={() => handleRemove(img.id, !img.isUploading)}
                   size="icon"
-                  className="border-background focus-visible:border-background absolute -top-2 -right-2 size-6 rounded-full border-2 shadow-none"
+                  className="border-background focus-visible:border-background absolute -top-2 -right-2 size-6 rounded-[4px] border-2 shadow-none"
                   aria-label={img.isUploading ? "Cancel upload" : "Remove image"}
                   disabled={isLoading && !img.isUploading}
                 >

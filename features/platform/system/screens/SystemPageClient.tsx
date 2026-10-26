@@ -16,7 +16,7 @@ export function SystemPageClient({
 
   return (
     <PageContainer
-      header={<PageTitle title="System Configuration" />}
+      header={<PageTitle title="System configuration" />}
     >
       <SystemTabs
         initialTab={initialTab}

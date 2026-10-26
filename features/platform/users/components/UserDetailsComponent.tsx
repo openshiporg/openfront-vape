@@ -1,12 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,8 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
-import { Count, Dot, ListBand, Pill, Track } from "../../components/vape-ui";
+import { ChevronDown, MoreVertical } from "lucide-react";
+import { Count, Dot, ListBand, Pill, StatusWord, Td, Tr, Track } from "../../components/vape-ui";
 import Link from "next/link";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
 import { ItemPagination } from "../../orders/components/ItemPagination";
@@ -169,7 +163,7 @@ export function UserDetailsComponent({
     },
     { 
       key: 'customerGroups' as TabType, 
-      label: `Customer Groups`,
+      label: `Customer groups`,
       count: customerGroupsData.length,
       data: customerGroupsData
     }
@@ -190,77 +184,81 @@ export function UserDetailsComponent({
     setEditItemOpen(true);
   };
 
+  const [expanded, setExpanded] = useState(false);
+  const displayName = user.name || `${user.firstName} ${user.lastName}`.trim() || user.email;
+  const heldOrders = ordersData.filter((order) => order.status === 'requires_action').length;
+
   return (
     <>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={user.id} className="border-0">
-          <div className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                <Dot tone={user.hasAccount ? "ok" : "muted"} />
-                <Link
-                  href={`/dashboard/platform/users/${user.id}`}
-                  className="text-sm font-semibold text-foreground hover:underline"
+      <Tr data-state={expanded ? 'open' : 'closed'}>
+        <Td className="max-w-[16rem]">
+          <Link
+            href={`/dashboard/platform/users/${user.id}`}
+            className="block truncate font-medium text-foreground hover:underline"
+          >
+            {displayName}
+          </Link>
+          {user.email && <span className="block truncate text-[12px] text-muted-foreground md:hidden">{user.email}</span>}
+        </Td>
+        <Td priority={2} className="max-w-[16rem]">
+          <span className="block truncate text-muted-foreground">{user.email}</span>
+          {user.phone && <span className="block text-[12px] tabular-nums text-muted-foreground">{user.phone}</span>}
+        </Td>
+        <Td priority={2}>
+          {user.role ? <span className="text-foreground">{user.role.name}</span> : <span className="text-muted-foreground">Customer</span>}
+        </Td>
+        <Td>
+          <StatusWord tone={user.hasAccount ? "ok" : "muted"}>{user.hasAccount ? "Account" : "Guest"}</StatusWord>
+          {heldOrders > 0 && (
+            <StatusWord tone="warn" className="ml-2 max-sm:ml-0 max-sm:flex">
+              {heldOrders} held
+            </StatusWord>
+          )}
+        </Td>
+        <Td align="right" priority={3}>{ordersData.length}</Td>
+        <Td priority={3} className="whitespace-nowrap tabular-nums text-muted-foreground">
+          {new Date(user.createdAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            timeZone: "UTC",
+          })}
+        </Td>
+        <Td align="right" className="whitespace-nowrap">
+          <div className="flex items-center justify-end gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-10 rounded-[4px] sm:size-8 [&_svg]:size-4"
+                  aria-label="Actions"
                 >
-                  {user.name || `${user.firstName} ${user.lastName}`.trim() || user.email}
-                </Link>
-                <span className="text-xs text-muted-foreground">{user.hasAccount ? "Has account" : "No account"}</span>
-                {user.role && (
-                  <span className="text-xs text-muted-foreground">{user.role.name}</span>
-                )}
-              </div>
-
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                {user.email && <span className="min-w-0 truncate">{user.email}</span>}
-                {user.phone && <span className="font-mono tabular-nums">{user.phone}</span>}
-                <span>
-                  <span className="font-mono tabular-nums">{ordersData.length}</span> {ordersData.length === 1 ? 'order' : 'orders'}
-                </span>
-                {addressesData.length > 0 && (
-                  <span>
-                    <span className="font-mono tabular-nums">{addressesData.length}</span> {addressesData.length === 1 ? 'address' : 'addresses'}
-                  </span>
-                )}
-                <span className="font-mono tabular-nums">
-                  {new Date(user.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    timeZone: "UTC",
-                  })}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                    aria-label="Actions"
-                  >
-                    <MoreVertical className="stroke-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
-                    Edit User
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-10 rounded-full sm:size-8 [&_svg]:size-4"
-                asChild
-              >
-                <AccordionTrigger className="justify-center py-0" />
-              </Button>
-            </div>
+                  <MoreVertical className="stroke-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsEditDrawerOpen(true)}>
+                  Edit user
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10 rounded-[4px] sm:size-8 [&_svg]:size-4"
+              aria-expanded={expanded}
+              aria-label={expanded ? `Hide records for ${displayName}` : `Show records for ${displayName}`}
+              onClick={() => setExpanded((value) => !value)}
+            >
+              <ChevronDown className={`stroke-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            </Button>
           </div>
-          <AccordionContent className="pb-0">
+        </Td>
+      </Tr>
+      {expanded && (
+        <tr className="border-b last:border-b-0">
+          <td colSpan={7} className="p-0">
             <div className="space-y-3 border-t border-border bg-background/60 px-4 py-4">
               {tabs.length > 0 && (
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -274,7 +272,7 @@ export function UserDetailsComponent({
                         {tab.key === 'orders' && 'Orders'}
                         {tab.key === 'addresses' && 'Addresses'}
                         {tab.key === 'carts' && 'Carts'}
-                        {tab.key === 'customerGroups' && 'Customer Groups'}
+                        {tab.key === 'customerGroups' && 'Customer groups'}
                         <Count>{tab.count}</Count>
                       </Pill>
                     ))}
@@ -326,7 +324,7 @@ export function UserDetailsComponent({
                               {address.province && `, ${address.province}`}
                             </div>
                             {address.phone && (
-                              <div className="font-mono text-xs tabular-nums text-muted-foreground">
+                              <div className="text-xs tabular-nums text-muted-foreground">
                                 {address.phone}
                               </div>
                             )}
@@ -336,7 +334,7 @@ export function UserDetailsComponent({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-10 shrink-0 rounded-full sm:size-8 [&_svg]:size-4"
+                            className="size-10 shrink-0 rounded-[4px] sm:size-8 [&_svg]:size-4"
                             aria-label="Address actions"
                           >
                             <MoreVertical className="stroke-muted-foreground" />
@@ -344,7 +342,7 @@ export function UserDetailsComponent({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEditItem(address.id, 'addresses')}>
-                            Edit Address
+                            Edit address
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -370,11 +368,11 @@ export function UserDetailsComponent({
                             </div>
                             <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                               {cart.totalPrice && (
-                                <span className="font-mono tabular-nums text-foreground">{cart.totalPrice}</span>
+                                <span className="tabular-nums text-foreground">{cart.totalPrice}</span>
                               )}
-                              <span className="font-mono tabular-nums">{new Date(cart.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })}</span>
+                              <span className="tabular-nums">{new Date(cart.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })}</span>
                               {cart.lineItems && (
-                                <span><span className="font-mono tabular-nums">{cart.lineItems.length}</span> items</span>
+                                <span><span className="tabular-nums">{cart.lineItems.length}</span> items</span>
                               )}
                             </div>
                           </div>
@@ -383,7 +381,7 @@ export function UserDetailsComponent({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-10 shrink-0 rounded-full sm:size-8 [&_svg]:size-4"
+                            className="size-10 shrink-0 rounded-[4px] sm:size-8 [&_svg]:size-4"
                             aria-label="Cart actions"
                           >
                             <MoreVertical className="stroke-muted-foreground" />
@@ -391,7 +389,7 @@ export function UserDetailsComponent({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEditItem(cart.id, 'carts')}>
-                            Edit Cart
+                            Edit cart
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -413,15 +411,15 @@ export function UserDetailsComponent({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-10 shrink-0 rounded-full sm:size-8 [&_svg]:size-4"
-                            aria-label="Customer Group actions"
+                            className="size-10 shrink-0 rounded-[4px] sm:size-8 [&_svg]:size-4"
+                            aria-label="Customer group actions"
                           >
                             <MoreVertical className="stroke-muted-foreground" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEditItem(group.id, 'customer-groups')}>
-                            Edit Customer Group
+                            Edit customer group
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -432,9 +430,9 @@ export function UserDetailsComponent({
                 </>
               )}
             </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          </td>
+        </tr>
+      )}
 
       <EditItemDrawerClientWrapper
         listKey="users"

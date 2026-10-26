@@ -65,7 +65,8 @@ export async function ClaimListPage({ searchParams }: PageProps) {
     where,
     pageSize,
     (currentPage - 1) * pageSize,
-    orderBy
+    orderBy,
+    `id type paymentStatus fulfillmentStatus canceledAt createdAt updatedAt order { id displayId } claimItems { id quantity }`
   )
 
   let fetchedData: { items: any[], count: number } = { items: [], count: 0 }
