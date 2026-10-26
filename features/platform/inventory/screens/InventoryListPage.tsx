@@ -212,7 +212,7 @@ export default async function InventoryListPage({ searchParams }: {
               <DataTable aria-labelledby="restock-title">
                 <thead>
                   <tr>
-                    <Th>SKU</Th>
+                    <Th className="w-[1%]">SKU</Th>
                     <Th priority={2}>Variant</Th>
                     <Th>State</Th>
                     <Th align="right">Quantity</Th>
@@ -224,7 +224,7 @@ export default async function InventoryListPage({ searchParams }: {
                     const state = stockState(item);
                     return (
                       <Tr key={item.id}>
-                        <Td className="max-w-0 w-[26%]">
+                        <Td className="w-[1%] whitespace-nowrap">
                           <SkuCell item={item} />
                         </Td>
                         <Td priority={2} className="max-w-0">
@@ -282,7 +282,7 @@ export default async function InventoryListPage({ searchParams }: {
               <DataTable aria-labelledby="all-stock-title">
                 <thead>
                   <tr>
-                    <Th>SKU</Th>
+                    <Th className="w-[1%]">SKU</Th>
                     <Th priority={2}>Variant</Th>
                     <Th>State</Th>
                     <Th align="right">Quantity</Th>
@@ -294,7 +294,7 @@ export default async function InventoryListPage({ searchParams }: {
                     const state = stockState(item);
                     return (
                       <Tr key={item.id}>
-                        <Td className="max-w-0 w-[26%]">
+                        <Td className="w-[1%] whitespace-nowrap">
                           <SkuCell item={item} />
                         </Td>
                         <Td priority={2} className="max-w-0">

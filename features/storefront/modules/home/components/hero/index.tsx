@@ -34,8 +34,8 @@ const Hero = ({ storeName, title, description, categories }: HeroProps) => {
           {description && (
             <p className="mt-6 hidden max-w-[52ch] text-[16px] leading-[25px] text-white/75 sm:block">{description}</p>
           )}
-          {/* The one 21+ note in the band, set like window vinyl: small white letters on a 1px white keyline. */}
-          <p className="mt-6 inline-flex w-fit items-center rounded-[2px] border border-white px-2 py-0.5 text-[12px] leading-[16px] font-medium text-white sm:mt-8">
+          {/* The one 21+ note in the band, lettered like door vinyl: cut white sign letters along the foot of the glass, no plate behind them. */}
+          <p className="vp-sign mt-6 w-fit border-t border-white/70 pt-2 text-[20px] tracking-[0.02em] text-white sm:mt-8">
             Adults 21+ only
           </p>
         </div>

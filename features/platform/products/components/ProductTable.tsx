@@ -99,14 +99,15 @@ export function BlockedQueue({ products, complianceById }: { products: any[]; co
                   <Td align="right" className="w-0 font-medium">
                     {count}
                   </Td>
-                  <Td className="max-w-0">
-                    <span className="block truncate text-foreground" title={blocker.reason}>
+                  <Td className="max-md:whitespace-normal md:max-w-0">
+                    <span className="block text-foreground md:truncate" title={blocker.reason}>
                       {blocker.reason}
                     </span>
                   </Td>
                   <Td align="right" className="w-0 whitespace-nowrap py-0.5">
-                    <Link href={fix.href} className={cn(buttonClass.base, buttonClass.outline)}>
-                      {fix.label}
+                    <Link href={fix.href} className={cn(buttonClass.base, buttonClass.outline)} aria-label={fix.label}>
+                      <span className="max-md:hidden">{fix.label}</span>
+                      <span className="md:hidden">Fix</span>
                     </Link>
                   </Td>
                 </Tr>
@@ -131,7 +132,7 @@ function ProductRow({ product, compliance }: { product: any; compliance: Complia
   return (
     <Fragment>
       <Tr>
-        <Td className="max-w-0 w-[32%]">
+        <Td className="w-[32%] max-md:min-w-[10rem] md:max-w-0">
           <span className="flex min-w-0 items-baseline gap-2">
             <Link
               href={`/dashboard/platform/products/${product.id}`}
@@ -157,7 +158,7 @@ function ProductRow({ product, compliance }: { product: any; compliance: Complia
         <Td align="right" priority={3}>
           {variantCount}
         </Td>
-        <Td align="right">
+        <Td align="right" priority={2}>
           {stock.tracked === 0 ? (
             <span className="text-muted-foreground">Not tracked</span>
           ) : (
@@ -220,7 +221,7 @@ export function ProductTable({ products, complianceById }: { products: any[]; co
           <Th align="right" priority={3}>
             Variants
           </Th>
-          <Th align="right">Stock</Th>
+          <Th align="right" priority={2}>Stock</Th>
           <Th priority={3}>Updated</Th>
           <Th align="right">
             <span className="sr-only">Actions</span>

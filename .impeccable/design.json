@@ -1,0 +1,707 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-26T07:22:34+00:00",
+  "title": "Design System: Openfront Vape",
+  "extensions": {
+    "colorMeta": {
+      "sf-glass": {
+        "role": "primary",
+        "displayName": "Window Glass",
+        "canonical": "#0d1513",
+        "tonalRamp": [
+          "oklch(15% 0.013 177.8)",
+          "oklch(26% 0.013 177.8)",
+          "oklch(37% 0.013 177.8)",
+          "oklch(48% 0.013 177.8)",
+          "oklch(59% 0.013 177.8)",
+          "oklch(70% 0.013 177.8)",
+          "oklch(82% 0.013 177.8)",
+          "oklch(95% 0.013 177.8)"
+        ]
+      },
+      "sf-glass-2": {
+        "role": "primary",
+        "displayName": "Glass Two",
+        "canonical": "#16201d",
+        "tonalRamp": [
+          "oklch(15% 0.015 174.6)",
+          "oklch(26% 0.015 174.6)",
+          "oklch(37% 0.015 174.6)",
+          "oklch(48% 0.015 174.6)",
+          "oklch(59% 0.015 174.6)",
+          "oklch(70% 0.015 174.6)",
+          "oklch(82% 0.015 174.6)",
+          "oklch(95% 0.015 174.6)"
+        ]
+      },
+      "sf-glass-line": {
+        "role": "primary",
+        "displayName": "Glass Line",
+        "canonical": "#2a3631",
+        "tonalRamp": [
+          "oklch(15% 0.018 167.9)",
+          "oklch(26% 0.018 167.9)",
+          "oklch(37% 0.018 167.9)",
+          "oklch(48% 0.018 167.9)",
+          "oklch(59% 0.018 167.9)",
+          "oklch(70% 0.018 167.9)",
+          "oklch(82% 0.018 167.9)",
+          "oklch(95% 0.018 167.9)"
+        ]
+      },
+      "sf-gold": {
+        "role": "primary",
+        "displayName": "Gold Leaf",
+        "canonical": "#d8b35e",
+        "tonalRamp": [
+          "oklch(15% 0.112 86.1)",
+          "oklch(26% 0.112 86.1)",
+          "oklch(37% 0.112 86.1)",
+          "oklch(48% 0.112 86.1)",
+          "oklch(59% 0.112 86.1)",
+          "oklch(70% 0.112 86.1)",
+          "oklch(82% 0.112 86.1)",
+          "oklch(95% 0.112 86.1)"
+        ]
+      },
+      "sf-gold-2": {
+        "role": "primary",
+        "displayName": "Burnished Gold",
+        "canonical": "#a9853a",
+        "tonalRamp": [
+          "oklch(15% 0.103 83.2)",
+          "oklch(26% 0.103 83.2)",
+          "oklch(37% 0.103 83.2)",
+          "oklch(48% 0.103 83.2)",
+          "oklch(59% 0.103 83.2)",
+          "oklch(70% 0.103 83.2)",
+          "oklch(82% 0.103 83.2)",
+          "oklch(95% 0.103 83.2)"
+        ]
+      },
+      "sf-neon": {
+        "role": "secondary",
+        "displayName": "Logo Neon",
+        "canonical": "hsl(178 95% 64%)",
+        "tonalRamp": [
+          "oklch(15% 0.138 191.7)",
+          "oklch(26% 0.138 191.7)",
+          "oklch(37% 0.138 191.7)",
+          "oklch(48% 0.138 191.7)",
+          "oklch(59% 0.138 191.7)",
+          "oklch(70% 0.138 191.7)",
+          "oklch(82% 0.138 191.7)",
+          "oklch(95% 0.138 191.7)"
+        ],
+        "note": "Hue comes from the store logo colour at runtime (--vp-h); 178 is the fallback."
+      },
+      "sf-accent": {
+        "role": "secondary",
+        "displayName": "Logo Accent",
+        "canonical": "hsl(178 62% 30%)",
+        "tonalRamp": [
+          "oklch(15% 0.084 191.6)",
+          "oklch(26% 0.084 191.6)",
+          "oklch(37% 0.084 191.6)",
+          "oklch(48% 0.084 191.6)",
+          "oklch(59% 0.084 191.6)",
+          "oklch(70% 0.084 191.6)",
+          "oklch(82% 0.084 191.6)",
+          "oklch(95% 0.084 191.6)"
+        ],
+        "note": "Hue comes from the store logo colour at runtime (--vp-h); 178 is the fallback."
+      },
+      "sf-tint": {
+        "role": "secondary",
+        "displayName": "Accent Tint",
+        "canonical": "hsl(178 38% 92%)",
+        "tonalRamp": [
+          "oklch(15% 0.016 194.5)",
+          "oklch(26% 0.016 194.5)",
+          "oklch(37% 0.016 194.5)",
+          "oklch(48% 0.016 194.5)",
+          "oklch(59% 0.016 194.5)",
+          "oklch(70% 0.016 194.5)",
+          "oklch(82% 0.016 194.5)",
+          "oklch(95% 0.016 194.5)"
+        ],
+        "note": "Hue comes from the store logo colour at runtime (--vp-h); 178 is the fallback."
+      },
+      "sf-bg": {
+        "role": "neutral",
+        "displayName": "Shelf White",
+        "canonical": "#f2f4f3",
+        "tonalRamp": [
+          "oklch(15% 0.002 165.1)",
+          "oklch(26% 0.002 165.1)",
+          "oklch(37% 0.002 165.1)",
+          "oklch(48% 0.002 165.1)",
+          "oklch(59% 0.002 165.1)",
+          "oklch(70% 0.002 165.1)",
+          "oklch(82% 0.002 165.1)",
+          "oklch(95% 0.002 165.1)"
+        ]
+      },
+      "sf-surface": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(26% 0.000 89.9)",
+          "oklch(37% 0.000 89.9)",
+          "oklch(48% 0.000 89.9)",
+          "oklch(59% 0.000 89.9)",
+          "oklch(70% 0.000 89.9)",
+          "oklch(82% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "sf-well": {
+        "role": "neutral",
+        "displayName": "Well",
+        "canonical": "#e8ecea",
+        "tonalRamp": [
+          "oklch(15% 0.005 165.0)",
+          "oklch(26% 0.005 165.0)",
+          "oklch(37% 0.005 165.0)",
+          "oklch(48% 0.005 165.0)",
+          "oklch(59% 0.005 165.0)",
+          "oklch(70% 0.005 165.0)",
+          "oklch(82% 0.005 165.0)",
+          "oklch(95% 0.005 165.0)"
+        ]
+      },
+      "sf-ink": {
+        "role": "primary",
+        "displayName": "Shop Ink",
+        "canonical": "#121816",
+        "tonalRamp": [
+          "oklch(15% 0.010 173.1)",
+          "oklch(26% 0.010 173.1)",
+          "oklch(37% 0.010 173.1)",
+          "oklch(48% 0.010 173.1)",
+          "oklch(59% 0.010 173.1)",
+          "oklch(70% 0.010 173.1)",
+          "oklch(82% 0.010 173.1)",
+          "oklch(95% 0.010 173.1)"
+        ]
+      },
+      "sf-ink-2": {
+        "role": "neutral",
+        "displayName": "Ink Two",
+        "canonical": "#3c4743",
+        "tonalRamp": [
+          "oklch(15% 0.016 171.5)",
+          "oklch(26% 0.016 171.5)",
+          "oklch(37% 0.016 171.5)",
+          "oklch(48% 0.016 171.5)",
+          "oklch(59% 0.016 171.5)",
+          "oklch(70% 0.016 171.5)",
+          "oklch(82% 0.016 171.5)",
+          "oklch(95% 0.016 171.5)"
+        ]
+      },
+      "sf-ink-3": {
+        "role": "neutral",
+        "displayName": "Ink Three",
+        "canonical": "#5b6763",
+        "tonalRamp": [
+          "oklch(15% 0.016 173.6)",
+          "oklch(26% 0.016 173.6)",
+          "oklch(37% 0.016 173.6)",
+          "oklch(48% 0.016 173.6)",
+          "oklch(59% 0.016 173.6)",
+          "oklch(70% 0.016 173.6)",
+          "oklch(82% 0.016 173.6)",
+          "oklch(95% 0.016 173.6)"
+        ]
+      },
+      "sf-line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#d3d9d6",
+        "tonalRamp": [
+          "oklch(15% 0.008 164.9)",
+          "oklch(26% 0.008 164.9)",
+          "oklch(37% 0.008 164.9)",
+          "oklch(48% 0.008 164.9)",
+          "oklch(59% 0.008 164.9)",
+          "oklch(70% 0.008 164.9)",
+          "oklch(82% 0.008 164.9)",
+          "oklch(95% 0.008 164.9)"
+        ]
+      },
+      "sf-input-line": {
+        "role": "neutral",
+        "displayName": "Input Line",
+        "canonical": "#b9c2be",
+        "tonalRamp": [
+          "oklch(15% 0.011 167.7)",
+          "oklch(26% 0.011 167.7)",
+          "oklch(37% 0.011 167.7)",
+          "oklch(48% 0.011 167.7)",
+          "oklch(59% 0.011 167.7)",
+          "oklch(70% 0.011 167.7)",
+          "oklch(82% 0.011 167.7)",
+          "oklch(95% 0.011 167.7)"
+        ]
+      },
+      "sf-on-ink": {
+        "role": "neutral",
+        "displayName": "On Ink",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(26% 0.000 89.9)",
+          "oklch(37% 0.000 89.9)",
+          "oklch(48% 0.000 89.9)",
+          "oklch(59% 0.000 89.9)",
+          "oklch(70% 0.000 89.9)",
+          "oklch(82% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "sf-ok": {
+        "role": "neutral",
+        "displayName": "Storefront OK",
+        "canonical": "#1d6f48",
+        "tonalRamp": [
+          "oklch(15% 0.100 158.0)",
+          "oklch(26% 0.100 158.0)",
+          "oklch(37% 0.100 158.0)",
+          "oklch(48% 0.100 158.0)",
+          "oklch(59% 0.100 158.0)",
+          "oklch(70% 0.100 158.0)",
+          "oklch(82% 0.100 158.0)",
+          "oklch(95% 0.100 158.0)"
+        ]
+      },
+      "sf-warn": {
+        "role": "neutral",
+        "displayName": "Storefront Warn",
+        "canonical": "#8a5a00",
+        "tonalRamp": [
+          "oklch(15% 0.108 73.3)",
+          "oklch(26% 0.108 73.3)",
+          "oklch(37% 0.108 73.3)",
+          "oklch(48% 0.108 73.3)",
+          "oklch(59% 0.108 73.3)",
+          "oklch(70% 0.108 73.3)",
+          "oklch(82% 0.108 73.3)",
+          "oklch(95% 0.108 73.3)"
+        ]
+      },
+      "sf-danger": {
+        "role": "neutral",
+        "displayName": "Storefront Danger",
+        "canonical": "#b3261e",
+        "tonalRamp": [
+          "oklch(15% 0.178 28.7)",
+          "oklch(26% 0.178 28.7)",
+          "oklch(37% 0.178 28.7)",
+          "oklch(48% 0.178 28.7)",
+          "oklch(59% 0.178 28.7)",
+          "oklch(70% 0.178 28.7)",
+          "oklch(82% 0.178 28.7)",
+          "oklch(95% 0.178 28.7)"
+        ]
+      },
+      "pf-cleared": {
+        "role": "tertiary",
+        "displayName": "Cleared Green",
+        "canonical": "oklch(0.48 0.1 160)",
+        "tonalRamp": [
+          "oklch(15% 0.100 160.0)",
+          "oklch(26% 0.100 160.0)",
+          "oklch(37% 0.100 160.0)",
+          "oklch(48% 0.100 160.0)",
+          "oklch(59% 0.100 160.0)",
+          "oklch(70% 0.100 160.0)",
+          "oklch(82% 0.100 160.0)",
+          "oklch(95% 0.100 160.0)"
+        ]
+      },
+      "pf-cleared-text": {
+        "role": "tertiary",
+        "displayName": "Cleared Text",
+        "canonical": "oklch(0.42 0.1 160)",
+        "tonalRamp": [
+          "oklch(15% 0.100 160.0)",
+          "oklch(26% 0.100 160.0)",
+          "oklch(37% 0.100 160.0)",
+          "oklch(48% 0.100 160.0)",
+          "oklch(59% 0.100 160.0)",
+          "oklch(70% 0.100 160.0)",
+          "oklch(82% 0.100 160.0)",
+          "oklch(95% 0.100 160.0)"
+        ]
+      },
+      "pf-pending": {
+        "role": "tertiary",
+        "displayName": "Pending Ochre",
+        "canonical": "oklch(0.7 0.13 75)",
+        "tonalRamp": [
+          "oklch(15% 0.130 75.0)",
+          "oklch(26% 0.130 75.0)",
+          "oklch(37% 0.130 75.0)",
+          "oklch(48% 0.130 75.0)",
+          "oklch(59% 0.130 75.0)",
+          "oklch(70% 0.130 75.0)",
+          "oklch(82% 0.130 75.0)",
+          "oklch(95% 0.130 75.0)"
+        ]
+      },
+      "pf-pending-text": {
+        "role": "tertiary",
+        "displayName": "Pending Text",
+        "canonical": "oklch(0.5 0.12 70)",
+        "tonalRamp": [
+          "oklch(15% 0.120 70.0)",
+          "oklch(26% 0.120 70.0)",
+          "oklch(37% 0.120 70.0)",
+          "oklch(48% 0.120 70.0)",
+          "oklch(59% 0.120 70.0)",
+          "oklch(70% 0.120 70.0)",
+          "oklch(82% 0.120 70.0)",
+          "oklch(95% 0.120 70.0)"
+        ]
+      },
+      "pf-denied": {
+        "role": "tertiary",
+        "displayName": "Denied Red",
+        "canonical": "oklch(0.52 0.17 27)",
+        "tonalRamp": [
+          "oklch(15% 0.170 27.0)",
+          "oklch(26% 0.170 27.0)",
+          "oklch(37% 0.170 27.0)",
+          "oklch(48% 0.170 27.0)",
+          "oklch(59% 0.170 27.0)",
+          "oklch(70% 0.170 27.0)",
+          "oklch(82% 0.170 27.0)",
+          "oklch(95% 0.170 27.0)"
+        ]
+      },
+      "pf-denied-text": {
+        "role": "tertiary",
+        "displayName": "Denied Text",
+        "canonical": "oklch(0.5 0.17 27)",
+        "tonalRamp": [
+          "oklch(15% 0.170 27.0)",
+          "oklch(26% 0.170 27.0)",
+          "oklch(37% 0.170 27.0)",
+          "oklch(48% 0.170 27.0)",
+          "oklch(59% 0.170 27.0)",
+          "oklch(70% 0.170 27.0)",
+          "oklch(82% 0.170 27.0)",
+          "oklch(95% 0.170 27.0)"
+        ]
+      },
+      "pf-denied-deep": {
+        "role": "tertiary",
+        "displayName": "Denied Deep",
+        "canonical": "oklch(0.46 0.17 27)",
+        "tonalRamp": [
+          "oklch(15% 0.170 27.0)",
+          "oklch(26% 0.170 27.0)",
+          "oklch(37% 0.170 27.0)",
+          "oklch(48% 0.170 27.0)",
+          "oklch(59% 0.170 27.0)",
+          "oklch(70% 0.170 27.0)",
+          "oklch(82% 0.170 27.0)",
+          "oklch(95% 0.170 27.0)"
+        ]
+      },
+      "pf-info": {
+        "role": "tertiary",
+        "displayName": "Info Blue",
+        "canonical": "#0284c7",
+        "tonalRamp": [
+          "oklch(15% 0.139 242.0)",
+          "oklch(26% 0.139 242.0)",
+          "oklch(37% 0.139 242.0)",
+          "oklch(48% 0.139 242.0)",
+          "oklch(59% 0.139 242.0)",
+          "oklch(70% 0.139 242.0)",
+          "oklch(82% 0.139 242.0)",
+          "oklch(95% 0.139 242.0)"
+        ]
+      },
+      "pf-void": {
+        "role": "tertiary",
+        "displayName": "Void Grey",
+        "canonical": "#a1a1aa",
+        "tonalRamp": [
+          "oklch(15% 0.013 286.1)",
+          "oklch(26% 0.013 286.1)",
+          "oklch(37% 0.013 286.1)",
+          "oklch(48% 0.013 286.1)",
+          "oklch(59% 0.013 286.1)",
+          "oklch(70% 0.013 286.1)",
+          "oklch(82% 0.013 286.1)",
+          "oklch(95% 0.013 286.1)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "sf-display": {
+        "displayName": "Sign Display",
+        "purpose": "Store name on the window band; 60px phone, 84px sm, 96px lg; uppercase."
+      },
+      "sf-headline": {
+        "displayName": "Sign Headline",
+        "purpose": "Shelf headings (32/40px) and painted departments (30/38px); uppercase."
+      },
+      "sf-title": {
+        "displayName": "Sign Title",
+        "purpose": "In-page section titles; footer column heads in gold at 22px; uppercase."
+      },
+      "sf-body": {
+        "displayName": "Body",
+        "purpose": "Product names, buttons, running text."
+      },
+      "sf-label": {
+        "displayName": "Label",
+        "purpose": "Form labels and metadata; fact rows at 12px."
+      },
+      "sf-figure": {
+        "displayName": "Figure",
+        "purpose": "Strength, size, price, counts; tabular mono."
+      },
+      "pf-headline": {
+        "displayName": "Platform Headline",
+        "purpose": "Page titles with the page state stamp beside."
+      },
+      "pf-title": {
+        "displayName": "Platform Title",
+        "purpose": "Section titles over a hairline."
+      },
+      "pf-body": {
+        "displayName": "Platform Body",
+        "purpose": "Table cells and list rows."
+      },
+      "pf-label": {
+        "displayName": "Platform Label",
+        "purpose": "Stamp words, table headers, field labels."
+      },
+      "pf-serial": {
+        "displayName": "Serial",
+        "purpose": "Record serials, ISO and currency codes, step numbers."
+      }
+    },
+    "shadows": [
+      {
+        "name": "window-overlay",
+        "value": "0 24px 60px rgb(13 21 19 / 0.45)",
+        "purpose": "Age gate plate over the glass scrim."
+      },
+      {
+        "name": "dialog",
+        "value": "0 18px 60px rgb(20 24 22 / 0.18)",
+        "purpose": "Storefront dialogs."
+      },
+      {
+        "name": "bottom-sheet",
+        "value": "0 -12px 40px rgb(20 24 22 / 0.18)",
+        "purpose": "Mobile add-to-bag sheet."
+      },
+      {
+        "name": "selected-lift",
+        "value": "0 1px 2px rgb(20 24 22 / 0.12), 0 0 0 0.5px rgb(20 24 22 / 0.06)",
+        "purpose": "Selected shipping or payment option raised out of a well."
+      },
+      {
+        "name": "card-ring",
+        "value": "inset 0 0 0 1px #d3d9d6",
+        "purpose": "Flat hairline ring on storefront bands and cards (not a lift)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "150ms ease",
+        "purpose": "Segment fills, hairline ring darkening, link colour."
+      },
+      {
+        "name": "nudge",
+        "value": "150ms ease-out, translateX(4px)",
+        "purpose": "Department arrow on hover."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ],
+    "focus": [
+      {
+        "name": "sf-focus",
+        "value": "outline: 2px solid hsl(var(--vp-h,178) 62% 36%); outline-offset: 1px",
+        "purpose": "Storefront focus ring in the logo hue."
+      },
+      {
+        "name": "pf-focus",
+        "value": "outline: 2px solid var(--ring)",
+        "purpose": "Platform focus from the shell ring token."
+      }
+    ],
+    "scope": "Platform neutrals, ink and Geist come from the shared dashboard shell and are not tokenised here."
+  },
+  "components": [
+    {
+      "name": "Storefront Primary Button",
+      "kind": "button",
+      "refersTo": "sf-button-primary",
+      "description": "Ink plate button for the main action inside the shop (checkout, continue).",
+      "html": "<button class=\"ds-sf-btn\">Continue to payment</button>",
+      "css": ".ds-sf-btn{display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 24px;border:0;border-radius:4px;background:#121816;color:#fff;font:500 15px/1 'Hanken Grotesk', system-ui, sans-serif;cursor:pointer;transition:opacity 150ms ease}.ds-sf-btn:hover{opacity:.9}.ds-sf-btn:focus-visible{outline:2px solid hsl(178 62% 36%);outline-offset:1px}.ds-sf-btn:disabled{background:#e8ecea;color:#5b6763;cursor:not-allowed}"
+    },
+    {
+      "name": "Storefront Secondary Button",
+      "kind": "button",
+      "refersTo": "sf-button-secondary",
+      "description": "Quiet well-filled plate for secondary actions.",
+      "html": "<button class=\"ds-sf-btn2\">Edit address</button>",
+      "css": ".ds-sf-btn2{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:0;border-radius:4px;background:#e8ecea;color:#121816;font:500 14px/1 'Hanken Grotesk', system-ui, sans-serif;cursor:pointer;transition:background-color 150ms ease}.ds-sf-btn2:hover{background:#d3d9d6}.ds-sf-btn2:focus-visible{outline:2px solid hsl(178 62% 36%);outline-offset:1px}"
+    },
+    {
+      "name": "Storefront Input",
+      "kind": "input",
+      "refersTo": "sf-input",
+      "description": "48px white plate field with logo-hue focus.",
+      "html": "<input class=\"ds-sf-input\" placeholder=\"Email\" />",
+      "css": ".ds-sf-input{height:48px;width:280px;padding:0 16px;border:1px solid #d3d9d6;border-radius:4px;background:#fff;color:#121816;font:400 15px/1.2 'Hanken Grotesk', system-ui, sans-serif;outline:none;transition:border-color 150ms ease,box-shadow 150ms ease}.ds-sf-input::placeholder{color:#5b6763}.ds-sf-input:hover{border-color:#5b6763}.ds-sf-input:focus-visible{border-color:hsl(178 62% 30%);box-shadow:0 0 0 2px hsl(178 38% 92%)}"
+    },
+    {
+      "name": "Segmented Plates",
+      "kind": "chip",
+      "refersTo": "sf-segment",
+      "description": "Joined square option segments; the current choice is inked.",
+      "html": "<div class=\"ds-track\" role=\"group\" aria-label=\"Strength\"><button class=\"ds-seg\">3 mg</button><button class=\"ds-seg\" data-active=\"true\">6 mg</button><button class=\"ds-seg\">12 mg</button><button class=\"ds-seg\" disabled>18 mg</button></div>",
+      "css": ".ds-track{display:inline-flex;border:1px solid #121816;border-radius:4px;background:#fff;overflow:hidden}.ds-seg{min-height:36px;padding:0 14px;border:0;background:transparent;color:#121816;font:600 13px/1 'Hanken Grotesk', system-ui, sans-serif;cursor:pointer;transition:background-color 150ms ease,color 150ms ease}.ds-seg+.ds-seg{border-left:1px solid #121816}.ds-seg:hover{background:#e8ecea}.ds-seg[data-active=true]{background:#121816;color:#fff}.ds-seg:disabled{color:#8b9692;text-decoration:line-through;cursor:not-allowed;background:transparent}.ds-seg:focus-visible{outline:2px solid hsl(178 62% 36%);outline-offset:1px}"
+    },
+    {
+      "name": "Shop Window Band",
+      "kind": "custom",
+      "refersTo": "sf-window-band",
+      "description": "Glass band: store name in gold leaf, one neon line, the 21+ vinyl note and painted departments.",
+      "html": "<section class=\"ds-win\"><div><h1 class=\"ds-sign ds-gold\">Northside Vapor</h1><p class=\"ds-sign ds-neon\">Devices and e-liquids</p><p class=\"ds-vinyl\">Adults 21+ only</p></div><ul class=\"ds-depts\"><li><a class=\"ds-sign ds-gold\" href=\"#\">Shop all</a></li><li><a class=\"ds-sign\" href=\"#\">Devices</a></li><li><a class=\"ds-sign\" href=\"#\">E-liquids</a></li></ul></section>",
+      "css": ".ds-win{display:grid;grid-template-columns:7fr 5fr;gap:24px;align-items:end;padding:48px 24px;background:#0d1513;color:#eef1ef}.ds-sign{margin:0;font-family:'Big Shoulders', 'Arial Narrow', sans-serif;font-weight:800;line-height:.92;letter-spacing:-.005em;text-transform:uppercase}.ds-win h1{font-size:72px}.ds-gold{color:#d8b35e;-webkit-text-stroke:.5px #6d5520}.ds-neon{margin-top:16px;font-size:28px;color:hsl(178 95% 64%)}.ds-vinyl{display:inline-block;margin-top:24px;padding:2px 8px;border:1px solid #fff;border-radius:2px;font:500 12px/16px 'Hanken Grotesk', system-ui, sans-serif;color:#fff}.ds-depts{list-style:none;margin:0;padding:0;border-top:1px solid #2a3631}.ds-depts li{border-bottom:1px solid #2a3631}.ds-depts a{display:flex;min-height:56px;align-items:center;font-size:32px;color:#fff;text-decoration:none;transition:color 150ms ease}.ds-depts a:hover{color:#d8b35e}.ds-depts a:focus-visible{outline:none;background:#16201d}"
+    },
+    {
+      "name": "Product Card",
+      "kind": "card",
+      "description": "Hairline-ringed square image over the name and a back-of-envelope fact table.",
+      "html": "<a class=\"ds-card\" href=\"#\"><div class=\"ds-thumb\"></div><h3>Mint Ice Salt</h3><dl><div><dt>Strength</dt><dd>35 mg/mL</dd></div><div><dt>Size</dt><dd>30 mL</dd></div><div><dt>Price</dt><dd>$18.00</dd></div></dl></a>",
+      "css": ".ds-card{display:flex;flex-direction:column;gap:12px;width:220px;color:#121816;text-decoration:none;font-family:'Hanken Grotesk', system-ui, sans-serif}.ds-thumb{aspect-ratio:1;background:#e8ecea;box-shadow:0 0 0 1px #d3d9d6;transition:box-shadow 150ms ease}.ds-card:hover .ds-thumb{box-shadow:0 0 0 1px #121816}.ds-card h3{margin:0;font-size:15px;line-height:20px;font-weight:600;text-underline-offset:4px}.ds-card:hover h3{text-decoration:underline}.ds-card dl{margin:0;border-top:1px solid #d3d9d6;font-size:12px;line-height:16px}.ds-card dl div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #d3d9d6}.ds-card dt{color:#3c4743}.ds-card dd{margin:0;font-family:'Spline Sans Mono', ui-monospace, monospace;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Excise Stamp",
+      "kind": "custom",
+      "refersTo": "pf-stamp-cleared",
+      "description": "Platform compliance state: word on a 2px state plate with perforated top and bottom edges, optional mono serial.",
+      "html": "<span class=\"ds-stamp ds-ok\">Cleared <i>A41F9C</i></span> <span class=\"ds-stamp ds-warn\">Pending</span> <span class=\"ds-stamp ds-bad\">Denied <i>7C02EE</i></span> <span class=\"ds-stamp ds-void\">Draft</span>",
+      "css": ".ds-stamp{display:inline-flex;align-items:center;gap:6px;min-height:22px;padding:3px 6px;border-radius:2px;border-top:1px dotted;border-bottom:1px dotted;font:600 12px/1 Geist, system-ui, sans-serif;white-space:nowrap}.ds-stamp i{font:500 11px/1 'Geist Mono', ui-monospace, monospace;font-style:normal;opacity:.8}.ds-ok{color:oklch(0.42 0.1 160);background:oklch(0.48 0.1 160/.12);border-color:oklch(0.42 0.1 160/.5)}.ds-warn{color:oklch(0.5 0.12 70);background:oklch(0.7 0.13 75/.18);border-color:oklch(0.5 0.12 70/.5)}.ds-bad{color:oklch(0.5 0.17 27);background:oklch(0.52 0.17 27/.12);border-color:oklch(0.5 0.17 27/.5)}.ds-void{color:#71717a;background:#f4f4f5;border-color:#71717a80}"
+    },
+    {
+      "name": "Platform Underline Tabs",
+      "kind": "nav",
+      "description": "Flat status tabs on a hairline; the current tab is ink with a 2px underline.",
+      "html": "<div class=\"ds-tabs\" role=\"group\" aria-label=\"Status\"><button class=\"ds-tab\" data-active=\"true\">Needs you <span>4</span></button><button class=\"ds-tab\">Cleared <span>212</span></button><button class=\"ds-tab\">Denied <span>3</span></button></div>",
+      "css": ".ds-tabs{display:flex;border-bottom:1px solid #e4e4e7}.ds-tab{margin-bottom:-1px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border:0;border-bottom:2px solid transparent;background:none;color:#71717a;font:500 13px/1 Geist, system-ui, sans-serif;cursor:pointer;transition:color 150ms ease}.ds-tab span{font-size:11px;font-variant-numeric:tabular-nums;color:#71717a}.ds-tab:hover{color:#09090b}.ds-tab[data-active=true]{color:#09090b;border-bottom-color:#09090b}.ds-tab:focus-visible{outline:2px solid #09090b}"
+    },
+    {
+      "name": "Platform Primary Button",
+      "kind": "button",
+      "description": "Flat 4px ink button; a page carries one in its header.",
+      "html": "<button class=\"ds-pf-btn\">Add approval</button> <button class=\"ds-pf-btn ds-pf-danger\">Stop sales</button>",
+      "css": ".ds-pf-btn{display:inline-flex;align-items:center;height:40px;padding:0 16px;border:0;border-radius:4px;background:#09090b;color:#fafafa;font:500 13px/1 Geist, system-ui, sans-serif;cursor:pointer;transition:background-color 150ms ease}.ds-pf-btn:hover{background:rgb(9 9 11/.85)}.ds-pf-btn:focus-visible{outline:2px solid #09090b;outline-offset:2px}.ds-pf-danger{background:oklch(0.52 0.17 27);color:#fff}.ds-pf-danger:hover{background:oklch(0.46 0.17 27)}"
+    },
+    {
+      "name": "Dense Data Table",
+      "kind": "custom",
+      "refersTo": "pf-table-row",
+      "description": "36px hairline rows, sticky muted header, mono serials, status words.",
+      "html": "<div class=\"ds-tbl\"><table><thead><tr><th>Serial</th><th>Variant</th><th>Status</th></tr></thead><tbody><tr><td class=\"m\">A41F9C</td><td>Mint Ice 35 mg</td><td><span class=\"ds-sw\"><b></b>Cleared</span></td></tr><tr><td class=\"m\">7C02EE</td><td>Mango 50 mg</td><td><span class=\"ds-sw bad\"><b></b>Denied</span></td></tr></tbody></table></div>",
+      "css": ".ds-tbl{border:1px solid #e4e4e7;border-radius:6px;overflow:hidden;font:400 13px/1.3 Geist, system-ui, sans-serif;color:#09090b}.ds-tbl table{width:100%;border-collapse:collapse}.ds-tbl th{position:sticky;top:0;height:36px;padding:0 12px;text-align:left;font-size:12px;font-weight:500;color:#71717a;background:rgb(244 244 245/.6);border-bottom:1px solid #e4e4e7}.ds-tbl td{height:36px;padding:6px 12px;border-bottom:1px solid #e4e4e7}.ds-tbl tr:last-child td{border-bottom:0}.ds-tbl tbody tr:hover{background:rgb(244 244 245/.4)}.ds-tbl .m{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;color:#71717a}.ds-sw{display:inline-flex;align-items:baseline;gap:6px;font-weight:500;color:oklch(0.42 0.1 160)}.ds-sw b{width:8px;height:8px;border-radius:1px;background:oklch(0.48 0.1 160);transform:translateY(-.1em)}.ds-sw.bad{color:oklch(0.5 0.17 27)}.ds-sw.bad b{background:oklch(0.52 0.17 27)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shop Window and the Excise Stamp",
+    "overview": "Openfront Vape has two surfaces that share a product but not a palette. The storefront is a shop's front window: a band of deep glass green-black carrying the store name in flat gold-leaf sign-painter lettering, one neon line in the shop's logo hue, the departments painted on the glass, and the 21+ notice set like window vinyl. Below the band you step inside to bright, cool-white shelves with ink text, hairline rules and products laid out on one aligned grid. Product facts (strength, size, flavour, price) read like the table on the back of a sewing-pattern envelope: compact rows, labels left, mono figures right.\n\nThe operator platform lives inside the shared Openfront dashboard shell, which stays as it is and supplies the neutrals, the ink and Geist. Inside that shell, every regulated state is an excise stamp: a small flat 2px plate in its state colour, edged top and bottom with a dotted perforation, carrying its word and, where a record exists, a mono serial. Pages open on the release state and the ordered blockers, then a dense hairline table. Density is the point: 36px rows, no padding bands, serials visible on every row.\n\nBoth surfaces refuse soft pill geometry. Corners stay at 6px or less, tabs are joined square segments (storefront) or underlines (platform), and colour never carries a state without its word.",
+    "keyCharacteristics": [
+      "Storefront: dark glass window bands at top and foot, bright shelves between.",
+      "Gold leaf is flat colour; the neon is one line per screen in the logo hue.",
+      "Big Shoulders sign lettering for display and headings, Hanken Grotesk for reading, Spline Sans Mono for every figure.",
+      "Platform: excise stamps for compliance state, underline tabs, 36px hairline tables with sticky headers.",
+      "Radii from 1px marks to 6px panels; nothing rounder."
+    ],
+    "rules": [
+      {
+        "name": "The One Neon Rule",
+        "body": "One neon element per screen, on glass. If a second thing wants to glow, it is gold or white instead.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat Leaf Rule",
+        "body": "Gold leaf is one flat colour with its keyline. No gradients, no sheen.",
+        "section": "colors"
+      },
+      {
+        "name": "The Stamp Only Means State Rule",
+        "body": "Platform stamp colours appear only on a stamp, a status dot or a status word, and always beside the word. Nothing decorative is green, ochre or red.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sign Painter Rule",
+        "body": "Big Shoulders is only for display, headings and painted departments, always uppercase at weight 800 with 0.92 line-height. Body, labels and buttons stay in Hanken Grotesk.",
+        "section": "typography"
+      },
+      {
+        "name": "The Figures Are Mono Rule",
+        "body": "A number the shopper compares, or a serial the operator matches, is set in the mono face with tabular figures and no tracking.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Grid Rule",
+        "body": "Every shelf on a page shares the same columns and gaps, so a shopper can scan across shelves without realigning.",
+        "section": "layout"
+      },
+      {
+        "name": "The Hairline Not Lift Rule",
+        "body": "Resting cards, plates and panels are flat; hover darkens the ring, it does not raise the card.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Six Pixel Ceiling Rule",
+        "body": "No corner exceeds 6px on either surface. No pill tabs, chips, badges or cards.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** open the storefront home on the glass window band with the store name in gold leaf, then step to white shelves.",
+      "**Do** keep the neon to a single flat line in the logo hue per screen, on glass.",
+      "**Do** set every strength, size, price and serial in the mono face with tabular figures.",
+      "**Do** show every compliance state as a stamp or status word with its word; pair each blocker with its fix link.",
+      "**Do** order blockers and queues by severity, not alphabetically.",
+      "**Do** keep platform tables at 36px rows with sticky headers and visible mono serials."
+    ],
+    "donts": [
+      "**Don't** round anything past 6px; no pill tabs, chips, badges or cards on either surface.",
+      "**Don't** paint gold leaf as a gradient.",
+      "**Don't** use stamp green, ochre or red for anything that is not a state, or show a state as colour alone.",
+      "**Don't** use Info Blue for a regulated state.",
+      "**Don't** lift resting cards with shadows; shadows are for overlays and the selected checkout option.",
+      "**Don't** set body copy, labels or buttons in Big Shoulders."
+    ]
+  }
+}
