@@ -35,10 +35,8 @@ export default async function Footer() {
       <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
         <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
           <div className="flex flex-col gap-4">
+            {/* The homepage sentence lives in the window band; the footer carries only the sign. */}
             <Logo tone="glass" size="lg" />
-            {store?.homepageDescription && (
-              <p className="max-w-xs text-[14px] leading-[22px] text-white/75">{store.homepageDescription}</p>
-            )}
           </div>
           {categories.length > 0 && (
             <div>
@@ -100,7 +98,6 @@ export default async function Footer() {
         </div>
         <div className="flex flex-col gap-2 border-t border-vp-glass-line py-6 text-[12px] text-white/75 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-1.5">
-            <p className="inline-flex w-fit rounded-[4px] border border-white/70 px-2 py-0.5 font-semibold text-white">Adults 21+ only</p>
             {showContact && (
               <p className="flex flex-wrap gap-x-4 gap-y-1" data-testid="footer-business">
                 {business.legalName && <span className="text-white">{business.legalName}</span>}

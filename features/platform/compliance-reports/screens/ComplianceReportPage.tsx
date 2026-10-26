@@ -98,7 +98,7 @@ export async function ComplianceReportPage({ params }: { params: Promise<{ id: s
             <div>
               <SectionTitle meta={policies.length}>Policy versions</SectionTitle>
               <ListBand>
-                {policies.length === 0 && <div className="px-4 py-3 text-sm text-muted-foreground">None</div>}
+                {policies.length === 0 && <div className="px-4 py-3 text-[13px] text-muted-foreground">None</div>}
                 {policies.map(policy => (
                   <div key={policy} className="px-4 py-2.5"><Mono>{policy}</Mono></div>
                 ))}
@@ -107,7 +107,7 @@ export async function ComplianceReportPage({ params }: { params: Promise<{ id: s
             <div>
               <SectionTitle meta={events.length}>Events</SectionTitle>
               <ListBand>
-                {events.length === 0 && <div className="px-4 py-3 text-sm text-muted-foreground">No events</div>}
+                {events.length === 0 && <div className="px-4 py-3 text-[13px] text-muted-foreground">No events</div>}
                 {events.map(event => (
                   <div key={event.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-2.5">
                     <span className="min-w-0">
@@ -128,7 +128,7 @@ export async function ComplianceReportPage({ params }: { params: Promise<{ id: s
         <section>
           <SectionTitle meta={orderIds.length}>Orders</SectionTitle>
           <ListBand>
-            {orderIds.length === 0 && <div className="px-4 py-3 text-sm text-muted-foreground">No orders in this period</div>}
+            {orderIds.length === 0 && <div className="px-4 py-3 text-[13px] text-muted-foreground">No orders in this period</div>}
             {orderIds.slice(0, 100).map(orderId => (
               <div key={orderId} className="flex items-baseline justify-between gap-4 px-4 py-2.5">
                 <Mono>{orderId}</Mono>

@@ -45,7 +45,7 @@ export function CreateCurrencyDrawer({ open, onClose }: CreateCurrencyDrawerProp
         <div className="px-4 pb-6 md:px-6">
           <div className="mx-auto max-w-md space-y-4">
             <ListBand>
-              <div className="px-4 py-4 text-sm text-muted-foreground">
+              <div className="px-4 py-3 text-[13px] text-muted-foreground">
                 Currency creation is not available here.
               </div>
             </ListBand>

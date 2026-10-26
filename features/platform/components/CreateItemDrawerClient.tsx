@@ -8,6 +8,8 @@ import { enhanceFields } from '../../dashboard/utils/enhanceFields'
 import { useCreateItem } from '../../dashboard/utils/useCreateItem'
 import { AlertCircle, Check, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import { primaryButtonClass } from './vape-primitives'
 
 interface CreateItemDrawerClientProps {
   list: any
@@ -99,7 +101,7 @@ export function CreateItemDrawerClient({
             <Button 
               type="submit" 
               disabled={createItem.state === 'loading'}
-              className="h-10 min-w-[120px] rounded-[4px] px-4"
+              className={cn(primaryButtonClass, "min-w-[120px]")}
             >
               {createItem.state === 'loading' ? (
                 <>

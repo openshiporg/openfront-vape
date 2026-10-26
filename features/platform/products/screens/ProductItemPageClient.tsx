@@ -270,7 +270,7 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
     return (
       <div className="px-4 py-10 md:px-6">
         <ListBand>
-          <div className="px-4 py-3 text-sm text-muted-foreground">Product not found</div>
+          <div className="px-4 py-3 text-[13px] text-muted-foreground">Product not found</div>
         </ListBand>
       </div>
     )

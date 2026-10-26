@@ -15,17 +15,15 @@ import { FilterAdd } from "../../dashboard/components/FilterAdd"
 import { FilterList } from "../../dashboard/components/FilterList"
 import { SortSelection } from "../../dashboard/components/SortSelection"
 import { FieldSelection } from "../../dashboard/components/FieldSelection"
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 import Link from "next/link"
 import { useDashboard } from '../../dashboard/context/DashboardProvider'
+import { createButtonClass } from "./vape-primitives"
 
 /** Lists with their own platform create page; others use the generic model route. */
 const PLATFORM_CREATE_PATHS = new Set(["orders", "products"])
 
-/** Class for a feature's own create button passed as `customCreateButton`. */
-export const platformCreateButtonClass =
-  "h-10 rounded-[4px] px-3 text-[13px] font-medium lg:w-auto lg:px-4 [&_svg]:size-4"
+/** Class for a feature's own create button passed as `customCreateButton` (see `createButtonClass`). */
+export const platformCreateButtonClass = createButtonClass
 
 interface PlatformFilterBarProps {
   list: any
@@ -148,18 +146,20 @@ export function PlatformFilterBar({
           {!list.hideCreate && (
             customCreateButton || (
               (createMode === 'dropdown' && onCreateClick) ? (
-                <Button
+                <button
+                  type="button"
                   onClick={() => onCreateClick?.()}
-                  size="icon"
                   className={create}
+                  aria-label={createLabel || `Create ${list.singular}`}
                 >
                   <Plus />
                   <span className="hidden lg:inline">{createLabel || `Create ${list.singular}`}</span>
-                </Button>
+                </button>
               ) : (
                 <Link
                   href={createHref}
-                  className={cn(buttonVariants({ size: "icon" }), create)}
+                  className={create}
+                  aria-label={`Create ${list.singular}`}
                 >
                   <Plus />
                   <span className="hidden lg:inline">Create {list.singular}</span>

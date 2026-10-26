@@ -35,7 +35,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function Tags({ values, empty = 'None' }: { values: string[]; empty?: string }) {
-  if (!values.length) return <p className="px-4 py-3 text-sm text-muted-foreground">{empty}</p>;
+  if (!values.length) return <p className="px-4 py-3 text-[13px] text-muted-foreground">{empty}</p>;
   return (
     <div className="flex flex-wrap gap-1.5 px-4 py-3">
       {values.map(value => (

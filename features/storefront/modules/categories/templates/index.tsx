@@ -50,7 +50,7 @@ export default function CategoryTemplate({
   return (
     <CatalogLayout title={category.title} activeCategory={root.handle} sortBy={sort} trail={trail}>
       {category.category_children && category.category_children.length > 0 && (
-        <SegmentedTrack label={`${category.title} types`} className="mb-6">
+        <SegmentedTrack label={`${category.title} types`} wrap className="mb-6">
           {category.category_children.map((c: StorefrontProductCategory) => (
             <SegmentedLink key={c.id} href={`/categories/${c.handle}`}>
               {c.title}

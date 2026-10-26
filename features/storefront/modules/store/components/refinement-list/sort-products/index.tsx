@@ -30,8 +30,9 @@ export default function SortProducts({
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
+  // Sized to its plates: no stretched track with an empty trailing cell on phone.
   return (
-    <SegmentedTrack label="Sort by" data-testid={dataTestId}>
+    <SegmentedTrack label="Sort by" className="w-fit self-start lg:self-auto" data-testid={dataTestId}>
       {sortOptions.map((o) => (
         <SegmentedButton key={o.value} active={sortBy === o.value} onClick={() => choose(o.value)}>
           {o.label}

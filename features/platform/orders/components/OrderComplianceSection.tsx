@@ -39,7 +39,7 @@ export async function OrderComplianceSection({ orderId }: { orderId: string }) {
     <section>
       <SectionTitle meta={headStamp}>Compliance</SectionTitle>
       <ListBand>
-        {!result.success && <div className="px-4 py-3 text-sm text-muted-foreground">{result.error}</div>}
+        {!result.success && <div className="px-4 py-3 text-[13px] text-muted-foreground">{result.error}</div>}
         {result.success && reviews > 0 && (
           <div className="flex items-baseline gap-2.5 px-4 py-3 text-sm font-medium text-foreground">
             <Dot tone={reversed ? 'ok' : 'danger'} />
@@ -47,7 +47,7 @@ export async function OrderComplianceSection({ orderId }: { orderId: string }) {
             <span className="text-xs font-normal tabular-nums text-muted-foreground">{reviews}</span>
           </div>
         )}
-        {result.success && events.length === 0 && <div className="px-4 py-3 text-sm text-muted-foreground">No compliance events</div>}
+        {result.success && events.length === 0 && <div className="px-4 py-3 text-[13px] text-muted-foreground">No compliance events</div>}
         {events.map(event => {
           const review = event.reasonCode === REVERSAL;
           const body = (

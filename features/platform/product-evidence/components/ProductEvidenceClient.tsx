@@ -92,14 +92,14 @@ function ProductLink({ variant }: { variant: EvidenceVariant | null }) {
   if (!variant) return <span className="truncate">No variant</span>
   const label = variant.productTitle || variant.sku || 'Product'
   return (
-    <span className="flex min-w-0 flex-col">
+    <span className="flex min-w-0 items-baseline gap-2">
       {variant.productId ? (
-        <Link href={`/dashboard/platform/products/${variant.productId}`} className="inline-flex min-w-0 items-baseline gap-0.5 font-medium text-foreground underline-offset-4 hover:underline">
+        <Link href={`/dashboard/platform/products/${variant.productId}`} className="inline-flex min-w-0 max-w-[65%] shrink-0 items-baseline gap-0.5 font-medium text-foreground underline-offset-4 hover:underline">
           <span className="truncate">{label}</span>
           <ArrowUpRight className="size-3 shrink-0 translate-y-[0.1em] text-muted-foreground" />
         </Link>
-      ) : <span className="truncate font-medium text-foreground">{label}</span>}
-      {variant.title && <span className="truncate text-[12px] text-muted-foreground">{variant.title}</span>}
+      ) : <span className="max-w-[65%] shrink-0 truncate font-medium text-foreground">{label}</span>}
+      {variant.title && <span className="min-w-0 truncate text-[12px] text-muted-foreground">{variant.title}</span>}
     </span>
   )
 }
@@ -164,6 +164,8 @@ export function ProductEvidenceClient({ data }: { data: ProductEvidence }) {
     (status === 'all' || item.status === status) &&
     matches(search, [item.variant?.productTitle, item.variant?.title, item.authority, item.authorizationIdentifier, item.jurisdiction]))
   const unclassified = data.unclassified.filter(item => matches(search, [item.productTitle, item.title, item.sku]))
+  // Shown only when a variant actually carries a SKU; the stamp serial identifies the record otherwise.
+  const anySku = unclassified.some(item => Boolean(item.sku))
   const attentionRows = attention.filter(({ item }) =>
     matches(search, [item.variant?.productTitle, item.variant?.title, item.variant?.sku, item.brand, item.flavor]))
 
@@ -202,7 +204,7 @@ export function ProductEvidenceClient({ data }: { data: ProductEvidence }) {
                 <thead>
                   <tr>
                     <Th>Product</Th>
-                    <Th priority={2}>SKU</Th>
+                    {anySku && <Th priority={2}>SKU</Th>}
                     <Th>State</Th>
                     <Th align="right"><span className="sr-only">Action</span></Th>
                   </tr>
@@ -211,10 +213,10 @@ export function ProductEvidenceClient({ data }: { data: ProductEvidence }) {
                   {unclassified.map(variant => (
                     <Tr key={variant.id}>
                       <Td className="max-w-[16rem]"><ProductLink variant={variant} /></Td>
-                      <Td priority={2} className="font-mono text-[12px] text-muted-foreground">{variant.sku || ''}</Td>
+                      {anySku && <Td priority={2} className="font-mono text-[12px] text-muted-foreground">{variant.sku || ''}</Td>}
                       <Td><Stamp tone="warn" serial={recordSerial(variant.id)}>Unclassified</Stamp></Td>
-                      <Td align="right">
-                        <button type="button" className={`${buttonClass.base} ${buttonClass.primary}`} onClick={() => setSheetVariant(variant.id)}>Classify</button>
+                      <Td align="right" className="w-0 whitespace-nowrap py-0.5">
+                        <button type="button" className={`${buttonClass.base} ${buttonClass.outline}`} onClick={() => setSheetVariant(variant.id)}>Classify</button>
                       </Td>
                     </Tr>
                   ))}
@@ -247,7 +249,7 @@ export function ProductEvidenceClient({ data }: { data: ProductEvidence }) {
                         </Stamp>
                       </Td>
                       <Td priority={2}><Stamp tone={tone}>{reason}</Stamp></Td>
-                      <Td align="right">
+                      <Td align="right" className="w-0 whitespace-nowrap py-0.5">
                         {item.variant && (
                           <button type="button" className={actionClass} onClick={() => item.variant && setSheetVariant(item.variant.id)}>
                             {['draft', 'review'].includes(item.status) ? 'Edit' : 'Open'}
@@ -259,7 +261,7 @@ export function ProductEvidenceClient({ data }: { data: ProductEvidence }) {
                 </tbody>
               </DataTable>
             ) : (
-              <ListBand><div className="px-4 py-3 text-sm text-muted-foreground">No classification needs a decision</div></ListBand>
+              <ListBand><div className="px-4 py-3 text-[13px] text-muted-foreground">No classification needs a decision</div></ListBand>
             )}
           </section>
         </div>
@@ -392,7 +394,7 @@ function ClassificationRow({ item, now, onOpen }: { item: EvidenceClassification
       <Td priority={3} className="max-w-[14rem] truncate text-[12px] text-muted-foreground">{facts.join(' · ')}</Td>
       <Td priority={3} className="whitespace-nowrap text-muted-foreground">{regulatedLabel(REVIEW_STATUS_LABELS, item.marketingReviewStatus)}</Td>
       <Td priority={2}><Expiry value={item.expiresAt} now={now} /></Td>
-      <Td align="right">
+      <Td align="right" className="whitespace-nowrap py-0.5">
         <TransitionActions actions={actions} className="flex flex-col items-end">
           {item.variant && (
             <button type="button" className={actionClass} onClick={onOpen}>
@@ -419,10 +421,10 @@ function AuthorizationRow({ item, now, onOpen }: { item: EvidenceAuthorization; 
 
   return (
     <Tr>
-      <Td>
-        <span className="flex min-w-0 flex-col">
-          <span className="truncate font-medium text-foreground">{regulatedLabel(AUTHORIZATION_TYPE_LABELS, item.authorizationType)}</span>
-          <span className="truncate text-[12px] text-muted-foreground">
+      <Td className="max-w-[18rem]">
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span className="shrink-0 font-medium text-foreground">{regulatedLabel(AUTHORIZATION_TYPE_LABELS, item.authorizationType)}</span>
+          <span className="min-w-0 truncate text-[12px] text-muted-foreground">
             {item.authority}
             {item.delistedAt && ` · delisted ${day(item.delistedAt)}`}
             {item.lastVerifiedAt && ` · verified ${day(item.lastVerifiedAt)}`}
@@ -437,7 +439,7 @@ function AuthorizationRow({ item, now, onOpen }: { item: EvidenceAuthorization; 
       </Td>
       <Td priority={3} className="font-mono text-[12px] text-muted-foreground">{item.jurisdiction || 'Federal'}</Td>
       <Td priority={2}><Expiry value={item.expiresAt} now={now} /></Td>
-      <Td align="right">
+      <Td align="right" className="whitespace-nowrap py-0.5">
         <TransitionActions actions={actions} className="flex flex-col items-end">
           {item.variant && <button type="button" className={actionClass} onClick={onOpen}>Open</button>}
         </TransitionActions>

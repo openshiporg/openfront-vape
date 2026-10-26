@@ -10,6 +10,7 @@ import { LaunchSteps, ReleaseBar, fixClass } from '@/features/platform/complianc
 import { COMPLIANCE_PATH, EVIDENCE_PATH, launchSteps } from '@/features/platform/compliance-center/lib/blockers';
 import { LEDGER_PATH, ORDERS_PATH, dateTime, day, label } from '@/features/platform/compliance-ledger/lib/format';
 import { getOverview, type Section } from '../actions/overview';
+import { recordSerial } from '@/features/platform/product-evidence/lib/serial';
 
 const breadcrumbs = [
   { type: 'link' as const, label: 'Dashboard', href: '/dashboard' },
@@ -118,28 +119,32 @@ export async function OverviewPage() {
                 <tbody>
                   {unclassified && unclassified.products > 0 && (
                     <Tr>
-                      <Td className="min-w-0">
-                        <span className="block font-medium text-foreground">
-                          {unclassified.products} {unclassified.products === 1 ? 'product' : 'products'}
-                        </span>
-                        <span className="block text-[12px] text-muted-foreground">
-                          {unclassified.variants} {unclassified.variants === 1 ? 'variant' : 'variants'} with no classification
+                      <Td className="max-w-0">
+                        <span className="flex min-w-0 items-baseline gap-2">
+                          <span className="shrink-0 font-medium text-foreground">
+                            {unclassified.products} {unclassified.products === 1 ? 'product' : 'products'}
+                          </span>
+                          <span className="min-w-0 truncate text-[12px] text-muted-foreground">
+                            {unclassified.variants} {unclassified.variants === 1 ? 'variant' : 'variants'} with no classification
+                          </span>
                         </span>
                       </Td>
                       <Td><Stamp tone="warn">Not classified</Stamp></Td>
-                      <Td align="right"><OutLink href={EVIDENCE_PATH}>Classify</OutLink></Td>
+                      <Td align="right" className="w-0 whitespace-nowrap py-0.5"><OutLink href={EVIDENCE_PATH}>Classify</OutLink></Td>
                     </Tr>
                   )}
                   {otherBlocked.map(product => {
                     const stamp = classificationStamp(product.variants);
                     return (
                     <Tr key={product.id}>
-                      <Td className="min-w-0">
-                        <span className="block break-words font-medium text-foreground">{product.title}</span>
-                        <span className="block text-[12px] text-muted-foreground">{variantSummary(product.variants)}</span>
+                      <Td className="max-w-0">
+                        <span className="flex min-w-0 items-baseline gap-2">
+                          <span className="max-w-[60%] shrink-0 truncate font-medium text-foreground" title={product.title}>{product.title}</span>
+                          <span className="min-w-0 truncate text-[12px] text-muted-foreground">{variantSummary(product.variants)}</span>
+                        </span>
                       </Td>
-                      <Td><Stamp tone={stamp.tone}>{stamp.word}</Stamp></Td>
-                      <Td align="right"><OutLink href={`/dashboard/platform/products/${product.id}`}>Product</OutLink></Td>
+                      <Td><Stamp tone={stamp.tone} serial={recordSerial(product.id)}>{stamp.word}</Stamp></Td>
+                      <Td align="right" className="w-0 whitespace-nowrap py-0.5"><OutLink href={`/dashboard/platform/products/${product.id}`}>Product</OutLink></Td>
                     </Tr>
                     );
                   })}
@@ -164,16 +169,18 @@ export async function OverviewPage() {
                     const urgent = new Date(item.expiresAt).getTime() - Date.now() < 7 * DAY_MS;
                     return (
                       <Tr key={`${item.kind}-${item.id}`}>
-                        <Td className="min-w-0">
-                          <span className="block break-words font-medium text-foreground">{item.title}</span>
-                          <span className="block text-[12px] text-muted-foreground">{item.detail}</span>
+                        <Td className="max-w-0">
+                          <span className="flex min-w-0 items-baseline gap-2">
+                            <span className="max-w-[60%] shrink-0 truncate font-medium text-foreground" title={item.title}>{item.title}</span>
+                            <span className="min-w-0 truncate text-[12px] text-muted-foreground">{item.detail}</span>
+                          </span>
                         </Td>
                         <Td className="whitespace-nowrap">
                           <Stamp tone={urgent ? 'danger' : 'warn'} serial={<span title={dateTime(item.expiresAt)}>{day(item.expiresAt)}</span>}>
                             {daysLeft(item.expiresAt)}
                           </Stamp>
                         </Td>
-                        <Td align="right"><OutLink href={item.href}>Open</OutLink></Td>
+                        <Td align="right" className="w-0 whitespace-nowrap py-0.5"><OutLink href={item.href}>Open</OutLink></Td>
                       </Tr>
                     );
                   })}

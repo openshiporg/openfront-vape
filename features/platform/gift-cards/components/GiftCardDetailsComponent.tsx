@@ -230,7 +230,7 @@ export function GiftCardDetailsComponent({
                   ))}
                 </SubTable>
               ) : (
-                <p className="py-4 text-center text-[13px] text-muted-foreground">No transactions</p>
+                <p className="py-2 text-[13px] text-muted-foreground">No transactions</p>
               )
             )}
           </div>

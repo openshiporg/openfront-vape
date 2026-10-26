@@ -41,7 +41,7 @@ interface InventoryListPageClientProps {
 function EmptyStateDefault() {
   return (
     <ListBand>
-      <div className="px-4 py-4 text-sm text-muted-foreground">No inventory items</div>
+      <div className="px-4 py-3 text-[13px] text-muted-foreground">No inventory items</div>
     </ListBand>
   )
 }

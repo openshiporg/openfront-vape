@@ -404,8 +404,8 @@ export default function ApiKeyTable({ data }: ApiKeyTableProps) {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No API keys found.
+              <TableCell colSpan={columns.length} className="h-10 px-4 text-[13px] text-muted-foreground">
+                No API keys
               </TableCell>
             </TableRow>
           )}

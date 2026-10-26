@@ -21,6 +21,7 @@ import { listJurisdictions } from '../actions/jurisdictions';
 import { JURISDICTION_TONES, type JurisdictionRow } from '../lib/shared';
 import { JurisdictionFilters, NoJurisdictions } from '../components/JurisdictionFilters';
 import { JurisdictionSheetButton } from '../components/JurisdictionSheet';
+import { primaryButtonClass } from '../../components/vape-primitives';
 
 const breadcrumbs = [
   { type: 'link' as const, label: 'Dashboard', href: '/dashboard' },
@@ -102,7 +103,7 @@ export async function JurisdictionListPage({ searchParams }: PageProps) {
         state={allowed.length ? `Selling in ${allowed.length}` : 'Selling nowhere'}
         meta={`${all.length} jurisdictions, ${blocked.length} active without a policy in force`}
       />
-      <JurisdictionSheetButton className="h-10 shrink-0 rounded-[4px] px-4 text-[13px] font-medium">New jurisdiction</JurisdictionSheetButton>
+      <JurisdictionSheetButton className={primaryButtonClass}>New jurisdiction</JurisdictionSheetButton>
     </div>
   );
 
@@ -112,7 +113,7 @@ export async function JurisdictionListPage({ searchParams }: PageProps) {
         <section>
           <SectionTitle meta={`${allowed.length} allowed, ${blocked.length} blocked`}>Coverage</SectionTitle>
           {levels.length === 0 ? (
-            <ListBand><div className="px-4 py-6 text-sm text-muted-foreground">No jurisdictions. Add a country or state and activate a rule set for it.</div></ListBand>
+            <ListBand><div className="px-4 py-3 text-[13px] text-muted-foreground">No jurisdictions. Add a country or state and activate a rule set for it.</div></ListBand>
           ) : (
             <DataTable>
               <thead>
@@ -142,7 +143,7 @@ export async function JurisdictionListPage({ searchParams }: PageProps) {
         <section>
           <SectionTitle meta={queue.length}>Needs a policy</SectionTitle>
           {queue.length === 0 ? (
-            <ListBand><div className="px-4 py-3 text-sm text-muted-foreground">Every active jurisdiction has one rule set in force</div></ListBand>
+            <ListBand><div className="px-4 py-3 text-[13px] text-muted-foreground">Every active jurisdiction has one rule set in force</div></ListBand>
           ) : (
             <DataTable>
               <thead>

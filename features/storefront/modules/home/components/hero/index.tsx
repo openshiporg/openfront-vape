@@ -11,9 +11,9 @@ interface HeroProps {
   categories: Link[]
 }
 
-// The shop's front window: the name in gold leaf, one neon line (the saved tagline;
-// the store has no open-hours data, so it never claims "Open"), the departments
-// painted on the glass, and the 21+ notice in window vinyl.
+// The shop's front window: the name in gold leaf, the one neon element on screen (the
+// saved tagline, as flat logo-hue type; the store has no open-hours data, so it never
+// claims "Open"), the departments painted on the glass, and the 21+ note in window vinyl.
 const Hero = ({ storeName, title, description, categories }: HeroProps) => {
   const name = storeName || title || "Store"
   const tagline = title && title.trim() !== name.trim() ? title : null
@@ -34,7 +34,8 @@ const Hero = ({ storeName, title, description, categories }: HeroProps) => {
           {description && (
             <p className="mt-6 hidden max-w-[52ch] text-[16px] leading-[25px] text-white/75 sm:block">{description}</p>
           )}
-          <p className="mt-6 inline-flex w-fit items-center gap-2 rounded-[4px] border border-white/70 px-2.5 py-1 text-[12px] leading-[16px] font-semibold text-white sm:mt-8">
+          {/* The one 21+ note in the band, set like window vinyl: small white letters on a 1px white keyline. */}
+          <p className="mt-6 inline-flex w-fit items-center rounded-[2px] border border-white px-2 py-0.5 text-[12px] leading-[16px] font-medium text-white sm:mt-8">
             Adults 21+ only
           </p>
         </div>

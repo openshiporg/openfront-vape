@@ -15,6 +15,8 @@ export {
   trackClass,
   pillClass,
   buttonClass,
+  createButtonClass,
+  primaryButtonClass,
   Track,
   Pill,
   Count,
@@ -41,7 +43,7 @@ export function PageTitle({
         <h1 className="text-2xl font-semibold tracking-[-0.015em] text-foreground">{title}</h1>
         {state && <Stamp tone={tone ?? "muted"}>{state}</Stamp>}
       </div>
-      {meta && <div className="text-[13px] text-muted-foreground">{meta}</div>}
+      {meta != null && meta !== "" ? <div className="text-[13px] text-muted-foreground">{meta}</div> : null}
     </div>
   )
 }
@@ -59,7 +61,7 @@ export function SectionTitle({ children, meta }: { children: ReactNode; meta?: R
   return (
     <div className="mb-2 flex items-baseline justify-between gap-3 border-b border-foreground/15 pb-2">
       <h2 className="text-[15px] font-semibold text-foreground">{children}</h2>
-      {meta && <span className="text-[13px] tabular-nums text-muted-foreground">{meta}</span>}
+      {meta != null && meta !== "" ? <span className="text-[13px] tabular-nums text-muted-foreground">{meta}</span> : null}
     </div>
   )
 }
@@ -105,7 +107,7 @@ export function Td({
 }: React.TdHTMLAttributes<HTMLTableCellElement> & { align?: "left" | "right"; priority?: 1 | 2 | 3 }) {
   return (
     <td
-      className={cn("h-9 px-3 py-2 align-middle first:pl-4 last:pr-4", align === "right" && "text-right tabular-nums", PRIORITY[priority], className)}
+      className={cn("h-9 px-3 py-1.5 align-middle first:pl-4 last:pr-4", align === "right" && "text-right tabular-nums", PRIORITY[priority], className)}
       {...props}
     />
   )

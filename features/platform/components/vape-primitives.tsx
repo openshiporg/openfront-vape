@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react"
+import type { ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -41,22 +41,9 @@ export function Dot({ tone = "muted", className }: { tone?: DotTone; className?:
   )
 }
 
-// Perforated top and bottom edges, like an excise stamp torn from its sheet.
-const PERFORATION: CSSProperties = {
-  WebkitMaskImage:
-    "radial-gradient(circle at 2px 0, transparent 1px, #000 1.3px), radial-gradient(circle at 2px 100%, transparent 1px, #000 1.3px)",
-  WebkitMaskSize: "4px 51%",
-  WebkitMaskRepeat: "repeat-x",
-  WebkitMaskPosition: "top, bottom",
-  maskImage:
-    "radial-gradient(circle at 2px 0, transparent 1px, #000 1.3px), radial-gradient(circle at 2px 100%, transparent 1px, #000 1.3px)",
-  maskSize: "4px 51%",
-  maskRepeat: "repeat-x",
-  maskPosition: "top, bottom",
-}
-
 /**
- * Compliance state as a stamp: the word on a perforated plate in its state colour, with an optional serial.
+ * Compliance state as a stamp: the word on a flat 2px plate in its state colour, edged top and bottom with a
+ * dotted rule (the torn perforation), with an optional mono record serial.
  * Use for every regulated state (cleared, pending, denied, expired), never colour alone.
  */
 export function Stamp({
@@ -72,9 +59,8 @@ export function Stamp({
 }) {
   return (
     <span
-      style={PERFORATION}
       className={cn(
-        "inline-flex min-h-[22px] max-w-full items-center gap-1.5 whitespace-nowrap rounded-[2px] px-1.5 py-[3px] text-[12px] font-semibold leading-none",
+        "inline-flex min-h-[22px] max-w-full items-center gap-1.5 whitespace-nowrap rounded-[2px] border-y border-dotted border-current/50 px-1.5 py-[3px] text-[12px] font-semibold leading-none",
         STAMP_FILL[tone],
         TEXT_TONES[tone],
         className
@@ -133,3 +119,14 @@ export const buttonClass = {
   ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
   danger: "bg-[oklch(0.52_0.17_27)] text-white hover:bg-[oklch(0.46_0.17_27)]",
 } as const
+
+// Resets that cancel the shared `<Button>` default variant (gradient, bevel border, ring, drop shadow) when a kit
+// class is applied to it, so the result is the kit's flat 4px ink button.
+const SHARED_BUTTON_RESET =
+  "rounded-[4px] border-0 bg-none shadow-none ring-0 brightness-100 hover:brightness-100 active:brightness-100 dark:inset-shadow-none"
+
+/** List create button: flat ink primary, a 40px icon-only square below lg, labelled from lg (matches the filter bar). */
+export const createButtonClass = cn(buttonClass.base, buttonClass.primary, "size-10 px-0 lg:w-auto lg:px-4", SHARED_BUTTON_RESET)
+
+/** A page header's one primary action: the same flat ink primary with its label always shown. */
+export const primaryButtonClass = cn(buttonClass.base, buttonClass.primary, "h-10 px-4", SHARED_BUTTON_RESET)

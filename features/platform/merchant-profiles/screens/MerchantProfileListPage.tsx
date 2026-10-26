@@ -88,7 +88,7 @@ export async function MerchantProfileListPage({ searchParams }: PageProps) {
           <SectionTitle meta={ready > 1 ? 'Sales need exactly one ready profile' : undefined}>Profile completeness</SectionTitle>
           {checked.length === 0 ? (
             <ListBand>
-              <div className="px-4 py-6 text-sm text-muted-foreground">
+              <div className="px-4 py-3 text-[13px] text-muted-foreground">
                 No merchant profile. Add one with a legal name, PACT registration, origin, product types and a launch jurisdiction, then activate it.
               </div>
             </ListBand>

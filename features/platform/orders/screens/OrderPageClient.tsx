@@ -258,7 +258,7 @@ export function OrderPageClient({
               <SectionTitle meta={`${itemCount} ${itemCount === 1 ? "item" : "items"}`}>Line items</SectionTitle>
               {lineItems.length === 0 ? (
                 <ListBand>
-                  <div className="px-4 py-3 text-sm text-muted-foreground">No line items</div>
+                  <div className="px-4 py-3 text-[13px] text-muted-foreground">No line items</div>
                 </ListBand>
               ) : (
                 <DataTable aria-label="Line items">
@@ -427,7 +427,7 @@ export function OrderPageClient({
               </SectionTitle>
               <ListBand>
                 {!order.events?.filter((event) => (showComments ? true : event.type !== 'NOTE_ADDED')).length && (
-                  <div className="px-4 py-3 text-sm text-muted-foreground">No activity</div>
+                  <div className="px-4 py-3 text-[13px] text-muted-foreground">No activity</div>
                 )}
                 {order.events?.filter((event) =>
                   showComments ? true : event.type !== 'NOTE_ADDED'
@@ -522,7 +522,7 @@ export function OrderPageClient({
               </SectionTitle>
               <ListBand>
                 {ship ? renderAddress(ship) : (
-                  <div className="px-4 py-3 text-sm text-muted-foreground">No shipping address</div>
+                  <div className="px-4 py-3 text-[13px] text-muted-foreground">No shipping address</div>
                 )}
               </ListBand>
             </section>
@@ -531,7 +531,7 @@ export function OrderPageClient({
               <SectionTitle>Billing address</SectionTitle>
               <ListBand>
                 {bill && bill.id !== ship?.id ? renderAddress(bill) : (
-                  <div className="px-4 py-3 text-sm text-muted-foreground">Same as shipping address</div>
+                  <div className="px-4 py-3 text-[13px] text-muted-foreground">Same as shipping address</div>
                 )}
               </ListBand>
             </section>

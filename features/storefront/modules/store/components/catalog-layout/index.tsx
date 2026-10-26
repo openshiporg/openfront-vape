@@ -36,7 +36,7 @@ export default async function CatalogLayout({
 
       <div className="mt-6 flex flex-col gap-3 border-b border-vp-line pb-5 lg:flex-row lg:items-center lg:justify-between">
         {categories.length > 0 && (
-          <SegmentedTrack label="Categories">
+          <SegmentedTrack label="Categories" wrap className="self-start">
             <SegmentedLink href="/store" active={activeCategory === "all"}>All</SegmentedLink>
             {categories.map((c: any) => (
               <SegmentedLink key={c.id} href={`/categories/${c.handle}`} active={activeCategory === c.handle}>

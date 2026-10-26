@@ -183,7 +183,7 @@ export async function MerchantProfileDetailPage({ params }: PageProps) {
             )}
           </div>
           <ListBand>
-            {profile.licenses.length === 0 && <div className="px-4 py-3 text-sm text-muted-foreground">No licences</div>}
+            {profile.licenses.length === 0 && <div className="px-4 py-3 text-[13px] text-muted-foreground">No licences</div>}
             {profile.licenses.map(license => (
               <LicenseSheet
                 key={license.id}
@@ -210,7 +210,7 @@ export async function MerchantProfileDetailPage({ params }: PageProps) {
         <section>
           <SectionTitle meta={profile.approvals.length}>Provider approvals</SectionTitle>
           <ListBand>
-            {profile.approvals.length === 0 && <div className="px-4 py-3 text-sm text-muted-foreground">No provider approvals</div>}
+            {profile.approvals.length === 0 && <div className="px-4 py-3 text-[13px] text-muted-foreground">No provider approvals</div>}
             {profile.approvals.map(approval => (
               <Link
                 key={approval.id}

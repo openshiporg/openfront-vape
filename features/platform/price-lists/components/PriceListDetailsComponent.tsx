@@ -281,7 +281,7 @@ export function PriceListDetailsComponent({
               )}
             </div>
           ) : (
-            <p className="py-2 text-center text-[13px] text-muted-foreground">No customer groups, prices or rules</p>
+            <p className="py-2 text-[13px] text-muted-foreground">No customer groups, prices or rules</p>
           )}
         </ExpandRow>
       )}

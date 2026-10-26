@@ -19,6 +19,7 @@ import {
 } from '@/features/platform/components/vape-ui';
 import { AdjustStockSheet } from '../components/AdjustStockSheet';
 import { BulkAdjustSheet } from '../components/BulkAdjustSheet';
+import { recordSerial } from '../../product-evidence/lib/serial';
 
 const LOW_STOCK_AT = 5;
 const PAGE_SIZE = 20;
@@ -68,16 +69,32 @@ function hrefFor(params: { page?: number; search?: string; stock?: StockFilter }
 
 function VariantCell({ item }: { item: VariantRow }) {
   return (
-    <>
-      <span className="block truncate font-medium text-foreground">{item.title}</span>
+    <span className="flex min-w-0 items-baseline gap-2">
+      <span className="shrink-0 truncate font-medium text-foreground max-w-[55%]">{item.title}</span>
       {item.product && (
         <Link
           href={`/dashboard/platform/products/${item.product.id}`}
-          className="block truncate text-[12px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          className="min-w-0 truncate text-[12px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           {item.product.title}
         </Link>
       )}
+    </span>
+  );
+}
+
+/** The variant's SKU when it has one, else its record serial so the column never reads as dashes. */
+function SkuCell({ item }: { item: VariantRow }) {
+  return (
+    <>
+      {item.sku ? (
+        <span className="block truncate font-mono text-[12px] text-foreground">{item.sku}</span>
+      ) : (
+        <span className="block truncate font-mono text-[12px] text-muted-foreground" title="No SKU set; record serial shown">
+          {recordSerial(item.id)}
+        </span>
+      )}
+      <span className="block truncate text-[12px] text-muted-foreground md:hidden">{item.title}</span>
     </>
   );
 }
@@ -208,15 +225,14 @@ export default async function InventoryListPage({ searchParams }: {
                     return (
                       <Tr key={item.id}>
                         <Td className="max-w-0 w-[26%]">
-                          <span className="block truncate font-mono text-[12px] text-foreground">{item.sku || 'No SKU'}</span>
-                          <span className="block truncate text-[12px] text-muted-foreground md:hidden">{item.title}</span>
+                          <SkuCell item={item} />
                         </Td>
                         <Td priority={2} className="max-w-0">
                           <VariantCell item={item} />
                         </Td>
                         <Td><StatusWord tone={state.tone}>{state.label}</StatusWord></Td>
                         <Td align="right" className="font-medium text-foreground">{Number(item.inventoryQuantity) || 0}</Td>
-                        {canManage && <Td align="right" className="w-0 whitespace-nowrap"><AdjustCell item={item} canManage={canManage} /></Td>}
+                        {canManage && <Td align="right" className="w-0 whitespace-nowrap py-0.5"><AdjustCell item={item} canManage={canManage} /></Td>}
                       </Tr>
                     );
                   })}
@@ -258,7 +274,7 @@ export default async function InventoryListPage({ searchParams }: {
             </form>
             {items.length === 0 ? (
               <ListBand>
-                <p className="px-4 py-3 text-sm text-muted-foreground">
+                <p className="px-4 py-3 text-[13px] text-muted-foreground">
                   {search || stock !== 'all' ? 'No inventory matches this search.' : 'No inventory yet'}
                 </p>
               </ListBand>
@@ -279,15 +295,14 @@ export default async function InventoryListPage({ searchParams }: {
                     return (
                       <Tr key={item.id}>
                         <Td className="max-w-0 w-[26%]">
-                          <span className="block truncate font-mono text-[12px] text-foreground">{item.sku || '-'}</span>
-                          <span className="block truncate text-[12px] text-muted-foreground md:hidden">{item.title}</span>
+                          <SkuCell item={item} />
                         </Td>
                         <Td priority={2} className="max-w-0">
                           <VariantCell item={item} />
                         </Td>
                         <Td><StatusWord tone={state.tone}>{state.label}</StatusWord></Td>
                         <Td align="right" className="text-foreground">{item.manageInventory ? Number(item.inventoryQuantity) || 0 : '-'}</Td>
-                        {canManage && <Td align="right" className="w-0 whitespace-nowrap"><AdjustCell item={item} canManage={canManage} /></Td>}
+                        {canManage && <Td align="right" className="w-0 whitespace-nowrap py-0.5"><AdjustCell item={item} canManage={canManage} /></Td>}
                       </Tr>
                     );
                   })}

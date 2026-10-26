@@ -170,7 +170,7 @@ export async function ComplianceDecisionPage({ params }: { params: Promise<{ id:
         <section>
           <SectionTitle meta={events.length}>Events</SectionTitle>
           <ListBand>
-            {events.length === 0 && <div className="px-4 py-3 text-sm text-muted-foreground">No events</div>}
+            {events.length === 0 && <div className="px-4 py-3 text-[13px] text-muted-foreground">No events</div>}
             {events.map(event => (
               <div key={event.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-2.5">
                 <span className="min-w-0">

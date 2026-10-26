@@ -538,7 +538,7 @@ export function ProductCreatePageClient({ listKey, list }: ProductCreatePageClie
                       <h3 className="text-sm font-semibold text-foreground">Regional pricing</h3>
                       {regionsLoading ? (
                         <ListBand className="bg-background">
-                          <div className="px-4 py-3 text-sm text-muted-foreground">Loading regions…</div>
+                          <div className="px-4 py-3 text-[13px] text-muted-foreground">Loading regions…</div>
                         </ListBand>
                       ) : regionsError ? (
                         <ListBand className="bg-background">
@@ -600,7 +600,7 @@ export function ProductCreatePageClient({ listKey, list }: ProductCreatePageClie
                         </ListBand>
                       ) : (
                         <ListBand className="bg-background">
-                          <div className="px-4 py-3 text-sm text-muted-foreground">No regions</div>
+                          <div className="px-4 py-3 text-[13px] text-muted-foreground">No regions</div>
                         </ListBand>
                       )}
                     </div>

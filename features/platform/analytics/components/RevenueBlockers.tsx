@@ -54,7 +54,14 @@ export function SalesNow({ windows }: { windows: SalesWindow[] }) {
   );
 }
 
-/** What is blocking revenue right now: blocked regulated products first, then held orders oldest first. */
+const HELD_ORDERS_HREF = `/dashboard/platform/orders?${new URLSearchParams({
+  "!status_matches": JSON.stringify(["requires_action"]),
+}).toString()}`;
+
+/**
+ * What is blocking revenue right now, as counts with one fix each: blocked regulated products first, then held
+ * orders. The records themselves live on Products, Product Evidence and Orders.
+ */
 export function RevenueBlockers({
   blocked,
   held,
@@ -69,6 +76,22 @@ export function RevenueBlockers({
     : held.length > 0
       ? `${held.length} held`
       : undefined;
+
+  // Group the sampled blocked products by why their variants hold them back.
+  const reasons = new Map<string, number>();
+  for (const product of blocked?.products ?? []) {
+    const states = new Set(product.variants.map((variant) => classificationLabel(variant.state)));
+    for (const state of states) reasons.set(state, (reasons.get(state) ?? 0) + 1);
+  }
+  const sampledAll = !blocked?.capped && (blocked?.products.length ?? 0) === blockedCount;
+  const reasonText = !sampledAll ? "" : [...reasons.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([state, count]) => `${count} ${state.toLowerCase()}`)
+    .join(", ");
+  const oldestHeld = held.reduce<string | null>(
+    (oldest, order) => (!oldest || order.createdAt < oldest ? order.createdAt : oldest),
+    null
+  );
 
   return (
     <section aria-label="Blocking revenue" className="min-w-0">
@@ -86,72 +109,61 @@ export function RevenueBlockers({
         <DataTable aria-label="Records blocking revenue">
           <thead>
             <tr>
-              <Th>Record</Th>
-              <Th>State</Th>
-              <Th priority={2}>Detail</Th>
-              <Th align="right">Fix</Th>
+              <Th align="right" className="w-0">
+                Count
+              </Th>
+              <Th>Blocked by</Th>
+              <Th align="right">
+                <span className="sr-only">Fix</span>
+              </Th>
             </tr>
           </thead>
           <tbody>
-            {(blocked?.products ?? []).map((product) => (
-              <Tr key={`p-${product.id}`}>
-                <Td className="max-w-[16rem]">
-                  <span className="block truncate font-medium text-foreground">{product.title}</span>
-                  <span className="block font-mono text-[11px] text-muted-foreground">{product.id.slice(-8)}</span>
+            {blockedCount > 0 && (
+              <Tr>
+                <Td align="right" className="w-0 font-medium">
+                  {blockedCount}
+                  {blocked?.capped ? "+" : ""}
                 </Td>
-                <Td>
-                  <Stamp tone="danger">Blocked</Stamp>
+                <Td className="max-w-0">
+                  <span className="flex min-w-0 items-baseline gap-2">
+                    <Stamp tone="danger">Blocked</Stamp>
+                    <span className="min-w-0 truncate text-muted-foreground">
+                      {blockedCount === 1 ? "product" : "products"} without current classification
+                      {reasonText ? ` (${reasonText})` : ""}
+                    </span>
+                  </span>
                 </Td>
-                <Td priority={2} className="text-muted-foreground">
-                  {product.variants
-                    .slice(0, 2)
-                    .map((variant) => `${variant.label}: ${classificationLabel(variant.state)}`)
-                    .join(", ")}
-                  {product.variants.length > 2 && ` +${product.variants.length - 2}`}
-                </Td>
-                <Td align="right">
-                  <Link
-                    href={`/dashboard/platform/products/${product.id}`}
-                    className={cn(buttonClass.base, buttonClass.outline)}
-                  >
-                    Classify
+                <Td align="right" className="w-0 whitespace-nowrap py-0.5">
+                  <Link href="/dashboard/platform/product-evidence" className={cn(buttonClass.base, buttonClass.outline)}>
+                    Classify in Product Evidence
                   </Link>
                 </Td>
               </Tr>
-            ))}
-            {held.map((order) => (
-              <Tr key={`o-${order.id}`}>
-                <Td>
-                  <span className="block font-mono font-medium text-foreground">#{order.displayId ?? order.id.slice(-6)}</span>
-                  <span className="block truncate text-[12px] text-muted-foreground">{order.email}</span>
+            )}
+            {held.length > 0 && (
+              <Tr>
+                <Td align="right" className="w-0 font-medium">
+                  {held.length}
                 </Td>
-                <Td>
-                  <StatusWord tone="warn">Held</StatusWord>
+                <Td className="max-w-0">
+                  <span className="flex min-w-0 items-baseline gap-2">
+                    <StatusWord tone="warn">Held</StatusWord>
+                    <span className="min-w-0 truncate tabular-nums text-muted-foreground">
+                      {held.length === 1 ? "order requires" : "orders require"} action
+                      {oldestHeld ? `, oldest since ${shortDate(oldestHeld)}` : ""}
+                    </span>
+                  </span>
                 </Td>
-                <Td priority={2} className="tabular-nums text-muted-foreground">
-                  Requires action since {shortDate(order.createdAt)}
-                  {order.total ? ` · ${order.total}` : ""}
-                </Td>
-                <Td align="right">
-                  <Link
-                    href={`/dashboard/platform/orders/${order.id}`}
-                    className={cn(buttonClass.base, buttonClass.outline)}
-                  >
-                    Review
+                <Td align="right" className="w-0 whitespace-nowrap py-0.5">
+                  <Link href={HELD_ORDERS_HREF} className={cn(buttonClass.base, buttonClass.outline)}>
+                    Review held orders
                   </Link>
                 </Td>
               </Tr>
-            ))}
+            )}
           </tbody>
         </DataTable>
-      )}
-      {blocked && blocked.count > blocked.products.length && (
-        <p className="mt-2 text-[13px]">
-          <Link href="/dashboard/platform/products" className="text-muted-foreground underline underline-offset-4 hover:text-foreground">
-            All {blocked.count}
-            {blocked.capped ? "+" : ""} blocked products
-          </Link>
-        </p>
       )}
     </section>
   );

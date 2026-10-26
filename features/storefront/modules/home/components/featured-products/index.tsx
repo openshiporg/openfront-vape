@@ -61,7 +61,7 @@ export default async function FeaturedProducts({
 
 export function ComingSoonShelf({ storeName }: { storeName?: string }) {
   return (
-    <section className="mx-auto max-w-[1320px] px-4 py-14 sm:px-6 sm:py-20" data-testid="home-empty-shelf">
+    <section className="mx-auto max-w-[1320px] px-4 pt-14 pb-6 sm:px-6 sm:pt-20 sm:pb-8" data-testid="home-empty-shelf">
       <div className="grid gap-6 border-y-2 border-vp-ink py-8 sm:py-10 lg:grid-cols-12">
         <h2 className="vp-sign text-[40px] text-vp-ink sm:text-[56px] lg:col-span-7">Shelves are being stocked</h2>
         <div className="flex flex-col gap-3 lg:col-span-5 lg:self-end">

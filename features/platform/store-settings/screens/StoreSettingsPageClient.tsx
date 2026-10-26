@@ -142,7 +142,7 @@ export function StoreSettingsPageClient({
     <div className="grid max-w-5xl gap-8 px-4 pb-10 md:px-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="min-w-0 space-y-8">
         <section aria-label="Blank required fields">
-          <SectionTitle meta={blankRequired.length || undefined}>Needs you</SectionTitle>
+          <SectionTitle meta={blankRequired.length}>Needs you</SectionTitle>
           <ListBand>
             {blankRequired.length === 0 ? (
               <div className="px-4 py-3">

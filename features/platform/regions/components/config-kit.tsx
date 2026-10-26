@@ -26,6 +26,7 @@ import {
   buttonClass,
   type DotTone,
 } from "../../components/vape-ui";
+import { recordSerial } from "../../product-evidence/lib/serial";
 
 /** Square 40px (phone) / 32px (desktop) icon control for table rows. */
 export const rowIconClass = cn(
@@ -77,7 +78,7 @@ export function ExpandToggle({
 /** Actions cell: right aligned, never wraps. */
 export function ActionsCell({ children }: { children: ReactNode }) {
   return (
-    <Td align="right" className="w-px whitespace-nowrap py-1">
+    <Td align="right" className="w-px whitespace-nowrap py-0.5">
       <div className="flex items-center justify-end gap-0.5">{children}</div>
     </Td>
   );
@@ -190,9 +191,7 @@ export function NeedsYouQueue({
               <Td className="max-w-[16rem]">
                 <div className="flex min-w-0 items-baseline gap-2">
                   <span className="truncate font-medium text-foreground">{item.record}</span>
-                  {item.serial && (
-                    <span className="shrink-0 font-mono text-[12px] text-muted-foreground">{item.serial}</span>
-                  )}
+                  <span className="shrink-0 font-mono text-[12px] text-muted-foreground">{item.serial || recordSerial(item.id)}</span>
                 </div>
                 <div className="mt-0.5 text-[12px] text-muted-foreground md:hidden">{item.issue}</div>
               </Td>
@@ -202,7 +201,7 @@ export function NeedsYouQueue({
               <Td priority={2} className="text-muted-foreground">
                 {item.issue}
               </Td>
-              <Td align="right" className="w-px whitespace-nowrap py-1">
+              <Td align="right" className="w-px whitespace-nowrap py-0.5">
                 {item.href ? (
                   <Link href={item.href} className={cn(buttonClass.base, buttonClass.outline)}>
                     {item.fixLabel}

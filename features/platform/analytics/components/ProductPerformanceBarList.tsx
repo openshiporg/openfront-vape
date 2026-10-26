@@ -43,6 +43,9 @@ export function ProductPerformanceBarList({
         </Track>
       }
     >
+      {barListData.length === 0 ? (
+        <p className="py-3 text-[13px] text-muted-foreground">No product sales in this period</p>
+      ) : (
         <BarList
           data={barListData}
           valueFormatter={(value) => 
@@ -52,6 +55,7 @@ export function ProductPerformanceBarList({
           }
           showAnimation={true}
         />
+      )}
     </ChartPanel>
   );
 }

@@ -37,7 +37,7 @@ function Meta({ label, children }: { label: string; children: React.ReactNode })
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="px-4 py-3 text-sm text-muted-foreground">{children}</div>;
+  return <div className="px-4 py-3 text-[13px] text-muted-foreground">{children}</div>;
 }
 
 export async function JurisdictionDetailPage({ params }: PageProps) {

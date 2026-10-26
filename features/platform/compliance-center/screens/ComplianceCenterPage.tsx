@@ -7,12 +7,10 @@ import { cn } from '@/lib/utils';
 import { DataTable, ListBand, PageTitle, SectionTitle, Stamp, Td, Th, Tr, buttonClass } from '@/features/platform/components/vape-ui';
 import { getComplianceReadiness } from '../actions/getReadiness';
 import { MerchantSafetyActions } from '../components/MerchantSafetyActions';
-import { AddApprovalButton } from '../components/ProviderApprovalSheet';
 import { LaunchSteps, ReleaseBar, fixClass } from '../components/ReleaseBar';
 import { PROFILES_PATH, launchSteps } from '../lib/blockers';
 import { keystoneClient } from '@/features/dashboard/lib/keystoneClient';
 import { missingStoreInfo } from '@/features/platform/store-settings/lib/store-info';
-import { PROVIDER_PURPOSE_LABELS } from '@/features/keystone/regulated/labels';
 
 const resources = [
   ['Merchant authority', 'Profiles, licenses, PACT, kill switch', '/dashboard/platform/merchant-profiles'],
@@ -28,8 +26,6 @@ const breadcrumbs = [
   { type: 'page' as const, label: 'Platform' },
   { type: 'page' as const, label: 'Compliance Center' },
 ];
-
-const PROVIDERS = PROVIDER_PURPOSE_LABELS;
 
 function label(code: string) {
   return code.toLowerCase().replaceAll('_', ' ').replace(/\b\w/g, character => character.toUpperCase());
@@ -107,40 +103,25 @@ export async function ComplianceCenterPage() {
           )}
         </section>
 
-        <section className="grid gap-8 lg:grid-cols-2">
-          <div className="min-w-0">
-            <SectionTitle meta={`${activeProviders} / ${readiness.integrationStates.length}`}>Providers</SectionTitle>
-            <DataTable>
-              <thead>
-                <tr>
-                  <Th>Purpose</Th>
-                  <Th>Approval</Th>
-                  <Th align="right"><span className="sr-only">Actions</span></Th>
-                </tr>
-              </thead>
-              <tbody>
-                {readiness.integrationStates.map(integration => {
-                  const active = integration.status === 'recorded_active';
-                  return (
-                    <Tr key={integration.purpose}>
-                      <Td className="font-medium">{PROVIDERS[integration.purpose] || label(integration.purpose)}</Td>
-                      <Td><Stamp tone={active ? 'ok' : 'warn'}>{active ? 'Active' : 'Missing'}</Stamp></Td>
-                      <Td align="right">
-                        {!active && (
-                          <AddApprovalButton purpose={integration.purpose} className={fixClass}>
-                            Add approval
-                          </AddApprovalButton>
-                        )}
-                      </Td>
-                    </Tr>
-                  );
-                })}
-              </tbody>
-            </DataTable>
-          </div>
+        {/* Missing providers already appear as launch steps with their Add approval fix; this line only counts them. */}
+        <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[13px]">
+          <span className="font-medium text-foreground">Providers</span>
+          <span className="font-mono tabular-nums text-muted-foreground">
+            {activeProviders}/{readiness.integrationStates.length}
+          </span>
+          <span className="text-muted-foreground">in force</span>
+          <Link
+            href="/dashboard/platform/provider-approvals"
+            className="inline-flex items-baseline gap-0.5 font-medium text-foreground underline underline-offset-4 hover:text-foreground/80 max-sm:min-h-10 max-sm:items-center"
+          >
+            Provider approvals
+            <ArrowUpRight className="size-3.5 shrink-0 translate-y-[0.1em]" />
+          </Link>
+        </p>
 
+        <section>
           <div className="min-w-0">
-            <SectionTitle meta={readiness.reportRuns?.length || 0}>Recent reports</SectionTitle>
+            <SectionTitle meta={readiness.reportRuns?.length ?? 0}>Recent reports</SectionTitle>
             {reports.length === 0 ? (
               <ListBand><div className="px-4 py-3 text-[13px] text-muted-foreground">No report runs</div></ListBand>
             ) : (

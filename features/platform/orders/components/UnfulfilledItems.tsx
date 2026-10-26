@@ -104,7 +104,7 @@ export function UnfulfilledItems({
             />
           ))
         ) : (
-          <div className="px-4 py-3 text-sm text-muted-foreground">No items to fulfill</div>
+          <div className="px-4 py-3 text-[13px] text-muted-foreground">No items to fulfill</div>
         )}
       </ListBand>
     </section>

@@ -240,7 +240,7 @@ export function CreatePaymentProviderDrawer({
                   {/* Provider Info */}
                   {selectedProvider && (
                     <ListBand>
-                      <p className="px-4 py-3 text-sm text-muted-foreground">
+                      <p className="px-4 py-3 text-[13px] text-muted-foreground">
                         {selectedProvider.description}
                       </p>
                       {selectedProvider.envVars.map((envVar, index) => (

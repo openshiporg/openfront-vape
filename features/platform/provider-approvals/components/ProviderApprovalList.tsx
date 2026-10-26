@@ -87,7 +87,7 @@ export function ProviderApprovalList({ approvals }: { approvals: ApprovalRow[] }
           Required providers
         </SectionTitle>
         {slots.length === 0 ? (
-          <ListBand><div className="px-4 py-3 text-sm text-muted-foreground">Every required provider has an approval in force</div></ListBand>
+          <ListBand><div className="px-4 py-3 text-[13px] text-muted-foreground">Every required provider has an approval in force</div></ListBand>
         ) : (
           <DataTable>
             <thead>
@@ -106,7 +106,7 @@ export function ProviderApprovalList({ approvals }: { approvals: ApprovalRow[] }
                   <Td priority={2} className="font-mono text-[12px] text-muted-foreground">
                     {slot.pending ? slot.pending.providerCode || recordSerial(slot.pending.id) : 'No record'}
                   </Td>
-                  <Td align="right">
+                  <Td align="right" className="w-0 whitespace-nowrap py-0.5">
                     {slot.pending && slot.rank === 1 ? (
                       <Link href={`/dashboard/platform/provider-approvals/${slot.pending.id}`} className={`${buttonClass.base} ${buttonClass.outline}`}>
                         Finish approval
@@ -127,7 +127,8 @@ export function ProviderApprovalList({ approvals }: { approvals: ApprovalRow[] }
 
       <section className="space-y-3">
         <SectionTitle meta={rows.length}>All approvals</SectionTitle>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        {/* Status tabs keep the full row; search and purpose sit on their own row so no status clips. */}
+        <div className="flex flex-col gap-3">
           <StatusFilter
             className="min-w-0 p-0 md:px-0"
             allCount={byPurpose.length}
@@ -176,15 +177,15 @@ export function ProviderApprovalList({ approvals }: { approvals: ApprovalRow[] }
                 return (
                   <Tr key={item.id}>
                     <Td>
-                      <Link href={`/dashboard/platform/provider-approvals/${item.id}`} className="flex min-h-10 min-w-0 flex-col justify-center underline-offset-4 hover:underline md:min-h-0">
-                        <span className="truncate font-medium text-foreground">{regulatedLabel(PROVIDER_PURPOSE_LABELS, item.purpose)}</span>
-                        <span className="truncate font-mono text-[12px] text-muted-foreground md:hidden">{item.providerCode}</span>
+                      <Link href={`/dashboard/platform/provider-approvals/${item.id}`} className="flex min-w-0 items-baseline gap-2 underline-offset-4 hover:underline max-sm:min-h-10 max-sm:items-center">
+                        <span className="shrink-0 truncate font-medium text-foreground">{regulatedLabel(PROVIDER_PURPOSE_LABELS, item.purpose)}</span>
+                        <span className="min-w-0 truncate font-mono text-[12px] text-muted-foreground md:hidden">{item.providerCode}</span>
                       </Link>
                     </Td>
-                    <Td priority={2}>
-                      <span className="flex min-w-0 flex-col">
-                        <span className="truncate font-mono text-[12px] text-foreground">{item.providerCode}</span>
-                        {provider && <span className="truncate text-[12px] text-muted-foreground">{provider.name || `${provider.label} not bound`}</span>}
+                    <Td priority={2} className="max-w-[18rem]">
+                      <span className="flex min-w-0 items-baseline gap-2">
+                        <span className="shrink-0 font-mono text-[12px] text-foreground">{item.providerCode}</span>
+                        {provider && <span className="min-w-0 truncate text-[12px] text-muted-foreground">{provider.name || `${provider.label} not bound`}</span>}
                       </span>
                     </Td>
                     <Td>

@@ -534,9 +534,9 @@ export function OrdersCreatePage() {
                     />
                   </div>
                 ) : sameAsShippingAddress && selectedShippingAddress ? null : !selectedCustomer ? (
-                  <div className="px-4 py-3 text-sm text-muted-foreground">Select a customer first</div>
+                  <div className="px-4 py-3 text-[13px] text-muted-foreground">Select a customer first</div>
                 ) : (
-                  <div className="px-4 py-3 text-sm text-muted-foreground">Select a shipping address first</div>
+                  <div className="px-4 py-3 text-[13px] text-muted-foreground">Select a shipping address first</div>
                 )}
               </ListBand>
             </section>

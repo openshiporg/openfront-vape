@@ -88,13 +88,13 @@ function Labels({ labels }: { labels: Evidence['labels'] }) {
   if (!Array.isArray(labels)) {
     return (
       <ListBand>
-        <div className="px-4 py-3 text-sm text-muted-foreground">{labels.error}</div>
+        <div className="px-4 py-3 text-[13px] text-muted-foreground">{labels.error}</div>
       </ListBand>
     );
   }
   return (
     <ListBand>
-      {labels.length === 0 && <div className="px-4 py-3 text-sm text-muted-foreground">No labels</div>}
+      {labels.length === 0 && <div className="px-4 py-3 text-[13px] text-muted-foreground">No labels</div>}
       {labels.map(label => {
         const state = labelState(label);
         return (
@@ -135,13 +135,13 @@ function Carrier({ decisions }: { decisions: CarrierDecision[] | { error: string
   if (!Array.isArray(decisions)) {
     return (
       <ListBand>
-        <div className="px-4 py-3 text-sm text-muted-foreground">{decisions.error}</div>
+        <div className="px-4 py-3 text-[13px] text-muted-foreground">{decisions.error}</div>
       </ListBand>
     );
   }
   return (
     <ListBand>
-      {decisions.length === 0 && <div className="px-4 py-3 text-sm text-muted-foreground">No carrier eligibility decision</div>}
+      {decisions.length === 0 && <div className="px-4 py-3 text-[13px] text-muted-foreground">No carrier eligibility decision</div>}
       {decisions.map(decision => (
         <div key={decision.id} className="px-4 py-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">

@@ -191,7 +191,7 @@ export function AppsPageClient({ existingApps = [] }: AppsPageClientProps) {
         <SectionTitle meta={apps.length}>OAuth applications</SectionTitle>
         {apps.length === 0 ? (
           <ListBand>
-            <div className="px-4 py-3 text-sm text-muted-foreground">No OAuth applications</div>
+            <div className="px-4 py-3 text-[13px] text-muted-foreground">No OAuth applications</div>
           </ListBand>
         ) : (
           <DataTable aria-label="OAuth applications">

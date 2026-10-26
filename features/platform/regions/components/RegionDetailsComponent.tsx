@@ -6,6 +6,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { EditItemDrawerClientWrapper } from "../../components/EditItemDrawerClientWrapper";
 import { ItemPagination } from "../../orders/components/ItemPagination";
 import { Count, Pill, StatusWord, Td, Th, Tr, Track, type DotTone } from "../../components/vape-ui";
+import { recordSerial } from "../../product-evidence/lib/serial";
 import { ActionsCell, ExpandRow, ExpandToggle, RowMenu, SubTable, formatDate, type QueueItem } from "./config-kit";
 
 interface Region {
@@ -195,7 +196,7 @@ export function RegionDetailsComponent({
             >
               {region.name}
             </Link>
-            <span className="shrink-0 font-mono text-[12px] uppercase text-muted-foreground">{region.code}</span>
+            <span className="shrink-0 font-mono text-[12px] uppercase text-muted-foreground">{region.code || recordSerial(region.id)}</span>
           </div>
         </Td>
         <Td>

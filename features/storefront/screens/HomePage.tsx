@@ -48,7 +48,9 @@ export async function HomePage(props: {
         description={store?.homepageDescription}
         categories={categories}
       />
-      <div className="-mb-16 bg-vp-surface pb-16 sm:-mb-24 sm:pb-24">
+      {/* The shelves sit on the same cool white as every other page and run straight into the footer:
+          the negative margin cancels the footer's top margin instead of filling it with a blank band. */}
+      <div className="-mb-16 bg-vp-bg pb-8 sm:-mb-24 sm:pb-10">
         {region ? (
           <FeaturedProducts collections={collections || []} region={region} storeName={store?.name} />
         ) : (

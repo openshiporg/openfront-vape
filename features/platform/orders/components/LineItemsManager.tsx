@@ -188,7 +188,7 @@ export function LineItemsManager({
 
   return (
     <section className={className}>
-      <SectionTitle meta={lineItems.length || undefined}>Line items</SectionTitle>
+      <SectionTitle meta={lineItems.length}>Line items</SectionTitle>
       <ListBand>
         {/* Search Bar Inline */}
         <div className="px-4 py-3">
@@ -268,7 +268,7 @@ export function LineItemsManager({
         {/* Existing Items */}
         <div className="relative divide-y divide-border">
           {lineItems.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-muted-foreground">No items added</div>
+            <div className="px-4 py-3 text-[13px] text-muted-foreground">No items added</div>
           ) : (
             <AnimatePresence initial={false}>
               {lineItems.map((item) => (

@@ -127,10 +127,10 @@
     color: #d8b35e;
     -webkit-text-stroke: 0.5px #6d5520;
   }
-  /* The one neon line per screen: a lit tube in the logo colour. */
+  /* The one neon element per screen: flat type in the logo hue, no glow. */
   .vp-neon {
-    color: hsl(var(--vp-h, 178) 100% 80%);
-    text-shadow: 0 0 2px hsl(var(--vp-h, 178) 100% 70%), 0 0 10px hsl(var(--vp-h, 178) 95% 55% / 0.75), 0 0 28px hsl(var(--vp-h, 178) 95% 50% / 0.45);
+    color: hsl(var(--vp-h, 178) 95% 64%);
+    text-shadow: none;
   }
   @media (prefers-reduced-transparency: reduce) {
     .vp-neon { text-shadow: none; color: hsl(var(--vp-h, 178) 95% 64%); }

@@ -5,15 +5,23 @@ import LocalizedClientLink from "../localized-client-link"
 
 // Joined square plates (.vp-track / .vp-pill): the one in-page switch used across the storefront.
 
+// `wrap`: on phone the plates wrap onto further rows instead of scrolling out of sight. The joins stay square:
+// the track keeps only its top and left rule and every plate draws its own right and bottom rule.
+const WRAP_ON_PHONE =
+  "max-sm:flex max-sm:flex-wrap max-sm:overflow-visible max-sm:rounded-none max-sm:border-0 max-sm:border-t max-sm:border-l max-sm:border-vp-ink " +
+  "max-sm:[&>*]:border-0 max-sm:[&>*]:border-r max-sm:[&>*]:border-b max-sm:[&>*]:border-vp-ink"
+
 export function SegmentedTrack({
   label,
   className,
   stretch,
+  wrap,
   children,
 }: {
   label: string
   className?: string
   stretch?: boolean
+  wrap?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -23,6 +31,7 @@ export function SegmentedTrack({
       className={cn(
         "vp-track max-w-full overflow-x-auto no-scrollbar",
         stretch && "flex w-full [&>*]:flex-1",
+        wrap && WRAP_ON_PHONE,
         className
       )}
     >

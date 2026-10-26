@@ -121,7 +121,7 @@ export function ComplianceSection({ compliance, onClassify }: { compliance: Prod
           )}
         </div>
         {compliance.regulated && compliance.variants.length === 0 && (
-          <div className="px-4 py-3 text-sm text-muted-foreground">No variants</div>
+          <div className="px-4 py-3 text-[13px] text-muted-foreground">No variants</div>
         )}
         {compliance.regulated && compliance.variants.map(variant => <VariantRow key={variant.id} variant={variant} onClassify={onClassify} />)}
       </ListBand>

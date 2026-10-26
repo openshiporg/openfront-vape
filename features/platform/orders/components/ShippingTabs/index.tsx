@@ -195,7 +195,7 @@ export function ShippingTabs({
       <section>
         <SectionTitle>Shipment</SectionTitle>
         <ListBand>
-          <div className="px-4 py-3 text-sm text-muted-foreground">Select at least 1 item to fulfill</div>
+          <div className="px-4 py-3 text-[13px] text-muted-foreground">Select at least 1 item to fulfill</div>
         </ListBand>
       </section>
     );
