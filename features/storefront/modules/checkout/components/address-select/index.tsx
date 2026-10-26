@@ -105,7 +105,7 @@ const AddressSelect = ({
       >
         <SelectTrigger
           id={id}
-          className="h-auto min-h-14 rounded-[14px] border-vp-line bg-vp-surface px-4 py-3 text-left text-vp-ink shadow-none hover:border-vp-ink-3 focus:border-vp-accent focus:ring-2 focus:ring-vp-tint [&>span]:flex [&>span]:items-center [&>span]:gap-2"
+          className="h-auto min-h-14 rounded-[4px] border-vp-line bg-vp-surface px-4 py-3 text-left text-vp-ink shadow-none hover:border-vp-ink-3 focus:border-vp-accent focus:ring-2 focus:ring-vp-tint [&>span]:flex [&>span]:items-center [&>span]:gap-2"
         >
           <SelectValue
             placeholder="Choose an address"
@@ -132,13 +132,13 @@ const AddressSelect = ({
             )}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="rounded-[18px] border-vp-line bg-vp-surface text-vp-ink [&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2">
+        <SelectContent className="rounded-[4px] border-vp-line bg-vp-surface text-vp-ink [&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2">
           {addresses.map((address) => (
             <SelectItem
               key={address.id}
               value={address.id}
               className={cn(
-                "cursor-pointer rounded-[12px] py-3",
+                "cursor-pointer rounded-[4px] py-3",
                 selectedAddress?.id === address.id && "bg-vp-well"
               )}
             >

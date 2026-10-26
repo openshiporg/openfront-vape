@@ -175,7 +175,7 @@ export default function ModernOrderList({
 
               {/* Expanded Details */}
               {isExpanded && (
-                <div className="mt-4 pt-4 border-t bg-muted/20 -m-4 p-4 rounded-b-lg">
+                <div className="mt-4 pt-4 border-t bg-muted/20 -m-4 p-4 rounded-b-[4px]">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                     <div>
                       <div className="font-medium text-muted-foreground mb-1">Order Status</div>

@@ -26,7 +26,7 @@ export default function TransferRequestForm() {
 
   return (
     <section className="flex w-full flex-col gap-4">
-      <h3 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Order transfer</h3>
+      <h3 className="vp-sign text-[26px] text-vp-ink">Order transfer</h3>
       <form action={formAction} className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="min-w-0 flex-1">
           <Field label="Order ID" id="transfer-order-id" name="order_id" required={false} />
@@ -49,7 +49,7 @@ export default function TransferRequestForm() {
           </div>
           <button
             type="button"
-            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-vp-ink-3 hover:text-vp-ink"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-[4px] text-vp-ink-3 hover:text-vp-ink"
             onClick={() => setShowSuccess(false)}
             aria-label="Dismiss"
           >

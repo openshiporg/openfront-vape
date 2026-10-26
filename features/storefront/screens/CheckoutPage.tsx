@@ -33,7 +33,7 @@ export async function CheckoutPage() {
       <main className="mx-auto flex min-h-[50vh] w-full max-w-[1320px] flex-col justify-center gap-5 px-4 py-16 sm:px-6 sm:py-24">
         <div className="flex items-baseline gap-3">
           <StatusDot tone={blockers.length ? "danger" : "muted"} />
-          <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink sm:text-[40px] sm:leading-[44px]">
+          <h1 className="vp-sign text-[40px] text-vp-ink sm:text-[52px]">
             Checkout isn&apos;t available right now.
           </h1>
         </div>
@@ -45,7 +45,7 @@ export async function CheckoutPage() {
         <div>
           <LocalizedClientLink
             href={bagEmpty ? "/store" : "/cart"}
-            className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink transition-opacity hover:opacity-90"
+            className="inline-flex h-12 items-center justify-center rounded-[4px] bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink transition-opacity hover:opacity-90"
           >
             {bagEmpty ? "Shop all" : "Back to bag"}
           </LocalizedClientLink>
@@ -58,7 +58,7 @@ export async function CheckoutPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-[1320px] grid-cols-1 gap-6 px-4 pt-6 pb-16 sm:px-6 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-12 lg:gap-y-8 xl:gap-x-16">
-      <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink sm:text-[40px] sm:leading-[44px] lg:col-span-2">
+      <h1 className="vp-sign text-[40px] text-vp-ink sm:text-[52px] lg:col-span-2">
         Checkout
       </h1>
       <CheckoutSummary cart={cart} />
@@ -94,7 +94,7 @@ export function CheckoutLayout({
               <Logo />
             </div>
             <div className="flex flex-1 basis-0 justify-end">
-              <span className="font-vp-mono text-[12px] uppercase tracking-[0.12em] text-vp-ink-3">21+ only</span>
+              <span className="text-[12px] font-semibold text-vp-ink-2">Adults 21+ only</span>
             </div>
           </nav>
         </div>
@@ -115,7 +115,7 @@ export function CheckoutNotFound() {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-[1320px] flex-col justify-center gap-4 px-4 py-24 sm:px-6">
       <span className="font-vp-mono text-[13px] text-vp-ink-3">404</span>
-      <h1 className="text-[40px] leading-[44px] font-semibold tracking-[-0.02em] text-vp-ink">Page not found</h1>
+      <h1 className="vp-sign text-[44px] text-vp-ink sm:text-[56px]">Page not found</h1>
       <div className="mt-4">
         <InteractiveLink href="/cart">Back to bag</InteractiveLink>
       </div>

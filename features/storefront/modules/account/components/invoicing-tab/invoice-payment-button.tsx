@@ -73,7 +73,7 @@ const InvoicePaymentButton: React.FC<InvoicePaymentButtonProps> = ({
         />
       )
     default:
-      return <Button disabled size="lg" className="h-12 w-full rounded-full bg-vp-well text-vp-ink-3 disabled:opacity-100">Select a payment method</Button>
+      return <Button disabled size="lg" className="h-12 w-full rounded-[4px] bg-vp-well text-vp-ink-3 disabled:opacity-100">Select a payment method</Button>
   }
 }
 
@@ -166,7 +166,7 @@ const StripeInvoicePaymentButton: React.FC<StripeInvoicePaymentButtonProps> = ({
         disabled={disabled || submitting}
         onClick={handlePayment}
         size="lg"
-        className="h-12 w-full rounded-full bg-vp-ink text-[15px] font-medium text-vp-on-ink hover:bg-vp-ink hover:opacity-90 disabled:bg-vp-well disabled:text-vp-ink-3 disabled:opacity-100"
+        className="h-12 w-full rounded-[4px] bg-vp-ink text-[15px] font-medium text-vp-on-ink hover:bg-vp-ink hover:opacity-90 disabled:bg-vp-well disabled:text-vp-ink-3 disabled:opacity-100"
         data-testid={dataTestId}
       >
         {submitting ? (
@@ -231,7 +231,7 @@ const ManualInvoicePaymentButton = ({ invoice, onPaymentSuccess, "data-testid": 
         disabled={submitting}
         onClick={handlePayment}
         size="lg"
-        className="h-12 w-full rounded-full bg-vp-ink text-[15px] font-medium text-vp-on-ink hover:bg-vp-ink hover:opacity-90 disabled:bg-vp-well disabled:text-vp-ink-3 disabled:opacity-100"
+        className="h-12 w-full rounded-[4px] bg-vp-ink text-[15px] font-medium text-vp-on-ink hover:bg-vp-ink hover:opacity-90 disabled:bg-vp-well disabled:text-vp-ink-3 disabled:opacity-100"
         data-testid={dataTestId || "pay-invoice-button"}
       >
         {submitting ? (

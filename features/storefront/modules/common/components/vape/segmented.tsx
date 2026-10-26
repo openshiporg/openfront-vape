@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import LocalizedClientLink from "../localized-client-link"
 
-// Raised pill in a recessed track: the one in-page switch used across the storefront.
+// Joined square plates (.vp-track / .vp-pill): the one in-page switch used across the storefront.
 
 export function SegmentedTrack({
   label,

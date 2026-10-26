@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 
-import FeaturedProducts from "@/features/storefront/modules/home/components/featured-products"
+import FeaturedProducts, { ComingSoonShelf } from "@/features/storefront/modules/home/components/featured-products"
 import Hero from "@/features/storefront/modules/home/components/hero"
 import { getCategoriesList } from "@/features/storefront/lib/data/categories"
 import { getCollectionsListByRegion } from "@/features/storefront/lib/data/collections"
@@ -47,13 +47,14 @@ export async function HomePage(props: {
         title={store?.homepageTitle}
         description={store?.homepageDescription}
         categories={categories}
-        collections={(collections || []).map((c: any) => ({ id: c.id, title: c.title, handle: c.handle }))}
       />
-      {region && collections?.length > 0 && (
-        <ul className="flex flex-col">
-          <FeaturedProducts collections={collections} region={region} />
-        </ul>
-      )}
+      <div className="-mb-16 bg-vp-surface pb-16 sm:-mb-24 sm:pb-24">
+        {region ? (
+          <FeaturedProducts collections={collections || []} region={region} storeName={store?.name} />
+        ) : (
+          <ComingSoonShelf storeName={store?.name} />
+        )}
+      </div>
     </>
   )
 }

@@ -87,14 +87,14 @@ const CartItemSelect = forwardRef<HTMLInputElement, CartItemSelectProps>(
     return (
       <div
         className={cn(
-          "inline-flex h-11 items-center rounded-full bg-vp-well shadow-[inset_0_1px_2px_rgb(20_24_22/0.08)]",
+          "inline-flex h-11 items-center rounded-[4px] border border-vp-line bg-vp-surface",
           className
         )}
       >
         <button
           type="button"
           aria-label="Decrease quantity"
-          className="flex h-11 w-11 flex-none items-center justify-center rounded-full text-vp-ink transition-colors hover:bg-vp-surface disabled:text-vp-ink-3 disabled:hover:bg-transparent"
+          className="flex h-11 w-11 flex-none items-center justify-center rounded-[4px] text-vp-ink transition-colors hover:bg-vp-well disabled:text-vp-ink-3 disabled:hover:bg-transparent"
           onClick={handleDecrement}
           disabled={value !== undefined && value <= min}
         >
@@ -110,13 +110,13 @@ const CartItemSelect = forwardRef<HTMLInputElement, CartItemSelectProps>(
           value={value ?? ""}
           onChange={handleInputChange}
           aria-label="Quantity"
-          className="h-full w-9 min-w-0 bg-transparent text-center font-vp-mono text-[15px] text-vp-ink outline-none [appearance:textfield] focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-vp-accent [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="h-full w-9 min-w-0 bg-transparent text-center font-vp-mono text-[15px] text-vp-ink outline-none [appearance:textfield] focus-visible:rounded-[4px] focus-visible:ring-2 focus-visible:ring-vp-accent [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           {...props}
         />
         <button
           type="button"
           aria-label="Increase quantity"
-          className="flex h-11 w-11 flex-none items-center justify-center rounded-full text-vp-ink transition-colors hover:bg-vp-surface disabled:text-vp-ink-3 disabled:hover:bg-transparent"
+          className="flex h-11 w-11 flex-none items-center justify-center rounded-[4px] text-vp-ink transition-colors hover:bg-vp-well disabled:text-vp-ink-3 disabled:hover:bg-transparent"
           onClick={handleIncrement}
           disabled={value !== undefined && value >= max}
         >

@@ -82,16 +82,17 @@ export default async function PaginatedProducts({
 
   return (
     <>
-      <p className="mb-5 font-vp-mono text-[12px] text-vp-ink-3" data-testid="products-count">
+      <p className="mb-5 font-vp-mono text-[12px] text-vp-ink-2" data-testid="products-count">
         {count} {count === 1 ? "product" : "products"}
       </p>
       {products.length === 0 ? (
-        <div className="vp-band px-6 py-16" role="status">
-          <h2 className="text-[18px] font-semibold text-vp-ink">No products here yet</h2>
+        <div className="flex flex-col gap-2 border-y-2 border-vp-ink py-10" role="status">
+          <h2 className="vp-sign text-[32px] text-vp-ink sm:text-[40px]">No products here yet</h2>
+          <p className="text-[14px] leading-[22px] text-vp-ink-2">Published products show up on this shelf.</p>
         </div>
       ) : (
         <ul
-          className="grid w-full grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 md:grid-cols-3 lg:grid-cols-4"
+          className="grid w-full grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4"
           data-testid="products-list"
         >
           {products.map((p: any) => {

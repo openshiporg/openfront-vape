@@ -99,7 +99,7 @@ const CartDropdown = ({
               <button
                 type="button"
                 data-filled={totalItems > 0}
-                className="group inline-flex min-h-11 items-center gap-2 rounded-full bg-vp-well px-4 text-[14px] font-medium text-vp-ink"
+                className="group inline-flex min-h-11 items-center gap-2 rounded-[4px] bg-vp-well px-4 text-[14px] font-medium text-vp-ink"
                 aria-label={`Open bag${totalItems > 0 ? `, ${totalItems} ${totalItems === 1 ? "item" : "items"}` : ""}`}
                 data-testid="nav-cart-trigger"
                 suppressHydrationWarning
@@ -110,7 +110,7 @@ const CartDropdown = ({
           </div>
           <LocalizedClientLink
             data-filled={totalItems > 0}
-            className="group inline-flex min-h-11 items-center gap-2 rounded-full bg-vp-well px-4 text-[14px] font-medium text-vp-ink sm:hidden"
+            className="group inline-flex min-h-11 items-center gap-2 rounded-[4px] bg-vp-well px-4 text-[14px] font-medium text-vp-ink sm:hidden"
             href="/cart"
             aria-label={`View bag${totalItems > 0 ? `, ${totalItems} ${totalItems === 1 ? "item" : "items"}` : ""}`}
             data-testid="nav-cart-link"
@@ -118,7 +118,7 @@ const CartDropdown = ({
             Bag {countBadge}
           </LocalizedClientLink>
           <PopoverContent
-            className="vape-sf hidden sm:block w-[400px] rounded-[22px] border-vp-line bg-vp-bg p-0 text-vp-ink shadow-[0_18px_60px_rgb(20_24_22/0.18)]"
+            className="vape-sf hidden sm:block w-[400px] rounded-[4px] border-vp-line bg-vp-bg p-0 text-vp-ink shadow-[0_18px_60px_rgb(20_24_22/0.18)]"
             sideOffset={8}
             align="end"
             onMouseEnter={openAndCancel}
@@ -168,7 +168,7 @@ const CartDropdown = ({
                   </div>
                   <LocalizedClientLink
                     href="/cart"
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-ink text-[15px] font-medium text-vp-on-ink"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-[4px] bg-vp-ink text-[15px] font-medium text-vp-on-ink"
                   >
                     <LinkStatus />
                     View bag
@@ -182,7 +182,7 @@ const CartDropdown = ({
                 <LocalizedClientLink
                   href="/store"
                   onClick={close}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-vp-ink px-5 text-[14px] font-medium text-vp-on-ink"
+                  className="inline-flex h-11 items-center justify-center rounded-[4px] bg-vp-ink px-5 text-[14px] font-medium text-vp-on-ink"
                 >
                   Shop all
                 </LocalizedClientLink>

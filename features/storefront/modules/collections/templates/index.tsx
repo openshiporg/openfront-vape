@@ -21,7 +21,7 @@ export default function CollectionTemplate({
   const sort = sortBy || "created_at"
 
   return (
-    <CatalogLayout title={collection.title} kicker="Collection" sortBy={sort}>
+    <CatalogLayout title={collection.title} sortBy={sort}>
       <Suspense fallback={<SkeletonProductGrid numberOfProducts={collection.products?.length} />}>
         <PaginatedProducts sortBy={sort} page={pageNumber} collectionId={collection.id} countryCode={countryCode} />
       </Suspense>

@@ -29,7 +29,7 @@ const Overview = ({ user, orders }: OverviewProps) => {
             recent.length > 0 ? (
               <LocalizedClientLink
                 href="/account/orders"
-                className="inline-flex min-h-11 items-center rounded-full bg-vp-well px-4 text-[13px] font-medium text-vp-ink"
+                className="inline-flex min-h-11 items-center rounded-[4px] bg-vp-well px-4 text-[13px] font-medium text-vp-ink"
               >
                 All orders
               </LocalizedClientLink>
@@ -89,7 +89,7 @@ const Overview = ({ user, orders }: OverviewProps) => {
               <span className="text-[15px] text-vp-ink-2" data-testid="no-orders-message">No orders yet</span>
               <LocalizedClientLink
                 href="/store"
-                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink"
+                className="inline-flex h-12 items-center justify-center rounded-[4px] bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink"
               >
                 Shop all
               </LocalizedClientLink>
@@ -99,7 +99,7 @@ const Overview = ({ user, orders }: OverviewProps) => {
       </section>
 
       <section aria-labelledby="account-details-title">
-        <h2 id="account-details-title" className="mb-5 text-[24px] leading-[30px] font-semibold tracking-[-0.02em] text-vp-ink">
+        <h2 id="account-details-title" className="mb-5 vp-sign text-[30px] text-vp-ink">
           Details
         </h2>
         <dl className="vp-band divide-y divide-vp-line">
@@ -137,7 +137,7 @@ const DetailRow = ({ label, href, children }: { label: string; href: string; chi
     <dd className="min-w-0 text-[15px] text-vp-ink">{children}</dd>
     <LocalizedClientLink
       href={href}
-      className="inline-flex min-h-11 items-center rounded-full bg-vp-surface px-4 text-[13px] font-medium text-vp-ink shadow-[0_1px_2px_rgb(20_24_22/0.12)] hover:text-vp-accent"
+      className="inline-flex min-h-11 items-center rounded-[4px] bg-vp-surface px-4 text-[13px] font-medium text-vp-ink shadow-[0_1px_2px_rgb(20_24_22/0.12)] hover:text-vp-accent"
       aria-label={`Edit ${label.toLowerCase()}`}
     >
       Edit

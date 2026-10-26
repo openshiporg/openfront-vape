@@ -125,7 +125,7 @@ const DiscountCode = ({ cart }: DiscountCodeProps) => {
                 </span>
                 <button
                   type="button"
-                  className="flex h-11 w-11 flex-none items-center justify-center rounded-full text-vp-ink-2 transition-colors hover:bg-vp-surface hover:text-vp-danger"
+                  className="flex h-11 w-11 flex-none items-center justify-center rounded-[4px] text-vp-ink-2 transition-colors hover:bg-vp-surface hover:text-vp-danger"
                   onClick={() => removeGiftCardCode(gc.code)}
                 >
                   <X className="size-4" />
@@ -152,7 +152,7 @@ const DiscountCode = ({ cart }: DiscountCodeProps) => {
                 <button
                   type="button"
                   onClick={() => removeDiscountCode(discount.code)}
-                  className="flex h-11 w-11 flex-none items-center justify-center rounded-full text-vp-ink-2 transition-colors hover:bg-vp-surface hover:text-vp-danger"
+                  className="flex h-11 w-11 flex-none items-center justify-center rounded-[4px] text-vp-ink-2 transition-colors hover:bg-vp-surface hover:text-vp-danger"
                 >
                   <X className="size-4" />
                   <span className="sr-only">Remove discount code</span>

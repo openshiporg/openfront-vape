@@ -20,11 +20,10 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
 }) => {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <p className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3">Order details</p>
+      <div className="flex items-center gap-4">
         <LocalizedClientLink
           href="/account/orders"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-vp-well pl-3 pr-4 text-[14px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-[4px] bg-vp-well pl-3 pr-4 text-[14px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
           data-testid="back-to-overview-button"
         >
           <ChevronLeft className="size-4" /> Orders
@@ -36,10 +35,10 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
       >
         <OrderDetails order={order} showStatus />
         <section className="flex flex-col gap-4" aria-label="Items">
-          <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Items</h2>
+          <h2 className="vp-sign text-[26px] text-vp-ink">Items</h2>
           <Items items={order.lineItems} region={order.region} />
         </section>
-        <div className="rounded-[22px] border border-vp-line bg-vp-surface p-5 sm:p-6">
+        <div className="rounded-[4px] border border-vp-line bg-vp-surface p-5 sm:p-6">
           <OrderSummary order={order} />
         </div>
         <FulfillmentCard order={order} />

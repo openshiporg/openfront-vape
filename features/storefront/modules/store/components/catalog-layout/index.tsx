@@ -6,14 +6,12 @@ import type { SortOptions } from "@/features/storefront/modules/store/components
 // Shared frame for Shop all, category and collection listings.
 export default async function CatalogLayout({
   title,
-  kicker,
   activeCategory,
   sortBy,
   trail,
   children,
 }: {
   title: string
-  kicker?: string
   activeCategory?: string
   sortBy: SortOptions
   trail?: React.ReactNode
@@ -27,10 +25,9 @@ export default async function CatalogLayout({
   return (
     <div className="mx-auto w-full max-w-[1320px] px-4 pt-8 pb-16 sm:px-6 sm:pt-12" data-testid="category-container">
       <header className="flex flex-col gap-2">
-        {kicker && <p className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3">{kicker}</p>}
         {trail}
         <h1
-          className="text-[36px] leading-[40px] font-semibold tracking-[-0.03em] text-vp-ink sm:text-[52px] sm:leading-[56px]"
+          className="vp-sign text-[44px] text-vp-ink sm:text-[64px]"
           data-testid="store-page-title"
         >
           {title}

@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
 
@@ -9,62 +9,62 @@ interface HeroProps {
   title?: string
   description?: string
   categories: Link[]
-  collections: Link[]
 }
 
-const Hero = ({ storeName, title, description, categories, collections }: HeroProps) => {
-  const firstCollection = collections[0]
+// The shop's front window: the name in gold leaf, one neon line (the saved tagline;
+// the store has no open-hours data, so it never claims "Open"), the departments
+// painted on the glass, and the 21+ notice in window vinyl.
+const Hero = ({ storeName, title, description, categories }: HeroProps) => {
+  const name = storeName || title || "Store"
+  const tagline = title && title.trim() !== name.trim() ? title : null
+  const departments = [{ id: "all", title: "Shop all", href: "/store" }].concat(
+    categories.map((c) => ({ id: c.id, title: c.title, href: `/categories/${c.handle}` }))
+  )
 
   return (
-    <section className="mx-auto max-w-[1320px] px-4 pt-12 pb-10 sm:px-6 sm:pt-20 lg:pt-24">
-      {storeName && (
-        <p className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3">{storeName}</p>
-      )}
-      <h1 className="mt-5 max-w-[16ch] text-[48px] leading-[46px] font-semibold tracking-[-0.04em] text-vp-ink text-balance sm:text-[88px] sm:leading-[82px] lg:text-[112px] lg:leading-[100px]">
-        {title || storeName}
-      </h1>
-      <div className="mt-10 grid gap-10 border-t border-vp-line pt-8 lg:mt-14 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
-        <div className="flex flex-col">
-          {description && (
-            <p className="max-w-md text-[16px] leading-[24px] text-vp-ink-2 sm:text-[17px] sm:leading-[26px]">{description}</p>
+    <section className="vp-window border-b border-vp-glass-line">
+      <div className="mx-auto grid max-w-[1320px] gap-8 px-4 pt-10 pb-8 sm:px-6 sm:pt-16 sm:pb-14 lg:grid-cols-12 lg:gap-6 lg:pt-20 lg:pb-16">
+        <div className="flex min-w-0 flex-col lg:col-span-7">
+          <h1 className="vp-sign vp-gold max-w-[12ch] break-words text-[60px] sm:text-[84px] lg:text-[96px]">
+            {name}
+          </h1>
+          {tagline && (
+            <p className="vp-sign vp-neon mt-4 max-w-[24ch] text-[26px] sm:mt-5 sm:text-[34px]">{tagline}</p>
           )}
-          <div className={`${description ? "mt-8" : ""} flex flex-wrap gap-2`}>
-            <LocalizedClientLink
-              href="/store"
-              className="inline-flex h-12 items-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink"
-            >
-              Shop all
-            </LocalizedClientLink>
-            {firstCollection && (
-              <LocalizedClientLink
-                href={`/collections/${firstCollection.handle}`}
-                className="inline-flex h-12 items-center rounded-full bg-vp-well px-6 text-[15px] font-medium text-vp-ink ring-1 ring-vp-line"
-              >
-                {firstCollection.title}
-              </LocalizedClientLink>
-            )}
-          </div>
+          {description && (
+            <p className="mt-6 hidden max-w-[52ch] text-[16px] leading-[25px] text-white/75 sm:block">{description}</p>
+          )}
+          <p className="mt-6 inline-flex w-fit items-center gap-2 rounded-[4px] border border-white/70 px-2.5 py-1 text-[12px] leading-[16px] font-semibold text-white sm:mt-8">
+            Adults 21+ only
+          </p>
         </div>
 
-        {categories.length > 0 && (
-          <nav aria-label="Categories">
-            <ul className="divide-y divide-vp-line border-y border-vp-line">
-              {categories.map((c) => (
-                <li key={c.id}>
-                  <LocalizedClientLink
-                    href={`/categories/${c.handle}`}
-                    className="group flex min-h-[64px] items-center gap-4 transition-colors sm:min-h-[76px]"
+        <nav aria-label="Departments" className="min-w-0 lg:col-span-5 lg:self-end">
+          <ul className="border-t border-vp-glass-line">
+            {departments.map((d, i) => (
+              <li key={d.id} className="border-b border-vp-glass-line">
+                <LocalizedClientLink
+                  href={d.href}
+                  className="group flex min-h-[52px] items-center justify-between gap-4 py-2 outline-none focus-visible:bg-vp-glass-2 sm:min-h-[60px]"
+                >
+                  <span
+                    className={
+                      i === 0
+                        ? "vp-sign vp-gold text-[30px] sm:text-[38px]"
+                        : "vp-sign text-[30px] text-white transition-colors group-hover:text-vp-gold sm:text-[38px]"
+                    }
                   >
-                    <span className="text-[24px] leading-[28px] font-semibold tracking-[-0.025em] text-vp-ink transition-transform duration-300 ease-out group-hover:translate-x-1.5 sm:text-[30px] sm:leading-[34px]">
-                      {c.title}
-                    </span>
-                    <ArrowUpRight className="ml-auto size-5 text-vp-ink-3 transition-colors group-hover:text-vp-accent" />
-                  </LocalizedClientLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )}
+                    {d.title}
+                  </span>
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="size-5 shrink-0 text-white/60 transition-transform duration-150 ease-out group-hover:translate-x-1 group-hover:text-vp-gold"
+                  />
+                </LocalizedClientLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
     </section>
   )

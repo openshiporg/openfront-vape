@@ -82,7 +82,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
               {address.firstName} {address.lastName}
             </h3>
             {address.isBilling && (
-              <span className="font-vp-mono text-[11px] uppercase tracking-[0.12em] text-vp-accent">Billing</span>
+              <span className="text-[12px] font-medium text-vp-accent">Billing</span>
             )}
           </div>
           {address.company && (

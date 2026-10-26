@@ -53,7 +53,7 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
         </p>
         <LocalizedClientLink
           href="/cart"
-          className="inline-flex min-h-11 items-center justify-center rounded-full bg-vp-well px-4 text-[14px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
+          className="inline-flex min-h-11 items-center justify-center rounded-[4px] bg-vp-well px-4 text-[14px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
         >
           Back to bag
         </LocalizedClientLink>

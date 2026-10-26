@@ -8,7 +8,7 @@ import StatusDot from "@/features/storefront/modules/common/components/vape/stat
 import Thumbnail from "@/features/storefront/modules/products/components/thumbnail";
 
 const Title = () => (
-  <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Fulfillment</h2>
+  <h2 className="vp-sign text-[26px] text-vp-ink">Fulfillment</h2>
 );
 
 type FulfillmentCardProps = {
@@ -114,7 +114,7 @@ const FulfillmentCard: React.FC<FulfillmentCardProps> = ({ order }) => {
 
       <div className="flex flex-col gap-3">
         <div
-          className="h-1.5 w-full overflow-hidden rounded-full bg-vp-well"
+          className="h-1.5 w-full overflow-hidden rounded-[4px] bg-vp-well"
           role="progressbar"
           aria-label="Items fulfilled"
           aria-valuemin={0}
@@ -122,7 +122,7 @@ const FulfillmentCard: React.FC<FulfillmentCardProps> = ({ order }) => {
           aria-valuenow={Math.round(fulfilledPercentage)}
         >
           <div
-            className="h-full rounded-full bg-vp-accent transition-all duration-300"
+            className="h-full rounded-[4px] bg-vp-accent transition-all duration-300"
             style={{ width: `${fulfilledPercentage}%` }}
           />
         </div>
@@ -167,7 +167,7 @@ const FulfillmentCard: React.FC<FulfillmentCardProps> = ({ order }) => {
                 <span className="flex min-w-0 flex-col gap-1">
                   <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <span className="text-[15px] leading-[20px] font-medium text-vp-ink">
-                      Shipment <span className="font-vp-mono">{String(index + 1).padStart(2, "0")}</span>
+                      Shipment <span className="font-vp-mono">{index + 1}</span>
                     </span>
                     <span className="inline-flex items-baseline gap-1.5 text-[13px] text-vp-ink-2">
                       <StatusDot tone={tone} />
@@ -186,7 +186,7 @@ const FulfillmentCard: React.FC<FulfillmentCardProps> = ({ order }) => {
               {expanded && fulfillment.fulfillmentItems && (
                 <div className="flex flex-col gap-3 px-4 pb-4">
                   {fulfillment.shippingLabels?.[0] && (
-                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-[14px] bg-vp-surface px-4 py-3 text-[13px] leading-[18px]">
+                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-[4px] bg-vp-surface px-4 py-3 text-[13px] leading-[18px]">
                       {fulfillment.shippingLabels[0].carrier && (
                         <span className="text-vp-ink-2">
                           Carrier{" "}

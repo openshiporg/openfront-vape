@@ -22,8 +22,21 @@ const InvoiceStripeWrapper = ({
   stripePromise,
   children,
 }: InvoiceStripeWrapperProps) => {
+  // Light shelf ground: Stripe iframes cannot read CSS variables, so the vp-* values are mirrored here.
   const options = {
     clientSecret: paymentSession?.data?.clientSecret,
+    appearance: {
+      theme: "stripe" as const,
+      variables: {
+        colorPrimary: "#121816",
+        colorBackground: "#ffffff",
+        colorText: "#121816",
+        colorTextSecondary: "#3c4743",
+        colorTextPlaceholder: "#5b6763",
+        colorDanger: "#b3261e",
+        borderRadius: "4px",
+      },
+    },
   }
 
   if (!stripeKey) {

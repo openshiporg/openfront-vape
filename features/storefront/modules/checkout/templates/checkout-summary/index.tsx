@@ -20,7 +20,7 @@ const CheckoutSummary = ({ cart }: { cart: any }) => {
 
   return (
     <div className="lg:col-start-2 lg:row-start-2">
-      <details className="group rounded-[22px] border border-vp-line bg-vp-surface lg:hidden">
+      <details className="group rounded-[4px] border border-vp-line bg-vp-surface lg:hidden">
         <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 [&::-webkit-details-marker]:hidden">
           <span className="flex items-baseline gap-2 text-[15px] font-medium text-vp-ink">
             Summary
@@ -38,9 +38,9 @@ const CheckoutSummary = ({ cart }: { cart: any }) => {
         </div>
       </details>
 
-      <aside className="sticky top-6 hidden rounded-[22px] border border-vp-line bg-vp-surface p-6 lg:block">
+      <aside className="sticky top-6 hidden rounded-[4px] border border-vp-line bg-vp-surface p-6 lg:block">
         <div className="mb-5 flex items-baseline justify-between gap-3">
-          <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Summary</h2>
+          <h2 className="vp-sign text-[26px] text-vp-ink">Summary</h2>
           <span className="font-vp-mono text-[12px] text-vp-ink-3">
             {count} {count === 1 ? "item" : "items"}
           </span>

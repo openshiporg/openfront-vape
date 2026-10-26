@@ -174,7 +174,7 @@ export function AddressFields({
           name="is_billing"
           value="true"
           defaultChecked={!!defaults.is_billing}
-          className="size-5 rounded-[6px] border-vp-line bg-vp-surface data-[state=checked]:border-vp-ink data-[state=checked]:bg-vp-ink"
+          className="size-5 rounded-[4px] border-vp-line bg-vp-surface data-[state=checked]:border-vp-ink data-[state=checked]:bg-vp-ink"
           data-testid="billing-checkbox"
         />
         <span className="text-[14px] text-vp-ink">Default billing address</span>
@@ -200,14 +200,14 @@ export function AddressDialogContent({
       data-testid={dataTestId}
       aria-describedby={undefined}
       className={cn(
-        "vape-sf flex max-h-[92dvh] w-[calc(100%-32px)] flex-col gap-0 overflow-y-auto rounded-[22px] border-vp-line bg-vp-bg p-0 text-vp-ink sm:max-w-xl [&>button:last-child]:hidden",
+        "vape-sf flex max-h-[92dvh] w-[calc(100%-32px)] flex-col gap-0 overflow-y-auto rounded-[4px] border-vp-line bg-vp-bg p-0 text-vp-ink sm:max-w-xl [&>button:last-child]:hidden",
         className
       )}
     >
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-vp-bg px-5 pt-5 pb-3">
         <DialogTitle className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em]">{title}</DialogTitle>
         <DialogClose
-          className="inline-flex size-11 items-center justify-center rounded-full bg-vp-well text-vp-ink-2 hover:text-vp-ink"
+          className="inline-flex size-11 items-center justify-center rounded-[4px] bg-vp-well text-vp-ink-2 hover:text-vp-ink"
           data-testid="close-modal-button"
         >
           <X size={18} aria-hidden="true" />

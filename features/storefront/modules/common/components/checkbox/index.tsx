@@ -27,7 +27,7 @@ const CheckboxWithLabel: React.FC<CheckboxProps> = ({
         onCheckedChange={onChange}
         name={name}
         data-testid={dataTestId}
-        className="size-5 rounded-[6px] border-vp-ink-3 bg-vp-surface shadow-none data-[state=checked]:border-vp-ink data-[state=checked]:bg-vp-ink data-[state=checked]:text-vp-on-ink focus-visible:ring-vp-tint"
+        className="size-5 rounded-[4px] border-vp-ink-3 bg-vp-surface shadow-none data-[state=checked]:border-vp-ink data-[state=checked]:bg-vp-ink data-[state=checked]:text-vp-on-ink focus-visible:ring-vp-tint"
       />
       <Label htmlFor={id} className="cursor-pointer text-[14px] font-normal leading-[20px] text-vp-ink">
         {label}

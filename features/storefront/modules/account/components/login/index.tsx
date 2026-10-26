@@ -28,7 +28,7 @@ const Login = ({ setCurrentView }: Props) => {
         setCurrentView={setCurrentView}
         testIds={{ [LOGIN_VIEW.REGISTER]: "register-button" }}
       />
-      <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink">Sign in</h1>
+      <h1 className="vp-sign text-[40px] text-vp-ink">Sign in</h1>
       <form className="flex w-full flex-col gap-4" action={formAction}>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="email" className={labelClass}>Email</label>
@@ -57,7 +57,7 @@ const Login = ({ setCurrentView }: Props) => {
               className={`${fieldClass} pe-12`}
             />
             <button
-              className="absolute inset-y-0 end-0 flex w-12 items-center justify-center rounded-e-[14px] text-vp-ink-3 outline-none hover:text-vp-ink focus-visible:text-vp-ink"
+              className="absolute inset-y-0 end-0 flex w-12 items-center justify-center rounded-e-[4px] text-vp-ink-3 outline-none hover:text-vp-ink focus-visible:text-vp-ink"
               type="button"
               onClick={toggleVisibility}
               aria-label={isVisible ? "Hide password" : "Show password"}

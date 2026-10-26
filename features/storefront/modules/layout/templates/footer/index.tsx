@@ -27,16 +27,18 @@ export default async function Footer() {
     (c: any) => !c.parentCategory && !c.isInternal && c.isActive !== false
   )
 
-  const heading = "mb-3 font-vp-mono text-[11px] uppercase tracking-[0.14em] text-vp-ink-3"
-  const link = "inline-flex min-h-9 items-center text-[14px] text-vp-ink-2 hover:text-vp-ink"
+  const heading = "vp-sign vp-gold mb-3 text-[22px]"
+  const link = "inline-flex min-h-10 items-center text-[14px] text-white/80 underline-offset-4 hover:text-white hover:underline"
 
   return (
-    <footer className="mt-24 border-t border-vp-line bg-vp-bg">
+    <footer className="vp-window mt-16 sm:mt-24">
       <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
         <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
           <div className="flex flex-col gap-4">
-            <Logo />
-            <p className="max-w-xs text-[14px] text-vp-ink-2">{store?.homepageDescription}</p>
+            <Logo tone="glass" size="lg" />
+            {store?.homepageDescription && (
+              <p className="max-w-xs text-[14px] leading-[22px] text-white/75">{store.homepageDescription}</p>
+            )}
           </div>
           {categories.length > 0 && (
             <div>
@@ -96,20 +98,20 @@ export default async function Footer() {
             </ul>
           </div>
         </div>
-        <div className="flex flex-col gap-2 border-t border-vp-line py-6 text-[12px] text-vp-ink-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2 border-t border-vp-glass-line py-6 text-[12px] text-white/75 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-1.5">
-            <p className="font-vp-mono uppercase tracking-[0.08em]">Adults 21+ only</p>
+            <p className="inline-flex w-fit rounded-[4px] border border-white/70 px-2 py-0.5 font-semibold text-white">Adults 21+ only</p>
             {showContact && (
               <p className="flex flex-wrap gap-x-4 gap-y-1" data-testid="footer-business">
-                {business.legalName && <span className="text-vp-ink-2">{business.legalName}</span>}
+                {business.legalName && <span className="text-white">{business.legalName}</span>}
                 {business.licenses.map((l) => (
                   <span key={l} className="font-vp-mono break-all">{l}</span>
                 ))}
                 {business.email && (
-                  <a href={`mailto:${business.email}`} className="break-all hover:text-vp-ink">{business.email}</a>
+                  <a href={`mailto:${business.email}`} className="break-all hover:text-white hover:underline">{business.email}</a>
                 )}
                 {business.phone && (
-                  <a href={`tel:${business.phone.replace(/[^\d+]/g, "")}`} className="font-vp-mono hover:text-vp-ink">{business.phone}</a>
+                  <a href={`tel:${business.phone.replace(/[^\d+]/g, "")}`} className="font-vp-mono hover:text-white hover:underline">{business.phone}</a>
                 )}
               </p>
             )}

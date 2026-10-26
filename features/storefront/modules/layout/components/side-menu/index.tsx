@@ -29,7 +29,7 @@ const SideMenu = ({
   const [open, setOpen] = useState(false);
 
   const linkClass =
-    "flex min-h-12 items-center justify-between border-b border-vp-line text-[20px] font-medium tracking-[-0.01em] text-vp-ink"
+    "flex min-h-12 items-center justify-between border-b border-vp-line text-[18px] font-medium text-vp-ink"
 
   return (
     // TODO: Remove suppressHydrationWarning when React 19.2.0 useId bug is fixed upstream
@@ -40,7 +40,7 @@ const SideMenu = ({
           <button
             data-testid="nav-menu-button"
             aria-label="Open menu"
-            className="inline-flex size-11 items-center justify-center rounded-full text-vp-ink hover:bg-vp-well"
+            className="inline-flex size-11 items-center justify-center rounded-[4px] text-vp-ink hover:bg-vp-well"
             suppressHydrationWarning
           >
             <Menu className="size-5" />
@@ -48,31 +48,30 @@ const SideMenu = ({
         </SheetTrigger>
         <SheetContent
           side="left"
-          className="vape-sf w-full sm:max-w-sm border-0 bg-vp-bg p-0 flex flex-col h-full [&>button]:hidden"
+          className="vape-sf w-full sm:max-w-sm border-0 bg-vp-surface p-0 flex flex-col h-full [&>button]:hidden"
           data-testid="nav-menu-popup"
         >
           <div className="flex h-16 items-center justify-between px-4 border-b border-vp-line">
             <SheetTitle className="text-[15px] font-semibold text-vp-ink">Menu</SheetTitle>
             <SheetClose asChild>
-              <button aria-label="Close menu" className="inline-flex size-11 items-center justify-center rounded-full hover:bg-vp-well">
+              <button aria-label="Close menu" className="inline-flex size-11 items-center justify-center rounded-[4px] hover:bg-vp-well">
                 <X className="size-5" />
               </button>
             </SheetClose>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 pb-6">
-            <p className="mt-6 mb-1 font-vp-mono text-[11px] uppercase tracking-[0.14em] text-vp-ink-3">Shop</p>
+            <h2 className="vp-sign mt-6 mb-1 text-[22px] text-vp-ink">Shop</h2>
             <ul>
               <li>
                 <LocalizedClientLink href="/store" className={linkClass} onClick={() => setOpen(false)} data-testid="store-link">
                   Shop all
                 </LocalizedClientLink>
               </li>
-              {categories.map((c, i) => (
+              {categories.map((c) => (
                 <li key={c.id}>
                   <LocalizedClientLink href={`/categories/${c.handle}`} className={linkClass} onClick={() => setOpen(false)}>
                     {c.title}
-                    <span className="font-vp-mono text-[12px] text-vp-ink-3">{String(i + 1).padStart(2, "0")}</span>
                   </LocalizedClientLink>
                 </li>
               ))}
@@ -80,7 +79,7 @@ const SideMenu = ({
 
             {collections.length > 0 && (
               <>
-                <p className="mt-8 mb-1 font-vp-mono text-[11px] uppercase tracking-[0.14em] text-vp-ink-3">Collections</p>
+                <h2 className="vp-sign mt-8 mb-1 text-[22px] text-vp-ink">Collections</h2>
                 <ul>
                   {collections.map((c) => (
                     <li key={c.id}>
@@ -101,7 +100,7 @@ const SideMenu = ({
               <LocalizedClientLink
                 href="/account"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-well text-[15px] font-medium text-vp-ink"
+                className="inline-flex h-12 items-center justify-center rounded-[4px] bg-vp-well text-[15px] font-medium text-vp-ink"
                 data-testid="account-link"
               >
                 Account
@@ -109,7 +108,7 @@ const SideMenu = ({
               <LocalizedClientLink
                 href="/cart"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink text-[15px] font-medium text-vp-on-ink"
+                className="inline-flex h-12 items-center justify-center rounded-[4px] bg-vp-ink text-[15px] font-medium text-vp-on-ink"
                 data-testid="cart-link"
               >
                 Bag

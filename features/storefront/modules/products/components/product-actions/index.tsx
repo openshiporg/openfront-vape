@@ -7,6 +7,7 @@ import { useIntersection } from "../../../../lib/hooks/use-in-view";
 import { addToCart } from "@/features/storefront/lib/data/cart";
 // Removed HttpTypes import
 import { getProductPrice } from "@/features/storefront/lib/util/get-product-price";
+import { productFacts } from "@/features/storefront/lib/util/vape-specs";
 import LocalizedClientLink from "../../../common/components/localized-client-link";
 import StatusDot from "../../../common/components/vape/status-dot";
 import OptionSelect from "./option-select";
@@ -168,6 +169,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
     });
   }, [variants, options, hasOnlyOneVariant]);
 
+  const facts = useMemo(() => productFacts(product, 3), [product]);
   const chosen = !!variant || hasOnlyOneVariant;
   const firstMissing = (product.productOptions || []).find((o: any) => !options[o.id]);
   const quantity = typeof variant?.inventoryQuantity === "number" ? variant.inventoryQuantity : null;
@@ -193,27 +195,45 @@ export default function ProductActions({ product, region, disabled, onVariantCha
     <>
       <div className="flex flex-col gap-6" ref={actionsRef}>
         <div className="flex flex-col gap-3">
-          {category?.title && (
-            <LocalizedClientLink
-              href={category.handle ? `/categories/${category.handle}` : "/store"}
-              className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3 hover:text-vp-ink"
-            >
-              {category.title}
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-2 text-[13px] text-vp-ink-2">
+            <LocalizedClientLink href="/store" className="inline-flex min-h-10 items-center hover:text-vp-ink hover:underline underline-offset-4">
+              Shop all
             </LocalizedClientLink>
+            {category?.title && (
+              <>
+                <span aria-hidden="true" className="text-vp-ink-3">/</span>
+                <LocalizedClientLink
+                  href={category.handle ? `/categories/${category.handle}` : "/store"}
+                  className="inline-flex min-h-10 items-center hover:text-vp-ink hover:underline underline-offset-4"
+                >
+                  {category.title}
+                </LocalizedClientLink>
+              </>
+            )}
+          </nav>
+          <h1
+            className="vp-sign text-[44px] text-vp-ink sm:text-[60px]"
+            data-testid="product-title"
+          >
+            {product.title}
+          </h1>
+          {facts.length > 0 && (
+            <dl className="mt-2 grid border-t border-vp-ink text-[13px] leading-[18px]">
+              {facts.map((f) => (
+                <div key={f.label} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-3 border-b border-vp-line py-2">
+                  <dt className="text-vp-ink-2">{f.label}</dt>
+                  <dd className="font-vp-mono text-vp-ink">{f.value}</dd>
+                </div>
+              ))}
+            </dl>
           )}
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <h1
-              className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink sm:text-[40px] sm:leading-[44px]"
-              data-testid="product-title"
-            >
-              {product.title}
-            </h1>
+          <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+            <ProductPrice product={product} variant={variant} region={region} />
             <span className="inline-flex items-baseline gap-1.5 text-[13px] text-vp-ink-2" data-testid="product-stock">
               <StatusDot tone={stock.tone} />
               {stock.label}
             </span>
           </div>
-          <ProductPrice product={product} variant={variant} region={region} />
         </div>
 
         {variants?.length > 1 && (
@@ -235,7 +255,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           type="button"
           onClick={handleAddToCart}
           disabled={disabled || isAdding || ((!inStock || !variant || !isValidVariant) && !hasOnlyOneVariant)}
-          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-vp-ink text-[16px] font-medium text-vp-on-ink transition-opacity disabled:bg-vp-well disabled:text-vp-ink-3"
+          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-[4px] bg-vp-ink text-[16px] font-semibold text-vp-on-ink transition-opacity hover:opacity-90 disabled:bg-vp-well disabled:text-vp-ink-3"
           data-testid="add-product-button"
         >
           {isAdding && <RiLoader2Fill className="size-4 animate-spin" />}

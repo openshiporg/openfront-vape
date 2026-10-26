@@ -6,8 +6,7 @@ import StatusDot from "@/features/storefront/modules/common/components/vape/stat
 export function CheckoutLinkHeader() {
   return (
     <div className="flex flex-col gap-2">
-      <p className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3">Checkout link</p>
-      <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink sm:text-[40px] sm:leading-[44px]">
+      <h1 className="vp-sign text-[40px] text-vp-ink sm:text-[52px]">
         Complete your order
       </h1>
     </div>
@@ -32,7 +31,7 @@ export function CheckoutLinkCart({ cart, actions }: { cart: any; actions: React.
   const numberOfProducts = lineItems.length;
 
   return (
-    <div className="flex flex-col gap-5 rounded-[22px] border border-vp-line bg-vp-surface p-4 sm:p-6" data-testid="cart-card">
+    <div className="flex flex-col gap-5 rounded-[4px] border border-vp-line bg-vp-surface p-4 sm:p-6" data-testid="cart-card">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="font-vp-mono text-[15px] font-medium text-vp-ink">
           Cart #{cart.id.slice(-8).toUpperCase()}

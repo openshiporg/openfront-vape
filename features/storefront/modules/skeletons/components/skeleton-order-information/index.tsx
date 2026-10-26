@@ -2,9 +2,9 @@ import SkeletonCartTotals from "@/features/storefront/modules/skeletons/componen
 
 const Block = () => (
   <div className="flex flex-col gap-2">
-    <div className="h-3 w-20 rounded-full bg-vp-well"></div>
-    <div className="h-3 w-3/4 rounded-full bg-vp-well"></div>
-    <div className="h-3 w-1/2 rounded-full bg-vp-well"></div>
+    <div className="h-3 w-20 rounded-[4px] bg-vp-well"></div>
+    <div className="h-3 w-3/4 rounded-[4px] bg-vp-well"></div>
+    <div className="h-3 w-1/2 rounded-[4px] bg-vp-well"></div>
   </div>
 )
 
@@ -16,7 +16,7 @@ const SkeletonOrderInformation = () => {
         <Block />
         <Block />
       </div>
-      <div className="rounded-[22px] border border-vp-line bg-vp-surface p-5 sm:p-6">
+      <div className="rounded-[4px] border border-vp-line bg-vp-surface p-5 sm:p-6">
         <SkeletonCartTotals />
       </div>
     </div>

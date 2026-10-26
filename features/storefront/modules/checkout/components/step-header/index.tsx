@@ -22,19 +22,19 @@ export default function StepHeader({
     <div className="flex min-h-11 items-center justify-between gap-4">
       <h2
         className={cn(
-          "flex items-baseline gap-3 text-[20px] leading-[26px] font-semibold tracking-[-0.02em] sm:text-[22px] sm:leading-[28px]",
+          "flex items-baseline gap-3 text-[26px] sm:text-[30px]",
           state === "todo" ? "text-vp-ink-3 select-none" : "text-vp-ink"
         )}
       >
         <span
           className={cn(
-            "font-vp-mono text-[13px] leading-none font-normal tracking-normal",
-            state === "open" ? "text-vp-accent" : "text-vp-ink-3"
+            "font-vp-mono text-[14px] leading-none font-medium tracking-normal",
+            state === "open" ? "text-vp-accent" : "text-vp-ink-2"
           )}
         >
-          {String(index).padStart(2, "0")}
+          {index}
         </span>
-        <span>{title}</span>
+        <span className="vp-sign">{title}</span>
         {state === "done" && <StatusDot tone="ok" label="Complete" />}
       </h2>
       {onEdit && (
@@ -43,7 +43,7 @@ export default function StepHeader({
           onClick={onEdit}
           data-testid={editTestId}
           aria-label={editLabel}
-          className="inline-flex min-h-11 flex-none items-center justify-center rounded-full bg-vp-well px-4 text-[14px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
+          className="inline-flex min-h-11 flex-none items-center justify-center rounded-[4px] bg-vp-well px-4 text-[14px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
         >
           Edit
         </button>

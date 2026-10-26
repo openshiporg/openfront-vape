@@ -45,12 +45,9 @@ export async function PolicyPage(props: Props) {
   return (
     <div className="mx-auto w-full max-w-[1320px] px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
       <header className="flex flex-col gap-2">
-        <p className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3">
-          {store?.name || "Store"}
-        </p>
         <div className="flex items-baseline gap-3">
           {!published && <StatusDot tone="muted" />}
-          <h1 className="break-words text-[36px] leading-[40px] font-semibold tracking-[-0.03em] text-vp-ink sm:text-[52px] sm:leading-[56px]">
+          <h1 className="break-words vp-sign text-[44px] text-vp-ink sm:text-[64px]">
             {page.title}
           </h1>
         </div>

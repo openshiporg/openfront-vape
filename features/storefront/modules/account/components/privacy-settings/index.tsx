@@ -193,7 +193,7 @@ export default function PrivacySettings({
                     type="button"
                     onClick={requestDeletion}
                     disabled={requesting}
-                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-vp-danger px-4 text-[13px] font-medium text-vp-on-ink transition-opacity hover:opacity-90 disabled:opacity-60"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[4px] bg-vp-danger px-4 text-[13px] font-medium text-vp-on-ink transition-opacity hover:opacity-90 disabled:opacity-60"
                     data-testid="privacy-delete-confirm"
                   >
                     {requesting && <RiLoader2Fill className="h-4 w-4 animate-spin" />}

@@ -39,50 +39,63 @@
   }
 }
 
-/* Vape storefront: the spec sheet at night. See docs/design/vape-redesign-2026-10-22.md.
-   A deep teal-black ground, bone ink, and the saved logo colour (--vp-h, set on the
-   .vape-sf wrapper) as a soft lifted accent. vp-on-ink is the text on an ink fill. */
+/* Vape storefront: the shop's front window. See .impeccable/surfaces/features-storefront.md.
+   Inside is bright (cool white shelves, ink text); the window bands are deep glass with
+   gold-leaf lettering and one neon line in the saved logo colour (--vp-h, set on .vape-sf).
+   vp-on-ink is the text on an ink fill. */
 @theme inline {
-  --color-vp-bg: #0e1413;
-  --color-vp-surface: #1b2322;
-  --color-vp-well: #161e1d;
-  --color-vp-ink: #eceee9;
-  --color-vp-ink-2: #b5bcb8;
-  --color-vp-ink-3: #838c88;
-  --color-vp-line: #263130;
-  --color-vp-on-ink: #0e1413;
-  --color-vp-accent: hsl(var(--vp-h, 178) 48% 64%);
-  --color-vp-tint: hsl(var(--vp-h, 178) 32% 19%);
-  --color-vp-danger: #f08a8e;
-  --color-vp-ok: #6fd3a0;
-  --color-vp-warn: #e9b56b;
+  --color-vp-bg: #f2f4f3;
+  --color-vp-surface: #ffffff;
+  --color-vp-well: #e8ecea;
+  --color-vp-ink: #121816;
+  --color-vp-ink-2: #3c4743;
+  --color-vp-ink-3: #5b6763;
+  --color-vp-line: #d3d9d6;
+  --color-vp-on-ink: #ffffff;
+  --color-vp-accent: hsl(var(--vp-h, 178) 62% 30%);
+  --color-vp-tint: hsl(var(--vp-h, 178) 38% 92%);
+  --color-vp-danger: #b3261e;
+  --color-vp-ok: #1d6f48;
+  --color-vp-warn: #8a5a00;
+  --color-vp-glass: #0d1513;
+  --color-vp-glass-2: #16201d;
+  --color-vp-glass-line: #2a3631;
+  --color-vp-gold: #d8b35e;
+  --color-vp-gold-2: #a9853a;
+  --color-vp-neon: hsl(var(--vp-h, 178) 95% 64%);
   --font-vp: var(--vp-font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-vp-mono: var(--vp-font-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-vp-sign: var(--vp-font-sign), "Arial Narrow", sans-serif;
 }
 
 @layer base {
   .vape-sf {
-    --sf-background: #0e1413;
-    --sf-foreground: #eceee9;
-    --sf-card: #1b2322;
-    --sf-card-foreground: #eceee9;
-    --sf-popover: #1b2322;
-    --sf-popover-foreground: #eceee9;
-    --sf-primary: #eceee9;
-    --sf-primary-foreground: #0e1413;
-    --sf-secondary: #161e1d;
-    --sf-secondary-foreground: #eceee9;
-    --sf-muted: #161e1d;
-    --sf-muted-foreground: #b5bcb8;
-    --sf-accent: #161e1d;
-    --sf-accent-foreground: #eceee9;
-    --sf-border: #263130;
-    --sf-input: #263130;
-    --sf-ring: hsl(var(--vp-h, 178) 48% 64%);
-    background-color: #0e1413;
-    color: #eceee9;
-    color-scheme: dark;
+    --sf-background: #f2f4f3;
+    --sf-foreground: #121816;
+    --sf-card: #ffffff;
+    --sf-card-foreground: #121816;
+    --sf-popover: #ffffff;
+    --sf-popover-foreground: #121816;
+    --sf-primary: #121816;
+    --sf-primary-foreground: #ffffff;
+    --sf-secondary: #e8ecea;
+    --sf-secondary-foreground: #121816;
+    --sf-muted: #e8ecea;
+    --sf-muted-foreground: #3c4743;
+    --sf-accent: #e8ecea;
+    --sf-accent-foreground: #121816;
+    --sf-border: #d3d9d6;
+    --sf-input: #b9c2be;
+    --sf-ring: hsl(var(--vp-h, 178) 62% 36%);
+    background-color: #f2f4f3;
+    color: #121816;
+    color-scheme: light;
     font-family: var(--vp-font-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .vape-sf ::selection {
+    background: #d8b35e;
+    color: #121816;
   }
 
   .vape-sf .vp-num,
@@ -94,14 +107,45 @@
 }
 
 @layer components {
-  /* Raised pill in a recessed track */
+  /* Sign-painter display face: headings inside, gold leaf on glass. */
+  .vp-sign {
+    font-family: var(--vp-font-sign), "Arial Narrow", sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.005em;
+    line-height: 0.92;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  /* The window: deep glass band. Text on glass is gold leaf or white vinyl. */
+  .vp-window {
+    background: #0d1513;
+    color: #eef1ef;
+    color-scheme: dark;
+  }
+  .vp-gold {
+    color: #d8b35e;
+    -webkit-text-stroke: 0.5px #6d5520;
+  }
+  /* The one neon line per screen: a lit tube in the logo colour. */
+  .vp-neon {
+    color: hsl(var(--vp-h, 178) 100% 80%);
+    text-shadow: 0 0 2px hsl(var(--vp-h, 178) 100% 70%), 0 0 10px hsl(var(--vp-h, 178) 95% 55% / 0.75), 0 0 28px hsl(var(--vp-h, 178) 95% 50% / 0.45);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .vp-neon { text-shadow: none; color: hsl(var(--vp-h, 178) 95% 64%); }
+  }
+
+  /* Joined square segmented plates: the current choice is inked. */
   .vp-track {
     display: inline-flex;
-    gap: 2px;
-    padding: 3px;
-    border-radius: 999px;
-    background: #0a0f0e;
-    box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(255 255 255 / 0.04);
+    max-width: 100%;
+    gap: 0;
+    padding: 0;
+    border: 1px solid #121816;
+    border-radius: 4px;
+    background: #ffffff;
+    overflow-x: auto;
   }
   .vp-pill {
     display: inline-flex;
@@ -110,41 +154,46 @@
     justify-content: center;
     gap: 6px;
     padding: 0 14px;
-    border-radius: 999px;
+    border-radius: 0;
     font-size: 13px;
-    font-weight: 500;
-    color: #b5bcb8;
+    font-weight: 600;
+    color: #121816;
     white-space: nowrap;
-    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+    transition: background-color 150ms ease, color 150ms ease;
   }
-  .vp-pill:hover { color: #eceee9; }
+  .vp-pill + .vp-pill { border-left: 1px solid #121816; }
+  .vp-pill:hover { background: #e8ecea; }
   .vp-pill[data-active="true"] {
-    background: #26302e;
-    color: #eceee9;
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
+    background: #121816;
+    color: #ffffff;
   }
   .vp-pill:disabled,
-  .vp-pill[aria-disabled="true"] { color: #56605d; text-decoration: line-through; cursor: not-allowed; }
-  .vp-pill:focus-visible { outline: 2px solid hsl(var(--vp-h, 178) 48% 64%); outline-offset: 1px; }
+  .vp-pill[aria-disabled="true"] { color: #8b9692; text-decoration: line-through; cursor: not-allowed; }
+  .vp-pill:focus-visible { outline: 2px solid hsl(var(--vp-h, 178) 62% 36%); outline-offset: 1px; }
   @media (max-width: 639px) {
     .vp-pill { min-height: 40px; }
   }
+  .vp-window .vp-track { border-color: #2a3631; background: transparent; }
+  .vp-window .vp-pill { color: #eef1ef; }
+  .vp-window .vp-pill + .vp-pill { border-left-color: #2a3631; }
+  .vp-window .vp-pill:hover { background: #16201d; }
+  .vp-window .vp-pill[data-active="true"] { background: #d8b35e; color: #121816; }
 
   .vp-band {
-    border-radius: 14px;
-    background: #121a19;
-    box-shadow: inset 0 0 0 1px #263130;
+    border-radius: 4px;
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1px #d3d9d6;
   }
 
   .vp-dot {
     display: inline-block;
     width: 8px;
     height: 8px;
-    border-radius: 999px;
+    border-radius: 1px;
     flex: none;
     transform: translateY(-0.1em);
   }
-  .vp-pill[data-active="true"]:disabled { color: #eceee9; text-decoration: none; cursor: default; }
+  .vp-pill[data-active="true"]:disabled { color: #ffffff; text-decoration: none; cursor: default; }
 
   /* Horizontal scrollers (segmented tracks on phone) */
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }

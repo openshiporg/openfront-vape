@@ -9,19 +9,19 @@ import StatusDot from "@/features/storefront/modules/common/components/vape/stat
 // components can both use it.
 
 export const fieldClass =
-  "block h-12 w-full appearance-none rounded-[14px] border border-vp-line bg-vp-surface px-4 text-[15px] text-vp-ink placeholder:text-vp-ink-3 outline-none transition-[border-color,box-shadow] focus:border-vp-accent focus:ring-2 focus:ring-vp-accent/20 disabled:bg-vp-well disabled:text-vp-ink-3"
+  "block h-12 w-full appearance-none rounded-[4px] border border-vp-line bg-vp-surface px-4 text-[15px] text-vp-ink placeholder:text-vp-ink-3 outline-none transition-[border-color,box-shadow] focus:border-vp-accent focus:ring-2 focus:ring-vp-accent/20 disabled:bg-vp-well disabled:text-vp-ink-3"
 
 export const labelClass = "text-[13px] leading-[18px] font-medium text-vp-ink-2"
 
 export const primaryButtonClass =
-  "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink transition-opacity hover:bg-vp-ink hover:opacity-90 disabled:cursor-not-allowed disabled:bg-vp-well disabled:text-vp-ink-3 disabled:opacity-100"
+  "inline-flex h-12 items-center justify-center gap-2 rounded-[4px] bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink transition-opacity hover:bg-vp-ink hover:opacity-90 disabled:cursor-not-allowed disabled:bg-vp-well disabled:text-vp-ink-3 disabled:opacity-100"
 
 export const secondaryButtonClass =
-  "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-well px-6 text-[15px] font-medium text-vp-ink transition-colors hover:bg-vp-line disabled:cursor-not-allowed disabled:text-vp-ink-3"
+  "inline-flex h-12 items-center justify-center gap-2 rounded-[4px] bg-vp-well px-6 text-[15px] font-medium text-vp-ink transition-colors hover:bg-vp-line disabled:cursor-not-allowed disabled:text-vp-ink-3"
 
 // White pill for actions that sit on a recessed band row.
 export const rowPillClass =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-vp-surface px-4 text-[13px] font-medium text-vp-ink shadow-[0_1px_2px_rgb(20_24_22/0.12)] transition-colors hover:text-vp-accent disabled:cursor-not-allowed disabled:text-vp-ink-3"
+  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[4px] bg-vp-surface px-4 text-[13px] font-medium text-vp-ink shadow-[0_1px_2px_rgb(20_24_22/0.12)] transition-colors hover:text-vp-accent disabled:cursor-not-allowed disabled:text-vp-ink-3"
 
 type FieldProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> & {
   label: string
@@ -73,7 +73,7 @@ export const SelectField = ({ label, id, name, className, children, ...props }: 
 export const FieldFrame = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex min-w-0 flex-col gap-1.5">
     <span className={labelClass}>{label}</span>
-    <div className="[&_button[role=combobox]]:h-12 [&_button[role=combobox]]:rounded-[14px] [&_button[role=combobox]]:border-vp-line [&_button[role=combobox]]:bg-vp-surface [&_button[role=combobox]]:px-4 [&_button[role=combobox]]:text-[15px]">
+    <div className="[&_button[role=combobox]]:h-12 [&_button[role=combobox]]:rounded-[4px] [&_button[role=combobox]]:border-vp-line [&_button[role=combobox]]:bg-vp-surface [&_button[role=combobox]]:px-4 [&_button[role=combobox]]:text-[15px]">
       {children}
     </div>
   </div>
@@ -99,7 +99,7 @@ export function AccountPageHeader({
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="flex items-baseline gap-3">
-        <h2 id={id} className="text-[24px] leading-[30px] font-semibold tracking-[-0.02em] text-vp-ink">{title}</h2>
+        <h2 id={id} className="vp-sign text-[30px] text-vp-ink">{title}</h2>
         {typeof count === "number" && <span className="font-vp-mono text-[13px] text-vp-ink-3">{count}</span>}
       </div>
       {action}

@@ -24,7 +24,7 @@ export function CartNotFound() {
   return (
     <div className="mx-auto flex min-h-[60vh] w-full max-w-[1320px] flex-col justify-center gap-4 px-4 py-24 sm:px-6">
       <span className="font-vp-mono text-[13px] text-vp-ink-3">404</span>
-      <h1 className="text-[40px] leading-[44px] font-semibold tracking-[-0.02em] text-vp-ink">Bag not found</h1>
+      <h1 className="vp-sign text-[44px] text-vp-ink sm:text-[56px]">Bag not found</h1>
       <p className="text-[15px] leading-[24px] text-vp-ink-2">This bag no longer exists. Clear your cookies and try again.</p>
       <div className="mt-4">
         <InteractiveLink href="/">Back to home</InteractiveLink>

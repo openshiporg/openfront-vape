@@ -38,7 +38,7 @@ type SummaryProps = {
 const Summary = ({ cart }: SummaryProps) => {
   return (
     <div className="flex flex-col gap-5">
-      <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Summary</h2>
+      <h2 className="vp-sign text-[26px] text-vp-ink">Summary</h2>
       <CartTotals data={cart} />
       {cart && (
         <div className="border-t border-vp-line pt-2">
@@ -48,7 +48,7 @@ const Summary = ({ cart }: SummaryProps) => {
       <LocalizedClientLink
         href={`/checkout?step=${cart?.checkoutStep ?? 'address'}`}
         data-testid="checkout-button"
-        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-vp-ink text-[16px] font-medium text-vp-on-ink transition-opacity hover:opacity-90"
+        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-[4px] bg-vp-ink text-[16px] font-medium text-vp-on-ink transition-opacity hover:opacity-90"
       >
         <LinkStatus />
         Check out

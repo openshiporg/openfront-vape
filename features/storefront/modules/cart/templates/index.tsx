@@ -20,7 +20,7 @@ const CartTemplate = ({ cart, user }: CartTemplateProps) => {
       {cart?.lineItems?.length ? (
         <>
           <header className="flex items-baseline gap-3">
-            <h1 className="text-[36px] leading-[40px] font-semibold tracking-[-0.03em] text-vp-ink sm:text-[52px] sm:leading-[56px]">
+            <h1 className="vp-sign text-[44px] text-vp-ink sm:text-[64px]">
               Bag
             </h1>
             <span className="font-vp-mono text-[14px] text-vp-ink-3">
@@ -34,7 +34,7 @@ const CartTemplate = ({ cart, user }: CartTemplateProps) => {
             </div>
             <div className="relative">
               {cart && cart.region && (
-                <aside className="rounded-[22px] border border-vp-line bg-vp-surface p-5 sm:p-6 lg:sticky lg:top-6">
+                <aside className="rounded-[4px] border border-vp-line bg-vp-surface p-5 sm:p-6 lg:sticky lg:top-6">
                   <Summary cart={cart} />
                 </aside>
               )}

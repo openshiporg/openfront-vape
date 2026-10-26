@@ -6,13 +6,13 @@ import { storeBrand } from "@/features/storefront/lib/vape-brand"
 import AgeGate from "../age-gate"
 import { AGE_COOKIE } from "../age-gate/constants"
 import { BodyTheme } from "./body-theme"
-import { vpMono, vpSans } from "./fonts"
+import { vpMono, vpSans, vpSign } from "./fonts"
 
 export default async function VapeShell({ children }: { children: ReactNode }) {
   const [store, cookieStore] = await Promise.all([getStore(), cookies()])
   const ageConfirmed = cookieStore.get(AGE_COOKIE)?.value === "1"
   const { hue } = storeBrand(store)
-  const themeClass = `vape-sf ${vpSans.variable} ${vpMono.variable}`
+  const themeClass = `vape-sf ${vpSans.variable} ${vpMono.variable} ${vpSign.variable}`
 
   return (
     <div

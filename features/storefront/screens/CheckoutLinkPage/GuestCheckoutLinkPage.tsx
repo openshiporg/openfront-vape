@@ -61,14 +61,14 @@ async function GuestCheckoutLinkContent({ cartId, countryCode }: { cartId: strin
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Link
               href={`/${countryCode}/account?view=register&returnUrl=${returnUrl}`}
-              className="inline-flex h-12 items-center justify-center rounded-full bg-vp-well px-6 text-[15px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
+              className="inline-flex h-12 items-center justify-center rounded-[4px] bg-vp-well px-6 text-[15px] font-medium text-vp-ink transition-colors hover:bg-vp-line"
             >
               Create account
             </Link>
             <Link
               href={`/${countryCode}/account?view=login&returnUrl=${returnUrl}`}
               data-testid="sign-in-to-complete-button"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink transition-opacity hover:opacity-90"
+              className="inline-flex h-12 items-center justify-center rounded-[4px] bg-vp-ink px-6 text-[15px] font-medium text-vp-on-ink transition-opacity hover:opacity-90"
             >
               Sign in to complete order
             </Link>

@@ -120,7 +120,7 @@ const Shipping: React.FC<ShippingProps> = ({
                     <Label
                       htmlFor={option.id}
                       className={cn(
-                        "flex min-h-14 cursor-pointer items-center justify-between gap-4 rounded-[14px] px-4 py-3 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-vp-accent",
+                        "flex min-h-14 cursor-pointer items-center justify-between gap-4 rounded-[4px] px-4 py-3 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-vp-accent",
                         {
                           "bg-vp-surface shadow-[0_1px_2px_rgb(20_24_22/0.12),0_0_0_0.5px_rgb(20_24_22/0.06)]": selected,
                           "hover:bg-vp-surface/60": !selected && !isDisabled,
@@ -132,7 +132,7 @@ const Shipping: React.FC<ShippingProps> = ({
                         <span
                           aria-hidden="true"
                           className={cn(
-                            "block h-[18px] w-[18px] flex-none rounded-full bg-vp-surface transition-all",
+                            "block h-[18px] w-[18px] flex-none rounded-[4px] bg-vp-surface transition-all",
                             selected ? "border-[5px] border-vp-ink" : "border-[1.5px] border-vp-ink-3"
                           )}
                         />

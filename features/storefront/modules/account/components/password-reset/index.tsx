@@ -14,7 +14,7 @@ import {
 
 const initialState: PasswordResetState = { status: "idle", error: null }
 
-const titleClass = "text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink"
+const titleClass = "vp-sign text-[40px] text-vp-ink"
 const bodyClass = "text-[15px] leading-[22px] text-vp-ink-2"
 const linkClass = "font-medium text-vp-ink underline underline-offset-4"
 

@@ -233,7 +233,7 @@ export default function InvoicePaymentDialog({
   if (invoice && availablePaymentMethods.length > 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="vape-sf w-[calc(100%-32px)] max-h-[92dvh] overflow-y-auto rounded-[22px] border-vp-line bg-vp-bg text-vp-ink sm:max-w-md">
+        <DialogContent className="vape-sf w-[calc(100%-32px)] max-h-[92dvh] overflow-y-auto rounded-[4px] border-vp-line bg-vp-bg text-vp-ink sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em]">Pay invoice <span className="font-vp-mono">#{invoice.invoiceNumber}</span></DialogTitle>
             <DialogDescription className="text-[13px] text-vp-ink-2">
@@ -245,14 +245,14 @@ export default function InvoicePaymentDialog({
             <div className="space-y-4">
               {/* Invoice Summary */}
               <div className="vp-band p-4">
-                <h4 className="mb-3 font-vp-mono text-[12px] uppercase tracking-[0.12em] text-vp-ink-3">Summary</h4>
+                <h4 className="mb-3 text-[13px] font-semibold text-vp-ink">Summary</h4>
                 <div className="mb-3 flex items-baseline justify-between">
                   <span className="text-[14px] text-vp-ink-2">Total <span className="font-vp-mono text-[17px] font-medium text-vp-ink">{invoice.formattedTotal}</span></span>
                   <span className="font-vp-mono text-[13px] text-vp-ink-2">{invoice.itemCount} {invoice.itemCount === 1 ? 'order' : 'orders'}</span>
                 </div>
                 
                 {/* Orders list */}
-                <div className="flex flex-col divide-y divide-vp-line overflow-hidden rounded-[14px] bg-vp-surface">
+                <div className="flex flex-col divide-y divide-vp-line overflow-hidden rounded-[4px] bg-vp-surface">
                   {invoice.lineItems?.map((lineItem: any) => (
                     <button
                       type="button"
@@ -274,7 +274,7 @@ export default function InvoicePaymentDialog({
 
               {/* Payment Method Card with Selection */}
               <div className="vp-band p-4">
-                <h4 className="mb-3 font-vp-mono text-[12px] uppercase tracking-[0.12em] text-vp-ink-3">Payment method</h4>
+                <h4 className="mb-3 text-[13px] font-semibold text-vp-ink">Payment method</h4>
                 <RadioGroup
                   value={selectedPaymentMethod}
                   onValueChange={handlePaymentMethodChange}
@@ -286,7 +286,7 @@ export default function InvoicePaymentDialog({
                       <Label 
                         htmlFor={method.id}
                         className={cn(
-                          "flex min-h-12 min-w-0 cursor-pointer items-center justify-between rounded-[14px] border bg-vp-surface px-4 py-3 text-sm font-normal transition-colors",
+                          "flex min-h-12 min-w-0 cursor-pointer items-center justify-between rounded-[4px] border bg-vp-surface px-4 py-3 text-sm font-normal transition-colors",
                           {
                             "border-vp-ink": selectedPaymentMethod === method.code,
                             "border-vp-line hover:border-vp-ink-3": selectedPaymentMethod !== method.code,
@@ -295,14 +295,14 @@ export default function InvoicePaymentDialog({
                       >
                         <div className="flex items-center gap-x-3 min-w-0 flex-1">
                           <div className={cn(
-                            "w-4 h-4 border-2 rounded-full flex items-center justify-center transition-colors flex-shrink-0",
+                            "w-4 h-4 border-2 rounded-[4px] flex items-center justify-center transition-colors flex-shrink-0",
                             {
                               "border-vp-ink": selectedPaymentMethod === method.code,
                               "border-vp-line": selectedPaymentMethod !== method.code,
                             }
                           )}>
                             {selectedPaymentMethod === method.code && (
-                              <div className="w-2 h-2 bg-vp-ink rounded-full" />
+                              <div className="w-2 h-2 bg-vp-ink rounded-[1px]" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -334,14 +334,15 @@ export default function InvoicePaymentDialog({
                       style: {
                         base: {
                           fontFamily: "ui-sans-serif, system-ui, sans-serif",
-                          color: "#141816",
+                          color: "#121816", // vp-ink (Stripe iframes cannot read CSS variables)
+                          iconColor: "#3c4743",
                           "::placeholder": {
-                            color: "#878d89",
+                            color: "#5b6763", // vp-ink-3
                           },
                         },
                       },
                       classes: {
-                        base: "block h-12 w-full appearance-none rounded-[14px] border border-vp-line bg-vp-surface px-4 pt-3.5 pb-1",
+                        base: "block h-12 w-full appearance-none rounded-[4px] border border-vp-line bg-vp-surface px-4 pt-3.5 pb-1",
                       },
                       // Hide postal code - billing address is already collected
                       hidePostalCode: true,
@@ -361,7 +362,7 @@ export default function InvoicePaymentDialog({
               {isStripe(selectedPaymentMethod) && !invoice?.paymentCollection?.paymentSessions?.find((s: { isSelected: boolean; data?: { clientSecret?: string } }) => s.isSelected && s.data?.clientSecret) && (
                 <div className="mt-5">
                   <p className="mb-1.5 text-[13px] font-medium text-vp-ink-2">Card</p>
-                  <div className="h-12 animate-pulse rounded-[14px] bg-vp-well"></div>
+                  <div className="h-12 animate-pulse rounded-[4px] bg-vp-well"></div>
                 </div>
               )}
 
@@ -373,11 +374,11 @@ export default function InvoicePaymentDialog({
 
               <div className="w-full">
                 {!selectedPaymentMethod ? (
-                  <div className="flex h-12 items-center justify-center rounded-full bg-vp-well">
+                  <div className="flex h-12 items-center justify-center rounded-[4px] bg-vp-well">
                     <span className="text-[14px] text-vp-ink-3">Select a payment method</span>
                   </div>
                 ) : paymentMethodSwitching ? (
-                  <div className="flex h-12 items-center justify-center rounded-full bg-vp-well">
+                  <div className="flex h-12 items-center justify-center rounded-[4px] bg-vp-well">
                     <RiLoader2Fill className="mr-2 h-4 w-4 animate-spin text-vp-ink-3" />
                     <span className="text-[14px] text-vp-ink-3">Loading payment method...</span>
                   </div>
@@ -400,7 +401,7 @@ export default function InvoicePaymentDialog({
   // Show region selection (like checkout shows cart items)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="vape-sf w-[calc(100%-32px)] rounded-[22px] border-vp-line bg-vp-bg text-vp-ink sm:max-w-md">
+      <DialogContent className="vape-sf w-[calc(100%-32px)] rounded-[4px] border-vp-line bg-vp-bg text-vp-ink sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em]">Pay balance</DialogTitle>
           <DialogDescription className="text-[13px] text-vp-ink-2">
@@ -412,7 +413,7 @@ export default function InvoicePaymentDialog({
           {unpaidLineItems.success && unpaidLineItems.regions?.length > 0 ? (
             <RadioGroup value={selectedRegion || ""} onValueChange={handleRegionSelect}>
               {unpaidLineItems.regions.map((regionData: any) => (
-                <div key={regionData.region.id} className="flex min-h-14 items-center gap-3 rounded-[14px] border border-vp-line bg-vp-surface px-4 py-3">
+                <div key={regionData.region.id} className="flex min-h-14 items-center gap-3 rounded-[4px] border border-vp-line bg-vp-surface px-4 py-3">
                   <RadioGroupItem value={regionData.region.id} id={regionData.region.id} />
                   <Label htmlFor={regionData.region.id} className="flex-1 cursor-pointer">
                     <div className="flex items-center justify-between">

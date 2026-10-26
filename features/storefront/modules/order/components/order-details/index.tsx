@@ -47,8 +47,9 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-        <h1 className="font-vp-mono text-[40px] leading-[44px] font-medium tracking-[-0.02em] text-vp-ink sm:text-[56px] sm:leading-[60px]">
-          <span className="sr-only">Order </span>#<span data-testid="order-id">{order.displayId}</span>
+        <h1 className="flex flex-wrap items-baseline gap-x-3 text-vp-ink">
+          <span className="vp-sign text-[44px] sm:text-[60px]">Order</span>
+          <span className="font-vp-mono text-[36px] leading-[40px] font-medium sm:text-[48px] sm:leading-[52px]">#<span data-testid="order-id">{order.displayId}</span></span>
         </h1>
         {showStatus ? (
           <span className="inline-flex items-baseline gap-1.5 text-[14px] text-vp-ink-2">

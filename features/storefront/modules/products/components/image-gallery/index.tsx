@@ -42,7 +42,7 @@ const ImageGallery = ({ images, title, kicker, specs }: ImageGalleryProps) => {
 
   if (!sources.length) {
     return (
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[24px] bg-vp-well sm:aspect-square lg:aspect-[4/5]">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[4px] bg-vp-well sm:aspect-square lg:aspect-[4/5]">
         <SpecTile title={title || ""} kicker={kicker} specs={specs} size="lg" />
       </div>
     )
@@ -52,7 +52,7 @@ const ImageGallery = ({ images, title, kicker, specs }: ImageGalleryProps) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[24px] bg-vp-well sm:aspect-square lg:aspect-[4/5]" id={current.id}>
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[4px] bg-vp-well sm:aspect-square lg:aspect-[4/5]" id={current.id}>
         <Image
           key={current.id}
           src={current.src}
@@ -73,7 +73,7 @@ const ImageGallery = ({ images, title, kicker, specs }: ImageGalleryProps) => {
               aria-label={`Image ${index + 1}`}
               aria-pressed={index === active}
               className={cn(
-                "relative size-16 shrink-0 overflow-hidden rounded-[12px] bg-vp-well ring-offset-2 ring-offset-vp-bg sm:size-20",
+                "relative size-16 shrink-0 overflow-hidden rounded-[4px] bg-vp-well ring-offset-2 ring-offset-vp-bg sm:size-20",
                 index === active ? "ring-2 ring-vp-ink" : "opacity-70 hover:opacity-100"
               )}
             >

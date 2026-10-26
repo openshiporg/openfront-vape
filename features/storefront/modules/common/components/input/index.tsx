@@ -58,7 +58,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-0.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-vp-ink-3 outline-none transition-colors hover:text-vp-ink focus-visible:text-vp-ink"
+              className="absolute right-0.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-[4px] text-vp-ink-3 outline-none transition-colors hover:text-vp-ink focus-visible:text-vp-ink"
             >
               {showPassword ? <Eye /> : <EyeOff />}
             </button>

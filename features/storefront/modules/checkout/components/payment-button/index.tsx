@@ -309,7 +309,7 @@ const PayPalPaymentButton: React.FC<PayPalPaymentButtonProps> = ({
 
   if (isPending) {
     return (
-      <div className="flex h-14 items-center justify-center rounded-full bg-vp-well" aria-busy="true">
+      <div className="flex h-14 items-center justify-center rounded-[4px] bg-vp-well" aria-busy="true">
         <RiLoader2Fill className="h-5 w-5 animate-spin text-vp-ink-3" aria-label="Loading PayPal" />
       </div>
     )

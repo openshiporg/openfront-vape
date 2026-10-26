@@ -73,10 +73,10 @@ const InvoiceCard = ({ invoice }: InvoiceCardProps) => {
 
       {orders.length > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="font-vp-mono text-[12px] uppercase tracking-[0.12em] text-vp-ink-3">
+          <p className="text-[13px] font-medium text-vp-ink-2">
             {orders.length} {orders.length === 1 ? "order" : "orders"}
           </p>
-          <ul className="flex flex-col divide-y divide-vp-line overflow-hidden rounded-[14px] bg-vp-surface">
+          <ul className="flex flex-col divide-y divide-vp-line overflow-hidden rounded-[4px] bg-vp-surface">
             {orders.map((lineItem: any) => (
               <li key={lineItem.id}>
                 <button

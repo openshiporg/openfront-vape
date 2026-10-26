@@ -52,7 +52,7 @@ const AddAddress = ({
       <DialogTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-vp-ink px-5 text-[15px] font-medium text-vp-on-ink"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-[4px] bg-vp-ink px-5 text-[15px] font-medium text-vp-on-ink"
           onClick={open}
           data-testid="add-address-button"
         >

@@ -25,7 +25,7 @@ export default function NavLinks({ categories }: { categories: Link[] }) {
             key={item.key}
             href={item.href}
             data-active={active}
-            className="inline-flex min-h-11 items-center rounded-full px-3 text-[14px] font-medium text-vp-ink-2 transition-colors hover:text-vp-ink data-[active=true]:text-vp-ink"
+            className="inline-flex min-h-11 items-center rounded-[4px] px-3 text-[14px] font-medium text-vp-ink-2 underline-offset-[6px] decoration-2 transition-colors hover:text-vp-ink data-[active=true]:text-vp-ink data-[active=true]:underline"
           >
             {item.title}
           </LocalizedClientLink>

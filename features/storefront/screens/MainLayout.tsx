@@ -50,8 +50,8 @@ export function UnmatchedPage(): never {
 export function MainNotFound() {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-[1320px] flex-col justify-center gap-4 px-4 py-24 sm:px-6">
-      <span className="font-vp-mono text-[13px] text-vp-ink-3">404</span>
-      <h1 className="text-[40px] leading-[44px] font-semibold tracking-[-0.02em] text-vp-ink">Page not found</h1>
+      <h1 className="vp-sign text-[48px] text-vp-ink sm:text-[64px]">Page not found</h1>
+      <p className="font-vp-mono text-[13px] text-vp-ink-2">Error 404</p>
       <div className="mt-4">
         <InteractiveLink href="/store">Shop all</InteractiveLink>
       </div>

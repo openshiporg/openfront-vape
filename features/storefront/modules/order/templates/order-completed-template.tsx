@@ -27,13 +27,12 @@ export default async function OrderCompletedTemplate({
       {isOnboarding && <OnboardingCta orderId={order.id} />}
       <div className="flex flex-col gap-8" data-testid="order-complete-container">
         <div className="flex flex-col gap-3">
-          <p className="font-vp-mono text-[12px] uppercase tracking-[0.14em] text-vp-ink-3">Order confirmed</p>
           <OrderDetails order={order} />
         </div>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
           <div className="flex min-w-0 flex-col gap-8">
             <section className="flex flex-col gap-4" aria-label="Items">
-              <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Items</h2>
+              <h2 className="vp-sign text-[26px] text-vp-ink">Items</h2>
               <Items items={order.lineItems} region={order.region} />
             </section>
             <FulfillmentCard order={order} />
@@ -41,8 +40,8 @@ export default async function OrderCompletedTemplate({
             <PaymentDetails order={order} />
           </div>
           <div className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
-            <aside className="rounded-[22px] border border-vp-line bg-vp-surface p-5 sm:p-6">
-              <h2 className="mb-4 text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Summary</h2>
+            <aside className="rounded-[4px] border border-vp-line bg-vp-surface p-5 sm:p-6">
+              <h2 className="mb-4 vp-sign text-[26px] text-vp-ink">Summary</h2>
               <CartTotals data={order} />
             </aside>
             <Help />

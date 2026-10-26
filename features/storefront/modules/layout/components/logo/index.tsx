@@ -14,7 +14,7 @@ export function LogoMark({ svg, color, className }: { svg: string; color: string
   );
 }
 
-export default async function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
+export default async function Logo({ size = 'md', tone = 'ink' }: { size?: 'md' | 'lg'; tone?: 'ink' | 'glass' }) {
   const store = await getStore();
   const storeName = store?.name || 'Store';
   const { logoSvg, logoColor } = storeBrand(store);
@@ -22,14 +22,14 @@ export default async function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
   return (
     <LocalizedClientLink
       href="/"
-      className="group inline-flex min-h-11 items-center gap-2.5 text-vp-ink"
+      className={cn('group inline-flex min-h-11 items-center gap-2.5', tone === 'glass' ? 'text-vp-gold' : 'text-vp-ink')}
       data-testid="nav-store-link"
     >
       <LogoMark svg={logoSvg} color={logoColor} className={size === 'lg' ? 'size-8' : 'size-6'} />
       <span
         className={cn(
-          'font-semibold tracking-[-0.02em] leading-none',
-          size === 'lg' ? 'text-[22px]' : 'text-[17px]'
+          'vp-sign leading-none',
+          size === 'lg' ? 'text-[30px]' : 'text-[24px]'
         )}
       >
         {storeName}

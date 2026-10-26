@@ -134,7 +134,7 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
   const header = (status: { tone: "ok" | "warn" | "danger" | "muted" | "accent"; label: string }, action?: React.ReactNode) => (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="flex flex-col gap-1">
-        <h2 className="text-[24px] leading-[30px] font-semibold tracking-[-0.02em] text-vp-ink">Invoicing</h2>
+        <h2 className="vp-sign text-[30px] text-vp-ink">Invoicing</h2>
         <span className="flex items-baseline gap-2 text-[13px] text-vp-ink-2">
           <StatusDot tone={status.tone} />
           {status.label}
@@ -228,7 +228,7 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
         </section>
 
         <section>
-          <h3 className="mb-4 text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">API access</h3>
+          <h3 className="mb-4 vp-sign text-[26px] text-vp-ink">API access</h3>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="customer-token" className="text-[13px] leading-[18px] font-medium text-vp-ink-2">
               Customer token
@@ -243,7 +243,7 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
               <button
                 type="button"
                 onClick={copyToken}
-                className="relative inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-vp-well text-vp-ink-2 hover:text-vp-ink disabled:text-vp-ink-3"
+                className="relative inline-flex size-12 shrink-0 items-center justify-center rounded-[4px] bg-vp-well text-vp-ink-2 hover:text-vp-ink disabled:text-vp-ink-3"
                 aria-label={tokenCopied ? "Copied" : "Copy token"}
                 title={tokenCopied ? "Copied" : "Copy token"}
                 disabled={tokenCopied || !currentToken}
@@ -257,7 +257,7 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
               <button
                 type="button"
                 onClick={handleTokenRegenerate}
-                className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-vp-well text-vp-ink-2 hover:text-vp-ink"
+                className="inline-flex size-12 shrink-0 items-center justify-center rounded-[4px] bg-vp-well text-vp-ink-2 hover:text-vp-ink"
                 aria-label="Regenerate token"
                 title="Regenerate token"
               >
@@ -269,7 +269,7 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
 
         <section>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Recent orders</h3>
+            <h3 className="vp-sign text-[26px] text-vp-ink">Recent orders</h3>
             {orders.length > 0 && (
               <SegmentedTrack label="Filter orders by payment">
                 {([

@@ -16,7 +16,7 @@ const PaymentTest = ({ className, provider = "general" }: PaymentTestProps) => {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full bg-[#33281a] px-2.5 py-1 font-vp-mono text-[11px] leading-[14px] text-vp-warn",
+        "inline-flex items-center gap-1.5 rounded-[4px] border border-vp-warn bg-vp-surface px-2.5 py-1 text-[12px] leading-[16px] font-medium text-vp-warn",
         className
       )}
     >

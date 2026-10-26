@@ -36,7 +36,7 @@ const Register = ({ setCurrentView, publishedPolicies }: Props) => {
   return (
     <div className="flex w-full max-w-[400px] flex-col gap-6" data-testid="register-page">
       <AuthSwitch current={LOGIN_VIEW.REGISTER} setCurrentView={setCurrentView} />
-      <h1 className="text-[32px] leading-[36px] font-semibold tracking-[-0.025em] text-vp-ink">Create account</h1>
+      <h1 className="vp-sign text-[40px] text-vp-ink">Create account</h1>
       <form className="flex w-full flex-col gap-4" action={formAction}>
         <Field
           label="First name"

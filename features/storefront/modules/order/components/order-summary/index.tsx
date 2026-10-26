@@ -14,7 +14,7 @@ const Row = ({ label, value, accent }: { label: string; value: React.ReactNode; 
 const OrderSummary = ({ order }: OrderSummaryProps) => {
   return (
     <div>
-      <h2 className="mb-4 text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Summary</h2>
+      <h2 className="mb-4 vp-sign text-[26px] text-vp-ink">Summary</h2>
       <dl className="flex flex-col gap-2.5">
         <Row label="Subtotal" value={order.subtotal} />
         {Number.parseFloat(order.discount.replace(/[^0-9.-]/g, '')) > 0 && (

@@ -87,7 +87,7 @@ export default function MobileActions({
         aria-label="Options"
         aria-hidden={!isOpen}
         className={cn(
-          "fixed inset-x-0 rounded-t-[28px] bg-vp-bg shadow-[0_-12px_40px_rgb(20_24_22/0.18)] transition-all duration-300 ease-out lg:hidden",
+          "fixed inset-x-0 rounded-t-[4px] bg-vp-bg shadow-[0_-12px_40px_rgb(20_24_22/0.18)] transition-all duration-300 ease-out lg:hidden",
           isOpen ? "bottom-0 z-[101]" : "-bottom-full z-[-1]"
         )}
       >
@@ -95,7 +95,7 @@ export default function MobileActions({
           <h2 className="text-[17px] font-semibold text-vp-ink">{product.title}</h2>
           <button
             onClick={() => setIsOpen(false)}
-            className="inline-flex size-11 items-center justify-center rounded-full bg-vp-well"
+            className="inline-flex size-11 items-center justify-center rounded-[4px] bg-vp-well"
             aria-label="Close options"
           >
             <X className="size-5" />
@@ -125,7 +125,7 @@ export default function MobileActions({
               setIsOpen(false)
             }}
             disabled={!inStock || !variant || !!isAdding}
-            className="inline-flex h-14 w-full items-center justify-center rounded-full bg-vp-ink text-[16px] font-medium text-vp-on-ink disabled:bg-vp-well disabled:text-vp-ink-3"
+            className="inline-flex h-14 w-full items-center justify-center rounded-[4px] bg-vp-ink text-[16px] font-medium text-vp-on-ink disabled:bg-vp-well disabled:text-vp-ink-3"
           >
             {actionLabel}
           </button>
@@ -151,7 +151,7 @@ export default function MobileActions({
             <button
               type="button"
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex h-12 max-w-[40%] items-center gap-1.5 rounded-full bg-vp-well px-4 text-[14px] font-medium text-vp-ink"
+              className="inline-flex h-12 max-w-[40%] items-center gap-1.5 rounded-[4px] bg-vp-well px-4 text-[14px] font-medium text-vp-ink"
             >
               <span className="truncate font-vp-mono text-[12px]">
                 {variant ? Object.values(options).filter(Boolean).join(" / ") : "Options"}
@@ -163,7 +163,7 @@ export default function MobileActions({
             type="button"
             onClick={handleAddToCart}
             disabled={!inStock || !variant || !!isAdding}
-            className="inline-flex h-12 items-center rounded-full bg-vp-ink px-5 text-[14px] font-medium text-vp-on-ink disabled:bg-vp-well disabled:text-vp-ink-3"
+            className="inline-flex h-12 items-center rounded-[4px] bg-vp-ink px-5 text-[14px] font-medium text-vp-on-ink disabled:bg-vp-well disabled:text-vp-ink-3"
           >
             {actionLabel}
           </button>

@@ -60,7 +60,7 @@ const Modal = ({
             "max-w-xl": size === "medium",
             "max-w-3xl": size === "large",
             "bg-transparent shadow-none border-none": search,
-            "rounded-[22px] border border-vp-line bg-vp-bg shadow-[0_18px_60px_rgb(20_24_22/0.18)]": !search,
+            "rounded-[4px] border border-vp-line bg-vp-bg shadow-[0_18px_60px_rgb(20_24_22/0.18)]": !search,
           }
         )}
       >
@@ -75,13 +75,13 @@ const Title: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <DialogHeader className="flex flex-row items-center justify-between gap-4 pb-4 text-left">
-      <DialogTitle className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">{children}</DialogTitle>
+      <DialogTitle className="vp-sign text-[26px] text-vp-ink">{children}</DialogTitle>
       <button
         type="button"
         onClick={close}
         data-testid="close-modal-button"
         aria-label="Close"
-        className="ml-auto inline-flex h-11 w-11 flex-none items-center justify-center rounded-full bg-vp-well text-vp-ink transition-colors hover:bg-vp-line"
+        className="ml-auto inline-flex h-11 w-11 flex-none items-center justify-center rounded-[4px] bg-vp-well text-vp-ink transition-colors hover:bg-vp-line"
       >
         <X size={20} />
       </button>

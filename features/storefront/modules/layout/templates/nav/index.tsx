@@ -24,14 +24,14 @@ export default async function Nav() {
 
   return (
     <div className="sticky top-0 inset-x-0 z-50">
-      <div className="border-b border-vp-line bg-vp-well text-vp-ink-2">
-        <div className="mx-auto flex h-8 max-w-[1320px] items-center justify-between px-4 sm:px-6 text-[12px]">
-          <span className="font-vp-mono tracking-[0.08em] uppercase">21+ only</span>
-          <span className="hidden sm:inline">Adult signature may be required on delivery</span>
+      <div className="border-b border-vp-line bg-vp-surface text-vp-ink">
+        <div className="mx-auto flex h-8 max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-6 text-[12px]">
+          <span className="font-semibold">Adults 21+ only</span>
+          <span className="hidden text-vp-ink-2 sm:inline">Adult signature may be required on delivery</span>
         </div>
       </div>
-      <header className="border-b border-vp-line bg-vp-bg/90 backdrop-blur-md">
-        <nav className="mx-auto flex h-16 max-w-[1320px] items-center gap-6 px-4 sm:px-6">
+      <header className="border-b border-vp-line bg-vp-surface">
+        <nav className="mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
           <div className="lg:hidden -ml-2">
             <SideMenu regions={regions} categories={categories} collections={collectionLinks} />
           </div>
@@ -39,7 +39,7 @@ export default async function Nav() {
           <NavLinks categories={categories} />
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <LocalizedClientLink
-              className="hidden lg:inline-flex min-h-11 items-center rounded-full px-3 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink"
+              className="hidden lg:inline-flex min-h-11 items-center rounded-[4px] px-3 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink"
               href="/account"
               data-testid="nav-account-link"
             >
@@ -48,11 +48,11 @@ export default async function Nav() {
             <Suspense
               fallback={
                 <LocalizedClientLink
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-[14px] font-medium text-vp-ink"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-[4px] px-3 text-[14px] font-medium text-vp-ink"
                   href="/cart"
                   data-testid="nav-cart-link"
                 >
-                  Bag <span className="font-vp-mono text-vp-ink-3">0</span>
+                  Bag <span className="font-vp-mono text-vp-ink-2">0</span>
                 </LocalizedClientLink>
               }
             >

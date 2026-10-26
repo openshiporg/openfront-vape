@@ -27,7 +27,7 @@ export default function ProductPrice({
   }, [product])
 
   if (!selectedPrice) {
-    return <div className="block h-9 w-32 animate-pulse rounded-full bg-vp-well" />;
+    return <div className="block h-9 w-32 animate-pulse rounded-[4px] bg-vp-well" />;
   }
 
   const format = (amount: number) =>
@@ -49,7 +49,7 @@ export default function ProductPrice({
           <span className="font-vp-mono text-[15px] text-vp-ink-3 line-through" data-testid="original-product-price">
             {format(selectedPrice.originalAmount)}
           </span>
-          <span className="rounded-full bg-vp-tint px-2 py-0.5 font-vp-mono text-[12px] text-vp-accent">
+          <span className="rounded-[4px] bg-vp-tint px-2 py-0.5 font-vp-mono text-[12px] text-vp-accent">
             -{Math.round((1 - selectedPrice.calculatedAmount / selectedPrice.originalAmount) * 100)}%
           </span>
         </>

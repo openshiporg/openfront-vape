@@ -46,3 +46,22 @@ export function productSpecs(product: { productOptions?: OptionLike[] | null } |
 export function displayOptionValue(value: string) {
   return value.replace(/(\d)\s*ohm\b/i, "$1 Ω")
 }
+
+// The shelf-label fact table: strength, size and flavour when the product carries them,
+// in that order; otherwise the first real options. Values come from the catalog only.
+const FACT_KINDS: { label: string; test: RegExp }[] = [
+  { label: "Strength", test: /strength|nicotine/i },
+  { label: "Size", test: /size|bottle|volume|capacity/i },
+  { label: "Flavour", test: /flavou?r|taste/i },
+]
+
+export function productFacts(product: { productOptions?: OptionLike[] | null } | null | undefined, limit = 3) {
+  const options = product?.productOptions || []
+  const facts: { label: string; value: string }[] = []
+  for (const kind of FACT_KINDS) {
+    const option = options.find((o) => kind.test.test(o.title || ""))
+    const summary = option ? summariseOption(option) : null
+    if (summary) facts.push({ label: kind.label, value: summary.value })
+  }
+  return (facts.length ? facts : productSpecs(product, limit)).slice(0, limit)
+}

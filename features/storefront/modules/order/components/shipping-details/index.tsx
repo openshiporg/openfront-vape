@@ -49,7 +49,7 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
   const a = order.shippingAddress;
   return (
     <section className="flex flex-col gap-4 border-t border-vp-line pt-5" aria-label="Delivery">
-      <h2 className="text-[20px] leading-[26px] font-semibold tracking-[-0.02em] text-vp-ink">Delivery</h2>
+      <h2 className="vp-sign text-[26px] text-vp-ink">Delivery</h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
         <div className="flex min-w-0 flex-col gap-1" data-testid="shipping-address-summary">
           <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Ship to</p>

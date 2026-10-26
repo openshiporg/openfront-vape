@@ -75,14 +75,15 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
         base: {
           fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif",
           fontSize: "16px",
-          color: "#eceee9",
+          color: "#121816", // vp-ink (Stripe iframes cannot read CSS variables)
+          iconColor: "#3c4743",
           "::placeholder": {
-            color: "#838c88",
+            color: "#5b6763", // vp-ink-3
           },
         },
       },
       classes: {
-        base: "block h-12 w-full rounded-[14px] border border-vp-line bg-vp-surface px-4 pt-[15px] transition-colors hover:border-vp-ink-3",
+        base: "block h-12 w-full rounded-[4px] border border-vp-line bg-vp-surface px-4 pt-[15px] transition-colors hover:border-vp-ink-3",
         focus: "border-vp-accent",
         invalid: "border-vp-danger",
       },
@@ -207,7 +208,7 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
                     <Label
                       htmlFor={method.id}
                       className={cn(
-                        "flex min-h-14 cursor-pointer items-center justify-between gap-4 rounded-[14px] px-4 py-3 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-vp-accent",
+                        "flex min-h-14 cursor-pointer items-center justify-between gap-4 rounded-[4px] px-4 py-3 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-vp-accent",
                         selected
                           ? "bg-vp-surface shadow-[0_1px_2px_rgb(20_24_22/0.12),0_0_0_0.5px_rgb(20_24_22/0.06)]"
                           : "hover:bg-vp-surface/60"
@@ -217,7 +218,7 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
                         <span
                           aria-hidden="true"
                           className={cn(
-                            "block h-[18px] w-[18px] flex-none rounded-full bg-vp-surface transition-all",
+                            "block h-[18px] w-[18px] flex-none rounded-[4px] bg-vp-surface transition-all",
                             selected ? "border-[5px] border-vp-ink" : "border-[1.5px] border-vp-ink-3"
                           )}
                         />
@@ -227,7 +228,7 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
                       </span>
                       <span className="flex flex-none items-center gap-3 text-vp-ink-2">
                         {isSandboxMode && (
-                          <span className="font-vp-mono text-[11px] uppercase tracking-[0.12em] text-vp-warn" title="Sandbox environment, do not enter real payment info">
+                          <span className="text-[12px] font-medium text-vp-warn" title="Sandbox environment, do not enter real payment info">
                             Test
                           </span>
                         )}
@@ -300,7 +301,7 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
             </StepFact>
             <StepFact label="Details" className="sm:col-span-2">
               <div className="flex items-center gap-2" data-testid="payment-details-summary">
-                <span className="flex h-8 w-11 flex-none items-center justify-center rounded-[8px] bg-vp-well text-vp-ink">
+                <span className="flex h-8 w-11 flex-none items-center justify-center rounded-[4px] bg-vp-well text-vp-ink">
                   {paymentInfoMap[selectedPaymentMethod]?.icon || <CreditCard className="h-5 w-5" />}
                 </span>
                 <span>
