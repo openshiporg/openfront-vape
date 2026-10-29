@@ -500,22 +500,16 @@ export async function getOrSetCart(countryCode: string) {
 
   // If no cart exists or was invalid, create one
   if (!cart) {
-    const { createCart: newCart } = await openfrontClient.request(
+    // Shoppers (signed in or not) create carts through the storefront command, which
+    // returns a server-signed cart proof. The admin createCart mutation requires
+    // order-management permission and rejects every customer.
+    const { createActiveCart: newCart } = await openfrontClient.request(
       gql`
-        mutation CreateCart($data: CartCreateInput!) {
-          createCart(data: $data) {
-            id
-            region {
-              id
-            }
-          }
+        mutation CreateActiveCart($regionId: ID!) {
+          createActiveCart(regionId: $regionId)
         }
       `,
-      {
-        data: {
-          region: { connect: { id: regionId } }
-        }
-      },
+      { regionId },
       headers
     );
 

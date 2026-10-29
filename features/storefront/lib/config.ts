@@ -18,7 +18,7 @@ class OpenfrontClient {
           headers: {
             'Connection': 'keep-alive',
           },
-          timeout: 10000,
+          timeout: 120000,
         });
       })();
     }
