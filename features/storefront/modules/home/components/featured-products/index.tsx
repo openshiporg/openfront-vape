@@ -1,5 +1,6 @@
 import { getProductsList } from "@/features/storefront/lib/data/products"
 import { StoreCollection, StoreRegion } from "@/features/storefront/types/storefront"
+import SalesPausedNote from "@/features/storefront/modules/common/components/vape/sales-paused-note"
 import ProductRail from "@/features/storefront/modules/home/components/featured-products/product-rail"
 
 // The shelves behind the window. Collections with products first; if none, the newest
@@ -69,6 +70,7 @@ export function ComingSoonShelf({ storeName }: { storeName?: string }) {
             {storeName ? `${storeName} hasn't` : "This shop hasn't"} put any products on sale here yet. Products
             appear on these shelves as soon as they're published.
           </p>
+          <SalesPausedNote className="mt-2 border-t border-vp-line pt-4" />
         </div>
       </div>
     </section>

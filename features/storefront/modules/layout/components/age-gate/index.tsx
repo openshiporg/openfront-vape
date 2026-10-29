@@ -41,6 +41,9 @@ export default function AgeGate({ storeName, confirmed }: { storeName: string; c
             <h2 id="vp-age-title" className="mt-5 text-[20px] leading-[26px] font-semibold text-white">
               You must be 21 or older to enter.
             </h2>
+            <p className="mt-2 text-[14px] leading-[22px] text-white/70">
+              This store sells nicotine and tobacco products, which can only be sold to adults 21 and over.
+            </p>
             <button
               type="button"
               onClick={() => setState("ask")}
@@ -54,6 +57,9 @@ export default function AgeGate({ storeName, confirmed }: { storeName: string; c
             <h2 id="vp-age-title" className="mt-5 text-[20px] leading-[26px] font-semibold text-white">
               Are you 21 or older?
             </h2>
+            <p className="mt-2 text-[14px] leading-[22px] text-white/70">
+              This store sells nicotine products. Confirm your age to enter.
+            </p>
             <div className="mt-8 grid grid-cols-2 gap-2">
               <button
                 type="button"

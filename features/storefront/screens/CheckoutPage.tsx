@@ -31,12 +31,10 @@ export async function CheckoutPage() {
     ];
     return (
       <main className="mx-auto flex min-h-[50vh] w-full max-w-[1320px] flex-col justify-center gap-5 px-4 py-16 sm:px-6 sm:py-24">
-        <div className="flex items-baseline gap-3">
-          <StatusDot tone={blockers.length ? "danger" : "muted"} />
-          <h1 className="vp-sign text-[40px] text-vp-ink sm:text-[52px]">
-            Checkout isn&apos;t available right now.
-          </h1>
-        </div>
+        <h1 className="vp-sign text-[40px] text-vp-ink sm:text-[52px]">
+          <StatusDot tone={blockers.length ? "danger" : "muted"} className="relative -top-[0.13em] mr-3 size-3" />
+          Checkout isn&apos;t available right now.
+        </h1>
         <ul className="flex flex-col gap-1 text-[15px] leading-[24px] text-vp-ink-2" data-testid="checkout-unavailable-reasons">
           {reasons.map((reason) => (
             <li key={reason}>{reason}</li>

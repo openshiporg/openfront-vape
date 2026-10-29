@@ -1,6 +1,8 @@
 import { getProductsListWithSort, getProductsListByPrice } from "../../../lib/data/products"
 import { getRegion } from "../../../lib/data/regions"
 import ProductPreview from "../../products/components/product-preview"
+import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
+import SalesPausedNote from "@/features/storefront/modules/common/components/vape/sales-paused-note"
 import { Pagination } from "../components/pagination"
 import { SortOptions } from "../components/refinement-list/sort-products"
 
@@ -86,9 +88,20 @@ export default async function PaginatedProducts({
         {count} {count === 1 ? "product" : "products"}
       </p>
       {products.length === 0 ? (
-        <div className="flex flex-col gap-2 border-y-2 border-vp-ink py-10" role="status">
-          <h2 className="vp-sign text-[32px] text-vp-ink sm:text-[40px]">No products here yet</h2>
-          <p className="text-[14px] leading-[22px] text-vp-ink-2">Published products show up on this shelf.</p>
+        <div className="grid gap-6 border-y-2 border-vp-ink py-10 lg:grid-cols-12" role="status" data-testid="products-empty">
+          <div className="flex flex-col gap-2 lg:col-span-7">
+            <h2 className="vp-sign text-[32px] text-vp-ink sm:text-[40px]">No products here yet</h2>
+            <p className="max-w-[48ch] text-[14px] leading-[22px] text-vp-ink-2">Published products show up on this shelf.</p>
+          </div>
+          <div className="flex flex-col items-start gap-5 lg:col-span-5 lg:self-end">
+            <SalesPausedNote />
+            <LocalizedClientLink
+              href={collectionId || categoryId ? "/store" : "/"}
+              className="inline-flex h-11 items-center justify-center rounded-[4px] border border-vp-ink px-5 text-[14px] font-medium text-vp-ink transition-colors hover:bg-vp-ink hover:text-vp-on-ink"
+            >
+              {collectionId || categoryId ? "Shop all" : "Back to home"}
+            </LocalizedClientLink>
+          </div>
         </div>
       ) : (
         <ul

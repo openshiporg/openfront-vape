@@ -6,10 +6,11 @@ import LocalizedClientLink from "../localized-client-link"
 // Joined square plates (.vp-track / .vp-pill): the one in-page switch used across the storefront.
 
 // `wrap`: on phone the plates wrap onto further rows instead of scrolling out of sight. The joins stay square:
-// the track keeps only its top and left rule and every plate draws its own right and bottom rule.
+// each plate draws its own rule and overlaps its neighbour by 1px, and the track itself is transparent so a
+// short last row doesn't leave a white strip behind it.
 const WRAP_ON_PHONE =
-  "max-sm:flex max-sm:flex-wrap max-sm:overflow-visible max-sm:rounded-none max-sm:border-0 max-sm:border-t max-sm:border-l max-sm:border-vp-ink " +
-  "max-sm:[&>*]:border-0 max-sm:[&>*]:border-r max-sm:[&>*]:border-b max-sm:[&>*]:border-vp-ink"
+  "max-sm:flex max-sm:flex-wrap max-sm:overflow-visible max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:pt-px max-sm:pl-px " +
+  "max-sm:[&>*]:-mt-px max-sm:[&>*]:-ml-px max-sm:[&>*]:border max-sm:[&>*]:border-vp-ink max-sm:[&>*]:bg-white max-sm:[&>[data-active=true]]:bg-vp-ink"
 
 export function SegmentedTrack({
   label,
