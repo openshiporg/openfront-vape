@@ -59,7 +59,7 @@ export const isStripeSandbox = () => {
 
 export const isPayPalSandbox = () => {
   // PayPal sandbox is controlled by NEXT_PUBLIC_PAYPAL_SANDBOX env var
-  // Default to true if not set (safer for demos)
+  // Default to sandbox mode unless explicitly disabled.
   const sandboxEnv = process.env.NEXT_PUBLIC_PAYPAL_SANDBOX
   return sandboxEnv !== "false"
 }
