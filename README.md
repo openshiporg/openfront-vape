@@ -1,6 +1,10 @@
+<!-- logo -->
+
 # Openfront Vape
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fopenshiporg%2Fopenfront-vape&env=DATABASE_URL%2CSESSION_SECRET%2CS3_BUCKET_NAME%2CS3_REGION%2CS3_ACCESS_KEY_ID%2CS3_SECRET_ACCESS_KEY)
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/openfront-vape)
 
 Openfront Vape is a self-hostable commerce application with catalog, inventory, customer accounts, orders, and regulated-product controls. Operators can maintain merchant authority, product classifications, policy records, and compliance reporting alongside the retail dashboard. Regulated transactions are disabled by the current release gate.
 
@@ -8,16 +12,14 @@ Openfront Vape is a self-hostable commerce application with catalog, inventory, 
 
 ## Demo
 
-Explore the application locally using the setup instructions below.
-
 | | |
 |---|---|
-| **Public application** | `/[countryCode]` on your development URL |
-| **Dashboard** | `/dashboard` on your development URL |
+| **Storefront** | [vape.openship.org](https://vape.openship.org) |
+| **Dashboard** | [vape.openship.org/dashboard](https://vape.openship.org/dashboard) |
 
 [Learn more →](https://github.com/openshiporg/openfront-vape)
 
-[Documentation →](features/keystone/models)
+[Documentation →](https://docs.openship.org/docs/openfront/vape/)
 
 ## The Openfront Ecosystem
 
