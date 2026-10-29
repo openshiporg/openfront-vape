@@ -1,6 +1,6 @@
 "use client"
 
-import { isManual, isStripe, isPaypal } from "@/features/storefront/lib/constants"
+import { isManual, isStripe, isPaypal, isAuthorizeNet } from "@/features/storefront/lib/constants"
 import { placeOrder } from "@/features/storefront/lib/data/cart"
 import { cn } from "@/lib/utils"
 import { vpPrimaryButton } from "@/features/storefront/modules/common/components/vp-classes"
@@ -63,6 +63,8 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
           data-testid={dataTestId}
         />
       )
+    case isAuthorizeNet(paymentSession?.paymentProvider?.code):
+      return <AuthorizeNetPaymentButton notReady={notReady} cart={cart} data-testid={dataTestId} />
     case isPaypal(paymentSession?.paymentProvider?.code):
       return (
         <PayPalPaymentButton
@@ -186,6 +188,13 @@ const StripePaymentButton: React.FC<StripePaymentButtonProps> = ({
     </>
   )
 }
+
+const AuthorizeNetPaymentButton = ({ notReady, cart, "data-testid": dataTestId }: { notReady: boolean; cart: PaymentButtonProps["cart"]; "data-testid"?: string }) => {
+  const [submitting, setSubmitting] = useState(false); const [errorMessage, setErrorMessage] = useState<string | null>(null); const router = useRouter();
+  const session = cart.paymentCollection?.paymentSessions?.find(s => s.isSelected && isAuthorizeNet(s.paymentProvider?.code));
+  const handle = async () => { if (!session?.id) { setErrorMessage("Payment session not found. Refresh checkout."); return; } setSubmitting(true); try { const { placeOrder } = await import("@/features/storefront/lib/data/cart"); const result = await placeOrder(session.id); if ((result as any)?.redirectTo) router.push((result as any).redirectTo); else if ((result as any)?.error) setErrorMessage((result as any).error); } catch (error: any) { setErrorMessage(checkoutErrorText(error)); } finally { setSubmitting(false); } };
+  return <><button type="button" onClick={handle} disabled={notReady || submitting || !session?.id} className={cn(vpPrimaryButton, "h-14 w-full text-[16px]")} data-testid={dataTestId}>{submitting && <RiLoader2Fill className="h-4 w-4 animate-spin" />} Place order</button><ErrorMessage error={errorMessage} data-testid="authorizenet-payment-error-message" /></>;
+};
 
 const ManualTestPaymentButton = ({ notReady, cart, "data-testid": dataTestId }: { 
   notReady: boolean, 

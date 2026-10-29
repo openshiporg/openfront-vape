@@ -26,6 +26,10 @@ export const paymentInfoMap: Record<
     title: "PayPal",
     icon: <PayPal />,
   },
+  pp_authorizenet_authorizenet: {
+    title: "Credit / debit card",
+    icon: <CreditCard className="w-5 h-5" />,
+  },
   pp_system_default: {
     title: "Cash on Delivery",
     icon: <CreditCard className="w-5 h-5" />,
@@ -34,6 +38,7 @@ export const paymentInfoMap: Record<
 }
 
 // This only checks if it is native stripe for card payments, it ignores the other stripe-based providers
+export const isAuthorizeNet = (providerId?: string) => providerId?.startsWith("pp_authorizenet");
 export const isStripe = (providerId?: string) => {
   return providerId?.startsWith("pp_stripe_")
 }

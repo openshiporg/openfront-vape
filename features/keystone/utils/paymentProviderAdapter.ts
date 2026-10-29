@@ -1,37 +1,23 @@
+import { paymentProviderAdapters } from "../../integrations/payment";
+
+const ADAPTER_OPERATIONS = new Set(["createPaymentFunction", "capturePaymentFunction", "refundPaymentFunction", "getPaymentStatusFunction", "generatePaymentLinkFunction", "handleWebhookFunction"]);
+export function paymentAdapterPayload(provider: any, args: any) {
+  const input: Record<string, any> = {};
+  for (const key of ["cart", "order", "amount", "currency", "idempotencyKey", "paymentId", "refundId", "event", "headers", "rawBody", "opaqueData"]) if (args?.[key] !== undefined) input[key] = args[key];
+  if (input.headers && typeof input.headers === "object") input.headers = Object.fromEntries(Object.entries(input.headers).filter(([key]) => ["stripe-signature", "x-anet-signature"].includes(key.toLowerCase()) || key.toLowerCase().startsWith("paypal-")));
+  return { ...input, provider: { id: provider.id, code: provider.code, credentials: provider.credentials || {} } };
+}
 export async function executeAdapterFunction({ provider, functionName, args }: { provider: Record<string, any>; functionName: string; args: Record<string, any> }) {
-  const functionPath = provider[functionName];
-
-  if (functionPath.startsWith("http")) {
-    const response = await fetch(functionPath, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ provider, ...args }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP request failed: ${response.statusText}`);
-    }
-    return response.json();
+  if (!ADAPTER_OPERATIONS.has(functionName)) throw new Error("Unknown payment adapter operation");
+  const functionPath = provider?.[functionName]; if (typeof functionPath !== "string") throw new Error("Payment adapter is not configured");
+  const payload = paymentAdapterPayload(provider, args);
+  if (/^https?:/i.test(functionPath)) {
+    try { const response = await fetch(functionPath, { method: "POST", redirect: "error", signal: AbortSignal.timeout(30_000), headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); if (!response.ok) throw new Error(); return await response.json(); }
+    catch { throw new Error("External payment adapter request failed; reconcile the original attempt before retrying"); }
   }
-
-  const adapter = await import(
-    `../../integrations/payment/${functionPath}.ts`
-  );
-
-  const fn = adapter[functionName];
-  if (!fn) {
-    throw new Error(
-      `Function ${functionName} not found in adapter ${functionPath}`
-    );
-  }
-
-  try {
-    return await fn({ provider, ...args });
-  } catch (error: any) {
-    throw new Error(
-      `Error executing ${functionName} for provider ${functionPath}: ${error.message}`
-    );
-  }
+  const loader = paymentProviderAdapters[functionPath as keyof typeof paymentProviderAdapters]; if (!loader) throw new Error("Unknown registered payment adapter");
+  const adapter = await loader(); const fn = (adapter as any)[functionName]; if (typeof fn !== "function") throw new Error("Payment adapter operation is unavailable");
+  try { return await fn(payload); } catch { throw new Error(`Payment adapter ${functionName} failed; reconcile the original attempt before retrying`); }
 }
 
 // Helper functions for common payment operations
@@ -43,17 +29,16 @@ type PaymentOperationArgs = {
   idempotencyKey: string;
 };
 
-export async function createPayment({ provider, cart, amount, currency }: {
+export async function createPayment({ provider, cart, order, amount, currency, idempotencyKey, opaqueData }: {
   provider: Record<string, any>;
-  cart: Record<string, any>;
+  cart?: Record<string, any>;
+  order?: Record<string, any>;
   amount: number;
   currency: string;
+  idempotencyKey?: string;
+  opaqueData?: { dataDescriptor: string; dataValue: string };
 }) {
-  return executeAdapterFunction({
-    provider,
-    functionName: "createPaymentFunction",
-    args: { cart, amount, currency },
-  });
+  return executeAdapterFunction({ provider, functionName: "createPaymentFunction", args: { cart, order, amount, currency, idempotencyKey, opaqueData } });
 }
 
 export async function capturePayment({ provider, paymentId, amount, currency, idempotencyKey }: PaymentOperationArgs) {
@@ -88,10 +73,6 @@ export async function generatePaymentLink({ provider, paymentId }: { provider: R
   });
 }
 
-export async function handleWebhook({ provider, event, headers }: { provider: Record<string, any>; event: unknown; headers: Record<string, string> }) {
-  return executeAdapterFunction({
-    provider,
-    functionName: "handleWebhookFunction",
-    args: { event, headers },
-  });
+export async function handleWebhook({ provider, event, headers, rawBody }: { provider: Record<string, any>; event: unknown; headers: Record<string, string>; rawBody?: string }) {
+  return executeAdapterFunction({ provider, functionName: "handleWebhookFunction", args: { event, headers, rawBody: rawBody || headers.__rawBody } });
 }

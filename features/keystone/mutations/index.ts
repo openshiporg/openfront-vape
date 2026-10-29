@@ -20,6 +20,7 @@ import activeCartShippingOptions from '../queries/activeCartShippingOptions';
 import activeCartPaymentProviders from '../queries/activeCartPaymentProviders';
 import activeCartRegion from '../queries/activeCartRegion';
 import initiatePaymentSession from './initiatePaymentSession';
+import authorizeCardPaymentSession from './authorizeCardPaymentSession';
 import handlePaymentProviderWebhook from './handlePaymentProviderWebhook';
 import getCustomerOrder from "./getCustomerOrder";
 import getCustomerOrders from "./getCustomerOrders";
@@ -273,6 +274,7 @@ export const extendGraphqlSchema = (schema: GraphQLSchema) =>
           cartId: ID!
           paymentProviderId: String!
         ): PaymentSession
+        authorizeCardPaymentSession(cartId: ID!, sessionId: ID!, opaqueData: JSON!): JSON!
         handlePaymentProviderWebhook(providerId: ID!, event: JSON!, headers: JSON!): WebhookResult!
         importInventory: Boolean
         adjustInventory(variantId: ID!, delta: Int!, reason: String!, note: String): ProductVariant
@@ -362,6 +364,7 @@ export const extendGraphqlSchema = (schema: GraphQLSchema) =>
         completeActiveCart,
         addActiveCartShippingMethod,
         initiatePaymentSession: releaseGuard(initiatePaymentSession),
+        authorizeCardPaymentSession: releaseGuard(authorizeCardPaymentSession),
         handlePaymentProviderWebhook,
         importInventory,
         adjustInventory,

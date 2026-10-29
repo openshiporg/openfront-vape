@@ -43,6 +43,12 @@ const PAYMENT_PROVIDER_PRESETS = [
     description: 'For Stripe to work, you need to add these environment variables to your .env file:',
     envVars: ['NEXT_PUBLIC_STRIPE_KEY', 'STRIPE_SECRET_KEY']
   },
+  {
+    id: 'authorizenet',
+    name: 'Authorize.net',
+    description: 'Requires an Authorize.net merchant account and server credentials.',
+    envVars: ['AUTHORIZENET_API_LOGIN_ID', 'AUTHORIZENET_TRANSACTION_KEY', 'NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY', 'AUTHORIZENET_SIGNATURE_KEY']
+  },
   { 
     id: 'paypal', 
     name: 'PayPal', 
@@ -152,6 +158,8 @@ export function CreatePaymentProviderDrawer({
           generatePaymentLinkFunction: 'stripe',
           handleWebhookFunction: 'stripe'
         }
+      } else if (selectedPreset === 'authorizenet') {
+        providerData = { ...providerData, createPaymentFunction: 'authorizenet', capturePaymentFunction: 'authorizenet', refundPaymentFunction: 'authorizenet', getPaymentStatusFunction: 'authorizenet', generatePaymentLinkFunction: 'authorizenet', handleWebhookFunction: 'authorizenet' }
       } else if (selectedPreset === 'paypal') {
         providerData = {
           ...providerData,

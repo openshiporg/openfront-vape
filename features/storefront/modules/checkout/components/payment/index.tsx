@@ -1,9 +1,11 @@
 "use client";
-import { isStripe, paymentInfoMap, isStripeSandbox, isPayPalSandbox } from "@/features/storefront/lib/constants";
+import { isStripe, isAuthorizeNet, paymentInfoMap, isStripeSandbox, isPayPalSandbox } from "@/features/storefront/lib/constants";
 import { getCheckoutCompliance, startCheckoutPayment } from "@/features/storefront/lib/data/compliance";
 import CompliancePanel from "../compliance-panel";
 import { checkoutErrorText, type CheckoutCompliance } from "../../lib/compliance-reasons";
 import { CreditCard } from "lucide-react";
+import AuthorizeNetCardForm from "../authorizenet-card-form";
+import { authorizeCardPaymentSession } from "@/features/storefront/lib/data/authorizenet";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import ErrorMessage from "../error-message";
@@ -22,6 +24,7 @@ interface PaymentProps {
     total: number;
     paymentCollection?: {
       paymentSessions?: Array<{
+        id?: string;
         isSelected: boolean;
         status?: string;
         paymentProvider: {
@@ -58,6 +61,7 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
   const isOpen = searchParams?.get("step") === "payment";
 
   const isStripePayment = isStripe(selectedPaymentMethod);
+  const isAuthorizeNetPayment = isAuthorizeNet(selectedPaymentMethod);
   const stripeReady = useContext(StripeContext);
 
   // Check if we're in sandbox/test mode
@@ -241,6 +245,7 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
                 );
               })}
             </RadioGroup>
+            {isAuthorizeNetPayment && <AuthorizeNetCardForm apiLoginId={process.env.NEXT_PUBLIC_AUTHORIZENET_API_LOGIN_ID || ""} clientKey={process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY || ""} env={process.env.NEXT_PUBLIC_AUTHORIZENET_ENV === "production" ? "production" : "sandbox"} onToken={async (opaqueData) => { try { const started = await startCheckoutPayment(selectedPaymentMethod); if (!started.ok) throw new Error(started.error); const latest = await import("@/features/storefront/lib/data/cart").then((module) => module.retrieveCart()); const session = latest?.paymentCollection?.paymentSessions?.find((item: any) => item.isSelected && isAuthorizeNet(item.paymentProvider?.code)); if (!session?.id) throw new Error("Payment session is missing; refresh checkout."); await authorizeCardPaymentSession(session.id, opaqueData); setCardComplete(true); setError(null); } catch (issue) { setCardComplete(false); setError(checkoutErrorText(issue)); } }} />}
             {isStripePayment && stripeReady && (
               <div className="flex flex-col gap-2">
                 <p className="text-[13px] leading-[18px] font-medium text-vp-ink-2">

@@ -17,6 +17,10 @@ function assertProviderAmount(providerCode: string, resource: any, payment: any)
     }
     return;
   }
+  if (providerCode.includes("authorizenet")) {
+    if (Math.round(Number(resource.authAmount) * 100) !== payment.amount || String(resource.currencyCode || expectedCurrency).toUpperCase() !== expectedCurrency) throw new Error("Provider webhook amount or currency mismatch");
+    return;
+  }
   if (providerCode.includes("paypal")) {
     const evidence = resource.amount;
     const divisor = NO_DIVISION_CURRENCIES.has(expectedCurrency) ? 1 : 100;
@@ -59,10 +63,11 @@ async function handlePaymentProviderWebhook(
     provider,
     event,
     headers: normalizedHeaders(headers),
+    rawBody: String((headers as any).__rawBody || ""),
   });
   const type = String(verified.type || "");
   const resource = verified.resource || {};
-  const providerEventId = String(verified.event?.id || event?.id || resource.id || "");
+  const providerEventId = String(verified.event?.notificationId || verified.event?.id || event?.notificationId || event?.id || resource.id || "");
   if (!providerEventId) throw new Error("Provider event ID is required");
 
   const dedupeKey = `provider-webhook:${provider.id}:${providerEventId}`;
@@ -115,7 +120,7 @@ async function handlePaymentProviderWebhook(
     }
   }
 
-  const succeeded = /payment_intent\.succeeded|PAYMENT\.CAPTURE\.COMPLETED/.test(type);
+  const succeeded = /payment_intent\.succeeded|PAYMENT\.CAPTURE\.COMPLETED|net\.authorize\.payment\.(authcapture|priorAuthCapture)\.created/.test(type);
   const failed = /payment_intent\.payment_failed|PAYMENT\.CAPTURE\.DENIED/.test(type);
   const authorized = /payment_intent\.amount_capturable_updated|PAYMENT\.AUTHORIZATION\.CREATED/.test(type);
   const voided = /payment_intent\.canceled|PAYMENT\.AUTHORIZATION\.VOIDED/.test(type);
