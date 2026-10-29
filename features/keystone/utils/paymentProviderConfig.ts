@@ -7,7 +7,7 @@ export interface PublicPaymentProviderConfig {
 }
 
 export function isPaymentProviderConfigured(code: string): boolean {
-  if (code.startsWith('pp_authorizenet')) return Boolean(process.env.AUTHORIZENET_API_LOGIN_ID && process.env.AUTHORIZENET_TRANSACTION_KEY && process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY);
+  if (code.startsWith('pp_authorizenet')) return Boolean(process.env.AUTHORIZENET_API_LOGIN_ID && process.env.AUTHORIZENET_TRANSACTION_KEY && process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY && process.env.NEXT_PUBLIC_AUTHORIZENET_API_LOGIN_ID === process.env.AUTHORIZENET_API_LOGIN_ID);
   if (code.startsWith('pp_stripe')) {
     return Boolean(
       (process.env.NEXT_PUBLIC_STRIPE_KEY || process.env.STRIPE_PUBLISHABLE_KEY) &&
