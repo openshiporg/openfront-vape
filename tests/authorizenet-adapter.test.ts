@@ -7,6 +7,7 @@ import {
   getPaymentStatusFunction,
   handleWebhookFunction,
   mapTransactionStatus,
+  mapWebhookEventType,
   refundPaymentFunction,
 } from "../features/integrations/payment/authorizenet";
 
@@ -96,6 +97,14 @@ test("refund voids an unsettled transaction", async () => {
   const result = await refundPaymentFunction({ paymentId: "1", amount: 1250, currency: "USD" });
   assert.deepEqual(seen, ["voidTransaction"]);
   assert.equal(result.status, "refunded");
+});
+
+test("Authorize.net webhook void and refund events map to terminal states", () => {
+  assert.equal(mapWebhookEventType("net.authorize.payment.void.created"), "voided");
+  assert.equal(mapWebhookEventType("net.authorize.payment.refund.created"), "refunded");
+  assert.equal(mapWebhookEventType("net.authorize.payment.authcapture.created"), "succeeded");
+  assert.equal(mapWebhookEventType("net.authorize.payment.priorAuthCapture.created"), "succeeded");
+  assert.equal(mapWebhookEventType("net.authorize.payment.unknown"), "unknown");
 });
 
 test("webhook HMAC-SHA512 over the raw body is enforced", async () => {

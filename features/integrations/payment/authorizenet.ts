@@ -76,6 +76,13 @@ export function mapTransactionStatus(status: string) {
   return STATUS[status] || "unknown";
 }
 
+export function mapWebhookEventType(type: string) {
+  if (type === "net.authorize.payment.void.created") return "voided";
+  if (type === "net.authorize.payment.refund.created") return "refunded";
+  if (type === "net.authorize.payment.authcapture.created" || type === "net.authorize.payment.priorAuthCapture.created") return "succeeded";
+  return "unknown";
+}
+
 export async function createPaymentFunction({ amount, currency, opaqueData, cart, order, idempotencyKey, captureNow }: Input) {
   if (!Number.isSafeInteger(amount) || (amount as number) <= 0) throw new Error("Invalid payment amount");
   if (String(currency || "").toUpperCase() !== "USD") throw new Error("Authorize.net adapter supports USD only");

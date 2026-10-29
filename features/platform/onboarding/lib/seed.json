@@ -21,6 +21,9 @@
         "connect": [
           {
             "code": "pp_system_default"
+          },
+          {
+            "code": "pp_authorizenet_authorizenet"
           }
         ]
       },
@@ -1227,6 +1230,17 @@
       "getPaymentStatusFunction": "manual",
       "generatePaymentLinkFunction": "manual",
       "handleWebhookFunction": "manual"
+    },
+    {
+      "name": "Authorize.net",
+      "code": "pp_authorizenet_authorizenet",
+      "isInstalled": true,
+      "createPaymentFunction": "authorizenet",
+      "capturePaymentFunction": "authorizenet",
+      "refundPaymentFunction": "authorizenet",
+      "getPaymentStatusFunction": "authorizenet",
+      "generatePaymentLinkFunction": "authorizenet",
+      "handleWebhookFunction": "authorizenet"
     }
   ]
 }

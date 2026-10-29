@@ -123,7 +123,8 @@ async function handlePaymentProviderWebhook(
   const succeeded = /payment_intent\.succeeded|PAYMENT\.CAPTURE\.COMPLETED|net\.authorize\.payment\.(authcapture|priorAuthCapture)\.created/.test(type);
   const failed = /payment_intent\.payment_failed|PAYMENT\.CAPTURE\.DENIED/.test(type);
   const authorized = /payment_intent\.amount_capturable_updated|PAYMENT\.AUTHORIZATION\.CREATED/.test(type);
-  const voided = /payment_intent\.canceled|PAYMENT\.AUTHORIZATION\.VOIDED/.test(type);
+  const voided = /payment_intent\.canceled|PAYMENT\.AUTHORIZATION\.VOIDED|net\.authorize\.payment\.void\.created/.test(type);
+  const refunded = /net\.authorize\.payment\.refund\.created/.test(type);
 
   const cartId = resource.metadata?.cartId || resource.custom_id;
   const explicitPaymentId = resource.metadata?.paymentId;
@@ -219,6 +220,17 @@ async function handlePaymentProviderWebhook(
             },
           });
         }
+      } else if (refunded) {
+        const currentPayment = await tx.payment.findUnique({
+          where: { id: paymentId },
+          select: { amount: true, currencyCode: true },
+        });
+        if (!currentPayment) throw new Error("Payment not found for provider event");
+        assertProviderAmount(provider.code, resource, currentPayment);
+        await tx.payment.update({
+          where: { id: paymentId },
+          data: { status: "refunded", data: resource },
+        });
       } else if (failed) {
         await tx.payment.update({
           where: { id: paymentId },
@@ -230,6 +242,12 @@ async function handlePaymentProviderWebhook(
           data: { status: "authorized", data: resource },
         });
       } else if (voided) {
+        const currentPayment = await tx.payment.findUnique({
+          where: { id: paymentId },
+          select: { amount: true, currencyCode: true },
+        });
+        if (!currentPayment) throw new Error("Payment not found for provider event");
+        assertProviderAmount(provider.code, resource, currentPayment);
         await tx.payment.update({
           where: { id: paymentId },
           data: { status: "canceled", canceledAt: new Date(), data: resource },
