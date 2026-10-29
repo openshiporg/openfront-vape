@@ -92,7 +92,7 @@ export function CheckoutLayout({
               <Logo />
             </div>
             <div className="flex flex-1 basis-0 justify-end">
-              <span className="text-[12px] font-semibold text-vp-ink-2">Adults 21+ only</span>
+              <span className="whitespace-nowrap text-[12px] font-semibold text-vp-ink-2"><span className="max-sm:hidden">Adults </span>21+ only</span>
             </div>
           </nav>
         </div>
