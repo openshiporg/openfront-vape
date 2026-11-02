@@ -72,13 +72,77 @@ export function mergeStoreInfo(
   };
 }
 
-// What a regulated store must publish before it can sell
+// Policies are drafted in metadata.policies and go live only when the merchant
+// publishes them: publishing copies the five texts to metadata.policiesPublished.
+// The storefront and the release gate read the published copy, never the draft.
+export type PublishedPolicies = { publishedAt: string; policies: StorePolicies };
+
+export function readPublishedPolicies(metadata: unknown): PublishedPolicies | null {
+  const published = asObject(asObject(metadata).policiesPublished);
+  const publishedAt = text(published.publishedAt);
+  if (!publishedAt) return null;
+  const policies = asObject(published.policies);
+  return {
+    publishedAt,
+    policies: Object.fromEntries(POLICY_KEYS.map((key) => [key, text(policies[key])])) as StorePolicies,
+  };
+}
+
+export function livePolicies(metadata: unknown): StorePolicies {
+  return (
+    readPublishedPolicies(metadata)?.policies ??
+    (Object.fromEntries(POLICY_KEYS.map((key) => [key, ''])) as StorePolicies)
+  );
+}
+
+export function policiesHaveUnpublishedChanges(metadata: unknown): boolean {
+  const live = livePolicies(metadata);
+  const draft = readStorePolicies(metadata);
+  return POLICY_KEYS.some((key) => live[key] !== draft[key]);
+}
+
+export const MIN_POLICY_LENGTH = 40;
+
+// Problems that stop a save or a publish, keyed to the form label.
+export function validateStoreInfo(business: StoreBusiness, policies: StorePolicies): string[] {
+  const errors: string[] = [];
+  const email = text(business.email);
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Contact email is not a valid address');
+  const phone = text(business.phone);
+  if (phone && (phone.replace(/\D/g, '').length < 10 || !/^[+\d\s().-]+$/.test(phone))) {
+    errors.push('Contact phone needs at least 10 digits');
+  }
+  for (const page of POLICY_PAGES) {
+    const body = text(policies[page.key]);
+    if (body && body.length < MIN_POLICY_LENGTH) {
+      errors.push(`${page.title} is too short to be a policy (minimum ${MIN_POLICY_LENGTH} characters)`);
+    }
+  }
+  return errors;
+}
+
+// Drafts that cannot be published yet (blank or too short).
+export function missingPolicies(metadata: unknown): string[] {
+  const draft = readStorePolicies(metadata);
+  return POLICY_PAGES.filter((page) => draft[page.key].length < MIN_POLICY_LENGTH).map((page) => page.title);
+}
+
+export function publishPolicies(metadata: unknown, now = new Date()): Record<string, unknown> {
+  const draft = readStorePolicies(metadata);
+  return {
+    ...asObject(metadata),
+    policiesPublished: { publishedAt: now.toISOString(), policies: draft },
+  };
+}
+
+// What a regulated store must publish before it can sell. Empty means the
+// store is blocked: a fresh store with no data can never sell.
 export function missingStoreInfo(metadata: unknown): string[] {
   const business = readStoreBusiness(metadata);
-  const policies = readStorePolicies(metadata);
+  const live = livePolicies(metadata);
   return [
     ...(business.legalName ? [] : ['Legal name']),
     ...(business.licenses.length ? [] : ['Licence numbers']),
-    ...POLICY_PAGES.filter((page) => !policies[page.key]).map((page) => page.title),
+    ...POLICY_PAGES.filter((page) => !live[page.key]).map((page) => `${page.title} (not published)`),
   ];
 }

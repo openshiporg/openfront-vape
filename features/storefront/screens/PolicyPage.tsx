@@ -8,7 +8,7 @@ import {
   POLICY_PAGES,
   hasBusinessDetails,
   readStoreBusiness,
-  readStorePolicies,
+  livePolicies,
 } from "@/features/platform/store-settings/lib/store-info"
 
 type Props = {
@@ -39,7 +39,7 @@ export async function PolicyPage(props: Props) {
   const store = await getStore()
   const business = readStoreBusiness(store?.metadata)
   const policy = POLICY_PAGES.find((p) => p.slug === slug)
-  const body = policy ? readStorePolicies(store?.metadata)[policy.key] : ""
+  const body = policy ? livePolicies(store?.metadata)[policy.key] : ""
   const published = policy ? Boolean(body) : hasBusinessDetails(business)
 
   return (

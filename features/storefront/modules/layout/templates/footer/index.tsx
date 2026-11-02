@@ -8,7 +8,7 @@ import {
   POLICY_PAGES,
   hasBusinessDetails,
   readStoreBusiness,
-  readStorePolicies,
+  livePolicies,
 } from "@/features/platform/store-settings/lib/store-info"
 
 export default async function Footer() {
@@ -20,7 +20,7 @@ export default async function Footer() {
   ])
   const storeName = store?.name || "Store"
   const business = readStoreBusiness(store?.metadata)
-  const policies = readStorePolicies(store?.metadata)
+  const policies = livePolicies(store?.metadata)
   const policyLinks = POLICY_PAGES.filter((p) => policies[p.key])
   const showContact = hasBusinessDetails(business)
   const categories = (productCategories || []).filter(

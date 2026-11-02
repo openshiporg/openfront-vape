@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { LOGO_ICONS, HUE_PRESETS } from '../lib/icon-registry';
-import { updateStoreSettings } from '../actions';
+import { updateStoreSettings, publishStorePolicies } from '../actions';
 import { StoreSettingsSaveBar } from '../components/StoreSettingsSaveBar';
 import { toast } from 'sonner';
 import { Code } from 'lucide-react';
@@ -29,6 +29,8 @@ import {
   POLICY_PAGES,
   readStoreBusiness,
   readStorePolicies,
+  readPublishedPolicies,
+  policiesHaveUnpublishedChanges,
   type StoreBusiness,
   type StorePolicies,
 } from '../lib/store-info';
@@ -67,6 +69,9 @@ export function StoreSettingsPageClient({
   const [licenses, setLicenses] = useState(() => readStoreBusiness(initialData?.metadata).licenses.join('\n'));
   const [policies, setPolicies] = useState<StorePolicies>(() => readStorePolicies(initialData?.metadata));
   const [isLoading, setIsLoading] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishedAt, setPublishedAt] = useState<string | null>(() => readPublishedPolicies(initialData?.metadata)?.publishedAt ?? null);
+  const [unpublished, setUnpublished] = useState(() => policiesHaveUnpublishedChanges(initialData?.metadata));
 
   const setBusinessField = (key: Exclude<keyof StoreBusiness, 'licenses'>, value: string) =>
     setBusiness((prev) => ({ ...prev, [key]: value }));
@@ -89,11 +94,32 @@ export function StoreSettingsPageClient({
     });
 
     if (result.success) {
+      setUnpublished(policiesHaveUnpublishedChanges(result.data?.metadata));
       toast.success('Store settings updated successfully');
     } else {
       toast.error(result.error || 'Failed to update store settings');
     }
     setIsLoading(false);
+  };
+
+  const handlePublish = async () => {
+    if (!initialData?.id) return;
+    setIsPublishing(true);
+    const saved = await updateStoreSettings(initialData.id, { business: { ...business, licenses: licenses.split('\n') }, policies });
+    if (!saved.success) {
+      toast.error(saved.error || 'Could not save the policies');
+      setIsPublishing(false);
+      return;
+    }
+    const result = await publishStorePolicies(initialData.id);
+    if (result.success) {
+      setPublishedAt(readPublishedPolicies(result.data?.metadata)?.publishedAt ?? null);
+      setUnpublished(false);
+      toast.success('Policies published');
+    } else {
+      toast.error(result.error || 'Could not publish the policies');
+    }
+    setIsPublishing(false);
   };
 
   if (initialError) {
@@ -385,6 +411,10 @@ export function StoreSettingsPageClient({
 
         <section>
           <SectionTitle>Policies</SectionTitle>
+          <p className="px-4 pb-2 text-sm text-muted-foreground">
+            Write your own shipping, returns, age verification, privacy and terms text (at least 40 characters each).
+            Policies appear on the storefront only after you publish them, and checkout stays closed until all five are published.
+          </p>
           <ListBand>
             {POLICY_PAGES.map((page) => (
               <div key={page.key} className={rowTop}>
@@ -401,6 +431,18 @@ export function StoreSettingsPageClient({
                 />
               </div>
             ))}
+            <div className="flex flex-wrap items-center gap-3 px-4 py-4">
+              <Button type="button" onClick={handlePublish} disabled={isPublishing || isLoading} className="h-10 rounded-[4px] px-5">
+                {isPublishing ? 'Publishing...' : publishedAt && !unpublished ? 'Republish policies' : 'Publish policies'}
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {!publishedAt
+                  ? 'Not published. The storefront shows no policy pages.'
+                  : unpublished
+                    ? `Unpublished changes. Live copy is from ${new Date(publishedAt).toLocaleString()}.`
+                    : `Published ${new Date(publishedAt).toLocaleString()}.`}
+              </span>
+            </div>
           </ListBand>
         </section>
 

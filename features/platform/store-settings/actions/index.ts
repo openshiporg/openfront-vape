@@ -4,7 +4,7 @@ import { keystoneClient } from '@/features/dashboard/lib/keystoneClient';
 import { revalidatePath } from 'next/cache';
 import { normalizeStoreLogoColor } from '../lib/store-logo';
 import { sanitizeStoreLogoSvg } from '@/features/keystone/utils/storeLogo';
-import { mergeStoreInfo, type StoreBusiness, type StorePolicies } from '../lib/store-info';
+import { mergeStoreInfo, publishPolicies, validateStoreInfo, missingPolicies, type StoreBusiness, type StorePolicies } from '../lib/store-info';
 
 export async function getStoreSettings() {
   const query = `
@@ -28,6 +28,29 @@ export async function getStoreSettings() {
   }
 
   return { success: true, data: response.data?.stores?.[0] || null };
+}
+
+/**
+ * Publish the five drafted policies. The merchant owns the text; this only
+ * copies the saved draft live, and refuses while any policy is blank or too short.
+ */
+export async function publishStorePolicies(storeId: string) {
+  const current = await keystoneClient(
+    `query StoreMetadata($id: ID!) { store(where: { id: $id }) { id metadata } }`,
+    { id: storeId }
+  );
+  if (!current.success) return { success: false, error: current.error };
+  const metadata = current.data?.store?.metadata;
+  const blocked = missingPolicies(metadata);
+  if (blocked.length) return { success: false, error: `Write and save before publishing: ${blocked.join(', ')}` };
+  const response = await keystoneClient(
+    `mutation PublishPolicies($id: ID!, $data: StoreUpdateInput!) { updateStore(where: { id: $id }, data: $data) { id metadata } }`,
+    { id: storeId, data: { metadata: publishPolicies(metadata) } }
+  );
+  if (!response.success) return { success: false, error: response.error };
+  revalidatePath('/dashboard');
+  revalidatePath('/', 'layout');
+  return { success: true, data: response.data?.updateStore };
 }
 
 export async function updateStoreSettings(storeId: string, data: {
@@ -54,6 +77,8 @@ export async function updateStoreSettings(storeId: string, data: {
   }
 
   if (business && policies) {
+    const problems = validateStoreInfo(business, policies);
+    if (problems.length) return { success: false, error: problems.join('. ') };
     // Read the current metadata so keys owned elsewhere survive the save.
     const current = await keystoneClient(
       `query StoreMetadata($id: ID!) { store(where: { id: $id }) { id metadata } }`,
