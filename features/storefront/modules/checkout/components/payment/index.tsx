@@ -1,5 +1,5 @@
 "use client";
-import { isStripe, isAuthorizeNet, paymentInfoMap, isStripeSandbox, isPayPalSandbox } from "@/features/storefront/lib/constants";
+import { isStripe, isAuthorizeNet, paymentInfoMap } from "@/features/storefront/lib/constants";
 import { getCheckoutCompliance, startCheckoutPayment } from "@/features/storefront/lib/data/compliance";
 import CompliancePanel from "../compliance-panel";
 import { checkoutErrorText, type CheckoutCompliance } from "../../lib/compliance-reasons";
@@ -66,7 +66,6 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3 }: PaymentProps)
   const stripeReady = useContext(StripeContext);
 
   // Check if we're in sandbox/test mode
-  const isSandboxMode = isStripeSandbox() || isPayPalSandbox();
 
   const paidByGiftcard =
     cart?.giftCards && cart?.giftCards?.length > 0 && cart?.total === 0;
@@ -232,11 +231,6 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3 }: PaymentProps)
                         </span>
                       </span>
                       <span className="flex flex-none items-center gap-3 text-vp-ink-2">
-                        {isSandboxMode && (
-                          <span className="text-[12px] font-medium text-vp-warn" title="Sandbox environment, do not enter real payment info">
-                            Test
-                          </span>
-                        )}
                         <span className="flex h-5 w-5 items-center justify-center">
                           {paymentInfoMap[method.code]?.icon}
                         </span>
