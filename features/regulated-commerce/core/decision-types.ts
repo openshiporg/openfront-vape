@@ -66,7 +66,7 @@ export type DecisionInput = {
   ageEvidence?: (EvidenceStatus & { result: string; age: number; addressMatch: string }) | null;
   taxEvidence?: (EvidenceStatus & { status: string }) | null;
   paymentApproval?: (EvidenceStatus & { status: string }) | null;
-  carrierEvidence?: (EvidenceStatus & { result: string; adultSignature: boolean; packageMarkings?: string[] }) | null;
+  carrierEvidence?: (EvidenceStatus & { result: string; adultSignature: boolean; signatureMinimumAge?: number; packageMarkings?: string[] }) | null;
 };
 
 export type DecisionOutput = {

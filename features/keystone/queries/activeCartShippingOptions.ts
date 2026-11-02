@@ -1,4 +1,5 @@
 import type { KeystoneContext } from '@keystone-6/core/types';
+import { prepareCarrierDecisions } from "../regulated/checkout-evidence";
 import { assertCartAccess } from "../security/cart-access";
 import {
   calculateCartSubtotalMinorUnits,
@@ -89,6 +90,9 @@ async function activeCartShippingOptions(_root: unknown, { cartId }: { cartId: s
   });
   if (shippingOptions.length !== shippingOptionCount) return [];
 
+  // Regulated carts get an adult-signature decision per delivery option before
+  // the shopper chooses; the checks below then read them like any other evidence.
+  try { await prepareCarrierDecisions(context, cartId); } catch { /* no decision means no options below */ }
   const compliance = await evaluateCartCompliance({
     context,
     cartId,

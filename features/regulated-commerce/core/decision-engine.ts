@@ -84,8 +84,18 @@ function evaluateRules(input: DecisionInput, rules: Rule[], reasons: Set<string>
     }
     // These policy values are not yet supported by an accepted content/lane
     // resolver. Deny rather than silently interpreting only part of a rule.
-    if (rule.type === "marketing_restriction" || rule.type === "adult_signature_required") {
+    if (rule.type === "marketing_restriction") {
       reasons.add("POLICY_REQUIREMENT_NOT_IMPLEMENTED"); ruleIds.add(rule.id);
+    }
+    // Checked against the carrier decision, which only exists once a shipping
+    // option is selected. The carrier adapter must have collected the signature
+    // from an adult at least as old as the rule requires.
+    if (rule.type === "adult_signature_required" && ["shipping", "payment", "checkout", "fulfillment"].includes(input.purpose)) {
+      const evidence = input.carrierEvidence;
+      if (!evidence || evidence.result !== "allow" || evidence.adultSignature !== true ||
+          (evidence.signatureMinimumAge ?? 0) < rule.minimumAge) {
+        reasons.add("APPROVED_ADULT_SIGNATURE_CARRIER_REQUIRED"); ruleIds.add(rule.id);
+      }
     }
     if (rule.type === "package_marking" && ["shipping", "payment", "checkout", "fulfillment"].includes(input.purpose)) {
       const supplied = new Set(input.carrierEvidence?.packageMarkings ?? []);

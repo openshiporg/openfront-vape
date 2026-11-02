@@ -2,6 +2,7 @@ import { evidenceDigest, evaluateRegulatedCommerce, isCurrentEvidence } from "..
 import type { CompliancePurpose, RegulatedCategory } from "../../regulated-commerce/core/decision-types";
 import { validateRules } from "../../regulated-commerce/core/policy-validation";
 import { assertCommerceReleaseEnabled, releaseBlockers } from "../../regulated-commerce/core/release-gate";
+import { signatureAgeFromService } from "../../regulated-commerce/providers/builtin/carrier-manual-adult-signature";
 import { cartEvidenceFingerprint } from "./cart-fingerprint";
 import { boundedComplianceSnapshotExpiry } from "./snapshot-expiry";
 
@@ -167,7 +168,7 @@ export async function evaluateCartCompliance({
   });
   const carrierDecisions = await sudo.query.CarrierEligibilityDecision.findMany({
     where: { cart: { id: { equals: cartId } } }, orderBy: [{ issuedAt: "desc" }], take: 1,
-    query: "id cartFingerprint result adultSignature packageMarkings issuedAt expiresAt evidenceDigest originJurisdictionCode destinationJurisdictionCode shippingOption { id } providerApproval { status effectiveAt expiresAt }",
+    query: "id cartFingerprint result adultSignature serviceCode packageMarkings issuedAt expiresAt evidenceDigest originJurisdictionCode destinationJurisdictionCode shippingOption { id } providerApproval { status effectiveAt expiresAt }",
   });
 
   const categories = regulatedLines.map((line: any) =>
@@ -231,7 +232,7 @@ export async function evaluateCartCompliance({
     } : null,
     taxEvidence,
     paymentApproval,
-    carrierEvidence: carrierMatchesSelection ? { ...carrierEvidence, status: carrierEvidence.result, effectiveAt: carrierEvidence.issuedAt } : null,
+    carrierEvidence: carrierMatchesSelection ? { ...carrierEvidence, status: carrierEvidence.result, effectiveAt: carrierEvidence.issuedAt, signatureMinimumAge: signatureAgeFromService(carrierEvidence.serviceCode) } : null,
   });
 
   // Fulfilling an existing order is not a new sale, so the store-level gate

@@ -39,9 +39,10 @@ interface PaymentProps {
     id: string;
     code: string;
   }>;
+  stepIndex?: number;
 }
 
-const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
+const Payment = ({ cart, availablePaymentMethods, stepIndex = 3 }: PaymentProps) => {
   const activeSession = cart.paymentCollection?.paymentSessions?.find(
     (session) => session.isSelected
   );
@@ -184,7 +185,7 @@ const Payment = ({ cart, availablePaymentMethods }: PaymentProps) => {
   return (
     <section className="flex flex-col gap-5 border-t border-vp-line pt-5" aria-label="Payment">
       <StepHeader
-        index={3}
+        index={stepIndex}
         title="Payment"
         state={isOpen ? "open" : paymentReady ? "done" : "todo"}
         onEdit={!isOpen && paymentReady ? handleEdit : undefined}

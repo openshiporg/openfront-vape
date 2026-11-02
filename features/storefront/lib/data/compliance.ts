@@ -100,3 +100,36 @@ export async function startCheckoutPayment(
     return { ok: false, error: await checkoutErrorMessage(error) };
   }
 }
+
+// Age step: required when the bag is regulated; done once age, tax and delivery evidence are current.
+export type AgeCheckStatus = { required: boolean; done: boolean };
+
+export async function getAgeCheckStatus(): Promise<AgeCheckStatus> {
+  const shipping = await getCheckoutCompliance("shipping");
+  if (shipping.state === "not_applicable") return { required: false, done: true };
+  const checkout = await getCheckoutCompliance("checkout");
+  const missing = new Set(["CURRENT_IDENTITY_AND_ADDRESS_EVIDENCE_REQUIRED", "COMMITTED_TAX_EVIDENCE_REQUIRED", "APPROVED_ADULT_SIGNATURE_CARRIER_REQUIRED"]);
+  return { required: true, done: checkout.state !== "unavailable" && !checkout.reasonCodes.some((code) => missing.has(code)) };
+}
+
+const SUBMIT_AGE_CHECK = gql`
+  mutation SubmitActiveCartAgeCheck($cartId: ID!, $dateOfBirth: String!, $idNameMatchesShipping: Boolean!) {
+    submitActiveCartAgeCheck(cartId: $cartId, dateOfBirth: $dateOfBirth, idNameMatchesShipping: $idNameMatchesShipping)
+  }
+`;
+
+export async function submitAgeCheck(
+  dateOfBirth: string,
+  idNameMatchesShipping: boolean
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const cartId = await getCartId();
+  if (!cartId) return { ok: false, error: "Your bag is empty." };
+  try {
+    await openfrontClient.request(SUBMIT_AGE_CHECK, { cartId, dateOfBirth, idNameMatchesShipping }, await getAuthHeaders());
+    revalidateTag("cart");
+    return { ok: true };
+  } catch (error) {
+    const message = (await checkoutErrorMessage(error)).replace(/^AGE_CHECK_FAILED:\s*/, "");
+    return { ok: false, error: message };
+  }
+}

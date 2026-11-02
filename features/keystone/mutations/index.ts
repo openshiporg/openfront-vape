@@ -16,6 +16,7 @@ import createActiveCart from './createActiveCart';
 import setActiveCartPaymentSession from './setActiveCartPaymentSession';
 import completeActiveCart from './completeActiveCart';
 import addActiveCartShippingMethod from './addActiveCartShippingMethod';
+import submitActiveCartAgeCheck from './submitActiveCartAgeCheck';
 import activeCartShippingOptions from '../queries/activeCartShippingOptions';
 import activeCartPaymentProviders from '../queries/activeCartPaymentProviders';
 import activeCartRegion from '../queries/activeCartRegion';
@@ -270,6 +271,7 @@ export const extendGraphqlSchema = (schema: GraphQLSchema) =>
         setActiveCartPaymentSession(cartId: ID!, providerId: ID!): Cart
         completeActiveCart(cartId: ID!, paymentSessionId: ID): JSON
         addActiveCartShippingMethod(cartId: ID!, shippingMethodId: ID!): Cart
+        submitActiveCartAgeCheck(cartId: ID!, dateOfBirth: String!, idNameMatchesShipping: Boolean!): JSON!
         initiatePaymentSession(
           cartId: ID!
           paymentProviderId: String!
@@ -363,6 +365,7 @@ export const extendGraphqlSchema = (schema: GraphQLSchema) =>
         setActiveCartPaymentSession: releaseGuard(setActiveCartPaymentSession),
         completeActiveCart,
         addActiveCartShippingMethod,
+        submitActiveCartAgeCheck,
         initiatePaymentSession: releaseGuard(initiatePaymentSession),
         authorizeCardPaymentSession: releaseGuard(authorizeCardPaymentSession),
         handlePaymentProviderWebhook,

@@ -6,7 +6,7 @@ import CompliancePanel, { complianceBlocksOrder } from "../compliance-panel"
 import type { CheckoutCompliance } from "../../lib/compliance-reasons"
 import { useSearchParams } from "next/navigation"
 
-const Review = ({ cart, compliance }: { cart: any; compliance: CheckoutCompliance | null }) => {
+const Review = ({ cart, compliance, stepIndex = 4 }: { cart: any; compliance: CheckoutCompliance | null; stepIndex?: number }) => {
   const searchParams = useSearchParams() ?? new URLSearchParams()
 
   const isOpen = searchParams.get("step") === "review"
@@ -23,7 +23,7 @@ const Review = ({ cart, compliance }: { cart: any; compliance: CheckoutComplianc
 
   return (
     <section className="flex flex-col gap-5 border-t border-vp-line pt-5" aria-label="Review">
-      <StepHeader index={4} title="Review" state={active ? "open" : "todo"} />
+      <StepHeader index={stepIndex} title="Review" state={active ? "open" : "todo"} />
       {active && (
         <div className="flex flex-col gap-4 pb-2">
           <dl className="vp-band divide-y divide-vp-line text-[14px] leading-[20px]">

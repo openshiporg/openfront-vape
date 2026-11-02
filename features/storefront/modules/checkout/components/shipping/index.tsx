@@ -33,11 +33,13 @@ interface ShippingProps {
     shipping: string;
   };
   availableShippingMethods: ShippingOption[] | null
+  nextStep?: "age" | "payment"
 }
 
 const Shipping: React.FC<ShippingProps> = ({
   cart,
   availableShippingMethods,
+  nextStep = "payment",
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -61,7 +63,7 @@ const Shipping: React.FC<ShippingProps> = ({
     setIsLoading(true)
     try {
       await setShippingMethod(selectedOption)
-      router.push(pathname + "?step=payment", { scroll: false })
+      router.push(pathname + "?step=" + nextStep, { scroll: false })
     } catch (err: any) {
       setError(checkoutErrorText(err))
     } finally {
@@ -159,7 +161,7 @@ const Shipping: React.FC<ShippingProps> = ({
               data-testid="submit-delivery-option-button"
             >
               {isLoading && <RiLoader2Fill className="h-4 w-4 animate-spin" />}
-              Continue to payment
+              {nextStep === "age" ? "Continue" : "Continue to payment"}
             </button>
             <ErrorMessage
               error={error}
