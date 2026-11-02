@@ -45,7 +45,9 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
   const availableShippingMethods = await getCartShippingOptions(cart.id);
   const availablePaymentMethods = await listCartPaymentMethods(cart.region.id, cart.id);
 
-  if (!availableShippingMethods?.length || !availablePaymentMethods?.length) {
+  // Payment methods can legitimately be empty (no card configured yet, or delivery chosen
+  // without a card); the Payment step explains that, and the shopper can still change delivery.
+  if (!availableShippingMethods?.length) {
     return (
       <section role="status" className="flex flex-col items-start gap-4 border-t border-vp-line pt-6">
         <p className="flex items-baseline gap-2.5 text-[17px] leading-[24px] font-medium text-vp-ink">

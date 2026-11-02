@@ -261,6 +261,14 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3 }: PaymentProps)
           </>
         )}
 
+        {!paidByGiftcard && !(availablePaymentMethods?.length > 0) && (
+          <p role="status" className="text-[14px] leading-[20px] text-vp-ink-2" data-testid="no-payment-methods">
+            {hasShipping
+              ? "Card payment isn't available for delivery yet. Choose Reserve online, pay in store to collect and pay at the counter."
+              : "Payment options appear once you choose how to receive your order."}
+          </p>
+        )}
+
         {paidByGiftcard && (
           <StepFact label="Payment method">
             <p data-testid="payment-method-summary">Gift card</p>
