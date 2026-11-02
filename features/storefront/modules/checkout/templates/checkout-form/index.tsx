@@ -47,6 +47,16 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
 
   // Payment methods can legitimately be empty (no card configured yet, or delivery chosen
   // without a card); the Payment step explains that, and the shopper can still change delivery.
+  // Delivery options depend on the destination, so a cart with no address yet has none.
+  // Show the address step on its own until there is one.
+  if (!cart.shippingAddress) {
+    return (
+      <div className="flex w-full flex-col gap-8">
+        <Addresses cart={cart} customer={customer} />
+      </div>
+    );
+  }
+
   if (!availableShippingMethods?.length) {
     return (
       <section role="status" className="flex flex-col items-start gap-4 border-t border-vp-line pt-6">
