@@ -1,10 +1,10 @@
-import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 /**
  * UserListPageClient - Client Component  
  * Based on dashboard ListPageClient but hardcoded for users
  */
 
 'use client'
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import React, { useState, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
