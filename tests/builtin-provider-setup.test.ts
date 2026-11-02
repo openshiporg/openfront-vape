@@ -34,3 +34,11 @@ test("running it again adds nothing; a new payment provider adds only that", () 
   const more = planBuiltInApprovals({ profile, paymentProviders: [stripe, { id: "pp2", code: "pp_stripe_stripe", name: "Stripe" }], shippingProviderId: "s1", existing, now });
   assert.deepEqual(more.map(a => a.providerCode), ["pp_stripe_stripe"]);
 });
+
+test("the manual provider is approved for pay at pickup only", () => {
+  const manual = { id: "pp0", code: "pp_system_default", name: "Reserve online, pay in store" };
+  const plan = planBuiltInApprovals({ profile, paymentProviders: [manual], shippingProviderId: "s1", existing: [], now });
+  const payment = plan.find(a => a.purpose === "payment")!;
+  assert.deepEqual(payment.capabilities, ["pay_at_pickup"]);
+  assert.equal(payment.paymentProviderId, "pp0");
+});

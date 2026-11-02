@@ -111,13 +111,15 @@ export function planBuiltInApprovals(input: PlanInput): PlannedApproval[] {
   });
   for (const provider of input.paymentProviders) {
     if (has("payment", provider.code, provider.id)) continue;
-    const capabilities = ["card_authorization", "capture", "refund"];
+    // The manual provider is pay-at-pickup only; completion refuses it for delivery carts.
+    const manual = provider.code === "pp_system_default";
+    const capabilities = manual ? ["pay_at_pickup"] : ["card_authorization", "capture", "refund"];
     planned.push({
       ...base,
       purpose: "payment",
       providerCode: provider.code,
       approvalReference: `payment-provider:${provider.code}`,
-      evidenceDigest: methodDigest("payment", provider.code, `Payment provider ${provider.name} installed by the merchant`, capabilities),
+      evidenceDigest: methodDigest("payment", provider.code, manual ? "Pay in store at pickup; the merchant marks the order paid at the counter" : `Payment provider ${provider.name} installed by the merchant`, capabilities),
       capabilities,
       paymentProviderId: provider.id,
     });

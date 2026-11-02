@@ -63,7 +63,7 @@ export async function approveBuiltInProviders(profileId: string): Promise<SaveRe
 
     const planned = planBuiltInApprovals({
       profile: input,
-      paymentProviders: (paymentProviders as any[]).filter(provider => provider.code !== 'pp_system_default') as Array<{ id: string; code: string; name: string }>,
+      paymentProviders: paymentProviders as unknown as Array<{ id: string; code: string; name: string }>,
       shippingProviderId: shipping.id,
       existing: existing.map((entry: any) => ({ purpose: entry.purpose, providerCode: entry.providerCode, paymentProviderId: entry.paymentProvider?.id })),
     });

@@ -32,7 +32,7 @@ export function ApproveBuiltInButton({ profileId }: { profileId: string }) {
         {pending ? 'Approving…' : 'Approve built-in providers'}
       </Button>
       <span className="text-[12px] text-muted-foreground">
-        Age check, tax, carrier, registry and installed card providers, for this profile's product types and launch jurisdictions.
+        Age check, tax, carrier, registry, pay-at-pickup and installed card providers, for this profile's product types and launch jurisdictions.
       </span>
       {error && <span role="alert" className="text-[12px] text-destructive">{error}</span>}
     </div>
