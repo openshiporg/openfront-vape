@@ -169,7 +169,10 @@ export async function evaluateCartCompliance({
   // Each delivery option (and pickup) has its own decision; judge the selected one.
   const selectedOptionId = cart.shippingMethods?.[0]?.shippingOption?.id;
   const carrierDecisions = await sudo.query.CarrierEligibilityDecision.findMany({
-    where: { cart: { id: { equals: cartId } }, ...(selectedOptionId ? { shippingOption: { id: { equals: selectedOptionId } } } : {}) },
+    where: {
+      cart: { id: { equals: cartId } }, cartFingerprint: { equals: cartFingerprint }, result: { equals: "allow" },
+      ...(selectedOptionId ? { shippingOption: { id: { equals: selectedOptionId } } } : {}),
+    },
     orderBy: [{ issuedAt: "desc" }], take: 1,
     query: "id cartFingerprint result adultSignature serviceCode packageMarkings issuedAt expiresAt evidenceDigest originJurisdictionCode destinationJurisdictionCode shippingOption { id } providerApproval { status effectiveAt expiresAt }",
   });
