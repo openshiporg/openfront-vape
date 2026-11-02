@@ -118,6 +118,16 @@ test('payment and shipping provider credentials are protected when changed', asy
   await run('PaymentProvider', 'update', DEMO, { item, inputData: { name: 'Authorize.net', code: 'pp_authorizenet', credentialReference: 'ref1', isInstalled: true } });
 });
 
+test('payment provider: create and delete refused; name, isInstalled, regions, metadata editable', async () => {
+  const item = { id: 'pp', name: 'Authorize.net', code: 'pp_authorizenet', isInstalled: true };
+  await refused(run('PaymentProvider', 'create', DEMO, { inputData: { name: 'X', code: 'pp_x' } }));
+  await refused(run('PaymentProvider', 'delete', DEMO, { item }));
+  for (const field of ['createPaymentFunction', 'capturePaymentFunction', 'refundPaymentFunction', 'getPaymentStatusFunction', 'generatePaymentLinkFunction', 'handleWebhookFunction']) {
+    await refused(run('PaymentProvider', 'update', DEMO, { item, inputData: { [field]: 'changed' } }));
+  }
+  await run('PaymentProvider', 'update', DEMO, { item, inputData: { name: 'Card payments', isInstalled: false, metadata: { a: 1 }, regions: { connect: [{ id: 'r' }] } } });
+});
+
 test('a demo user cannot delete business records but can still create and edit them', async () => {
   for (const key of ['Order', 'Product', 'Payment']) {
     await refused(run(key, 'delete', DEMO, { item: { id: 'x' } }));
