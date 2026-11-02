@@ -266,6 +266,11 @@ export async function updateProductVariant(variantId: string, data: {
   hsCode?: string;
   originCountry?: string;
   midCode?: string;
+  batteryCapacityMah?: number | null;
+  liquidCapacityMl?: string | null;
+  nicotineStrengthMgMl?: string | null;
+  coilResistanceOhm?: string | null;
+  coilType?: string;
   primaryImageId?: string;
 }) {
   const query = `
@@ -284,6 +289,11 @@ export async function updateProductVariant(variantId: string, data: {
         hsCode
         originCountry
         midCode
+        batteryCapacityMah
+        liquidCapacityMl
+        nicotineStrengthMgMl
+        coilResistanceOhm
+        coilType
         primaryImage {
           id
           image {
@@ -311,6 +321,13 @@ export async function updateProductVariant(variantId: string, data: {
   if (data.hsCode !== undefined) input.hsCode = data.hsCode;
   if (data.originCountry !== undefined) input.originCountry = data.originCountry;
   if (data.midCode !== undefined) input.midCode = data.midCode;
+  // Specs: blank clears the value.
+  if (data.batteryCapacityMah !== undefined) input.batteryCapacityMah = data.batteryCapacityMah;
+  for (const key of ['liquidCapacityMl', 'nicotineStrengthMgMl', 'coilResistanceOhm'] as const) {
+    const value = data[key];
+    if (value !== undefined) input[key] = value === null || String(value).trim() === '' ? null : String(value).trim();
+  }
+  if (data.coilType !== undefined) input.coilType = data.coilType;
 
   // Handle primaryImage connection
   if (data.primaryImageId !== undefined) {

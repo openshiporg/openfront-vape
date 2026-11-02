@@ -56,6 +56,7 @@ import { toast } from "sonner";
 
 // Import SWR and server actions
 import { useProductData, useRegions } from "../hooks/useProductData";
+import { VARIANT_SPEC_FIELDS, variantSpecInput } from "../lib/variant-specs";
 import {
   createProductOption,
   updateProductOption,
@@ -494,6 +495,7 @@ export function VariantsTab({ product: initialProduct }: VariantsTab2Props) {
         hsCode: variant.hsCode,
         originCountry: variant.originCountry,
         midCode: variant.midCode,
+        ...variantSpecInput(variant),
       });
 
       if (response.success) {
@@ -817,6 +819,23 @@ export const VariantForm = ({ variant, onChange, onSave, onCancel }: any) => (
               className="mt-1 h-8 text-sm"
             />
           </div>
+          <div className="border-t pt-3">
+            <h4 className="text-sm font-medium">Specs</h4>
+            <p className="text-muted-foreground text-xs">Leave blank when it doesn&apos;t apply. Changing a spec sends the variant back for compliance review.</p>
+          </div>
+          {VARIANT_SPEC_FIELDS.map((spec) => (
+            <div key={spec.key}>
+              <Label htmlFor={`spec-${spec.key}`} className="text-xs">{spec.label}</Label>
+              <Input
+                id={`spec-${spec.key}`}
+                inputMode={spec.numeric ? "decimal" : undefined}
+                value={variant[spec.key] ?? ""}
+                onChange={(e) => onChange({ ...variant, [spec.key]: e.target.value })}
+                placeholder={spec.placeholder}
+                className="mt-1 h-8 text-sm"
+              />
+            </div>
+          ))}
         </div>
       </div>
       <div className="flex justify-end gap-2 p-4 border-t">

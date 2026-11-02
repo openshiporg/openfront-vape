@@ -221,7 +221,7 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
 
   const GENERAL_FIELDS = new Set(['title', 'handle', 'description', 'subtitle', 'isGiftcard'])
   const STATUS_FIELDS = new Set(['status'])
-  const ORGANIZATION_FIELDS = new Set(['productCollections', 'productCategories', 'productTags'])
+  const ORGANIZATION_FIELDS = new Set(['productCollections', 'productCategories', 'productTags', 'compatibleWith'])
   const DISCOUNT_TAX_FIELDS = new Set(['discountable', 'taxRates'])
 
   const fieldsSplit = useMemo(() => {

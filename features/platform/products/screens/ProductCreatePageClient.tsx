@@ -109,7 +109,7 @@ export function ProductCreatePageClient({ listKey, list }: ProductCreatePageClie
   const VARIANT_FIELDS = new Set(['productVariants'])
   const DISCOUNT_TAX_FIELDS = new Set(['discountable', 'taxRates'])
   const STATUS_FIELDS = new Set(['status'])
-  const ORGANIZATION_FIELDS = new Set(['productCollections', 'productCategories', 'productTags'])
+  const ORGANIZATION_FIELDS = new Set(['productCollections', 'productCategories', 'productTags', 'compatibleWith'])
   const HIDDEN_FIELDS = new Set(['metadata', 'externalId', 'shippingProfile', 'productType', 'productOptions'])
 
   const [variantMode, setVariantMode] = useState<VariantMode>('default')

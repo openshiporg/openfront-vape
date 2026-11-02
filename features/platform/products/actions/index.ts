@@ -183,6 +183,11 @@ export async function getProduct(id: string) {
           originCountry
           midCode
           material
+          batteryCapacityMah
+          liquidCapacityMl
+          nicotineStrengthMgMl
+          coilResistanceOhm
+          coilType
           metadata
           primaryImage {
             id

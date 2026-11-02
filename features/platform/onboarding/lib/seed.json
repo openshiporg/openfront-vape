@@ -201,7 +201,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "batteryCapacityMah": 1000,
+          "coilResistanceOhm": "0.8"
         },
         {
           "title": "Silver",
@@ -218,7 +220,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "batteryCapacityMah": 1000,
+          "coilResistanceOhm": "0.8"
         },
         {
           "title": "Ocean Blue",
@@ -235,7 +239,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "batteryCapacityMah": 1000,
+          "coilResistanceOhm": "0.8"
         }
       ]
     },
@@ -305,7 +311,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "batteryCapacityMah": 1500,
+          "liquidCapacityMl": "2"
         },
         {
           "title": "White",
@@ -322,7 +330,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "batteryCapacityMah": 1500,
+          "liquidCapacityMl": "2"
         }
       ]
     },
@@ -492,7 +502,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "3",
+          "liquidCapacityMl": "30"
         },
         {
           "title": "3 mg / 60 ml",
@@ -512,7 +524,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "3",
+          "liquidCapacityMl": "60"
         },
         {
           "title": "6 mg / 30 ml",
@@ -532,7 +546,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "6",
+          "liquidCapacityMl": "30"
         },
         {
           "title": "6 mg / 60 ml",
@@ -552,7 +568,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "6",
+          "liquidCapacityMl": "60"
         },
         {
           "title": "12 mg / 30 ml",
@@ -572,7 +590,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "12",
+          "liquidCapacityMl": "30"
         },
         {
           "title": "12 mg / 60 ml",
@@ -592,7 +612,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "12",
+          "liquidCapacityMl": "60"
         }
       ]
     },
@@ -678,7 +700,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "3",
+          "liquidCapacityMl": "30"
         },
         {
           "title": "3 mg / 60 ml",
@@ -698,7 +722,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "3",
+          "liquidCapacityMl": "60"
         },
         {
           "title": "6 mg / 30 ml",
@@ -718,7 +744,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "6",
+          "liquidCapacityMl": "30"
         },
         {
           "title": "6 mg / 60 ml",
@@ -738,7 +766,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "6",
+          "liquidCapacityMl": "60"
         },
         {
           "title": "12 mg / 30 ml",
@@ -758,7 +788,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "12",
+          "liquidCapacityMl": "30"
         },
         {
           "title": "12 mg / 60 ml",
@@ -778,7 +810,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "12",
+          "liquidCapacityMl": "60"
         }
       ]
     },
@@ -858,7 +892,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "25",
+          "liquidCapacityMl": "30"
         },
         {
           "title": "50 mg / 30 ml",
@@ -878,9 +914,21 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "nicotineStrengthMgMl": "50",
+          "liquidCapacityMl": "30"
         }
-      ]
+      ],
+      "compatibleWith": {
+        "connect": [
+          {
+            "handle": "nova-pod-kit"
+          },
+          {
+            "handle": "stratus-starter-kit"
+          }
+        ]
+      }
     },
     {
       "title": "Nova Replacement Pods (2-Pack)",
@@ -945,7 +993,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "liquidCapacityMl": "2",
+          "coilResistanceOhm": "0.8"
         },
         {
           "title": "1.2 ohm",
@@ -962,9 +1012,18 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "liquidCapacityMl": "2",
+          "coilResistanceOhm": "1.2"
         }
-      ]
+      ],
+      "compatibleWith": {
+        "connect": [
+          {
+            "handle": "nova-pod-kit"
+          }
+        ]
+      }
     },
     {
       "title": "Apex Mesh Coils (5-Pack)",
@@ -1029,7 +1088,9 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "coilType": "Mesh",
+          "coilResistanceOhm": "0.15"
         },
         {
           "title": "0.2 ohm",
@@ -1046,9 +1107,18 @@
             }
           ],
           "inventoryQuantity": 100,
-          "manageInventory": true
+          "manageInventory": true,
+          "coilType": "Mesh",
+          "coilResistanceOhm": "0.2"
         }
-      ]
+      ],
+      "compatibleWith": {
+        "connect": [
+          {
+            "handle": "apex-80w-box-mod"
+          }
+        ]
+      }
     },
     {
       "title": "Device Carry Case",
@@ -1216,7 +1286,20 @@
           "inventoryQuantity": 100,
           "manageInventory": true
         }
-      ]
+      ],
+      "compatibleWith": {
+        "connect": [
+          {
+            "handle": "nova-pod-kit"
+          },
+          {
+            "handle": "stratus-starter-kit"
+          },
+          {
+            "handle": "apex-80w-box-mod"
+          }
+        ]
+      }
     }
   ],
   "paymentProviders": [

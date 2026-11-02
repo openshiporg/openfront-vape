@@ -927,6 +927,7 @@ export function useOnboardingApi({
     regionIds: IdMap
   ) => {
     setProgress('Creating products and variants...');
+    const createdProductIds: IdMap = {};
 
     for (const product of data.products || []) {
       const productName = product.title || 'Unknown Product';
@@ -938,7 +939,8 @@ export function useOnboardingApi({
 
       setItemLoading('products', productName);
 
-      const { variants, productCollections, productCategories, subtitle, ...productInput } = product;
+      // compatibleWith points at other seed products, so it is linked after every product exists.
+      const { variants, productCollections, productCategories, subtitle, compatibleWith, ...productInput } = product;
 
       // Only connect the collections that exist for this product, by id
       const collectionsToConnect = (productCollections?.connect || [])
@@ -1016,6 +1018,7 @@ export function useOnboardingApi({
             title: variant.title,
             inventoryQuantity: variant.inventoryQuantity,
             manageInventory: variant.manageInventory,
+            ...pickVariantSpecs(variant),
             product: { connect: { id: (productResult as any).createProduct.id } },
             productOptionValues: { connect: matchingIds },
             prices,
@@ -1024,7 +1027,26 @@ export function useOnboardingApi({
       }
 
       summary.created.products += 1;
+      createdProductIds[key(product.handle)] = (productResult as any).createProduct.id;
       setItemCompleted('products', productName);
+    }
+
+    // Link "compatible with" between products created in this run (draft data only).
+    for (const product of data.products || []) {
+      const id = createdProductIds[key(product.handle)];
+      const targets = (product.compatibleWith?.connect || [])
+        .map((c: { handle: string }) => createdProductIds[key(c.handle)] || existing.productsByHandle[key(c.handle)])
+        .filter(Boolean)
+        .map((targetId: string) => ({ id: targetId }));
+      if (!id || targets.length === 0) continue;
+      await client.request(
+        gql`
+          mutation LinkCompatible($id: ID!, $data: ProductUpdateInput!) {
+            updateProduct(where: { id: $id }, data: $data) { id }
+          }
+        `,
+        { id, data: { compatibleWith: { connect: targets } } }
+      );
     }
   };
 
@@ -1098,4 +1120,15 @@ export function useOnboardingApi({
   };
 
   return { runOnboarding, planOnboarding };
+}
+
+const VARIANT_SPEC_KEYS = ['batteryCapacityMah', 'liquidCapacityMl', 'nicotineStrengthMgMl', 'coilResistanceOhm', 'coilType'] as const;
+
+// Structured specs carried on seed variants; only keys that are present are sent.
+function pickVariantSpecs(variant: Record<string, unknown>) {
+  const out: Record<string, unknown> = {};
+  for (const specKey of VARIANT_SPEC_KEYS) {
+    if (variant[specKey] !== undefined && variant[specKey] !== null) out[specKey] = variant[specKey];
+  }
+  return out;
 }
