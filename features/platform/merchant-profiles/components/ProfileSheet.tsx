@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Checks, ErrorLine, EvidenceFile, Field, selectClass, textareaClass } from '@/features/platform/components/compliance-form';
+import { Checks, ErrorLine, EvidenceFile, Field, textareaClass } from '@/features/platform/components/compliance-form';
 import { SectionTitle } from '@/features/platform/components/vape-ui';
 import { CLASSIFICATION_CATEGORY_LABELS } from '@/features/keystone/regulated/labels';
 import {
@@ -17,6 +17,7 @@ import {
   type JurisdictionOption,
   type ProfileInput,
 } from '../actions/profiles';
+import { DateField, PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 const EMPTY: ProfileInput = {
   legalName: '',
@@ -138,10 +139,7 @@ export function ProfileSheet({
                   onChange={enabledCategories => set({ enabledCategories })}
                 />
                 <Field id="mp-origin" label="Origin jurisdiction">
-                  <select id="mp-origin" className={selectClass} value={value.originJurisdictionId} onChange={event => set({ originJurisdictionId: event.target.value })}>
-                    <option value="">None</option>
-                    {jurisdictions.map(item => <option key={item.id} value={item.id}>{item.code} {item.name}</option>)}
-                  </select>
+                  <PickSelect id="mp-origin" value={value.originJurisdictionId} onChange={v => set({ originJurisdictionId: v })} options={[['', 'None'] as PickOption, ...jurisdictions.map((item): PickOption => [item.id, `${item.code} ${item.name}`])]} />
                 </Field>
                 <Checks
                   label="Launch jurisdictions"
@@ -173,10 +171,10 @@ export function ProfileSheet({
                 <SectionTitle>Dates</SectionTitle>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field id="mp-from" label="Effective from">
-                    <Input id="mp-from" type="date" value={value.effectiveAt} onChange={event => set({ effectiveAt: event.target.value })} />
+                    <DateField id="mp-from" value={value.effectiveAt} onChange={v => set({ effectiveAt: v })} />
                   </Field>
                   <Field id="mp-to" label="Expires">
-                    <Input id="mp-to" type="date" value={value.expiresAt} onChange={event => set({ expiresAt: event.target.value })} />
+                    <DateField id="mp-to" value={value.expiresAt} onChange={v => set({ expiresAt: v })} />
                   </Field>
                 </div>
               </section>

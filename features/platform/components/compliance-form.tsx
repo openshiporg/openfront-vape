@@ -4,11 +4,9 @@ import type { ReactNode } from 'react'
 
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 // Form pieces shared by the compliance record sheets and drawers.
-
-export const selectClass =
-  'h-10 w-full rounded-[4px] border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60'
 
 export const textareaClass =
   'min-h-24 w-full rounded-[4px] border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60'
@@ -37,10 +35,13 @@ export function Options({ id, labels, value, onChange, disabled, empty }: {
   empty?: string
 }) {
   return (
-    <select id={id} className={selectClass} value={value} disabled={disabled} onChange={event => onChange(event.target.value)}>
-      {empty !== undefined && <option value="">{empty}</option>}
-      {Object.entries(labels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-    </select>
+    <PickSelect
+      id={id}
+      value={value}
+      disabled={disabled}
+      onChange={onChange}
+      options={[...(empty !== undefined ? [['', empty] as PickOption] : []), ...(Object.entries(labels) as PickOption[])]}
+    />
   )
 }
 

@@ -13,6 +13,7 @@ import { PROVIDER_APPROVAL_STATUS_LABELS, PROVIDER_PURPOSE_LABELS, regulatedLabe
 import type { ApprovalRow } from '../actions/provider-approvals'
 import { recordSerial } from '@/features/platform/product-evidence/lib/serial'
 import { APPROVAL_TONES, approvalInForce, boundProvider, DAY, day, Expiry, REQUIRED_PROVIDER_PURPOSES } from './approval-display'
+import { PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 const STATUS_PARAM = '!status_matches'
 
@@ -144,17 +145,16 @@ export function ProviderApprovalList({ approvals }: { approvals: ApprovalRow[] }
             </label>
             <label className="flex shrink-0 items-center gap-2">
               <span className="text-[12px] font-medium text-muted-foreground">Purpose</span>
-              <select
+              <PickSelect
                 aria-label="Purpose"
-                className="h-10 min-w-0 rounded-[4px] border border-input bg-background px-2.5 text-[13px] text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                className="w-auto text-[13px]"
                 value={purpose}
-                onChange={event => setParams({ purpose: event.target.value === 'all' ? null : event.target.value })}
-              >
-                <option value="all">All purposes ({approvals.length})</option>
-                {Object.entries(PROVIDER_PURPOSE_LABELS).map(([key, label]) => (
-                  <option key={key} value={key}>{label} ({approvals.filter(item => item.purpose === key).length})</option>
-                ))}
-              </select>
+                onChange={next => setParams({ purpose: next === 'all' ? null : next })}
+                options={[
+                  ['all', `All purposes (${approvals.length})`] as PickOption,
+                  ...Object.entries(PROVIDER_PURPOSE_LABELS).map(([key, label]): PickOption => [key, `${label} (${approvals.filter(item => item.purpose === key).length})`]),
+                ]}
+              />
             </label>
           </div>
         </div>

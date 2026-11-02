@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ErrorLine, Field, textareaClass } from '@/features/platform/components/compliance-form';
 import { Pill, Track, buttonClass } from '@/features/platform/components/vape-primitives';
 import { adjustStock } from '../actions/adjust';
+import { PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 const REASONS = ['Received', 'Count correction', 'Damaged', 'Expired', 'Returned to supplier', 'Recall', 'Other'];
 
@@ -95,14 +96,12 @@ export function AdjustStockSheet({ variant }: { variant: { id: string; title: st
             </Field>
 
             <Field id="adjust-reason" label="Reason">
-              <select
+              <PickSelect
                 id="adjust-reason"
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
                 value={reason}
-                onChange={event => setReason(event.target.value)}
-              >
-                {REASONS.map(value => <option key={value} value={value}>{value}</option>)}
-              </select>
+                onChange={setReason}
+                options={REASONS.map((value): PickOption => [value, value])}
+              />
             </Field>
 
             <Field id="adjust-note" label="Note">

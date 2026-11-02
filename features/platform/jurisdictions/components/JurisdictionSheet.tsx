@@ -7,12 +7,13 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { ErrorLine, Field, Options, selectClass } from '@/features/platform/components/compliance-form';
+import { ErrorLine, Field, Options } from '@/features/platform/components/compliance-form';
 import { SectionTitle } from '@/features/platform/components/vape-ui';
 import { JURISDICTION_LEVEL_LABELS } from '@/features/keystone/regulated/labels';
 import { getParentOptions, saveJurisdiction } from '../actions/jurisdictions';
 import type { JurisdictionDetail, JurisdictionInput } from '../lib/shared';
 import { SourcesEditor } from './SourcesEditor';
+import { PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 function initial(jurisdiction?: JurisdictionDetail): JurisdictionInput {
   return {
@@ -87,12 +88,7 @@ export function JurisdictionSheetButton({ jurisdiction, children, className, var
                   <Options id="j-level" labels={JURISDICTION_LEVEL_LABELS} value={value.level} onChange={level => set({ level })} />
                 </Field>
                 <Field id="j-parent" label="Parent">
-                  <select id="j-parent" className={selectClass} value={value.parentId} onChange={event => set({ parentId: event.target.value })}>
-                    <option value="">None</option>
-                    {parents.filter(parent => parent.id !== jurisdiction?.id).map(parent => (
-                      <option key={parent.id} value={parent.id}>{parent.code} {parent.name}</option>
-                    ))}
-                  </select>
+                  <PickSelect id="j-parent" value={value.parentId} onChange={v => set({ parentId: v })} options={[['', 'None'] as PickOption, ...parents.filter(parent => parent.id !== jurisdiction?.id).map((parent): PickOption => [parent.id, `${parent.code} ${parent.name}`])]} />
                 </Field>
               </div>
               <Field id="j-postal" label="Postal scope (comma separated)">

@@ -13,6 +13,7 @@ import { saveRuleSet } from '../actions/jurisdictions';
 import { formatDay, nextVersion, type RuleSetRecord, type Source } from '../lib/shared';
 import { RulesEditor, currentRules, initialRulesState, type RulesState } from './RulesEditor';
 import { SourcesEditor } from './SourcesEditor';
+import { DateField } from '@/features/platform/components/admin-fields'
 
 export type RuleSetSheetMode = 'create' | 'edit' | 'version' | 'view';
 
@@ -116,10 +117,10 @@ export function RuleSetSheetButton({ jurisdictionId, ruleSet, mode, children, cl
                   <Input id="rs-version" required disabled={readOnly} className="font-mono" value={value.version} onChange={event => set({ version: event.target.value })} />
                 </Field>
                 <Field id="rs-from" label="Effective from">
-                  <Input id="rs-from" type="date" required disabled={readOnly} value={value.effectiveAt} onChange={event => set({ effectiveAt: event.target.value })} />
+                  <DateField id="rs-from" required disabled={readOnly} value={value.effectiveAt} onChange={v => set({ effectiveAt: v })} />
                 </Field>
                 <Field id="rs-to" label="Expires">
-                  <Input id="rs-to" type="date" required disabled={readOnly} value={value.expiresAt} onChange={event => set({ expiresAt: event.target.value })} />
+                  <DateField id="rs-to" required disabled={readOnly} value={value.expiresAt} onChange={v => set({ expiresAt: v })} />
                 </Field>
               </div>
               {readOnly && ruleSet && (

@@ -7,6 +7,7 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { PlatformEmptyState } from '@/features/platform/components/PlatformEmptyState';
 import { JURISDICTION_LEVEL_LABELS } from '@/features/keystone/regulated/labels';
+import { PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 export function JurisdictionFilters({ level, search }: { level: string; search: string }) {
   const router = useRouter();
@@ -47,17 +48,13 @@ export function JurisdictionFilters({ level, search }: { level: string; search: 
       </form>
       <label className="flex shrink-0 items-center gap-2">
         <span className="text-[12px] font-medium text-muted-foreground">Level</span>
-        <select
+        <PickSelect
           aria-label="Level"
-          className="h-10 rounded-[4px] border border-input bg-background px-2.5 text-[13px] text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          className="w-auto text-[13px]"
           value={level}
-          onChange={event => update({ level: event.target.value })}
-        >
-          <option value="">All levels</option>
-          {Object.entries(JURISDICTION_LEVEL_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
-        </select>
+          onChange={next => update({ level: next })}
+          options={[['', 'All levels'] as PickOption, ...(Object.entries(JURISDICTION_LEVEL_LABELS) as PickOption[])]}
+        />
       </label>
     </div>
   );

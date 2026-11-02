@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { Checks, ErrorLine, EvidenceFile, Field, selectClass } from '@/features/platform/components/compliance-form';
+import { Checks, ErrorLine, EvidenceFile, Field } from '@/features/platform/components/compliance-form';
 import { Button } from '@/components/ui/button';
 import { SectionTitle } from '@/features/platform/components/vape-ui';
 import { Pill, Track } from '@/features/platform/components/vape-primitives';
@@ -16,6 +16,7 @@ import {
   PROVIDER_PURPOSE_LABELS,
 } from '@/features/keystone/regulated/labels';
 import { createProviderApproval, getApprovalOptions, type ApprovalInput, type ApprovalOptions } from '../actions/approvals';
+import { DateField, PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 const STATUSES = ['review', 'active'] as const;
 
@@ -96,33 +97,22 @@ export function AddApprovalButton({ purpose, children, className }: { purpose: s
                 <SectionTitle>Provider</SectionTitle>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field id="pa-purpose" label="Purpose">
-                    <select id="pa-purpose" className={selectClass} value={value.purpose} onChange={event => set({ purpose: event.target.value })}>
-                      {Object.entries(PROVIDER_PURPOSE_LABELS).map(([key, text]) => <option key={key} value={key}>{text}</option>)}
-                    </select>
+                    <PickSelect id="pa-purpose" value={value.purpose} onChange={v => set({ purpose: v })} options={Object.entries(PROVIDER_PURPOSE_LABELS) as PickOption[]} />
                   </Field>
                   <Field id="pa-profile" label="Merchant profile">
-                    <select id="pa-profile" className={selectClass} value={value.profileId} onChange={event => set({ profileId: event.target.value })}>
-                      <option value="">None</option>
-                      {options.profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.legalName}</option>)}
-                    </select>
+                    <PickSelect id="pa-profile" value={value.profileId} onChange={v => set({ profileId: v })} options={[['', 'None'] as PickOption, ...options.profiles.map((profile): PickOption => [profile.id, profile.legalName])]} />
                   </Field>
                   <Field id="pa-code" label="Provider code">
                     <Input id="pa-code" required className="font-mono" value={value.providerCode} onChange={event => set({ providerCode: event.target.value })} />
                   </Field>
                   {value.purpose === 'payment' && (
                     <Field id="pa-payment" label="Payment provider">
-                      <select id="pa-payment" className={selectClass} value={value.paymentProviderId} onChange={event => set({ paymentProviderId: event.target.value })}>
-                        <option value="">None</option>
-                        {options.paymentProviders.map(provider => <option key={provider.id} value={provider.id}>{provider.name}</option>)}
-                      </select>
+                      <PickSelect id="pa-payment" value={value.paymentProviderId} onChange={v => set({ paymentProviderId: v })} options={[['', 'None'] as PickOption, ...options.paymentProviders.map((provider): PickOption => [provider.id, provider.name])]} />
                     </Field>
                   )}
                   {value.purpose === 'carrier' && (
                     <Field id="pa-shipping" label="Shipping provider">
-                      <select id="pa-shipping" className={selectClass} value={value.shippingProviderId} onChange={event => set({ shippingProviderId: event.target.value })}>
-                        <option value="">None</option>
-                        {options.shippingProviders.map(provider => <option key={provider.id} value={provider.id}>{provider.name}</option>)}
-                      </select>
+                      <PickSelect id="pa-shipping" value={value.shippingProviderId} onChange={v => set({ shippingProviderId: v })} options={[['', 'None'] as PickOption, ...options.shippingProviders.map((provider): PickOption => [provider.id, provider.name])]} />
                     </Field>
                   )}
                 </div>
@@ -155,10 +145,10 @@ export function AddApprovalButton({ purpose, children, className }: { purpose: s
                 <EvidenceFile id="pa-evidence" label="Evidence document" digest={value.evidenceDigest} onRecord={false} onDigest={evidenceDigest => set({ evidenceDigest })} />
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field id="pa-from" label="Effective from">
-                    <Input id="pa-from" type="date" value={value.effectiveAt} onChange={event => set({ effectiveAt: event.target.value })} />
+                    <DateField id="pa-from" value={value.effectiveAt} onChange={v => set({ effectiveAt: v })} />
                   </Field>
                   <Field id="pa-to" label="Expires">
-                    <Input id="pa-to" type="date" value={value.expiresAt} onChange={event => set({ expiresAt: event.target.value })} />
+                    <DateField id="pa-to" value={value.expiresAt} onChange={v => set({ expiresAt: v })} />
                   </Field>
                 </div>
                 <div className="space-y-1.5">

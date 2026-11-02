@@ -41,6 +41,7 @@ import {
 } from '../actions/evidence'
 import { recordSerial } from '../lib/serial'
 import { actionClass, TransitionActions, type TransitionAction } from './TransitionActions'
+import { PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 const STATUS_PARAM = '!status_matches'
 const DAY = 24 * 60 * 60 * 1000
@@ -279,16 +280,13 @@ export function ProductEvidenceClient({ data }: { data: ProductEvidence }) {
             />
             <label className="flex shrink-0 items-center gap-2">
               <span className="text-[12px] font-medium text-muted-foreground">Evidence</span>
-              <select
+              <PickSelect
                 aria-label="Evidence filter"
-                className="h-10 rounded-[4px] border border-input bg-background px-2.5 text-[13px] text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                className="w-auto text-[13px]"
                 value={flag}
-                onChange={event => setParams({ flag: event.target.value === 'all' ? null : event.target.value })}
-              >
-                {FLAGS.map(([key, label]) => (
-                  <option key={key} value={key}>{label} ({key === 'all' ? data.classifications.length : flagged[key].length})</option>
-                ))}
-              </select>
+                onChange={next => setParams({ flag: next === 'all' ? null : next })}
+                options={FLAGS.map(([key, label]): PickOption => [key, `${label} (${key === 'all' ? data.classifications.length : flagged[key].length})`])}
+              />
             </label>
           </div>
           <div className="px-4 md:px-6">

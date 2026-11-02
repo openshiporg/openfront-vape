@@ -7,11 +7,12 @@ import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ErrorLine, Field, selectClass } from '@/features/platform/components/compliance-form';
+import { ErrorLine, Field } from '@/features/platform/components/compliance-form';
 import { Pill, Track } from '@/features/platform/components/vape-primitives';
 import { REPORT_STATUS_LABELS, REPORT_TYPE_LABELS } from '@/features/keystone/regulated/labels';
 import { exportInventory } from '@/features/platform/compliance-center/actions/operations';
 import { generateReport, getReportOptions, recordSubmission, type GenerateInput, type ReportOptions } from '../actions/reports';
+import { DateField, PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 const primaryClass = 'h-10 rounded-[4px] px-4 text-[13px] font-medium';
 const secondaryClass =
@@ -85,30 +86,20 @@ export function GenerateReportButton() {
               }}
             >
               <Field id="cr-type" label="Report type">
-                <select id="cr-type" className={selectClass} value={value.reportType} onChange={event => set({ reportType: event.target.value })}>
-                  {Object.entries(REPORT_TYPE_LABELS).map(([key, text]) => <option key={key} value={key}>{text}</option>)}
-                </select>
+                <PickSelect id="cr-type" value={value.reportType} onChange={v => set({ reportType: v })} options={Object.entries(REPORT_TYPE_LABELS) as PickOption[]} />
               </Field>
               <Field id="cr-profile" label="Merchant profile">
-                <select id="cr-profile" required className={selectClass} value={value.merchantProfileId} onChange={event => set({ merchantProfileId: event.target.value })}>
-                  <option value="">Choose a profile</option>
-                  {options.profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.legalName}</option>)}
-                </select>
+                <PickSelect id="cr-profile" required value={value.merchantProfileId} onChange={v => set({ merchantProfileId: v })} options={[['', 'Choose a profile'] as PickOption, ...options.profiles.map((profile): PickOption => [profile.id, profile.legalName])]} />
               </Field>
               <Field id="cr-jurisdiction" label="Jurisdiction">
-                <select id="cr-jurisdiction" required className={selectClass} value={value.jurisdictionId} onChange={event => set({ jurisdictionId: event.target.value })}>
-                  <option value="">Choose a jurisdiction</option>
-                  {options.jurisdictions.map(jurisdiction => (
-                    <option key={jurisdiction.id} value={jurisdiction.id}>{jurisdiction.code} {jurisdiction.name}</option>
-                  ))}
-                </select>
+                <PickSelect id="cr-jurisdiction" required value={value.jurisdictionId} onChange={v => set({ jurisdictionId: v })} options={[['', 'Choose a jurisdiction'] as PickOption, ...options.jurisdictions.map((jurisdiction): PickOption => [jurisdiction.id, `${jurisdiction.code} ${jurisdiction.name}`])]} />
               </Field>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field id="cr-from" label="Period start">
-                  <Input id="cr-from" type="date" required value={value.periodStartsAt} onChange={event => set({ periodStartsAt: event.target.value })} />
+                  <DateField id="cr-from" required value={value.periodStartsAt} onChange={v => set({ periodStartsAt: v })} />
                 </Field>
                 <Field id="cr-through" label="Period end (inclusive)">
-                  <Input id="cr-through" type="date" required value={value.periodThrough} onChange={event => set({ periodThrough: event.target.value })} />
+                  <DateField id="cr-through" required value={value.periodThrough} onChange={v => set({ periodThrough: v })} />
                 </Field>
               </div>
               <ErrorLine message={error} />
@@ -194,9 +185,7 @@ export function ExportInventoryButton({ profiles }: { profiles: Array<{ id: stri
   return (
     <div className="flex flex-wrap items-center gap-2">
       {profiles.length > 1 && (
-        <select aria-label="Merchant profile" className={`${selectClass} h-10 w-auto max-w-full rounded-[4px]`} value={profileId} onChange={event => setProfileId(event.target.value)}>
-          {profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.legalName}</option>)}
-        </select>
+        <PickSelect aria-label="Merchant profile" className="w-auto max-w-full" value={profileId} onChange={setProfileId} options={profiles.map((profile): PickOption => [profile.id, profile.legalName])} />
       )}
       <button
         type="button"

@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
-import { ErrorLine, EvidenceFile, Field, Options, selectClass } from '@/features/platform/components/compliance-form'
+import { ErrorLine, EvidenceFile, Field, Options } from '@/features/platform/components/compliance-form'
 import { Button } from '@/components/ui/button'
 import { Dot, ListBand, SectionTitle } from '@/features/platform/components/vape-ui'
 import { Pill, Track } from '@/features/platform/components/vape-primitives'
@@ -26,6 +26,7 @@ import {
   type ClassificationInput,
   type ClassifyForm,
 } from '../actions/classify'
+import { DateField, PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 const emptyClassification: ClassificationInput = {
   category: 'e_liquid',
@@ -92,12 +93,7 @@ function AuthorizationForm({ form, onSaved }: { form: ClassifyForm; onSaved: () 
           <Input id="auth-number" required value={value.authorizationIdentifier} onChange={event => set({ authorizationIdentifier: event.target.value })} />
         </Field>
         <Field id="auth-jurisdiction" label="Jurisdiction">
-          <select id="auth-jurisdiction" className={selectClass} value={value.jurisdictionId} onChange={event => set({ jurisdictionId: event.target.value })}>
-            <option value="">Federal</option>
-            {form.jurisdictions.map(jurisdiction => (
-              <option key={jurisdiction.id} value={jurisdiction.id}>{jurisdiction.code} {jurisdiction.name}</option>
-            ))}
-          </select>
+          <PickSelect id="auth-jurisdiction" value={value.jurisdictionId} onChange={v => set({ jurisdictionId: v })} options={[['', 'Federal'] as PickOption, ...form.jurisdictions.map((jurisdiction): PickOption => [jurisdiction.id, `${jurisdiction.code} ${jurisdiction.name}`])]} />
         </Field>
       </div>
       <Field id="auth-url" label="Evidence URL">
@@ -109,10 +105,10 @@ function AuthorizationForm({ form, onSaved }: { form: ClassifyForm; onSaved: () 
           <Options id="auth-status" labels={{ pending: AUTHORIZATION_STATUS_LABELS.pending, authorized: AUTHORIZATION_STATUS_LABELS.authorized }} value={value.status} onChange={status => set({ status })} />
         </Field>
         <Field id="auth-from" label="Effective from">
-          <Input id="auth-from" type="date" required value={value.effectiveAt} onChange={event => set({ effectiveAt: event.target.value })} />
+          <DateField id="auth-from" required value={value.effectiveAt} onChange={v => set({ effectiveAt: v })} />
         </Field>
         <Field id="auth-to" label="Expires">
-          <Input id="auth-to" type="date" value={value.expiresAt} onChange={event => set({ expiresAt: event.target.value })} />
+          <DateField id="auth-to" value={value.expiresAt} onChange={v => set({ expiresAt: v })} />
         </Field>
       </div>
       <ErrorLine message={error} />
@@ -250,10 +246,10 @@ export function ClassifySheet({ variantId, open, onOpenChange, onSaved }: {
                       </Field>
                       <EvidenceFile id="cls-marketing-evidence" label="Marketing review document" digest={value.marketingEvidenceDigest || ''} onRecord={Boolean(existing?.hasMarketingEvidence)} onDigest={marketingEvidenceDigest => set({ marketingEvidenceDigest })} />
                       <Field id="cls-from" label="Effective from">
-                        <Input id="cls-from" type="date" value={value.effectiveAt} onChange={event => set({ effectiveAt: event.target.value })} />
+                        <DateField id="cls-from" value={value.effectiveAt} onChange={v => set({ effectiveAt: v })} />
                       </Field>
                       <Field id="cls-to" label="Expires">
-                        <Input id="cls-to" type="date" value={value.expiresAt} onChange={event => set({ expiresAt: event.target.value })} />
+                        <DateField id="cls-to" value={value.expiresAt} onChange={v => set({ expiresAt: v })} />
                       </Field>
                     </div>
                     <div className="space-y-1.5">

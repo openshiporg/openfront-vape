@@ -7,12 +7,13 @@ import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ErrorLine, EvidenceFile, Field, selectClass } from '@/features/platform/components/compliance-form';
+import { ErrorLine, EvidenceFile, Field } from '@/features/platform/components/compliance-form';
 import { SectionTitle } from '@/features/platform/components/vape-ui';
 import { Pill, Track } from '@/features/platform/components/vape-primitives';
 import { MERCHANT_LICENSE_STATUS_LABELS } from '@/features/keystone/regulated/labels';
 import { getJurisdictionOptions, type JurisdictionOption, type ProfileLicense } from '../actions/profiles';
 import { closeLicense, createLicense, updateLicense, type LicenseInput } from '../actions/licenses';
+import { DateField, PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 const STATUSES = ['draft', 'active', 'conditioned'] as const;
 const USABLE = ['active', 'conditioned'];
@@ -171,10 +172,7 @@ export function LicenseSheet({
               <section className="space-y-3">
                 <SectionTitle>Licence</SectionTitle>
                 <Field id="ml-jurisdiction" label="Jurisdiction">
-                  <select id="ml-jurisdiction" className={selectClass} value={value.jurisdictionId} onChange={event => set({ jurisdictionId: event.target.value })}>
-                    <option value="">None</option>
-                    {jurisdictions.map(item => <option key={item.id} value={item.id}>{item.code} {item.name}</option>)}
-                  </select>
+                  <PickSelect id="ml-jurisdiction" value={value.jurisdictionId} onChange={v => set({ jurisdictionId: v })} options={[['', 'None'] as PickOption, ...jurisdictions.map((item): PickOption => [item.id, `${item.code} ${item.name}`])]} />
                 </Field>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field id="ml-type" label="Licence type">
@@ -206,13 +204,13 @@ export function LicenseSheet({
                 />
                 <div className="grid gap-3 sm:grid-cols-3">
                   <Field id="ml-verified" label="Verified on">
-                    <Input id="ml-verified" type="date" value={value.verifiedAt} onChange={event => set({ verifiedAt: event.target.value })} />
+                    <DateField id="ml-verified" value={value.verifiedAt} onChange={v => set({ verifiedAt: v })} />
                   </Field>
                   <Field id="ml-from" label="Effective from">
-                    <Input id="ml-from" type="date" required value={value.effectiveAt} onChange={event => set({ effectiveAt: event.target.value })} />
+                    <DateField id="ml-from" required value={value.effectiveAt} onChange={v => set({ effectiveAt: v })} />
                   </Field>
                   <Field id="ml-to" label="Expires">
-                    <Input id="ml-to" type="date" required value={value.expiresAt} onChange={event => set({ expiresAt: event.target.value })} />
+                    <DateField id="ml-to" required value={value.expiresAt} onChange={v => set({ expiresAt: v })} />
                   </Field>
                 </div>
                 <div className="space-y-1.5">

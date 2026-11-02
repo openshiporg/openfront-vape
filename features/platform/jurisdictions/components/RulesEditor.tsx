@@ -4,11 +4,12 @@ import { useMemo, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
-import { Checks, Field, Options, selectClass, textareaClass } from '@/features/platform/components/compliance-form';
+import { Checks, Field, Options, textareaClass } from '@/features/platform/components/compliance-form';
 import { Pill, Track } from '@/features/platform/components/vape-primitives';
 import { CLASSIFICATION_CATEGORY_LABELS, RULE_TYPE_LABELS } from '@/features/keystone/regulated/labels';
 import { validateRules } from '@/features/regulated-commerce/core/policy-validation';
 import { RULE_TYPES, newRuleDraft, rulesToDrafts, serialiseRules, type RuleDraft, type RuleType } from '../lib/shared';
+import { PickSelect, type PickOption } from '@/features/platform/components/admin-fields'
 
 export type RulesState = { mode: 'rows' | 'json'; drafts: RuleDraft[]; text: string };
 
@@ -180,9 +181,7 @@ export function RulesEditor({ value, onChange, disabled }: {
           </div>
           {!disabled && (
             <div className="flex gap-2">
-              <select aria-label="Rule type" className={selectClass} value={addType} onChange={event => setAddType(event.target.value as RuleType)}>
-                {RULE_TYPES.map(type => <option key={type} value={type}>{RULE_TYPE_LABELS[type] || type}</option>)}
-              </select>
+              <PickSelect aria-label="Rule type" value={addType} onChange={next => setAddType(next as RuleType)} options={RULE_TYPES.map((type): PickOption => [type, RULE_TYPE_LABELS[type] || type])} />
               <button
                 type="button"
                 onClick={() => setDrafts([...value.drafts, newRuleDraft(addType, value.drafts)])}
