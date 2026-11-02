@@ -99,7 +99,7 @@ const CartDropdown = ({
               <button
                 type="button"
                 data-filled={totalItems > 0}
-                className="group inline-flex min-h-11 items-center gap-2 rounded-[4px] bg-vp-well px-4 text-[14px] font-medium text-vp-ink"
+                className="group inline-flex min-h-11 items-center gap-1.5 rounded-[4px] px-3 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink"
                 aria-label={`Open bag${totalItems > 0 ? `, ${totalItems} ${totalItems === 1 ? "item" : "items"}` : ""}`}
                 data-testid="nav-cart-trigger"
                 suppressHydrationWarning
@@ -110,7 +110,7 @@ const CartDropdown = ({
           </div>
           <LocalizedClientLink
             data-filled={totalItems > 0}
-            className="group inline-flex min-h-11 items-center gap-2 rounded-[4px] bg-vp-well px-4 text-[14px] font-medium text-vp-ink sm:hidden"
+            className="group inline-flex min-h-11 items-center gap-1.5 rounded-[4px] px-2 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink sm:hidden"
             href="/cart"
             aria-label={`View bag${totalItems > 0 ? `, ${totalItems} ${totalItems === 1 ? "item" : "items"}` : ""}`}
             data-testid="nav-cart-link"

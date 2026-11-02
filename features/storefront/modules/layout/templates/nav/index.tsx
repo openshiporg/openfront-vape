@@ -52,11 +52,11 @@ export default async function Nav() {
             <Suspense
               fallback={
                 <LocalizedClientLink
-                  className="inline-flex min-h-11 items-center gap-2 rounded-[4px] px-3 text-[14px] font-medium text-vp-ink"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-[4px] px-2 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink sm:px-3"
                   href="/cart"
                   data-testid="nav-cart-link"
                 >
-                  Bag <span className="font-vp-mono text-vp-ink-2">0</span>
+                  Bag <span className="font-vp-mono text-[13px] text-vp-ink-3">0</span>
                 </LocalizedClientLink>
               }
             >
