@@ -19,8 +19,10 @@ import {
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { LOGO_ICONS, HUE_PRESETS } from '../lib/icon-registry';
 import { updateStoreSettings } from '../actions';
+import { StoreSettingsSaveBar } from '../components/StoreSettingsSaveBar';
 import { toast } from 'sonner';
 import { Code } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ListBand, SectionTitle, StatusWord } from '@/features/platform/components/vape-ui';
 import {
@@ -106,7 +108,6 @@ export function StoreSettingsPageClient({
 
   // Find matching preset icon, but don't default to first icon if not found
   const selectedIcon = LOGO_ICONS.find((icon) => icon.lightSvg === logoIcon);
-  const selectedHue = HUE_PRESETS.find((preset) => preset.value.toString() === logoColor);
 
   // Required before a regulated store can sell (mirrors missingStoreInfo), in form order.
   const blankRequired: Array<{ id: string; label: string; section: string }> = [
@@ -133,13 +134,11 @@ export function StoreSettingsPageClient({
   const area = 'min-h-24 rounded-[4px] bg-background';
   const row = 'grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center';
   const rowTop = 'grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-start';
-  const square =
-    'flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-[4px] border border-input bg-background p-0 transition-colors hover:bg-muted focus:outline-none focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50';
   const requiredMark = (id: string) =>
-    requiredIds.has(id) ? <span className="ml-1.5 text-[12px] font-medium text-[oklch(0.52_0.17_27)]">Required</span> : null;
+    requiredIds.has(id) ? <span className="ml-1.5 text-xs font-medium text-[oklch(0.52_0.17_27)]">Required</span> : null;
 
   return (
-    <div className="grid max-w-5xl gap-8 px-4 pb-10 md:px-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div className="grid max-w-5xl gap-8 px-4 pb-24 md:px-6 md:pb-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="min-w-0 space-y-8">
         <section aria-label="Blank required fields">
           <SectionTitle meta={blankRequired.length}>Needs you</SectionTitle>
@@ -154,12 +153,12 @@ export function StoreSettingsPageClient({
                   <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
                     <StatusWord tone="warn">Blank</StatusWord>
                     <span className="text-sm font-medium text-foreground">{item.label}</span>
-                    <span className="text-[12px] text-muted-foreground">{item.section}</span>
+                    <span className="text-xs text-muted-foreground">{item.section}</span>
                   </span>
                   <button
                     type="button"
                     onClick={() => focusField(item.id)}
-                    className="inline-flex min-h-8 shrink-0 items-center rounded-[4px] border border-input bg-background px-3 text-[13px] font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring max-sm:min-h-10"
+                    className="inline-flex min-h-8 shrink-0 items-center rounded-[4px] border border-input bg-background px-3 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring max-sm:min-h-10"
                   >
                     Fill
                   </button>
@@ -182,121 +181,131 @@ export function StoreSettingsPageClient({
               />
             </div>
 
-            {/* Logo Icon Selector */}
-            <div className="grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
-              <Label className="text-sm text-muted-foreground">Logo</Label>
-              <div className="flex min-w-0 items-center gap-2">
-                <Select
-                  value={selectedIcon?.id || ''}
-                  onValueChange={(id) => {
-                    const icon = LOGO_ICONS.find((i) => i.id === id);
-                    if (icon) setLogoIcon(icon.lightSvg);
-                  }}
-                >
-                  <SelectPrimitive.Trigger aria-label="Logo icon" className={square}>
-                    <div
-                      dangerouslySetInnerHTML={{ __html: logoIcon }}
-                      style={{ filter: `hue-rotate(${logoColor}deg)` }}
-                      className="[&>svg]:h-6 [&>svg]:w-6"
-                    />
-                  </SelectPrimitive.Trigger>
-                  <SelectContent className="max-h-80 border-border">
-                    {LOGO_ICONS.map((icon) => (
-                      <SelectItem key={icon.id} value={icon.id} className="min-h-10">
-                        <span className="flex items-center gap-3">
-                          <div
-                            dangerouslySetInnerHTML={{ __html: icon.lightSvg }}
-                            style={{ filter: `hue-rotate(${logoColor}deg)` }}
-                            className="[&>svg]:h-6 [&>svg]:w-6"
-                          />
-                          <span className="block text-sm font-medium text-foreground">
-                            {icon.name}
-                          </span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <span className="min-w-0 truncate text-sm text-foreground">
-                  {selectedIcon?.name || 'Custom SVG'}
-                </span>
-
-                {/* SVG Code Editor Popover */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      className="ml-auto h-10 shrink-0 rounded-[4px] border border-input bg-background px-3 text-[13px] font-medium hover:bg-muted [&_svg]:size-4"
+            <div className="space-y-6 px-4 py-4">
+              {/* Logo Icon Selector */}
+              <div>
+                <Label>Logo Icon</Label>
+                <div className="mt-2 flex items-center gap-2">
+                  <Select
+                    value={selectedIcon?.id || ''}
+                    onValueChange={(id) => {
+                      const icon = LOGO_ICONS.find((i) => i.id === id);
+                      if (icon) setLogoIcon(icon.lightSvg);
+                    }}
+                  >
+                    <SelectPrimitive.Trigger
+                      className={cn(
+                        'flex h-12 w-12 shrink-0 rounded-lg border border-input bg-background focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 p-0 overflow-hidden items-center justify-center'
+                      )}
                     >
-                      <Code className="stroke-muted-foreground" />
-                      <span className="hidden sm:inline">SVG</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[min(500px,calc(100vw-2rem))]" align="end">
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-semibold">Edit SVG code</h4>
-                      <Textarea
-                        value={logoIcon}
-                        onChange={(e) => setLogoIcon(e.target.value)}
-                        className="min-h-[300px] font-mono text-xs"
-                        placeholder="<svg>...</svg>"
-                      />
-                      <div className="flex items-center gap-2">
-                        <div className="text-xs text-muted-foreground">Preview</div>
-                        <div
-                          dangerouslySetInnerHTML={{ __html: logoIcon }}
-                          style={{ filter: `hue-rotate(${logoColor}deg)` }}
-                          className="flex items-center justify-center rounded-[4px] bg-muted p-2 [&>svg]:h-8 [&>svg]:w-8"
-                        />
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            {/* Logo Color Selector */}
-            <div className="grid gap-2 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
-              <Label className="text-sm text-muted-foreground">Logo colour</Label>
-              <div className="flex items-center gap-3">
-                <Select
-                  value={logoColor}
-                  onValueChange={(value) => setLogoColor(value)}
-                >
-                  <SelectPrimitive.Trigger aria-label="Logo colour" className={square}>
-                    <SelectValue>
                       <div
-                        className="h-6 w-6 rounded-[2px]"
-                        style={{
-                          background: `hsl(${(240 + parseInt(logoColor)) % 360}, 70%, 50%)`
-                        }}
+                        dangerouslySetInnerHTML={{ __html: logoIcon }}
+                        style={{ filter: `hue-rotate(${logoColor}deg)` }}
+                        className="[&>svg]:w-6 [&>svg]:h-6"
                       />
-                    </SelectValue>
-                  </SelectPrimitive.Trigger>
-                  <SelectContent className="border-border">
-                    <div className="grid grid-cols-4 gap-2 p-2">
-                      {HUE_PRESETS.map((preset) => (
-                        <SelectItem
-                          key={preset.value}
-                          value={preset.value.toString()}
-                          aria-label={preset.name}
-                          className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-[4px] p-0 [&>span:first-child]:hidden"
-                        >
-                          <div
-                            className="h-6 w-6 rounded-[2px]"
-                            style={{
-                              background: `hsl(${(240 + preset.value) % 360}, 70%, 50%)`
-                            }}
-                          />
+                    </SelectPrimitive.Trigger>
+                    <SelectContent className="border-border dark:border-blue-700">
+                      {LOGO_ICONS.map((icon) => (
+                        <SelectItem key={icon.id} value={icon.id}>
+                          <span className="flex items-center gap-3">
+                            <div
+                              dangerouslySetInnerHTML={{ __html: icon.lightSvg }}
+                              style={{ filter: `hue-rotate(${logoColor}deg)` }}
+                              className="[&>svg]:w-6 [&>svg]:h-6"
+                            />
+                            <span>
+                              <span className="block font-medium text-gray-900 dark:text-gray-100">
+                                {icon.name}
+                              </span>
+                            </span>
+                          </span>
                         </SelectItem>
                       ))}
-                    </div>
-                  </SelectContent>
-                </Select>
-                <span className="text-sm text-foreground">{selectedHue?.name || 'Custom'}</span>
-                <span className="font-mono text-xs tabular-nums text-muted-foreground">{logoColor}°</span>
+                    </SelectContent>
+                  </Select>
+
+                  {/* SVG Code Editor Popover */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-12 w-12 shrink-0"
+                        type="button"
+                      >
+                        <Code className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[min(500px,calc(100vw-2rem))]" align="start">
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-medium mb-2">Edit SVG Code</h4>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Edit the SVG code directly. Changes will be reflected in the icon preview.
+                          </p>
+                        </div>
+                        <Textarea
+                          value={logoIcon}
+                          onChange={(e) => setLogoIcon(e.target.value)}
+                          className="font-mono text-xs min-h-[300px]"
+                          placeholder="<svg>...</svg>"
+                        />
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm text-muted-foreground">Preview:</div>
+                          <div
+                            dangerouslySetInnerHTML={{ __html: logoIcon }}
+                            style={{ filter: `hue-rotate(${logoColor}deg)` }}
+                            className="[&>svg]:w-8 [&>svg]:h-8 flex items-center justify-center p-2 border rounded"
+                          />
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              {/* Logo Color Selector */}
+              <div>
+                <Label>Logo Color</Label>
+                <div className="mt-2">
+                  <Select
+                    value={logoColor}
+                    onValueChange={(value) => setLogoColor(value)}
+                  >
+                    <SelectPrimitive.Trigger
+                      className={cn(
+                        'flex h-12 w-12 shrink-0 rounded-lg border border-input bg-background focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 p-0 overflow-hidden items-center justify-center'
+                      )}
+                    >
+                      <SelectValue>
+                        <div
+                          className="w-6 h-6 rounded-full"
+                          style={{
+                            background: `hsl(${(240 + parseInt(logoColor)) % 360}, 70%, 50%)`
+                          }}
+                        />
+                      </SelectValue>
+                    </SelectPrimitive.Trigger>
+                    <SelectContent className="border-border dark:border-blue-700">
+                      <div className="grid grid-cols-4 gap-2 p-2">
+                        {HUE_PRESETS.map((preset) => (
+                          <SelectItem
+                            key={preset.value}
+                            value={preset.value.toString()}
+                            className="cursor-pointer p-0 h-12 w-12 flex items-center justify-center [&>span:first-child]:hidden"
+                          >
+                            <div
+                              className="w-6 h-6 rounded-full"
+                              style={{
+                                background: `hsl(${(240 + preset.value) % 360}, 70%, 50%)`
+                              }}
+                            />
+                          </SelectItem>
+                        ))}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </ListBand>
@@ -395,13 +404,18 @@ export function StoreSettingsPageClient({
           </ListBand>
         </section>
 
-        <Button
-          onClick={handleSave}
-          disabled={isLoading}
-          className="h-11 w-full rounded-[4px] px-6 sm:h-10 sm:w-auto"
-        >
-          {isLoading ? 'Saving...' : 'Save settings'}
-        </Button>
+        <StoreSettingsSaveBar
+          isSaving={isLoading}
+          button={
+            <Button
+              onClick={handleSave}
+              disabled={isLoading}
+              className="h-11 rounded-[4px] px-6 sm:h-10"
+            >
+              {isLoading ? 'Saving...' : 'Save settings'}
+            </Button>
+          }
+        />
       </div>
 
       <aside className="min-w-0 lg:sticky lg:top-4 lg:self-start">
