@@ -489,7 +489,7 @@ export function VariantCard({
                       <MoreHorizontal />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0 bg-popover border shadow-lg" align="end">
+                  <PopoverContent className="w-80 max-h-[var(--radix-popover-content-available-height)] overflow-y-auto p-0 bg-popover border shadow-lg" align="end" collisionPadding={8}>
                     <VariantForm
                       variant={currentVariant}
                       onChange={setCurrentVariant}
