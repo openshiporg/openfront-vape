@@ -22,6 +22,8 @@ export const COMPLIANCE_REASON_LINES: Record<string, string> = {
   KILL_SWITCH_ENABLED: SALES_PAUSED,
   LAUNCH_JURISDICTION_REQUIRED: "Sales paused: no sales region is open yet.",
   STORE_POLICIES_REQUIRED: "Sales paused: store policies aren't published yet.",
+  DEMO_CATALOGUE_ACTIVE: "Sales paused: this is a demo catalogue. Products are display only.",
+  DEMO_ITEM_NOT_FOR_SALE: "This product is display only and can't be bought.",
   // Merchant authority
   MERCHANT_NOT_ACTIVE: "This store isn't cleared to sell right now.",
   MERCHANT_KILL_SWITCH_ACTIVE: SALES_PAUSED,

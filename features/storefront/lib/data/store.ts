@@ -13,6 +13,7 @@ interface Store {
   logoIcon?: string;
   logoColor?: string;
   nicotineWarningRequired?: boolean | null;
+  demoCatalogue?: boolean | null;
   metadata?: any;
 }
 
@@ -31,6 +32,7 @@ export const getStore = cache(async function (): Promise<Store | null> {
         logoIcon
         logoColor
         nicotineWarningRequired
+        demoCatalogue
         metadata
       }
     }

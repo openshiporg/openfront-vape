@@ -58,6 +58,7 @@ type RegionInfoForActions = StoreRegion;
 
 // Corresponds to Product in schema
 import { StoreProduct } from "@/features/storefront/types/storefront";
+import { DISPLAY_ONLY, isDisplayOnly } from "@/features/storefront/lib/display-only";
 
 type ProductInfoForActions = StoreProduct;
 
@@ -145,6 +146,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
   const inView = useIntersection(actionsRef, "0px");
 
   const handleAddToCart = async () => {
+    if (isDisplayOnly(product)) return;
     if (!variant?.id) return null;
     setIsAdding(true);
     await addToCart({
@@ -182,6 +184,9 @@ export default function ProductActions({ product, region, disabled, onVariantCha
     : quantity !== null && quantity <= 5
     ? { tone: "warn" as const, label: `${quantity} left` }
     : { tone: "ok" as const, label: "In stock" };
+
+  // Draft shown through the demo catalogue: no bag button, "Display only" on the price line.
+  const displayOnly = isDisplayOnly(product);
 
   const buttonLabel = isAdding
     ? "Adding"
@@ -229,10 +234,14 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           )}
           <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
             <ProductPrice product={product} variant={variant} region={region} />
-            <span className="inline-flex items-baseline gap-1.5 text-[13px] text-vp-ink-2" data-testid="product-stock">
-              <StatusDot tone={stock.tone} />
-              {stock.label}
-            </span>
+            {displayOnly ? (
+              <span className="text-[14px] text-vp-ink-2" data-testid="display-only">{DISPLAY_ONLY}</span>
+            ) : (
+              <span className="inline-flex items-baseline gap-1.5 text-[13px] text-vp-ink-2" data-testid="product-stock">
+                <StatusDot tone={stock.tone} />
+                {stock.label}
+              </span>
+            )}
           </div>
         </div>
 
@@ -251,6 +260,12 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           </div>
         )}
 
+        {displayOnly ? (
+          <p className="border-t border-vp-line pt-4 text-[14px] leading-[22px] text-vp-ink-2" data-testid="display-only-note">
+            This is a demo catalogue. Nothing here can be bought yet.
+          </p>
+        ) : (
+        <>
         <button
           type="button"
           onClick={handleAddToCart}
@@ -273,6 +288,8 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           show={!inView}
           optionsDisabled={!!disabled || isAdding}
         />
+        </>
+        )}
       </div>
     </>
   );

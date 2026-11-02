@@ -62,6 +62,14 @@ export function describeBlocker(code: string, context: { missingInfo?: string[];
         action: 'Open profile',
       };
     }
+    case 'DEMO_CATALOGUE_ACTIVE':
+      return {
+        code, step: 0, severity: { tone: 'warn' as const, word: 'Demo' },
+        title: 'Demo catalogue on',
+        detail: 'Drafts are visible on the storefront as display only and nothing can be bought. Turn it off before launch.',
+        href: COMPLIANCE_PATH,
+        action: 'Compliance Center',
+      };
     case 'STORE_POLICIES_REQUIRED':
       return {
         code, step: 1, severity: MISSING,

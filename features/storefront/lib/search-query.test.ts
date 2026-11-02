@@ -11,7 +11,8 @@ test("normalises whitespace, arrays and length", () => {
 
 test("only published, priced, non-gift-card products", () => {
   const where = searchWhere("nova", "us") as any;
-  assert.deepEqual(where.AND[0], { status: { equals: "published" } });
+  assert.deepEqual(where.AND[0], { status: { in: ["published"] } });
+  assert.deepEqual((searchWhere("nova", "us", ["published", "draft"]) as any).AND[0], { status: { in: ["published", "draft"] } });
   assert.deepEqual(where.AND[1], { isGiftcard: { equals: false } });
   assert.match(JSON.stringify(where.AND[2]), /"iso2":\{"equals":"us"\}/);
 });

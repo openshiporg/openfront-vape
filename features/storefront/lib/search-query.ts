@@ -1,6 +1,6 @@
 // Turns the header search text into a Product where-clause over published products.
-// The access filter already hides drafts from the public; the explicit status keeps
-// drafts out even for a signed-in staff session.
+// Statuses mirror the public Product access rule: published, plus drafts only while the
+// store's demo catalogue is on. Explicit so a signed-in staff session sees the same as the public.
 export const SEARCH_MAX_LENGTH = 80
 
 export function normaliseSearch(raw: unknown): string {
@@ -9,7 +9,7 @@ export function normaliseSearch(raw: unknown): string {
   return text.replace(/\s+/g, " ").trim().slice(0, SEARCH_MAX_LENGTH)
 }
 
-export function searchWhere(query: string, countryCode: string) {
+export function searchWhere(query: string, countryCode: string, statuses: string[] = ["published"]) {
   const words = normaliseSearch(query).split(" ").filter(Boolean).slice(0, 6)
   const match = (word: string) => ({
     OR: [
@@ -22,7 +22,7 @@ export function searchWhere(query: string, countryCode: string) {
   })
   return {
     AND: [
-      { status: { equals: "published" } },
+      { status: { in: statuses } },
       { isGiftcard: { equals: false } },
       { productVariants: { some: { prices: { some: { region: { countries: { some: { iso2: { equals: countryCode } } } } } } } } },
       // Every word must match somewhere ("menthol 30" finds the 30 ml menthol).

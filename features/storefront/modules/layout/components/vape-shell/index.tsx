@@ -22,6 +22,11 @@ export default async function VapeShell({ children }: { children: ReactNode }) {
     >
       <BodyTheme className={themeClass} hue={hue} />
       <NicotineWarning store={store} />
+      {store?.demoCatalogue && (
+        <p className="bg-vp-surface px-4 py-1.5 text-center text-[12px] leading-[16px] text-vp-ink-2 sm:text-[13px]" role="note" data-testid="demo-catalogue-note">
+          Demo catalogue. Products are display only and nothing here is for sale.
+        </p>
+      )}
       {children}
       <AgeGate storeName={store?.name || "Store"} confirmed={ageConfirmed} />
     </div>
