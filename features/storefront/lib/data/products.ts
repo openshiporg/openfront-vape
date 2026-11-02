@@ -3,6 +3,7 @@ import { gql } from "graphql-request"
 import { openfrontClient } from "../config"
 import { cache } from "react"
 import { ProductWhereClause } from "../../types/storefront"
+import { searchWhere } from "../search-query"
 
 interface GetProductsListParams {
   pageParam?: number;
@@ -374,4 +375,32 @@ export const getProductsListByPrice = cache(async function ({
     nextPage: result.count > offset + limit ? page + 1 : null,
     queryParams,
   };
+});
+
+// Header search: published products in this country's region only (see lib/search-query).
+export const searchProducts = cache(async function ({
+  query,
+  countryCode,
+  limit = 24,
+}: {
+  query: string;
+  countryCode: string;
+  limit?: number;
+}): Promise<{ products: any[]; count: number }> {
+  const SEARCH_PRODUCTS_QUERY = gql`
+    query SearchProducts($where: ProductWhereInput!, $limit: Int!) {
+      products(where: $where, take: $limit, orderBy: [{ title: asc }]) {
+        id
+        title
+        handle
+        thumbnail
+      }
+      productsCount(where: $where)
+    }
+  `;
+  const data = await openfrontClient.request(SEARCH_PRODUCTS_QUERY, {
+    where: searchWhere(query, countryCode),
+    limit,
+  });
+  return { products: data.products || [], count: data.productsCount || 0 };
 });

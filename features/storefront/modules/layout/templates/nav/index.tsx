@@ -9,6 +9,7 @@ import CartButton from '@/features/storefront/modules/layout/components/cart-but
 import SideMenu from '@/features/storefront/modules/layout/components/side-menu';
 import Logo from '@/features/storefront/modules/layout/components/logo';
 import NavLinks from './nav-links';
+import SearchBox from '@/features/storefront/modules/search/components/search-box';
 
 export default async function Nav() {
   const [{ regions }, { productCategories }, { collections }] = await Promise.all([
@@ -38,6 +39,9 @@ export default async function Nav() {
           <Logo />
           <NavLinks categories={categories} />
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <Suspense fallback={null}>
+              <SearchBox />
+            </Suspense>
             <LocalizedClientLink
               className="hidden lg:inline-flex min-h-11 items-center rounded-[4px] px-3 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink"
               href="/account"
