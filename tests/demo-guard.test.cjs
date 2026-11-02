@@ -36,6 +36,8 @@ const lists = withDemoGuard({
   ShippingProvider: { fields: {} },
   FulfillmentProvider: { fields: {} },
   Order: { fields: {} },
+  ApiKey: { fields: {} },
+  WebhookEndpoint: { fields: {} },
   Customer: { fields: {} },
   Payment: { fields: {} },
 }, DEMO_GUARD_POLICY, env);
@@ -126,6 +128,21 @@ test('payment provider: create and delete refused; name, isInstalled, regions, m
     await refused(run('PaymentProvider', 'update', DEMO, { item, inputData: { [field]: 'changed' } }));
   }
   await run('PaymentProvider', 'update', DEMO, { item, inputData: { name: 'Card payments', isInstalled: false, metadata: { a: 1 }, regions: { connect: [{ id: 'r' }] } } });
+});
+
+test('ApiKey is locked; WebhookEndpoint url and secrets are protected, create/delete refused', async () => {
+  await refused(run('ApiKey', 'create', DEMO, { inputData: { name: 'k' } }));
+  await refused(run('ApiKey', 'update', DEMO, { item: { id: 'k' }, inputData: { status: 'active' } }));
+  await refused(run('ApiKey', 'delete', DEMO, { item: { id: 'k' } }));
+  const item = { id: 'w', url: 'https://a/hook', secret: 's1', registrationKey: null, subscriptionKey: null, isActive: true };
+  await refused(run('WebhookEndpoint', 'create', DEMO, { inputData: { url: 'https://evil' } }));
+  await refused(run('WebhookEndpoint', 'delete', DEMO, { item }));
+  for (const field of ['url', 'secret', 'registrationKey', 'subscriptionKey']) {
+    await refused(run('WebhookEndpoint', 'update', DEMO, { item, inputData: { [field]: 'changed' } }));
+  }
+  await run('WebhookEndpoint', 'update', DEMO, { item, inputData: { url: 'https://a/hook', secret: 's1', isActive: false, events: ['order.created'] } });
+  await run('ApiKey', 'create', ADMIN, { inputData: { name: 'k' } });
+  await run('WebhookEndpoint', 'create', ADMIN, { inputData: { url: 'https://ok' } });
 });
 
 test('a demo user cannot delete business records but can still create and edit them', async () => {

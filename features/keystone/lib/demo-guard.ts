@@ -49,6 +49,8 @@ export const DEMO_GUARD_POLICY: DemoGuardPolicy = {
     kind: 'fields',
     fields: ['code', 'credentials', 'credentialReference', 'createPaymentFunction', 'capturePaymentFunction', 'refundPaymentFunction', 'getPaymentStatusFunction', 'generatePaymentLinkFunction', 'handleWebhookFunction'],
   },
+  ApiKey: { kind: 'locked' },
+  WebhookEndpoint: { kind: 'fields', fields: ['url', 'secret', 'registrationKey', 'subscriptionKey'] },
   ShippingProvider: { kind: 'fields', fields: ['accessToken', 'credentialReference'] },
   FulfillmentProvider: { kind: 'fields', fields: ['credentials'] },
   Order: NO_DELETE,
