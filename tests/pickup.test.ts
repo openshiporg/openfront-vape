@@ -54,6 +54,7 @@ import { readFileSync } from "node:fs";
 test("the cart fingerprint does not depend on variant updatedAt (stock reservation touches it)", () => {
   const source = readFileSync(new URL("../features/keystone/regulated/cart-fingerprint.ts", import.meta.url), "utf8");
   const variant = source.slice(source.indexOf("lineItems(orderBy"), source.indexOf("discounts("));
-  assert.ok(!/productVariant \{ id[^}]*updatedAt/.test(variant.replace(/\s+/g, " ")));
+  const own = variant.replace(/\s+/g, " ").split("product {")[0];
+  assert.ok(own.includes("productVariant { id title sku") && !own.includes("updatedAt"));
   assert.ok(/regulatedClassification \{ id updatedAt \}/.test(variant));
 });
