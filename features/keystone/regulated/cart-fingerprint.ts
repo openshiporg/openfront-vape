@@ -1,5 +1,10 @@
 import { evidenceDigest } from "../../regulated-commerce/core/decision-engine";
 
+/**
+ * Variants contribute their reviewed fields, not `updatedAt`: reserving stock at
+ * checkout touches `updatedAt` and would otherwise invalidate every piece of
+ * evidence bound to the cart moments before the order is committed.
+ */
 /** Server-only digest of the exact subject, full addresses, contents and price inputs.
  * Never persist or log the input projection as identity evidence. Legacy blank
  * digests deliberately do not match. Provider handlers must capture this BEFORE
@@ -13,7 +18,8 @@ export async function cartEvidenceFingerprint(context: any, cartId: string): Pro
       shippingAddress { firstName lastName company address1 address2 city province postalCode phone country { iso2 } }
       billingAddress { firstName lastName company address1 address2 city province postalCode phone country { iso2 } }
       lineItems(orderBy: [{ id: asc }]) { id quantity productVariant {
-        id sku updatedAt product { id updatedAt regulatedCommerceRequired }
+        id title sku barcode ean upc hsCode originCountry midCode material batteryCapacityMah liquidCapacityMl
+        nicotineStrengthMgMl coilResistanceOhm coilType metadata product { id updatedAt regulatedCommerceRequired }
         regulatedClassification { id updatedAt }
         prices(orderBy: [{ id: asc }]) { id amount compareAmount updatedAt region { id } currency { code } }
       } }

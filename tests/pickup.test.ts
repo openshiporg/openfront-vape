@@ -49,3 +49,11 @@ test("concurrent requests in the same window build the identical decision", () =
   assert.equal(a.evidenceDigest, b.evidenceDigest);
   assert.ok(new Date(a.expiresAt).getTime() - new Date("2026-11-02T18:51:03.900Z").getTime() > 50 * 60_000);
 });
+
+import { readFileSync } from "node:fs";
+test("the cart fingerprint does not depend on variant updatedAt (stock reservation touches it)", () => {
+  const source = readFileSync(new URL("../features/keystone/regulated/cart-fingerprint.ts", import.meta.url), "utf8");
+  const variant = source.slice(source.indexOf("lineItems(orderBy"), source.indexOf("discounts("));
+  assert.ok(!/productVariant \{ id[^}]*updatedAt/.test(variant.replace(/\s+/g, " ")));
+  assert.ok(/regulatedClassification \{ id updatedAt \}/.test(variant));
+});
