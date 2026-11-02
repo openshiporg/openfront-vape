@@ -25,7 +25,7 @@ export default async function Logo({ size = 'md', tone = 'ink' }: { size?: 'md' 
       className={cn('group inline-flex min-h-11 items-center gap-2.5', tone === 'glass' ? 'text-vp-gold' : 'text-vp-ink')}
       data-testid="nav-store-link"
     >
-      <LogoMark svg={logoSvg} color={logoColor} className={size === 'lg' ? 'size-8' : 'size-6'} />
+      {logoSvg ? <LogoMark svg={logoSvg} color={logoColor} className={size === 'lg' ? 'size-8' : 'size-6'} /> : null}
       <span
         className={cn(
           'vp-sign leading-none',
