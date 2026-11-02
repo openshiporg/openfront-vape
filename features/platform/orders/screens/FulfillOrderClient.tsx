@@ -1,4 +1,5 @@
 'use client';
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -94,13 +95,7 @@ export function FulfillOrderClient({ order, evidence }: FulfillOrderClientProps)
               </StatusWord>
             </div>
             <div className="text-[13px] tabular-nums text-muted-foreground">
-              Placed {new Date(order.createdAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-              })}
+              Placed <ViewerTime value={order.createdAt} style="datetime" />
             </div>
           </div>
         </div>

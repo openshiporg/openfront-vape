@@ -176,7 +176,7 @@ export async function OverviewPage() {
                           </span>
                         </Td>
                         <Td className="whitespace-nowrap">
-                          <Stamp tone={urgent ? 'danger' : 'warn'} serial={<span title={dateTime(item.expiresAt)}>{day(item.expiresAt)}</span>}>
+                          <Stamp tone={urgent ? 'danger' : 'warn'} serial={<span>{day(item.expiresAt)}</span>}>
                             {daysLeft(item.expiresAt)}
                           </Stamp>
                         </Td>

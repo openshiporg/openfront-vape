@@ -1,4 +1,5 @@
 "use client";
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import React, { Fragment, useState } from "react";
 import Link from "next/link";
@@ -30,7 +31,7 @@ function statusOf(status: string) {
 
 function day(value?: string) {
   if (!value) return "-";
-  return new Date(value).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return <ViewerTime value={value} style="date" />;
 }
 
 const EVIDENCE_HREF = "/dashboard/platform/product-evidence";

@@ -1,3 +1,4 @@
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -16,7 +17,7 @@ const EVENT_TONES: Record<string, DotTone> = {
 };
 
 const stamp = (value: string) =>
-  new Date(value).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  <ViewerTime value={value} style="datetime" />;
 
 /** Read-only compliance events for one order, reversal reviews first. */
 export async function OrderComplianceSection({ orderId }: { orderId: string }) {

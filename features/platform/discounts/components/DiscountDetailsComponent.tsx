@@ -58,7 +58,7 @@ export function discountAttention(discount: Discount): QueueItem | null {
   const base = { id: discount.id, record: discount.code, fixLabel: "Edit" };
   const status = discountStatus(discount);
   if (status.label === "Expired") {
-    return { ...base, tone: "danger", state: "Expired", issue: `Ended ${formatDate(discount.endsAt)}, still enabled` };
+    return { ...base, tone: "danger", state: "Expired", issue: <>Ended {formatDate(discount.endsAt)}, still enabled</> };
   }
   if (status.label === "Used up") {
     return { ...base, tone: "danger", state: "Used up", issue: `Usage limit ${discount.usageLimit} reached, still enabled` };

@@ -1,4 +1,5 @@
 'use client'
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import { useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
@@ -102,7 +103,7 @@ export function DateField({
           >
             <CalendarIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <span className={cn('min-w-0 truncate tabular-nums', !selected && 'text-muted-foreground')}>
-              {selected ? selected.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : placeholder}
+              {selected ? <ViewerTime value={selected} style="date" /> : placeholder}
             </span>
           </button>
         </PopoverTrigger>

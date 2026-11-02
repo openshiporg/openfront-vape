@@ -1,3 +1,4 @@
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 import Link from "next/link";
 
 import {
@@ -26,9 +27,8 @@ export type HeldOrder = {
 export type SalesWindow = { label: string; value: string; orders: number };
 
 function shortDate(iso: string) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (Number.isNaN(new Date(iso).getTime())) return "";
+  return <ViewerTime value={iso} style="date" />;
 }
 
 function classificationLabel(state: string) {
@@ -151,7 +151,7 @@ export function RevenueBlockers({
                     <StatusWord tone="warn">Held</StatusWord>
                     <span className="min-w-0 truncate tabular-nums text-muted-foreground">
                       {held.length === 1 ? "order requires" : "orders require"} action
-                      {oldestHeld ? `, oldest since ${shortDate(oldestHeld)}` : ""}
+                      {oldestHeld ? <>, oldest since {shortDate(oldestHeld)}</> : ""}
                     </span>
                   </span>
                 </Td>

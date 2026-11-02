@@ -3,6 +3,7 @@
  */
 
 'use client'
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import React, { useState } from 'react'
 import { Input } from '@/components/ui/input'
@@ -367,7 +368,7 @@ export function controller(config: FieldControllerConfig<TimestampFieldMeta>): F
           return label.toLowerCase()
         }
 
-        return `${label.toLowerCase()} ${formatInZone(new Date(value), undefined, "datetime")}`
+        return `${label.toLowerCase()} ${<ViewerTime value={new Date(value)} style="datetime" />}`
       },
       types: {
         equals: {

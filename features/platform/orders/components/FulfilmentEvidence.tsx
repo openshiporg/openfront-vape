@@ -1,4 +1,5 @@
 'use client';
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
@@ -17,7 +18,7 @@ const RESULT_TONES: Record<string, DotTone> = { allow: 'ok', deny: 'danger', man
 
 const stamp = (value: string | null | undefined) =>
   value
-    ? new Date(value).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    ? <ViewerTime value={value} style="datetime" />
     : '';
 
 function labelState(label: OrderLabel): { tone: DotTone; text: string; cancellable: boolean } {

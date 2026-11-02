@@ -1,4 +1,5 @@
 "use client";
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -217,12 +218,7 @@ export function UserDetailsComponent({
         </Td>
         <Td align="right" priority={3}>{ordersData.length}</Td>
         <Td priority={3} className="whitespace-nowrap tabular-nums text-muted-foreground">
-          {new Date(user.createdAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            timeZone: "UTC",
-          })}
+          <ViewerTime value={user.createdAt} style="date" />
         </Td>
         <Td align="right" className="whitespace-nowrap">
           <div className="flex items-center justify-end gap-1">
@@ -370,7 +366,7 @@ export function UserDetailsComponent({
                               {cart.totalPrice && (
                                 <span className="tabular-nums text-foreground">{cart.totalPrice}</span>
                               )}
-                              <span className="tabular-nums">{new Date(cart.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })}</span>
+                              <span className="tabular-nums"><ViewerTime value={cart.createdAt} style="date" /></span>
                               {cart.lineItems && (
                                 <span><span className="tabular-nums">{cart.lineItems.length}</span> items</span>
                               )}

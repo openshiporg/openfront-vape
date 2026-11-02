@@ -1,4 +1,5 @@
 "use client";
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -194,7 +195,7 @@ export function BusinessAccountRequestDetailsComponent({
               </div>
               <div>
                 <dt className="text-[12px] font-medium text-muted-foreground">Submitted</dt>
-                <dd className="mt-0.5 tabular-nums text-foreground">{new Date(businessAccountRequest.submittedAt).toLocaleString()}</dd>
+                <dd className="mt-0.5 tabular-nums text-foreground"><ViewerTime value={businessAccountRequest.submittedAt} style="datetime" /></dd>
               </div>
             </dl>
 
@@ -335,7 +336,7 @@ export function BusinessAccountRequestDetailsComponent({
         <Td align="right" priority={2} className="whitespace-nowrap text-foreground">{request.formattedRequestedCredit}</Td>
         <Td align="right" priority={3} className="whitespace-nowrap text-muted-foreground">{request.formattedApprovedCredit || "None"}</Td>
         <Td priority={2} className="whitespace-nowrap tabular-nums text-muted-foreground">
-          {request.submittedAt ? new Date(request.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Not submitted"}
+          {request.submittedAt ? <ViewerTime value={request.submittedAt} style="date" /> : "Not submitted"}
         </Td>
         <Td className="w-20 whitespace-nowrap pr-2 text-right">
           {request.status === "pending" && (
@@ -376,7 +377,7 @@ export function BusinessAccountRequestDetailsComponent({
               <span className="font-mono tabular-nums text-foreground">{businessAccountRequest.formattedRequestedCredit}</span> requested
             </span>
             <span>
-              Submitted <span className="font-mono tabular-nums">{new Date(businessAccountRequest.submittedAt).toLocaleDateString()}</span>
+              Submitted <span className="font-mono tabular-nums"><ViewerTime value={businessAccountRequest.submittedAt} style="date" /></span>
             </span>
           </div>
           {businessAccountRequest.reviewNotes && (

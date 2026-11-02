@@ -1,4 +1,5 @@
 "use client";
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import { useState } from "react";
 import Link from "next/link";
@@ -55,7 +56,7 @@ export function claimNeed(claim: any): Word | null {
 
 const claimHref = (claim: any) => `/dashboard/claim-orders/${claim.id}`;
 const shortDate = (value?: string) =>
-  value ? new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No date";
+  value ? <ViewerTime value={value} style="date" /> : "No date";
 const waiting = (value?: string) => {
   if (!value) return "";
   const days = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000));

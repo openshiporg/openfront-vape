@@ -58,7 +58,7 @@ export function giftCardAttention(giftcard: GiftCard): QueueItem | null {
   if (giftcard.isDisabled) return null;
   const base = { id: giftcard.id, record: giftcard.code, fixLabel: "Edit" };
   if (giftcard.endsAt && new Date(giftcard.endsAt) <= new Date()) {
-    return { ...base, tone: "danger", state: "Expired", issue: `Ended ${formatDate(giftcard.endsAt)} with ${formatAmount(giftcard, giftcard.balance)} left` };
+    return { ...base, tone: "danger", state: "Expired", issue: <>Ended {formatDate(giftcard.endsAt)} with {formatAmount(giftcard, giftcard.balance)} left</> };
   }
   const days = daysUntil(giftcard.endsAt);
   if (days !== null && days <= 30 && giftcard.balance > 0) {

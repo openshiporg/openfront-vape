@@ -1,3 +1,5 @@
+import { createElement } from "react";
+import { ViewerTime } from "@/features/dashboard/components/ViewerTime";
 // Order state in words, derived only from fields the order queries already load
 // (status, fulfillmentStatus JSON, paymentDetails). No new fields are invented here.
 
@@ -84,7 +86,7 @@ export function customerName(order: any): string {
 
 export function shortDate(value?: string) {
   if (!value) return "No date";
-  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return createElement(ViewerTime, { value, style: "date" });
 }
 
 export function daysSince(value?: string) {

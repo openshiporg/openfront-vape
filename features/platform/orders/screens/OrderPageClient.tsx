@@ -1,4 +1,5 @@
 "use client";
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -164,14 +165,7 @@ export function OrderPageClient({
     value.replace(/[_-]+/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
   const formatDate = (value?: string) =>
     value
-      ? new Date(value).toLocaleString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
+      ? <ViewerTime value={value} style="datetime" />
       : "No date";
   const itemCount = lineItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
   const ship = order.shippingAddress;

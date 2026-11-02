@@ -1,4 +1,5 @@
 "use client";
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 // Local building blocks for the configuration lists (regions, countries, currencies,
 // discounts, gift cards, price lists, shipping, payment, stores). Built only from the
@@ -127,7 +128,7 @@ export function SubTable({ head, children }: { head: ReactNode; children: ReactN
 
 export function formatDate(value?: string | null) {
   if (!value) return null;
-  return new Date(value).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return <ViewerTime value={value} style="date" />;
 }
 
 export function daysUntil(value?: string | null) {
@@ -141,7 +142,7 @@ export type QueueItem = {
   serial?: string | null;
   tone: DotTone;
   state: string;
-  issue: string;
+  issue: ReactNode;
   fixLabel: string;
   /** Opens the edit drawer for this list key (defaults to the queue's listKey). */
   listKey?: string;

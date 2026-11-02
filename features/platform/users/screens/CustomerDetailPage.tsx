@@ -1,3 +1,4 @@
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -42,7 +43,7 @@ const statusLabel = (value: string) => value.replaceAll('_', ' ').replace(/^\w/,
 
 const day = (value: string | null | undefined) =>
   value
-    ? new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })
+    ? <ViewerTime value={value} style="date" />
     : '';
 
 function Row({ label, children }: { label: string; children: ReactNode }) {

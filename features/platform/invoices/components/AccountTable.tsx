@@ -1,4 +1,5 @@
 "use client";
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 import { useState } from "react";
 import Link from "next/link";
@@ -53,7 +54,7 @@ export function accountNeed(account: any): (Word & { rank: number }) | null {
 
 const accountHref = (account: any) => `/dashboard/accounts/${account.id}`;
 const shortDate = (value?: string) =>
-  value ? new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "None";
+  value ? <ViewerTime value={value} style="date" /> : "None";
 const holder = (account: any) => account?.user?.name || account?.user?.email || "No holder";
 
 function AccountLink({ account }: { account: any }) {

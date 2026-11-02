@@ -94,7 +94,7 @@ export function priceListAttention(pricelist: PriceList): QueueItem | null {
   const base = { id: pricelist.id, record: pricelist.name, fixLabel: "Edit" };
   if (pricelist.status === "active") {
     if (pricelist.endsAt && new Date(pricelist.endsAt) <= new Date()) {
-      return { ...base, tone: "danger", state: "Ended", issue: `Ended ${formatDate(pricelist.endsAt)}, still active` };
+      return { ...base, tone: "danger", state: "Ended", issue: <>Ended {formatDate(pricelist.endsAt)}, still active</> };
     }
     const days = daysUntil(pricelist.endsAt);
     if (days !== null && days <= 7) {
@@ -102,7 +102,7 @@ export function priceListAttention(pricelist: PriceList): QueueItem | null {
     }
   }
   if (pricelist.status === "draft" && pricelist.startsAt && new Date(pricelist.startsAt) <= new Date()) {
-    return { ...base, tone: "warn", state: "Draft", issue: `Start date ${formatDate(pricelist.startsAt)} passed, still draft` };
+    return { ...base, tone: "warn", state: "Draft", issue: <>Start date {formatDate(pricelist.startsAt)} passed, still draft</> };
   }
   return null;
 }

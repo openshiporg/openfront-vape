@@ -11,7 +11,7 @@ import { MoreVertical } from 'lucide-react';
 import { Dot, ListBand, type DotTone } from '@/features/platform/components/vape-ui';
 import { Button } from '@/components/ui/button';
 import { EditItemDrawerClientWrapper } from '../../components/EditItemDrawerClientWrapper';
-import { format } from 'date-fns';
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 import Link from 'next/link';
 
 interface InventoryDetailsComponentProps {
@@ -66,7 +66,7 @@ export function InventoryDetailsComponent({ inventory, list }: InventoryDetailsC
               )}
               <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                 <span>{inventory.location || 'Default'}</span>
-                <span className="font-mono tabular-nums">{format(new Date(inventory.updatedAt), 'MMM d, yyyy')}</span>
+                <span className="font-mono tabular-nums"><ViewerTime value={inventory.updatedAt} style="date" /></span>
               </div>
             </div>
 
@@ -106,7 +106,7 @@ export function InventoryDetailsComponent({ inventory, list }: InventoryDetailsC
                 ))}
               </ListBand>
               <div className="mt-2 font-mono text-xs tabular-nums text-muted-foreground">
-                Updated {format(new Date(inventory.updatedAt), 'MMM d, yyyy h:mm a')}
+                Updated <ViewerTime value={inventory.updatedAt} style="datetime" />
               </div>
             </div>
           </AccordionContent>

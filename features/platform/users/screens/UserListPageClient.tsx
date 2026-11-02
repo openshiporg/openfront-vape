@@ -1,3 +1,4 @@
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 /**
  * UserListPageClient - Client Component  
  * Based on dashboard ListPageClient but hardcoded for users
@@ -262,7 +263,7 @@ export function UserListPageClient({
                   </span>
                   <span className="font-mono text-[12px] text-muted-foreground">#{oldest.displayId}</span>
                   <span className="text-[12px] tabular-nums text-muted-foreground">
-                    since {new Date(oldest.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
+                    since <ViewerTime value={oldest.createdAt} style="date" />
                   </span>
                 </span>
                 <Link

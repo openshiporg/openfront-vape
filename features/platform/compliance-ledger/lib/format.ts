@@ -1,5 +1,7 @@
 // Display helpers shared by the ledger, reports and overview screens.
 
+import React, { createElement, type ReactNode } from 'react';
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 import type { DotTone } from '@/features/platform/components/vape-primitives';
 import { COMPLIANCE_EVENT_LABELS, REASON_CODE_LABELS } from '@/features/keystone/regulated/labels';
 
@@ -53,20 +55,15 @@ export function stateTone(value: string | null | undefined): DotTone {
   }
 }
 
-const pad = (value: number) => String(value).padStart(2, '0');
-
-/** UTC so server and client render the same text. */
-export function dateTime(value: string | null | undefined) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return '';
-  return `${date.toISOString().slice(0, 10)} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())} UTC`;
+/** Viewer zone with a short label; renders after mount so server and client match. */
+export function dateTime(value: string | null | undefined): ReactNode {
+  if (!value || !Number.isFinite(new Date(value).getTime())) return '';
+  return createElement(ViewerTime, { value, style: 'datetime' });
 }
 
-export function day(value: string | null | undefined) {
-  if (!value) return '';
-  const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : '';
+export function day(value: string | null | undefined): ReactNode {
+  if (!value || !Number.isFinite(new Date(value).getTime())) return '';
+  return createElement(ViewerTime, { value, style: 'date' });
 }
 
 export function money(amount: number | null | undefined, currency: string | null | undefined) {
@@ -100,11 +97,11 @@ export function pageNumber(raw: string | string[] | undefined) {
 }
 
 /** Report periods are half-open; inventory snapshots have no span. */
-export function periodText(startsAt: string | null | undefined, endsAt: string | null | undefined) {
+export function periodText(startsAt: string | null | undefined, endsAt: string | null | undefined): ReactNode {
   if (!startsAt || !endsAt) return '';
   const start = new Date(startsAt).getTime();
   const end = new Date(endsAt).getTime();
   if (!Number.isFinite(start) || !Number.isFinite(end)) return '';
-  if (end <= start) return `Snapshot ${dateTime(startsAt)}`;
-  return `${day(startsAt)} to ${day(new Date(end - 1).toISOString())}`;
+  if (end <= start) return createElement(React.Fragment, null, 'Snapshot ', dateTime(startsAt));
+  return createElement(React.Fragment, null, day(startsAt), ' to ', day(new Date(end - 1).toISOString()));
 }

@@ -53,12 +53,6 @@ const Mono = ({ children, className }: { children: ReactNode; className?: string
   <span className={`font-mono text-[12px] tabular-nums ${className ?? ''}`}>{children}</span>
 );
 
-/** HH:MM UTC for today's log; the full date and time sit in the title. */
-function clock(value: string | null | undefined) {
-  if (!value) return '';
-  return dateTime(value).slice(11);
-}
-
 function Serial({ id, href }: { id: string; href?: string }) {
   if (!href) return <Mono className="text-muted-foreground">{shortId(id)}</Mono>;
   return (
@@ -86,7 +80,7 @@ function actor(item: any) {
 }
 
 /** Decision log: time, decision stamp, rule, jurisdiction, subject, actor, record serial. */
-function DecisionLog({ items, timeOnly }: { items: any[]; timeOnly?: boolean }) {
+function DecisionLog({ items }: { items: any[] }) {
   return (
     <DataTable>
       <thead>
@@ -106,7 +100,7 @@ function DecisionLog({ items, timeOnly }: { items: any[]; timeOnly?: boolean }) 
           <Tr key={item.id}>
             <Td className="whitespace-nowrap">
               <Mono>
-                <span title={dateTime(item.issuedAt)}>{timeOnly ? clock(item.issuedAt) : dateTime(item.issuedAt)}</span>
+                <span>{dateTime(item.issuedAt)}</span>
               </Mono>
             </Td>
             <Td><Stamp tone={stateTone(item.result)}>{label(DECISION_RESULT_LABELS, item.result)}</Stamp></Td>
@@ -359,7 +353,7 @@ export async function ComplianceLedgerPage({ searchParams }: { searchParams: Sea
                 No denials or manual reviews today
               </div>
             ) : (
-              <DecisionLog items={attentionItems} timeOnly />
+              <DecisionLog items={attentionItems} />
             )}
           </section>
         )}

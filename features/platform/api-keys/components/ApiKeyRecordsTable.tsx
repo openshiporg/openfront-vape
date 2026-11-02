@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
+import { ViewerTime } from "@/features/dashboard/components/ViewerTime"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 
@@ -44,10 +45,8 @@ const STATUS: Record<string, { label: string; tone: DotTone }> = {
 }
 
 function day(value?: string | null) {
-  if (!value) return ""
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ""
-  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })
+  if (!value || Number.isNaN(new Date(value).getTime())) return ""
+  return <ViewerTime value={value} style="date" />
 }
 
 function keyState(key: ApiKeyRow, now: number): { label: string; tone: DotTone } {
@@ -60,15 +59,15 @@ function keyState(key: ApiKeyRow, now: number): { label: string; tone: DotTone }
 
 /** Keys that need the operator: expired-but-not-revoked first, then active keys expiring within 14 days. */
 function needsYou(items: ApiKeyRow[], now: number) {
-  const rows: Array<{ key: ApiKeyRow; tone: DotTone; word: string; detail: string; at: number }> = []
+  const rows: Array<{ key: ApiKeyRow; tone: DotTone; word: string; detail: ReactNode; at: number }> = []
   for (const key of items) {
     if (key.status === "revoked") continue
     const expires = key.expiresAt ? new Date(key.expiresAt).getTime() : NaN
     if (!Number.isFinite(expires)) continue
     if (expires <= now) {
-      rows.push({ key, tone: "danger", word: "Expired", detail: `Expired ${day(key.expiresAt)}`, at: expires })
+      rows.push({ key, tone: "danger", word: "Expired", detail: <>Expired {day(key.expiresAt)}</>, at: expires })
     } else if (key.status === "active" && expires - now <= 14 * DAY) {
-      rows.push({ key, tone: "warn", word: "Expiring", detail: `Expires ${day(key.expiresAt)}`, at: expires })
+      rows.push({ key, tone: "warn", word: "Expiring", detail: <>Expires {day(key.expiresAt)}</>, at: expires })
     }
   }
   return rows.sort((a, b) => (a.tone === b.tone ? a.at - b.at : a.tone === "danger" ? -1 : 1))

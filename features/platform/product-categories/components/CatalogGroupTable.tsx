@@ -1,4 +1,5 @@
 "use client";
+import { ViewerTime } from '@/features/dashboard/components/ViewerTime';
 
 // Shared table for product groupings (categories and collections): one row per group,
 // expandable to its products, with the same edit drawers the old cards used.
@@ -49,7 +50,7 @@ export function productStatus(status: string) {
 
 export function shortDate(value?: string) {
   if (!value) return "-";
-  return new Date(value).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return <ViewerTime value={value} style="date" />;
 }
 
 export function GroupTable({ label, children, extraColumn }: { label: string; children: ReactNode; extraColumn?: string }) {
