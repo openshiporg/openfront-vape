@@ -73,6 +73,7 @@ type ProductActionsProps = {
 export default function ProductActions({ product, region, disabled, onVariantChange, category }: ProductActionsProps) {
   const [options, setOptions] = useState<any>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
 
   const params = useParams();
   const countryCode = params?.countryCode as string;
@@ -149,11 +150,13 @@ export default function ProductActions({ product, region, disabled, onVariantCha
     if (isDisplayOnly(product)) return;
     if (!variant?.id) return null;
     setIsAdding(true);
-    await addToCart({
+    setCartError(null);
+    const error = await addToCart({
       variantId: variant.id,
       quantity: 1,
       countryCode,
     });
+    if (error) setCartError(error);
     setIsAdding(false);
   };
 
@@ -245,7 +248,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           </div>
         </div>
 
-        {variants?.length > 1 && (
+        {!displayOnly && variants?.length > 1 && (
           <div className="flex flex-col gap-5">
             {(product.productOptions || []).map((option: any) => (
               <OptionSelect
@@ -260,11 +263,8 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           </div>
         )}
 
-        {displayOnly ? (
-          <p className="border-t border-vp-line pt-4 text-[14px] leading-[22px] text-vp-ink-2" data-testid="display-only-note">
-            This is a demo catalogue. Nothing here can be bought yet.
-          </p>
-        ) : (
+        {cartError && <p role="alert" className="text-[14px] text-vp-ink">{cartError}</p>}
+        {!displayOnly && (
         <>
         <button
           type="button"

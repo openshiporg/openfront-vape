@@ -2,6 +2,8 @@
 // products as display-only. It never makes anything sellable: carts, payment and checkout refuse
 // any product that is not published, and the release gate stays closed while it is on.
 
+import { GraphQLError } from "graphql";
+
 export const DEMO_ITEM_NOT_FOR_SALE = "DEMO_ITEM_NOT_FOR_SALE";
 export const DEMO_CATALOGUE_ACTIVE = "DEMO_CATALOGUE_ACTIVE";
 
@@ -33,7 +35,8 @@ export async function publicProductStatuses(context: any): Promise<string[]> {
 /** Sale check by product status alone; evidence checks still run after this. */
 export function assertProductForSale(status: string | null | undefined) {
   if (status !== "published") {
-    throw new Error(`${DEMO_ITEM_NOT_FOR_SALE}: This product is display only and can't be bought.`);
+    // Yoga preserves expected GraphQLErrors in production; never expose arbitrary errors.
+    throw new GraphQLError("This item is display only.", { extensions: { code: DEMO_ITEM_NOT_FOR_SALE } });
   }
 }
 
