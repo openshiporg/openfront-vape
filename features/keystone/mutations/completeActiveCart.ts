@@ -17,6 +17,7 @@ import {
 import { createOrderFromCartAtomically } from "../checkout/order-commit";
 import { withCartFence } from "../security/commerce-fence";
 import { cartEvidenceFingerprint } from "../regulated/cart-fingerprint";
+import { cartIsPickup } from '../regulated/pickup';
 import { assertCommerceReleaseEnabled } from "../../regulated-commerce/core/release-gate";
 import { evidenceDigest } from "../../regulated-commerce/core/decision-engine";
 import {
@@ -90,6 +91,7 @@ async function completeActiveCart(
       giftCards { id }
       shippingMethods {
         id
+        shippingOption { id data }
       }
       lineItems {
         id
@@ -200,10 +202,13 @@ async function completeActiveCart(
         (session: any) => session.id === paymentSessionId
       );
       const paymentResult = existingAttempt?.responseBody?.paymentResult;
-      if (!selectedSession || !paymentResult || existingAttempt.recoveryPoint !== 'payment_confirmed') {
+      if (selectedSession?.paymentProvider?.code === 'pp_system_default' && cartIsPickup(cart)) {
+        await recordPayAtPickup(cart.order, selectedSession, cart, sudoContext);
+      } else if (!selectedSession || !paymentResult || existingAttempt.recoveryPoint !== 'payment_confirmed') {
         throw new Error('Checkout requires payment reconciliation');
+      } else {
+        await createPaymentRecord(paymentResult, selectedSession, cart.order, cart, sudoContext);
       }
-      await createPaymentRecord(paymentResult, selectedSession, cart.order, cart, sudoContext);
     } else if (!paymentSessionId && !cart.order.account?.id) {
       if (!user) throw new Error('Checkout requires account reconciliation');
       const accounts = await sudoContext.query.Account.findMany({
@@ -389,6 +394,14 @@ async function handlePaidOrder(cart: any, paymentSessionId: string, sudoContext:
     throw new Error("Payment session amount no longer matches cart total");
   }
 
+  // Reserve online, pay at the counter: a pickup cart paying with the manual
+  // provider becomes an unpaid order. Delivery carts never take this path.
+  if (selectedSession.paymentProvider.code === 'pp_system_default' && cartIsPickup(cart)) {
+    const order = await createOrderFromCartAtomically(cart, sudoContext);
+    await recordPayAtPickup(order, selectedSession, cart, sudoContext);
+    return order;
+  }
+
   let paymentResult = attempt.responseBody?.paymentResult;
   if (attempt.recoveryPoint !== 'payment_confirmed' || !paymentResult) {
     try {
@@ -433,6 +446,7 @@ async function handlePaidOrder(cart: any, paymentSessionId: string, sudoContext:
 async function settlePaymentSession(session: any, cart: any) {
   const provider = session.paymentProvider;
   if (provider.code === 'pp_system_default') {
+    // Pickup carts never reach here (they reserve instead); delivery stays card-only.
     throw new Error('Manual tender cannot complete storefront checkout');
   }
 
@@ -570,6 +584,39 @@ async function addOrderToAccount(accountId: string, order: any, sudoContext: any
 }
 
 // Helper function to create payment record
+/**
+ * The pay-at-pickup payment record: pending, nothing captured. The merchant
+ * marks it paid at the counter or cancels the order in admin.
+ */
+async function recordPayAtPickup(order: any, selectedSession: any, cart: any, sudoContext: any) {
+  await sudoContext.prisma.$transaction(async (tx: any) => {
+    const existing = await tx.payment.findFirst({
+      where: { orderId: order.id, paymentCollectionId: cart.paymentCollection.id },
+    });
+    if (existing) return;
+    const payment = await tx.payment.create({
+      data: {
+        status: 'pending',
+        amount: cart.rawTotal,
+        currencyCode: cart.region.currency.code,
+        data: { ...selectedSession.data, method: 'pay_at_pickup', paymentProviderId: selectedSession.paymentProvider.id },
+        metadata: { checkoutIdempotencyKey: checkoutKey(cart.id), payAtPickup: true },
+        idempotencyKey: checkoutKey(cart.id),
+        paymentCollectionId: cart.paymentCollection.id,
+        orderId: order.id,
+        userId: cart.user?.id || cart.shippingAddress?.user?.id || null,
+      },
+    });
+    await tx.orderEvent.create({
+      data: {
+        orderId: order.id,
+        type: 'PAYMENT_STATUS_CHANGE',
+        data: { paymentId: payment.id, status: 'pending', method: 'pay_at_pickup', amount: cart.rawTotal },
+      },
+    });
+  });
+}
+
 async function createPaymentRecord(
   paymentResult: any,
   selectedSession: any,

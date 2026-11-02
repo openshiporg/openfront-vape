@@ -21,7 +21,7 @@ async function transitionOrderStatus(
       where: { id: orderId },
       include: {
         payments: {
-          select: { amount: true, amountRefunded: true, refunds: { select: { amount: true } } },
+          select: { id: true, status: true, amount: true, amountRefunded: true, refunds: { select: { amount: true } } },
         },
         fulfillments: { where: { canceledAt: null }, select: { id: true } },
         accountLineItems: {
@@ -57,10 +57,17 @@ async function transitionOrderStatus(
       if (
         order.payments.some(
           (payment: any) =>
+            // A pay-at-pickup payment that was never taken has nothing to refund.
+            payment.status !== "pending" &&
             payment.refunds.reduce((sum: number, refund: any) => sum + refund.amount, 0) < payment.amount
         )
       ) {
         throw new Error("Captured payments must be fully refunded before cancellation");
+      }
+      for (const payment of order.payments) {
+        if (payment.status === "pending") {
+          await tx.payment.update({ where: { id: payment.id }, data: { status: "canceled" } });
+        }
       }
       for (const line of order.lineItems) {
         if (!line.productVariant?.manageInventory) continue;

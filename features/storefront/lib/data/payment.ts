@@ -6,10 +6,10 @@ import { cookies } from "next/headers";
 import { updateTag as revalidateTag } from "next/cache";
 import { getAuthHeaders } from "./cookies";
 
-export const listCartPaymentMethods = cache(async function (regionId: string) {
+export const listCartPaymentMethods = cache(async function (regionId: string, cartId?: string) {
   const LIST_PAYMENT_PROVIDERS = gql`
-    query ListPaymentProviders($regionId: ID!) {
-      activeCartPaymentProviders(regionId: $regionId) {
+    query ListPaymentProviders($regionId: ID!, $cartId: ID) {
+      activeCartPaymentProviders(regionId: $regionId, cartId: $cartId) {
         id
         name
         code
@@ -20,7 +20,8 @@ export const listCartPaymentMethods = cache(async function (regionId: string) {
 
   const { activeCartPaymentProviders } = await openfrontClient.request(
     LIST_PAYMENT_PROVIDERS,
-    { regionId }
+    { regionId, cartId },
+    cartId ? await getAuthHeaders() : undefined
   );
   return activeCartPaymentProviders;
 });

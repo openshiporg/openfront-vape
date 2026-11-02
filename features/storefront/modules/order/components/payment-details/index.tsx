@@ -12,7 +12,22 @@ const PaymentDetails = ({ order }: { order: StoreOrder }) => {
   return (
     <section className="flex flex-col gap-4 border-t border-vp-line pt-5" aria-label="Payment">
       <h2 className="vp-sign text-[26px] text-vp-ink">Payment</h2>
-      {payment && provider?.code && (
+      {payment?.status === "pending" && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6" data-testid="pay-at-pickup-summary">
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Method</p>
+            <p className="text-[14px] leading-[20px] text-vp-ink-2">Pay in store at pickup</p>
+          </div>
+          <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
+            <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Amount due</p>
+            <p className="text-[14px] leading-[20px] text-vp-ink-2">
+              <span className="font-vp-mono text-vp-ink">{order.total}</span>
+              {" at the counter. Bring photo ID showing you are 21 or older. Nothing has been charged."}
+            </p>
+          </div>
+        </div>
+      )}
+      {payment && payment.status !== "pending" && provider?.code && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
           <div className="flex min-w-0 flex-col gap-1">
             <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Method</p>

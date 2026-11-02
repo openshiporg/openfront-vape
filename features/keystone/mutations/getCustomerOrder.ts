@@ -97,6 +97,7 @@ async function getCustomerOrder(root: unknown, { orderId, secretKey }: { orderId
         price
         shippingOption {
           name
+          data
         }
       }
       payments {

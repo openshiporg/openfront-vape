@@ -16,6 +16,7 @@ interface ShippingOption {
   id: string;
   name: string;
   calculatedAmount: string;
+  data?: { pickup?: boolean; instructions?: string } | null;
 }
 
 interface ShippingProps {
@@ -138,8 +139,13 @@ const Shipping: React.FC<ShippingProps> = ({
                             selected ? "border-[5px] border-vp-ink" : "border-[1.5px] border-vp-ink-3"
                           )}
                         />
-                        <span className="text-[15px] leading-[20px] font-medium text-vp-ink">
-                          {option.name}
+                        <span className="flex min-w-0 flex-col">
+                          <span className="text-[15px] leading-[20px] font-medium text-vp-ink">
+                            {option.name}
+                          </span>
+                          {option.data?.pickup && option.data.instructions && (
+                            <span className="text-[13px] leading-[18px] text-vp-ink-3">{option.data.instructions}</span>
+                          )}
                         </span>
                       </span>
                       <span className="flex-none font-vp-mono text-[14px] text-vp-ink">

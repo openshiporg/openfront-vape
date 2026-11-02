@@ -115,6 +115,7 @@ export async function getOrder(orderId: string) {
         paymentDetails
         totalPaid
         formattedTotalPaid
+        payments { id status amount }
         lineItems {
           id
           quantity
@@ -221,6 +222,18 @@ export async function getOrder(orderId: string) {
   };
 
   const response = await keystoneClient(query, { id: orderId }, cacheOptions);
+  return response;
+}
+
+/**
+ * The merchant took payment at the counter for a reserve-online order.
+ */
+export async function markPickupOrderPaid(orderId: string) {
+  const response = await keystoneClient(
+    `mutation MarkPickupPaid($id: ID!) { markPickupPaid(orderId: $id) { id status } }`,
+    { id: orderId }
+  );
+  if (response.success) revalidatePath(`/dashboard/platform/orders/${orderId}`);
   return response;
 }
 

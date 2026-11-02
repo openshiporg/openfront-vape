@@ -30,6 +30,8 @@ export type ManualCarrierInput = {
   packageMarkings: string[];
   /** Highest `adult_signature_required.minimumAge` in the destination rule set, if any. */
   signatureMinimumAge?: number | null;
+  /** Store pickup: the counter collects the adult signature and checks ID. */
+  pickup?: boolean;
   now?: Date;
 };
 
@@ -44,9 +46,9 @@ export function buildManualAdultSignatureDecision(input: ManualCarrierInput) {
   const packageDigest = evidenceDigest({ lines, packageMarkings });
   const decision = {
     cartFingerprint: input.cartFingerprint,
-    rateId: `manual:${input.shippingOptionId}`,
+    rateId: `${input.pickup ? "pickup" : "manual"}:${input.shippingOptionId}`,
     packageDigest,
-    carrierCode: MANUAL_ADULT_SIGNATURE_CARRIER,
+    carrierCode: input.pickup ? "store_pickup" : MANUAL_ADULT_SIGNATURE_CARRIER,
     serviceCode: MANUAL_ADULT_SIGNATURE_SERVICE,
     originJurisdictionCode: origin,
     destinationJurisdictionCode: destination,

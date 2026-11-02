@@ -31,7 +31,7 @@ export const paymentInfoMap: Record<
     icon: <CreditCard className="w-5 h-5" />,
   },
   pp_system_default: {
-    title: "Cash on Delivery",
+    title: "Reserve online, pay in store",
     icon: <CreditCard className="w-5 h-5" />,
   },
   // Add more payment providers here

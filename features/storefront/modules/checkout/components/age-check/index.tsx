@@ -10,6 +10,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 
 type AgeCheckProps = {
+  pickup?: boolean
   index: number
   done: boolean
   hasShippingMethod: boolean
@@ -18,7 +19,8 @@ type AgeCheckProps = {
 
 // Age check (21+). The date of birth is only used to compute age; the adult
 // signature and ID check are completed by the carrier at delivery.
-const AgeCheck = ({ index, done, hasShippingMethod, shippingName }: AgeCheckProps) => {
+const AgeCheck = ({ index, done, hasShippingMethod, shippingName, pickup = false }: AgeCheckProps) => {
+  const counterNote = pickup ? "Photo ID is checked again at the counter." : "Adult signature and ID required at delivery."
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams() ?? new URLSearchParams()
@@ -67,7 +69,7 @@ const AgeCheck = ({ index, done, hasShippingMethod, shippingName }: AgeCheckProp
       {isOpen && hasShippingMethod ? (
         <div className="flex flex-col gap-5 pb-2">
           <p className="text-[15px] leading-[22px] text-vp-ink-2">
-            You must be 21 or older to order. Adult signature and ID required at delivery.
+            You must be 21 or older to order. {counterNote}
           </p>
           <fieldset className="flex flex-col gap-2">
             <legend className={vpLabel}>Date of birth</legend>
@@ -100,7 +102,7 @@ const AgeCheck = ({ index, done, hasShippingMethod, shippingName }: AgeCheckProp
         done && (
           <div className="pb-2">
             <StepFact label="Status">
-              <p>Confirmed 21 or older. Adult signature and ID required at delivery.</p>
+              <p>Confirmed 21 or older. {counterNote}</p>
             </StepFact>
           </div>
         )

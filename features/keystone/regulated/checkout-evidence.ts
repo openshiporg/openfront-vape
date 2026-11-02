@@ -20,6 +20,7 @@ import {
 } from "../../regulated-commerce/providers/builtin/tax-store-rate";
 import { digestCredential } from "../security/token-crypto";
 import { cartEvidenceFingerprint } from "./cart-fingerprint";
+import { isPickupOption } from "./pickup";
 import { evaluateCartCompliance } from "./enforcement";
 import { recordVerifiedIdentityResult } from "./evidence-ingestion";
 import { reverseRegulatedTaxCommit } from "./reversals";
@@ -39,7 +40,7 @@ async function regulatedCartScope(context: any, cartId: string) {
     where: { id: cartId },
     query: `id rawTotal region { id currency { code } }
       shippingAddress { firstName lastName province country { iso2 } }
-      shippingMethods { id price shippingOption { id } }
+      shippingMethods { id price shippingOption { id data } }
       lineItems { quantity productVariant { id
         product { regulatedCommerceRequired regulatedExemptionReference regulatedExemptionDigest regulatedExemptionReviewedAt regulatedExemptionExpiresAt }
         regulatedClassification { category packageUnits }
@@ -81,7 +82,7 @@ async function regulatedCartScope(context: any, cartId: string) {
 
 type Scope = NonNullable<Awaited<ReturnType<typeof regulatedCartScope>>>;
 
-function carrierDecisionFor(scope: Scope, shippingOptionId: string, cartFingerprint: string) {
+function carrierDecisionFor(scope: Scope, shippingOptionId: string, cartFingerprint: string, pickup = false) {
   return buildManualAdultSignatureDecision({
     cartFingerprint,
     shippingOptionId,
@@ -91,6 +92,7 @@ function carrierDecisionFor(scope: Scope, shippingOptionId: string, cartFingerpr
     lines: scope.lines,
     packageMarkings: scope.packageMarkings,
     signatureMinimumAge: scope.signatureMinimumAge,
+    pickup,
   });
 }
 
@@ -113,13 +115,13 @@ export async function prepareCarrierDecisions(context: any, cartId: string) {
   if (compliance.decision?.result !== "allow") return { regulated: true, issued: 0 };
   const options = await context.sudo().query.ShippingOption.findMany({
     where: { region: { id: { equals: scope.cart.region.id } }, adminOnly: { equals: false }, isReturn: { equals: false } },
-    take: 50, orderBy: [{ id: "asc" }], query: "id",
+    take: 50, orderBy: [{ id: "asc" }], query: "id data",
   });
   const cartFingerprint = await cartEvidenceFingerprint(context, cartId);
   let issued = 0;
   for (const option of options) {
     if (await hasCurrentCarrierDecision(context, cartId, option.id, cartFingerprint)) continue;
-    const decision = carrierDecisionFor(scope, option.id, cartFingerprint);
+    const decision = carrierDecisionFor(scope, option.id, cartFingerprint, isPickupOption(option));
     if (!decision) continue;
     await recordCarrierEligibility({
       context, cartId, shippingOptionId: option.id, providerCode: MANUAL_ADULT_SIGNATURE_PROVIDER_CODE, decision,
@@ -204,7 +206,7 @@ export async function submitAgeCheck(
   if (verification.result !== "passed") throw new AgeCheckFailedError(reasonCode ?? "ID_NAME_NOT_CONFIRMED");
 
   if (!(await hasCurrentCarrierDecision(context, cartId, selected, cartFingerprint))) {
-    const decision = carrierDecisionFor(scope, selected, cartFingerprint);
+    const decision = carrierDecisionFor(scope, selected, cartFingerprint, isPickupOption(scope.cart.shippingMethods[0]?.shippingOption));
     if (!decision) throw new Error("Regulated commerce denied: APPROVED_ADULT_SIGNATURE_CARRIER_REQUIRED");
     await recordCarrierEligibility({ context, cartId, shippingOptionId: selected, providerCode: MANUAL_ADULT_SIGNATURE_PROVIDER_CODE, decision });
   }

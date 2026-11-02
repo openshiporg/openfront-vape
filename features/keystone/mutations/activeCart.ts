@@ -86,6 +86,7 @@ async function activeCart(root: unknown, { cartId }: { cartId: string }, context
         shippingOption {
           id
           name
+          data
         }
       }
       paymentCollection {

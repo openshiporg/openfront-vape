@@ -22,6 +22,7 @@ type AddressInfoForShipping = {
 
 type ShippingOptionInfo = {
   name?: string | null;
+  data?: { pickup?: boolean; instructions?: string } | null;
 };
 
 type ShippingMethodInfo = {
@@ -47,12 +48,14 @@ type ShippingDetailsProps = {
 
 const ShippingDetails = ({ order }: ShippingDetailsProps) => {
   const a = order.shippingAddress;
+  const option = order.shippingMethods?.[0]?.shippingOption;
+  const pickup = option?.data?.pickup === true;
   return (
-    <section className="flex flex-col gap-4 border-t border-vp-line pt-5" aria-label="Delivery">
-      <h2 className="vp-sign text-[26px] text-vp-ink">Delivery</h2>
+    <section className="flex flex-col gap-4 border-t border-vp-line pt-5" aria-label={pickup ? "Pickup" : "Delivery"}>
+      <h2 className="vp-sign text-[26px] text-vp-ink">{pickup ? "Pickup" : "Delivery"}</h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
         <div className="flex min-w-0 flex-col gap-1" data-testid="shipping-address-summary">
-          <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Ship to</p>
+          <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">{pickup ? "Reserved for" : "Ship to"}</p>
           <div className="text-[14px] leading-[20px] text-vp-ink-2">
             <p>{a?.firstName} {a?.lastName}</p>
             <p>{a?.address1} {a?.address2}</p>
@@ -81,7 +84,9 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
             {order.shippingMethods?.[0]?.shippingOption?.name}{" "}
             <span className="font-vp-mono text-[13px] text-vp-ink">{order.shipping}</span>
           </p>
-          <p className="text-[13px] leading-[18px] text-vp-ink-3">Adult signature may be required</p>
+          <p className="text-[13px] leading-[18px] text-vp-ink-3">
+            {pickup ? (option?.data?.instructions || "Collect in store with photo ID (21+).") : "Adult signature may be required"}
+          </p>
         </div>
       </div>
     </section>

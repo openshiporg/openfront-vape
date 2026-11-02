@@ -2,6 +2,7 @@ import { mergeSchemas } from "@graphql-tools/schema";
 import type { GraphQLSchema } from 'graphql'
 import redirectToInit from "./redirectToInit";
 import activeCart from "./activeCart";
+import markPickupPaid from './markPickupPaid';
 import updateActiveCart from "./updateActiveCart";
 import updateActiveCartLineItem from "./updateActiveCartLineItem";
 import updateActiveUser from "./updateActiveUser";
@@ -88,7 +89,7 @@ export const extendGraphqlSchema = (schema: GraphQLSchema) =>
         redirectToInit: Boolean
         activeCart(cartId: ID!): JSON
         activeCartShippingOptions(cartId: ID!): [ShippingOption!]
-        activeCartPaymentProviders(regionId: ID!): [PaymentProvider!]
+        activeCartPaymentProviders(regionId: ID!, cartId: ID): [PaymentProvider!]
         activeCartRegion(countryCode: String!): Region
         getCustomerOrder(orderId: ID!, secretKey: String): JSON
         getCustomerOrders(limit: Int, offset: Int): JSON
@@ -255,6 +256,7 @@ export const extendGraphqlSchema = (schema: GraphQLSchema) =>
       type Mutation {
         updateActiveUser(data: UserUpdateProfileInput!): User
         createActiveCart(regionId: ID!): JSON!
+        markPickupPaid(orderId: ID!): Order
         updateActiveCart(cartId: ID!, data: CartUpdateInput, code: String): Cart
         updateActiveCartLineItem(cartId: ID!, lineId: ID!, quantity: Int!): Cart
         updateActiveUserPassword(
@@ -353,6 +355,7 @@ export const extendGraphqlSchema = (schema: GraphQLSchema) =>
         ...controlledNativeMutations(schema, controlledBusinessRequestResolvers),
         updateActiveUserPassword,
         createActiveCart,
+        markPickupPaid,
         updateActiveCart,
         updateActiveCartLineItem,
         updateActiveUser,

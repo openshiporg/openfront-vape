@@ -2,6 +2,7 @@ import { PageBreadcrumbs } from '@/features/dashboard/components/PageBreadcrumbs
 import { OrderPageClient } from './OrderPageClient';
 import { getOrder } from '@/features/platform/orders/actions';
 import { OrderComplianceSection } from '../components/OrderComplianceSection';
+import { PickupOrderActions } from '../components/PickupOrderActions';
 
 interface OrderPageParams {
   params: Promise<{
@@ -54,7 +55,12 @@ export async function OrderDetailPage({ params }: OrderPageParams) {
         fieldModes={{}}
         fieldPositions={{}}
         uiConfig={uiConfig}
-        compliance={<OrderComplianceSection orderId={order.id} />}
+        compliance={
+          <>
+            <PickupOrderActions orderId={order.id} status={order.status} payAtPickupPending={Boolean(order.payments?.some((payment: any) => payment.status === 'pending'))} />
+            <OrderComplianceSection orderId={order.id} />
+          </>
+        }
       />
     </>
   );

@@ -43,7 +43,7 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
 
   // get available shipping methods and payment methods
   const availableShippingMethods = await getCartShippingOptions(cart.id);
-  const availablePaymentMethods = await listCartPaymentMethods(cart.region.id);
+  const availablePaymentMethods = await listCartPaymentMethods(cart.region.id, cart.id);
 
   if (!availableShippingMethods?.length || !availablePaymentMethods?.length) {
     return (
@@ -80,7 +80,8 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
       <Shipping cart={cart} availableShippingMethods={availableShippingMethods} nextStep={ageCheck.required ? "age" : "payment"} />
       {ageCheck.required && (
         <AgeCheck index={3} done={ageCheck.done && (cart.shippingMethods?.length ?? 0) > 0}
-          hasShippingMethod={(cart.shippingMethods?.length ?? 0) > 0} shippingName={shippingName} />
+          hasShippingMethod={(cart.shippingMethods?.length ?? 0) > 0} shippingName={shippingName}
+          pickup={cart.shippingMethods?.[0]?.shippingOption?.data?.pickup === true} />
       )}
       <Payment cart={cart} availablePaymentMethods={availablePaymentMethods} stepIndex={3 + shift} />
       <Review cart={cart} compliance={compliance} stepIndex={4 + shift} />

@@ -233,7 +233,7 @@ const ManualTestPaymentButton = ({ notReady, cart, "data-testid": dataTestId }: 
       return;
     }
     
-    // For Cash on Delivery payments, we still pass the session ID but no actual payment processing needed
+    // Pay at pickup: the session ID is passed, nothing is charged online
     onPaymentCompleted(session.id)
   }
 
@@ -247,8 +247,11 @@ const ManualTestPaymentButton = ({ notReady, cart, "data-testid": dataTestId }: 
         data-testid={dataTestId || "submit-order-button"}
       >
         {submitting && <RiLoader2Fill className="h-4 w-4 animate-spin" />} 
-        Place order
+        Reserve order
       </button>
+      <p className="text-[13px] leading-[18px] text-vp-ink-3">
+        Nothing is charged online. You pay at the counter and show photo ID (21+) when you collect.
+      </p>
       <ErrorMessage
         error={errorMessage}
         data-testid="cash-on-delivery-error-message"
