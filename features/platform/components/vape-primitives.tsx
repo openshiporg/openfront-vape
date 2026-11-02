@@ -67,7 +67,7 @@ export function Stamp({
       )}
     >
       <span className="truncate">{children}</span>
-      {serial != null && serial !== "" && <span className="font-mono text-[11px] font-medium opacity-80">{serial}</span>}
+      {serial != null && serial !== "" && <span className="hidden font-mono text-xs font-medium opacity-80 sm:inline">{serial}</span>}
     </span>
   )
 }
@@ -108,7 +108,7 @@ export function Pill({
 }
 
 export function Count({ children }: { children: ReactNode }) {
-  return <span className="text-[11px] tabular-nums text-muted-foreground">{children ?? 0}</span>
+  return <span className="text-xs tabular-nums text-muted-foreground">{children ?? 0}</span>
 }
 
 /** Flat 4px button for in-page actions. `primary` is ink; default is outlined; `ghost` is quiet. */

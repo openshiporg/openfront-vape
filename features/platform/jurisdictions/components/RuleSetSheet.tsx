@@ -123,7 +123,7 @@ export function RuleSetSheetButton({ jurisdictionId, ruleSet, mode, children, cl
                 </Field>
               </div>
               {readOnly && ruleSet && (
-                <p className="break-all font-mono text-[11px] text-muted-foreground">Policy hash {ruleSet.policyHash}</p>
+                <p className="break-all font-mono text-xs text-muted-foreground">Policy hash {ruleSet.policyHash}</p>
               )}
             </section>
 

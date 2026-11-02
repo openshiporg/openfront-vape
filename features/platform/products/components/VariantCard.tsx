@@ -228,7 +228,7 @@ export function VariantCard({
       type="button"
       data-active={selectedFilters.includes(`${ov.option}:${ov.value}`)}
       className={cn(
-        "inline-flex min-h-6 items-center gap-1 rounded-[4px] bg-muted px-2 text-[11px] font-medium text-foreground hover:bg-muted/70",
+        "inline-flex min-h-6 items-center gap-1 rounded-[4px] bg-muted px-2 text-xs font-medium text-foreground hover:bg-muted/70",
         "data-[active=true]:bg-foreground data-[active=true]:text-background"
       )}
       onClick={() => onOptionFilter?.(ov.option, ov.value)}
@@ -410,7 +410,7 @@ export function VariantCard({
                                 size="sm"
                                 className="h-7 cursor-pointer flex items-center gap-1 rounded-[4px] px-2.5 text-xs tabular-nums hover:bg-accent max-sm:h-9"
                               >
-                                <span className="text-[11px] text-muted-foreground mr-0.5">
+                                <span className="text-xs text-muted-foreground mr-0.5">
                                   {region.currency.code}
                                 </span>
                                 <span>
@@ -457,7 +457,7 @@ export function VariantCard({
                               size="sm"
                               className="h-7 gap-1 rounded-[4px] border-dashed bg-transparent px-2.5 text-xs hover:bg-muted max-sm:h-9"
                             >
-                              <span className="text-[11px] text-muted-foreground mr-0.5">
+                              <span className="text-xs text-muted-foreground mr-0.5">
                                 {region.currency.code}
                               </span>
                               Add

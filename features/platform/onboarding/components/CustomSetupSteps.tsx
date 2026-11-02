@@ -342,7 +342,7 @@ After I tell you what to change, modify the JSON and provide the complete update
 
             {/* Section header with number badge */}
             <div className="flex items-center space-x-3 mb-2 relative">
-              <div className="z-10 inline-flex size-6 items-center justify-center rounded-full bg-muted font-mono text-[11px] tabular-nums text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] ring-1 ring-inset ring-border/60">
+              <div className="z-10 inline-flex size-6 items-center justify-center rounded-full bg-muted font-mono text-xs tabular-nums text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] ring-1 ring-inset ring-border/60">
                 {String(step.number).padStart(2, '0')}
               </div>
               <Label className="text-sm font-semibold text-foreground">

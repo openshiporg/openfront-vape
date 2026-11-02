@@ -78,7 +78,7 @@ export function DeleteVariantCard({
                             key={region.code}
                             className="h-6 flex items-center gap-1 px-2 rounded-md text-xs border"
                           >
-                            <span className="text-[11px] text-muted-foreground mr-0.5">
+                            <span className="text-xs text-muted-foreground mr-0.5">
                               {region.currency.code}
                             </span>
                             <span>

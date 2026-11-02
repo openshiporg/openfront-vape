@@ -145,7 +145,7 @@ export function KillSwitchControl({ id, killSwitch, canKill }: { id: string; kil
         >
           {pending ? 'Recording…' : 'Stop sales'}
         </button>
-        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{length} / 10-500</span>
+        <span className="font-mono text-xs tabular-nums text-muted-foreground">{length} / 10-500</span>
       </div>
       {!canKill && <p className="text-xs text-muted-foreground">Kill switch permission required</p>}
       <ErrorLine message={error} />

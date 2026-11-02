@@ -74,7 +74,7 @@ function ExistingAppCard({
           {app.description && (
             <span className="block truncate text-[12px] text-muted-foreground">{app.description}</span>
           )}
-          <span className="block break-all font-mono text-[11px] text-muted-foreground md:hidden">{app.clientId}</span>
+          <span className="block break-all font-mono text-xs text-muted-foreground md:hidden">{app.clientId}</span>
         </Td>
         <Td>
           <Stamp tone={app.status === 'active' ? 'ok' : 'danger'}>
@@ -180,7 +180,7 @@ export function AppsPageClient({ existingApps = [] }: AppsPageClientProps) {
                   <span className="text-sm font-medium text-foreground">{app.name}</span>
                   <span className="text-[12px] text-muted-foreground">{issue!.detail}</span>
                 </span>
-                <span className="font-mono text-[11px] text-muted-foreground">{app.clientId}</span>
+                <span className="font-mono text-xs text-muted-foreground">{app.clientId}</span>
               </div>
             ))}
           </ListBand>

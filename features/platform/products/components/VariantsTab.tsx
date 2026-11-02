@@ -613,7 +613,7 @@ export function VariantsTab({ product: initialProduct }: VariantsTab2Props) {
         <Pill active={activeTab === "drift"} onClick={() => setActiveTab("drift")}>
           Changes
           {(variantsToDelete.length > 0 || variantsToCreate.length > 0) && (
-            <span className="text-[11px] tabular-nums text-muted-foreground">
+            <span className="text-xs tabular-nums text-muted-foreground">
               {variantsToCreate.length} added · {variantsToDelete.length} removed
             </span>
           )}

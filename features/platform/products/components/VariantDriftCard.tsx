@@ -281,7 +281,7 @@ function PendingVariantCard({
                               size="sm"
                               className="h-7 cursor-pointer flex items-center gap-1 px-2.5 rounded-[4px] text-xs tabular-nums hover:bg-accent border-dashed"
                             >
-                              <span className="text-[11px] text-muted-foreground mr-0.5">
+                              <span className="text-xs text-muted-foreground mr-0.5">
                                 {region.currency.code}
                               </span>
                               <span>
@@ -334,7 +334,7 @@ function PendingVariantCard({
                             size="sm"
                             className="h-7 gap-1 border border-dashed px-2.5 rounded-[4px] text-xs"
                           >
-                            <span className="text-[11px] text-muted-foreground mr-0.5">
+                            <span className="text-xs text-muted-foreground mr-0.5">
                               {region.currency.code}
                             </span>
                             Add

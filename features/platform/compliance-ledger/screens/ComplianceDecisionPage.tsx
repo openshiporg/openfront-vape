@@ -107,7 +107,7 @@ export async function ComplianceDecisionPage({ params }: { params: Promise<{ id:
                       <Dot tone="danger" />
                       {reasonLabel(code)}
                     </span>
-                    <span className="block pl-[1.125rem] font-mono text-[11px] text-muted-foreground">{code}</span>
+                    <span className="block pl-[1.125rem] font-mono text-xs text-muted-foreground">{code}</span>
                   </div>
                 ))
               )}

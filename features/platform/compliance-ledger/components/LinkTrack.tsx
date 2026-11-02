@@ -21,7 +21,7 @@ export function LinkTrack({ label, options, className }: { label: string; option
         >
           {option.label}
           {option.count !== undefined && (
-            <span className="text-[11px] tabular-nums text-muted-foreground">{option.count}</span>
+            <span className="text-xs tabular-nums text-muted-foreground">{option.count}</span>
           )}
         </Link>
       ))}

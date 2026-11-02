@@ -221,7 +221,7 @@ export function ApiKeyRecordsTable({
                     <Td priority={3} className="max-w-[18rem]">
                       <span className="flex flex-wrap gap-1">
                         {scopes.slice(0, 3).map((scope) => (
-                          <span key={scope} className="rounded-[2px] border border-border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                          <span key={scope} className="rounded-[2px] border border-border px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
                             {scope}
                           </span>
                         ))}

@@ -62,7 +62,7 @@ export function EvidenceFile({ id, label, digest, onRecord, onDigest }: {
           onDigest(file ? await sha256(file) : '')
         }}
       />
-      <p className="truncate font-mono text-[11px] text-muted-foreground">
+      <p className="truncate font-mono text-xs text-muted-foreground">
         {digest ? `SHA-256 ${digest}` : onRecord ? 'On file' : 'No file'}
       </p>
     </Field>
