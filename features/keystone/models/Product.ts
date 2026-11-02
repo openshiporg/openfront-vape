@@ -257,6 +257,12 @@ export const Product = list<Lists.Product.TypeInfo>({
       ref: "ProductTag.products",
       many: true,
     }),
+    // Pods, coils, liquids and accessories this product works with (one-way).
+    compatibleWith: relationship({
+      ref: "Product",
+      many: true,
+      label: "Compatible with",
+    }),
     taxRates: relationship({
       ref: "TaxRate.products",
       many: true,
@@ -271,7 +277,7 @@ export const Product = list<Lists.Product.TypeInfo>({
     validateInput: async ({ operation, resolvedData, item, context, addValidationError }: any) => {
       const nextStatus = resolvedData.status ?? item?.status;
       const regulated = resolvedData.regulatedCommerceRequired ?? item?.regulatedCommerceRequired ?? true;
-      const marketingChanged = ["title", "subtitle", "description", "metadata"].some(key => resolvedData[key] !== undefined);
+      const marketingChanged = ["title", "subtitle", "description", "metadata", "compatibleWith"].some(key => resolvedData[key] !== undefined);
       if (!regulated) {
         const reference = resolvedData.regulatedExemptionReference ?? item?.regulatedExemptionReference;
         const digest = resolvedData.regulatedExemptionDigest ?? item?.regulatedExemptionDigest;
@@ -302,7 +308,7 @@ export const Product = list<Lists.Product.TypeInfo>({
       // Keystone supplies no resolvedData for delete. Do not report failure
       // after it has already committed the deletion.
       if (operation !== "update") return;
-      const marketingChanged = ["title", "subtitle", "description", "metadata"].some(key => resolvedData[key] !== undefined);
+      const marketingChanged = ["title", "subtitle", "description", "metadata", "compatibleWith"].some(key => resolvedData[key] !== undefined);
       if (!marketingChanged || item?.status === "published" || item?.regulatedCommerceRequired === false) return;
       const product = await context.sudo().query.Product.findOne({
         where: { id: item.id },

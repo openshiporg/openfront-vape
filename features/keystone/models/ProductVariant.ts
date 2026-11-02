@@ -3,6 +3,7 @@ import type { Lists } from '.keystone/types';
 import { graphql, list } from "@keystone-6/core";
 import {
   checkbox,
+  decimal,
   integer,
   json,
   text,
@@ -58,6 +59,13 @@ export const ProductVariant = list<Lists.ProductVariant.TypeInfo>({
     originCountry: text(),
     midCode: text(),
     material: text(),
+    // Structured device and liquid specs. Blank means "not stated"; the storefront shows
+    // only what is filled in. Changing any of them revokes the variant's compliance review.
+    batteryCapacityMah: integer({ label: "Battery (mAh)", validation: { min: 0 } }),
+    liquidCapacityMl: decimal({ scale: 2, precision: 8, label: "Capacity (ml)", validation: { min: "0" } }),
+    nicotineStrengthMgMl: decimal({ scale: 2, precision: 8, label: "Nicotine strength (mg/ml)", validation: { min: "0" } }),
+    coilResistanceOhm: decimal({ scale: 3, precision: 8, label: "Resistance (Ω)", validation: { min: "0" } }),
+    coilType: text({ label: "Coil type" }),
     metadata: json(),
     variantRank: integer({
       defaultValue: 0,

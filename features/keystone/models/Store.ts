@@ -1,7 +1,7 @@
 
 import { list } from "@keystone-6/core";
 import { denyAll } from "@keystone-6/core/access";
-import { json, text, relationship, virtual } from "@keystone-6/core/fields";
+import { checkbox, json, text, relationship, virtual } from "@keystone-6/core/fields";
 import { permissions } from "../access";
 import { trackingFields } from "./trackingFields";
 import { graphql } from "@keystone-6/core";
@@ -65,6 +65,20 @@ export const Store = list({
           const value = resolvedData[fieldKey];
           return value === undefined ? value : normalizeStoreLogoColor(value);
         },
+      },
+    }),
+    // 21 CFR 1143.3(b): the storefront advertises nicotine products, so every page that
+    // shows products carries the fixed FDA warning. Compliance owns the switch; the
+    // wording is fixed in code and cannot be edited here.
+    nicotineWarningRequired: checkbox({
+      defaultValue: true,
+      label: "Show the FDA nicotine warning on the storefront",
+      access: {
+        create: permissions.canManageCompliance,
+        update: permissions.canManageCompliance,
+      },
+      ui: {
+        description: "Required while the shop sells or shows nicotine products (21 CFR 1143.3). Turn off only after a compliance review.",
       },
     }),
     metadata: json(),

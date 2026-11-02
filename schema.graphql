@@ -6112,6 +6112,8 @@ type Product {
   productOptionsCount(where: ProductOptionWhereInput! = {}): Int
   productTags(where: ProductTagWhereInput! = {}, orderBy: [ProductTagOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ProductTagWhereUniqueInput): [ProductTag!]
   productTagsCount(where: ProductTagWhereInput! = {}): Int
+  compatibleWith(where: ProductWhereInput! = {}, orderBy: [ProductOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ProductWhereUniqueInput): [Product!]
+  compatibleWithCount(where: ProductWhereInput! = {}): Int
   taxRates(where: TaxRateWhereInput! = {}, orderBy: [TaxRateOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TaxRateWhereUniqueInput): [TaxRate!]
   taxRatesCount(where: TaxRateWhereInput! = {}): Int
   productVariants(where: ProductVariantWhereInput! = {}, orderBy: [ProductVariantOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ProductVariantWhereUniqueInput): [ProductVariant!]
@@ -6162,6 +6164,7 @@ input ProductWhereInput {
   productImages: ProductImageManyRelationFilter
   productOptions: ProductOptionManyRelationFilter
   productTags: ProductTagManyRelationFilter
+  compatibleWith: ProductManyRelationFilter
   taxRates: TaxRateManyRelationFilter
   productVariants: ProductVariantManyRelationFilter
   createdAt: DateTimeFilter
@@ -6241,6 +6244,7 @@ input ProductUpdateInput {
   productImages: ProductImageRelateToManyForUpdateInput
   productOptions: ProductOptionRelateToManyForUpdateInput
   productTags: ProductTagRelateToManyForUpdateInput
+  compatibleWith: ProductRelateToManyForUpdateInput
   taxRates: TaxRateRelateToManyForUpdateInput
   productVariants: ProductVariantRelateToManyForUpdateInput
   createdAt: DateTime
@@ -6316,6 +6320,7 @@ input ProductCreateInput {
   productImages: ProductImageRelateToManyForCreateInput
   productOptions: ProductOptionRelateToManyForCreateInput
   productTags: ProductTagRelateToManyForCreateInput
+  compatibleWith: ProductRelateToManyForCreateInput
   taxRates: TaxRateRelateToManyForCreateInput
   productVariants: ProductVariantRelateToManyForCreateInput
   createdAt: DateTime
@@ -6871,6 +6876,11 @@ type ProductVariant {
   originCountry: String
   midCode: String
   material: String
+  batteryCapacityMah: Int
+  liquidCapacityMl: Decimal
+  nicotineStrengthMgMl: Decimal
+  coilResistanceOhm: Decimal
+  coilType: String
   metadata: JSON
   variantRank: Int
   product: Product
@@ -6892,6 +6902,8 @@ type ProductVariant {
   createdAt: DateTime
   updatedAt: DateTime
 }
+
+scalar Decimal
 
 input ProductVariantWhereUniqueInput {
   id: ID
@@ -6915,6 +6927,11 @@ input ProductVariantWhereInput {
   originCountry: StringFilter
   midCode: StringFilter
   material: StringFilter
+  batteryCapacityMah: IntNullableFilter
+  liquidCapacityMl: DecimalNullableFilter
+  nicotineStrengthMgMl: DecimalNullableFilter
+  coilResistanceOhm: DecimalNullableFilter
+  coilType: StringFilter
   variantRank: IntNullableFilter
   product: ProductWhereInput
   claimItems: ClaimItemManyRelationFilter
@@ -6928,6 +6945,17 @@ input ProductVariantWhereInput {
   regulatedClassification: RegulatedProductClassificationWhereInput
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
+}
+
+input DecimalNullableFilter {
+  equals: Decimal
+  in: [Decimal!]
+  notIn: [Decimal!]
+  lt: Decimal
+  lte: Decimal
+  gt: Decimal
+  gte: Decimal
+  not: DecimalNullableFilter
 }
 
 input StockMovementManyRelationFilter {
@@ -6956,6 +6984,11 @@ input ProductVariantOrderByInput {
   originCountry: OrderDirection
   midCode: OrderDirection
   material: OrderDirection
+  batteryCapacityMah: OrderDirection
+  liquidCapacityMl: OrderDirection
+  nicotineStrengthMgMl: OrderDirection
+  coilResistanceOhm: OrderDirection
+  coilType: OrderDirection
   variantRank: OrderDirection
   createdAt: OrderDirection
   updatedAt: OrderDirection
@@ -6974,6 +7007,11 @@ input ProductVariantUpdateInput {
   originCountry: String
   midCode: String
   material: String
+  batteryCapacityMah: Int
+  liquidCapacityMl: Decimal
+  nicotineStrengthMgMl: Decimal
+  coilResistanceOhm: Decimal
+  coilType: String
   metadata: JSON
   variantRank: Int
   product: ProductRelateToOneForUpdateInput
@@ -7040,6 +7078,11 @@ input ProductVariantCreateInput {
   originCountry: String
   midCode: String
   material: String
+  batteryCapacityMah: Int
+  liquidCapacityMl: Decimal
+  nicotineStrengthMgMl: Decimal
+  coilResistanceOhm: Decimal
+  coilType: String
   metadata: JSON
   variantRank: Int
   product: ProductRelateToOneForCreateInput
@@ -8760,6 +8803,7 @@ type Store {
   homepageDescription: String
   logoIcon: String
   logoColor: String
+  nicotineWarningRequired: Boolean
   metadata: JSON
   swapLinkTemplate: String
   paymentLinkTemplate: String
@@ -8791,6 +8835,7 @@ input StoreWhereInput {
   homepageDescription: StringFilter
   logoIcon: StringFilter
   logoColor: StringFilter
+  nicotineWarningRequired: BooleanFilter
   swapLinkTemplate: StringFilter
   paymentLinkTemplate: StringFilter
   inviteLinkTemplate: StringFilter
@@ -8813,6 +8858,7 @@ input StoreOrderByInput {
   homepageDescription: OrderDirection
   logoIcon: OrderDirection
   logoColor: OrderDirection
+  nicotineWarningRequired: OrderDirection
   swapLinkTemplate: OrderDirection
   paymentLinkTemplate: OrderDirection
   inviteLinkTemplate: OrderDirection
@@ -8827,6 +8873,7 @@ input StoreUpdateInput {
   homepageDescription: String
   logoIcon: String
   logoColor: String
+  nicotineWarningRequired: Boolean
   metadata: JSON
   swapLinkTemplate: String
   paymentLinkTemplate: String
@@ -8855,6 +8902,7 @@ input StoreCreateInput {
   homepageDescription: String
   logoIcon: String
   logoColor: String
+  nicotineWarningRequired: Boolean
   metadata: JSON
   swapLinkTemplate: String
   paymentLinkTemplate: String
@@ -10671,8 +10719,6 @@ enum RegulatedProductClassificationNicotineSourceType {
   unknown
 }
 
-scalar Decimal
-
 enum RegulatedProductClassificationMarketingReviewStatusType {
   pending
   approved
@@ -10733,17 +10779,6 @@ input RegulatedProductClassificationNicotineSourceTypeNullableFilter {
   in: [RegulatedProductClassificationNicotineSourceType!]
   notIn: [RegulatedProductClassificationNicotineSourceType!]
   not: RegulatedProductClassificationNicotineSourceTypeNullableFilter
-}
-
-input DecimalNullableFilter {
-  equals: Decimal
-  in: [Decimal!]
-  notIn: [Decimal!]
-  lt: Decimal
-  lte: Decimal
-  gt: Decimal
-  gte: Decimal
-  not: DecimalNullableFilter
 }
 
 input RegulatedProductClassificationMarketingReviewStatusTypeNullableFilter {
@@ -11978,6 +12013,7 @@ type Mutation {
   completeActiveCart(cartId: ID!, paymentSessionId: ID): JSON
   addActiveCartShippingMethod(cartId: ID!, shippingMethodId: ID!): Cart
   initiatePaymentSession(cartId: ID!, paymentProviderId: String!): PaymentSession
+  authorizeCardPaymentSession(cartId: ID!, sessionId: ID!, opaqueData: JSON!): JSON!
   handlePaymentProviderWebhook(providerId: ID!, event: JSON!, headers: JSON!): WebhookResult!
   importInventory: Boolean
   adjustInventory(variantId: ID!, delta: Int!, reason: String!, note: String): ProductVariant

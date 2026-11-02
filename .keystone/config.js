@@ -995,19 +995,197 @@ var init_manual = __esm({
   }
 });
 
-// features/integrations/payment/index.ts
-var payment_exports = {};
-__export(payment_exports, {
-  paymentProviderAdapters: () => paymentProviderAdapters
+// features/integrations/payment/authorizenet.ts
+var authorizenet_exports = {};
+__export(authorizenet_exports, {
+  cancelPaymentFunction: () => cancelPaymentFunction,
+  capturePaymentFunction: () => capturePaymentFunction4,
+  createPaymentFunction: () => createPaymentFunction4,
+  generatePaymentLinkFunction: () => generatePaymentLinkFunction4,
+  getPaymentStatusFunction: () => getPaymentStatusFunction4,
+  handleWebhookFunction: () => handleWebhookFunction4,
+  mapTransactionStatus: () => mapTransactionStatus,
+  mapWebhookEventType: () => mapWebhookEventType,
+  refundPaymentFunction: () => refundPaymentFunction4
 });
-var paymentProviderAdapters;
-var init_payment = __esm({
-  "features/integrations/payment/index.ts"() {
+function merchantAuthentication() {
+  const name = process.env.AUTHORIZENET_API_LOGIN_ID;
+  const transactionKey = process.env.AUTHORIZENET_TRANSACTION_KEY;
+  if (!name || !transactionKey) throw new Error("Authorize.net credentials are not configured");
+  return { name, transactionKey };
+}
+async function call(operation, body, refId) {
+  const payload = { [operation]: { merchantAuthentication: merchantAuthentication(), ...refId ? { refId: ref(refId) } : {}, ...body } };
+  const response = await fetch(endpoint(), {
+    method: "POST",
+    redirect: "error",
+    signal: AbortSignal.timeout(3e4),
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) throw new Error(`Authorize.net HTTP ${response.status}`);
+  const result = JSON.parse((await response.text()).replace(/^\uFEFF/, ""));
+  return result;
+}
+function transactionError(result) {
+  const tx = result?.transactionResponse;
+  return tx?.errors?.[0]?.errorText || result?.messages?.message?.[0]?.text || "Authorize.net rejected the transaction";
+}
+function mapTransactionStatus(status) {
+  return STATUS[status] || "unknown";
+}
+function mapWebhookEventType(type) {
+  if (type === "net.authorize.payment.void.created") return "voided";
+  if (type === "net.authorize.payment.refund.created") return "refunded";
+  if (type === "net.authorize.payment.authcapture.created" || type === "net.authorize.payment.priorAuthCapture.created") return "succeeded";
+  return "unknown";
+}
+async function createPaymentFunction4({ amount, currency, opaqueData, cart, order, idempotencyKey, captureNow }) {
+  if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error("Invalid payment amount");
+  if (String(currency || "").toUpperCase() !== "USD") throw new Error("Authorize.net adapter supports USD only");
+  if (!opaqueData) {
+    return {
+      status: "requires_payment_method",
+      amount,
+      currency: "USD",
+      acceptJs: {
+        apiLoginId: process.env.AUTHORIZENET_API_LOGIN_ID || "",
+        clientKey: process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY || "",
+        env: isProduction() ? "production" : "sandbox"
+      }
+    };
+  }
+  const invoiceNumber = ref(String(order?.displayId || order?.orderNumber || order?.id || cart?.id || "order"));
+  const result = await call(
+    "createTransactionRequest",
+    {
+      transactionRequest: {
+        transactionType: captureNow ? "authCaptureTransaction" : "authOnlyTransaction",
+        amount: dollars(amount),
+        payment: { opaqueData },
+        order: { invoiceNumber }
+      }
+    },
+    idempotencyKey || cart?.id || order?.id
+  );
+  const tx = result.transactionResponse;
+  if (result.messages?.resultCode !== "Ok" || tx?.responseCode !== "1" || !tx?.transId || tx.transId === "0") {
+    return { status: "failed", amount, currency: "USD", error: transactionError(result) };
+  }
+  return {
+    status: captureNow ? "succeeded" : "authorized",
+    paymentIntentId: String(tx.transId),
+    amount,
+    currency: "USD",
+    data: { transId: tx.transId, authCode: tx.authCode, accountNumber: tx.accountNumber, accountType: tx.accountType }
+  };
+}
+async function capturePaymentFunction4({ paymentId, amount, idempotencyKey }) {
+  if (!paymentId) throw new Error("Payment reference is required");
+  const result = await call(
+    "createTransactionRequest",
+    { transactionRequest: { transactionType: "priorAuthCaptureTransaction", ...amount ? { amount: dollars(amount) } : {}, refTransId: paymentId } },
+    idempotencyKey || paymentId
+  );
+  const tx = result.transactionResponse;
+  if (result.messages?.resultCode === "Ok" && tx?.responseCode === "1") {
+    return getPaymentStatusFunction4({ paymentId });
+  }
+  return { status: "unknown", error: transactionError(result) };
+}
+async function cancelPaymentFunction({ paymentId, idempotencyKey }) {
+  if (!paymentId) throw new Error("Payment reference is required");
+  const result = await call(
+    "createTransactionRequest",
+    { transactionRequest: { transactionType: "voidTransaction", refTransId: paymentId } },
+    idempotencyKey || `void${paymentId}`
+  );
+  const ok = result.messages?.resultCode === "Ok" && result.transactionResponse?.responseCode === "1";
+  return { status: ok ? "canceled" : "unknown", error: ok ? void 0 : transactionError(result) };
+}
+async function refundPaymentFunction4({ paymentId, amount, currency, idempotencyKey }) {
+  if (!paymentId) throw new Error("Payment reference is required");
+  const details = await call("getTransactionDetailsRequest", { transId: paymentId });
+  const transaction = details.transaction;
+  if (!transaction) throw new Error(transactionError(details));
+  const settled = transaction.transactionStatus === "settledSuccessfully";
+  if (!settled) {
+    const voided = await cancelPaymentFunction({ paymentId, idempotencyKey });
+    return { ...voided, status: voided.status === "canceled" ? "refunded" : voided.status, amount: cents(transaction.authAmount), currency: "USD", method: "void" };
+  }
+  const refundAmount = amount ?? cents(transaction.settleAmount);
+  const result = await call(
+    "createTransactionRequest",
+    {
+      transactionRequest: {
+        transactionType: "refundTransaction",
+        amount: dollars(refundAmount),
+        payment: { creditCard: { cardNumber: String(transaction.payment?.creditCard?.cardNumber || "").slice(-4), expirationDate: "XXXX" } },
+        refTransId: paymentId
+      }
+    },
+    idempotencyKey || `refund${paymentId}`
+  );
+  const tx = result.transactionResponse;
+  const ok = result.messages?.resultCode === "Ok" && tx?.responseCode === "1";
+  return { status: ok ? "refunded" : "unknown", amount: refundAmount, currency: currency || "USD", data: tx, error: ok ? void 0 : transactionError(result), method: "refund" };
+}
+async function getPaymentStatusFunction4({ paymentId }) {
+  if (!paymentId) throw new Error("Payment reference is required");
+  const result = await call("getTransactionDetailsRequest", { transId: paymentId });
+  const transaction = result.transaction;
+  if (!transaction) return { status: "unknown", error: transactionError(result) };
+  const status = mapTransactionStatus(transaction.transactionStatus);
+  const amount = status === "authorized" ? cents(transaction.authAmount) : cents(transaction.settleAmount || transaction.authAmount);
+  return {
+    status,
+    amount,
+    currency: "USD",
+    data: { transId: transaction.transId, transactionStatus: transaction.transactionStatus, authAmount: transaction.authAmount, settleAmount: transaction.settleAmount }
+  };
+}
+async function generatePaymentLinkFunction4({ paymentId }) {
+  const host = isProduction() ? "https://account.authorize.net" : "https://sandbox.authorize.net";
+  return `${host}/ui/themes/sandbox/Transaction/TransactionReceipt.aspx?transid=${encodeURIComponent(paymentId || "")}`;
+}
+async function handleWebhookFunction4({ rawBody, headers = {} }) {
+  const signatureKey = process.env.AUTHORIZENET_SIGNATURE_KEY;
+  if (!signatureKey) throw new Error("Authorize.net webhook signature key is not configured");
+  if (!rawBody) throw new Error("Raw webhook body is required");
+  const supplied = String(headers["x-anet-signature"] || "").toLowerCase();
+  const expected = `sha512=${(0, import_node_crypto3.createHmac)("sha512", signatureKey).update(rawBody).digest("hex")}`;
+  const a = Buffer.from(supplied);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !(0, import_node_crypto3.timingSafeEqual)(a, b)) throw new Error("Webhook signature verification failed");
+  const event = JSON.parse(rawBody);
+  return { isValid: true, event: { ...event, id: event.notificationId }, type: String(event.eventType || ""), resource: event.payload || {} };
+}
+var import_node_crypto3, isProduction, endpoint, ref, dollars, cents, STATUS;
+var init_authorizenet = __esm({
+  "features/integrations/payment/authorizenet.ts"() {
     "use strict";
-    paymentProviderAdapters = {
-      stripe: () => Promise.resolve().then(() => (init_stripe(), stripe_exports)),
-      paypal: () => Promise.resolve().then(() => (init_paypal(), paypal_exports)),
-      manual: () => Promise.resolve().then(() => (init_manual(), manual_exports))
+    import_node_crypto3 = require("node:crypto");
+    isProduction = () => process.env.AUTHORIZENET_ENV === "production";
+    endpoint = () => isProduction() ? "https://api.authorize.net/xml/v1/request.api" : "https://apitest.authorize.net/xml/v1/request.api";
+    ref = (value) => value.replace(/[^A-Za-z0-9-]/g, "").slice(-20);
+    dollars = (minor) => (minor / 100).toFixed(2);
+    cents = (value) => Math.round(Number(value) * 100);
+    STATUS = {
+      authorizedPendingCapture: "authorized",
+      capturedPendingSettlement: "succeeded",
+      settledSuccessfully: "succeeded",
+      refundPendingSettlement: "refunded",
+      refundSettledSuccessfully: "refunded",
+      voided: "canceled",
+      declined: "failed",
+      expired: "failed",
+      failedReview: "failed",
+      generalError: "failed",
+      settlementError: "failed",
+      communicationError: "unknown",
+      underReview: "unknown",
+      FDSPendingReview: "unknown",
+      FDSAuthorizedPendingReview: "unknown"
     };
   }
 });
@@ -1767,8 +1945,9 @@ async function createLabelFunction3({ provider, order, rate }) {
     "FedEx": "https://www.fedex.com/fedextrack/?trknbr=",
     "DHL": "https://www.dhl.com/en/express/tracking.html?AWB="
   };
-  const trackingNumber = trackingFormats[rate.carrier] || carrierPrefix + Math.random().toString(36).substring(2, 10).toUpperCase();
-  const trackingUrl2 = baseTrackingUrls[rate.carrier] ? baseTrackingUrls[rate.carrier] + trackingNumber : "https://example.com/track";
+  const carrier = rate.carrier;
+  const trackingNumber = trackingFormats[carrier] || carrierPrefix + Math.random().toString(36).substring(2, 10).toUpperCase();
+  const trackingUrl2 = baseTrackingUrls[carrier] ? baseTrackingUrls[carrier] + trackingNumber : "https://example.com/track";
   return {
     status: "SUCCESS",
     data: {
@@ -2199,17 +2378,58 @@ function validateRules(value) {
   return { valid: errors.length === 0, errors, rules: errors.length ? [] : value };
 }
 
+// features/platform/store-settings/lib/store-info.ts
+var POLICY_KEYS = ["shipping", "returns", "ageVerification", "privacy", "terms"];
+var POLICY_PAGES = [
+  { slug: "shipping", key: "shipping", title: "Shipping policy" },
+  { slug: "returns", key: "returns", title: "Returns policy" },
+  { slug: "age-verification", key: "ageVerification", title: "Age verification" },
+  { slug: "privacy", key: "privacy", title: "Privacy policy" },
+  { slug: "terms", key: "terms", title: "Terms of use" }
+];
+var text = (value) => typeof value === "string" ? value.trim() : "";
+var asObject = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
+function readStoreBusiness(metadata) {
+  const business = asObject(asObject(metadata).business);
+  const rawLicenses = business.licenses;
+  const licenses = (Array.isArray(rawLicenses) ? rawLicenses : typeof rawLicenses === "string" ? rawLicenses.split("\n") : []).map(text).filter(Boolean);
+  return {
+    legalName: text(business.legalName),
+    email: text(business.email),
+    phone: text(business.phone),
+    address: text(business.address),
+    licenses
+  };
+}
+function readStorePolicies(metadata) {
+  const policies = asObject(asObject(metadata).policies);
+  return Object.fromEntries(POLICY_KEYS.map((key) => [key, text(policies[key])]));
+}
+function missingStoreInfo(metadata) {
+  const business = readStoreBusiness(metadata);
+  const policies = readStorePolicies(metadata);
+  return [
+    ...business.legalName ? [] : ["Legal name"],
+    ...business.licenses.length ? [] : ["Licence numbers"],
+    ...POLICY_PAGES.filter((page) => !policies[page.key]).map((page) => page.title)
+  ];
+}
+
 // features/regulated-commerce/core/release-gate.ts
 async function releaseBlockers(context) {
-  const profiles = await context.sudo().query.RegulatedMerchantProfile.findMany({
-    where: { status: { equals: "active" } },
-    query: "id killSwitch launchJurisdictionsCount"
-  });
-  if (!profiles.length) return ["ACTIVE_MERCHANT_PROFILE_REQUIRED"];
+  const [profiles, stores] = await Promise.all([
+    context.sudo().query.RegulatedMerchantProfile.findMany({
+      where: { status: { equals: "active" } },
+      query: "id killSwitch launchJurisdictionsCount"
+    }),
+    context.sudo().query.Store.findMany({ take: 1, query: "metadata" })
+  ]);
+  const storeInfo = missingStoreInfo(stores[0]?.metadata).length ? ["STORE_POLICIES_REQUIRED"] : [];
+  if (!profiles.length) return ["ACTIVE_MERCHANT_PROFILE_REQUIRED", ...storeInfo];
   const live = profiles.filter((profile) => !profile.killSwitch);
-  if (!live.length) return ["KILL_SWITCH_ENABLED"];
-  if (!live.some((profile) => (profile.launchJurisdictionsCount ?? 0) > 0)) return ["LAUNCH_JURISDICTION_REQUIRED"];
-  return [];
+  if (!live.length) return ["KILL_SWITCH_ENABLED", ...storeInfo];
+  if (!live.some((profile) => (profile.launchJurisdictionsCount ?? 0) > 0)) return ["LAUNCH_JURISDICTION_REQUIRED", ...storeInfo];
+  return storeInfo;
 }
 async function assertCommerceReleaseEnabled(context) {
   if ((await releaseBlockers(context)).length) {
@@ -3365,6 +3585,7 @@ init_cart_access();
 
 // features/keystone/utils/paymentProviderConfig.ts
 function isPaymentProviderConfigured(code) {
+  if (code.startsWith("pp_authorizenet")) return Boolean(process.env.AUTHORIZENET_API_LOGIN_ID && process.env.AUTHORIZENET_TRANSACTION_KEY && process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY && process.env.NEXT_PUBLIC_AUTHORIZENET_API_LOGIN_ID === process.env.AUTHORIZENET_API_LOGIN_ID);
   if (code.startsWith("pp_stripe")) {
     return Boolean(
       (process.env.NEXT_PUBLIC_STRIPE_KEY || process.env.STRIPE_PUBLISHABLE_KEY) && process.env.STRIPE_SECRET_KEY
@@ -3385,6 +3606,7 @@ function getPublicPaymentProviderConfig(code) {
       publishableKey: process.env.NEXT_PUBLIC_STRIPE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || ""
     };
   }
+  if (code.startsWith("pp_authorizenet")) return { provider: "authorizenet", apiLoginId: process.env.AUTHORIZENET_API_LOGIN_ID, clientKey: process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY, env: process.env.AUTHORIZENET_ENV === "production" ? "production" : "sandbox" };
   if (code.startsWith("pp_paypal")) {
     return {
       provider: "paypal",
@@ -3559,49 +3781,49 @@ var setActiveCartPaymentSession_default = setActiveCartPaymentSession;
 // features/keystone/mutations/completeActiveCart.ts
 init_cart_access();
 
-// import("../../integrations/payment/**/*.ts") in features/keystone/utils/paymentProviderAdapter.ts
-var globImport_integrations_payment_ts = __glob({
-  "../../integrations/payment/index.ts": () => Promise.resolve().then(() => (init_payment(), payment_exports)),
-  "../../integrations/payment/manual.ts": () => Promise.resolve().then(() => (init_manual(), manual_exports)),
-  "../../integrations/payment/paypal.ts": () => Promise.resolve().then(() => (init_paypal(), paypal_exports)),
-  "../../integrations/payment/stripe.ts": () => Promise.resolve().then(() => (init_stripe(), stripe_exports))
-});
+// features/integrations/payment/index.ts
+var paymentProviderAdapters = {
+  stripe: () => Promise.resolve().then(() => (init_stripe(), stripe_exports)),
+  paypal: () => Promise.resolve().then(() => (init_paypal(), paypal_exports)),
+  manual: () => Promise.resolve().then(() => (init_manual(), manual_exports)),
+  authorizenet: () => Promise.resolve().then(() => (init_authorizenet(), authorizenet_exports))
+};
 
 // features/keystone/utils/paymentProviderAdapter.ts
+var ADAPTER_OPERATIONS = /* @__PURE__ */ new Set(["createPaymentFunction", "capturePaymentFunction", "refundPaymentFunction", "getPaymentStatusFunction", "generatePaymentLinkFunction", "handleWebhookFunction"]);
+function paymentAdapterPayload(provider, args) {
+  const input = {};
+  for (const key of ["cart", "order", "amount", "currency", "idempotencyKey", "paymentId", "refundId", "event", "headers", "rawBody", "opaqueData"]) if (args?.[key] !== void 0) input[key] = args[key];
+  if (input.headers && typeof input.headers === "object") input.headers = Object.fromEntries(Object.entries(input.headers).filter(([key]) => ["stripe-signature", "x-anet-signature"].includes(key.toLowerCase()) || key.toLowerCase().startsWith("paypal-")));
+  return { ...input, provider: { id: provider.id, code: provider.code, credentials: provider.credentials || {} } };
+}
 async function executeAdapterFunction({ provider, functionName, args }) {
-  const functionPath = provider[functionName];
-  if (functionPath.startsWith("http")) {
-    const response = await fetch(functionPath, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ provider, ...args })
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP request failed: ${response.statusText}`);
+  if (!ADAPTER_OPERATIONS.has(functionName)) throw new Error("Unknown payment adapter operation");
+  const functionPath = provider?.[functionName];
+  if (typeof functionPath !== "string") throw new Error("Payment adapter is not configured");
+  const payload = paymentAdapterPayload(provider, args);
+  if (/^https?:/i.test(functionPath)) {
+    try {
+      const response = await fetch(functionPath, { method: "POST", redirect: "error", signal: AbortSignal.timeout(3e4), headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      if (!response.ok) throw new Error();
+      return await response.json();
+    } catch {
+      throw new Error("External payment adapter request failed; reconcile the original attempt before retrying");
     }
-    return response.json();
   }
-  const adapter = await globImport_integrations_payment_ts(`../../integrations/payment/${functionPath}.ts`);
+  const loader = paymentProviderAdapters[functionPath];
+  if (!loader) throw new Error("Unknown registered payment adapter");
+  const adapter = await loader();
   const fn = adapter[functionName];
-  if (!fn) {
-    throw new Error(
-      `Function ${functionName} not found in adapter ${functionPath}`
-    );
-  }
+  if (typeof fn !== "function") throw new Error("Payment adapter operation is unavailable");
   try {
-    return await fn({ provider, ...args });
-  } catch (error) {
-    throw new Error(
-      `Error executing ${functionName} for provider ${functionPath}: ${error.message}`
-    );
+    return await fn(payload);
+  } catch {
+    throw new Error(`Payment adapter ${functionName} failed; reconcile the original attempt before retrying`);
   }
 }
-async function createPayment({ provider, cart, amount, currency }) {
-  return executeAdapterFunction({
-    provider,
-    functionName: "createPaymentFunction",
-    args: { cart, amount, currency }
-  });
+async function createPayment({ provider, cart, order, amount, currency, idempotencyKey, opaqueData }) {
+  return executeAdapterFunction({ provider, functionName: "createPaymentFunction", args: { cart, order, amount, currency, idempotencyKey, opaqueData } });
 }
 async function capturePayment({ provider, paymentId, amount, currency, idempotencyKey }) {
   return executeAdapterFunction({
@@ -3624,16 +3846,12 @@ async function getPaymentStatus({ provider, paymentId }) {
     args: { paymentId }
   });
 }
-async function handleWebhook({ provider, event, headers }) {
-  return executeAdapterFunction({
-    provider,
-    functionName: "handleWebhookFunction",
-    args: { event, headers }
-  });
+async function handleWebhook({ provider, event, headers, rawBody }) {
+  return executeAdapterFunction({ provider, functionName: "handleWebhookFunction", args: { event, headers, rawBody: rawBody || headers.__rawBody } });
 }
 
 // features/keystone/utils/idempotency.ts
-var import_node_crypto3 = __toESM(require("node:crypto"));
+var import_node_crypto4 = __toESM(require("node:crypto"));
 function normalize(value) {
   if (value === null || value === void 0) return null;
   if (typeof value === "string" || typeof value === "boolean") return value;
@@ -3654,7 +3872,7 @@ function canonicalIdempotencyParams(params) {
   return normalize(params);
 }
 function idempotencyFingerprint(params) {
-  return import_node_crypto3.default.createHash("sha256").update(JSON.stringify(canonicalIdempotencyParams(params))).digest("hex");
+  return import_node_crypto4.default.createHash("sha256").update(JSON.stringify(canonicalIdempotencyParams(params))).digest("hex");
 }
 function storedFingerprint(requestParams) {
   const params = requestParams && typeof requestParams === "object" ? { ...requestParams } : {};
@@ -3872,7 +4090,7 @@ async function releaseCheckoutResources(prisma, lines, discounts, idempotencyKey
 }
 
 // features/keystone/checkout/order-commit.ts
-var import_node_crypto4 = __toESM(require("node:crypto"));
+var import_node_crypto5 = __toESM(require("node:crypto"));
 init_commerce_fence();
 
 // features/webhooks/delivery-policy.ts
@@ -3905,8 +4123,8 @@ async function subscribedWebhookEndpointIds(context, eventType, userId) {
     query: "id events"
   });
   return endpoints.filter(
-    (endpoint2) => Array.isArray(endpoint2.events) && (endpoint2.events.includes(eventType) || endpoint2.events.includes("*"))
-  ).map((endpoint2) => endpoint2.id);
+    (endpoint3) => Array.isArray(endpoint3.events) && (endpoint3.events.includes(eventType) || endpoint3.events.includes("*"))
+  ).map((endpoint3) => endpoint3.id);
 }
 async function enqueueWebhookOutbox(tx, endpointIds, eventType, resourceType, resourceId, data) {
   const payload = {
@@ -3963,7 +4181,10 @@ var BaseWebhookEnricher = class {
 
 // features/webhooks/enrichers/order-enricher.ts
 var OrderWebhookEnricher = class extends BaseWebhookEnricher {
-  entityType = "Order";
+  constructor() {
+    super(...arguments);
+    this.entityType = "Order";
+  }
   async enrich(item, context) {
     const enrichedItem = await this.queryEnrichedEntity(item, context);
     return enrichedItem || item;
@@ -4066,7 +4287,9 @@ var OrderWebhookEnricher = class extends BaseWebhookEnricher {
 
 // features/webhooks/enrichers/registry.ts
 var WebhookEnricherRegistry = class {
-  enrichers = /* @__PURE__ */ new Map();
+  constructor() {
+    this.enrichers = /* @__PURE__ */ new Map();
+  }
   register(entityType, enricher) {
     this.enrichers.set(entityType, enricher);
   }
@@ -4551,7 +4774,7 @@ async function commitOrderFromCart(cart, sudo) {
     "order.created",
     userId
   );
-  const secretKey = userId ? "" : import_node_crypto4.default.randomBytes(32).toString("hex");
+  const secretKey = userId ? "" : import_node_crypto5.default.randomBytes(32).toString("hex");
   const commercialSnapshot = {
     currency: cart.region.currency.code,
     cartFingerprint,
@@ -5763,6 +5986,23 @@ async function initiatePaymentSession(root, { cartId, paymentProviderId }, conte
 }
 var initiatePaymentSession_default = initiatePaymentSession;
 
+// features/keystone/mutations/authorizeCardPaymentSession.ts
+init_cart_access();
+async function authorizeCardPaymentSession(_root, { cartId, sessionId, opaqueData }, context) {
+  await assertCartAccess(context, cartId);
+  if (!opaqueData?.dataDescriptor || !opaqueData?.dataValue) throw new Error("Card token is required");
+  const sudo = context.sudo();
+  const cart = await sudo.query.Cart.findOne({ where: { id: cartId }, query: `id rawTotal region { currency { code } } paymentCollection { id paymentSessions { id isSelected amount paymentProvider { id code createPaymentFunction } data } }` });
+  const session = cart?.paymentCollection?.paymentSessions?.find((item) => item.id === sessionId && item.isSelected);
+  if (!session || !session.paymentProvider?.code?.startsWith("pp_authorizenet")) throw new Error("Selected Authorize.net checkout session not found");
+  await requireAllowedCartCompliance({ context, cartId, purpose: "payment", paymentProviderId: session.paymentProvider.id });
+  if (!Number.isSafeInteger(cart.rawTotal) || cart.rawTotal !== session.amount) throw new Error("Cart payment amount changed; refresh checkout");
+  const result = await createPayment({ provider: session.paymentProvider, cart, amount: cart.rawTotal, currency: cart.region.currency.code, idempotencyKey: `cart:${cartId}:${sessionId}`, opaqueData });
+  if (result.status !== "authorized" || !result.paymentIntentId || result.amount !== cart.rawTotal || String(result.currency).toUpperCase() !== String(cart.region.currency.code).toUpperCase()) throw new Error("Authorize.net authorization did not match the checkout amount and currency");
+  await sudo.prisma.paymentSession.update({ where: { id: sessionId }, data: { data: { paymentIntentId: result.paymentIntentId, status: "authorized" } } });
+  return { success: true, paymentIntentId: result.paymentIntentId };
+}
+
 // features/keystone/orders/order-lifecycle.ts
 async function reconcileOrderFulfillmentStatus(tx, orderId, { reason, actorId = null, paymentRecovered = false }) {
   const order = await tx.order.findUnique({
@@ -5850,6 +6090,10 @@ function assertProviderAmount(providerCode, resource, payment) {
     }
     return;
   }
+  if (providerCode.includes("authorizenet")) {
+    if (Math.round(Number(resource.authAmount) * 100) !== payment.amount || String(resource.currencyCode || expectedCurrency).toUpperCase() !== expectedCurrency) throw new Error("Provider webhook amount or currency mismatch");
+    return;
+  }
   if (providerCode.includes("paypal")) {
     const evidence = resource.amount;
     const divisor = NO_DIVISION_CURRENCIES2.has(expectedCurrency) ? 1 : 100;
@@ -5878,11 +6122,12 @@ async function handlePaymentProviderWebhook(root, { providerId, event, headers }
   const verified = await handleWebhook({
     provider,
     event,
-    headers: normalizedHeaders(headers)
+    headers: normalizedHeaders(headers),
+    rawBody: String(headers.__rawBody || "")
   });
   const type = String(verified.type || "");
   const resource = verified.resource || {};
-  const providerEventId = String(verified.event?.id || event?.id || resource.id || "");
+  const providerEventId = String(verified.event?.notificationId || verified.event?.id || event?.notificationId || event?.id || resource.id || "");
   if (!providerEventId) throw new Error("Provider event ID is required");
   const dedupeKey = `provider-webhook:${provider.id}:${providerEventId}`;
   const existing = await sudo.prisma.idempotencyKey.findUnique({
@@ -5932,10 +6177,11 @@ async function handlePaymentProviderWebhook(root, { providerId, event, headers }
       throw error;
     }
   }
-  const succeeded = /payment_intent\.succeeded|PAYMENT\.CAPTURE\.COMPLETED/.test(type);
+  const succeeded = /payment_intent\.succeeded|PAYMENT\.CAPTURE\.COMPLETED|net\.authorize\.payment\.(authcapture|priorAuthCapture)\.created/.test(type);
   const failed = /payment_intent\.payment_failed|PAYMENT\.CAPTURE\.DENIED/.test(type);
   const authorized = /payment_intent\.amount_capturable_updated|PAYMENT\.AUTHORIZATION\.CREATED/.test(type);
-  const voided = /payment_intent\.canceled|PAYMENT\.AUTHORIZATION\.VOIDED/.test(type);
+  const voided = /payment_intent\.canceled|PAYMENT\.AUTHORIZATION\.VOIDED|net\.authorize\.payment\.void\.created/.test(type);
+  const refunded = /net\.authorize\.payment\.refund\.created/.test(type);
   const cartId = resource.metadata?.cartId || resource.custom_id;
   const explicitPaymentId = resource.metadata?.paymentId;
   let orderId = resource.metadata?.orderId;
@@ -6025,6 +6271,17 @@ async function handlePaymentProviderWebhook(root, { providerId, event, headers }
             }
           });
         }
+      } else if (refunded) {
+        const currentPayment = await tx.payment.findUnique({
+          where: { id: paymentId },
+          select: { amount: true, currencyCode: true }
+        });
+        if (!currentPayment) throw new Error("Payment not found for provider event");
+        assertProviderAmount(provider.code, resource, currentPayment);
+        await tx.payment.update({
+          where: { id: paymentId },
+          data: { status: "refunded", data: resource }
+        });
       } else if (failed) {
         await tx.payment.update({
           where: { id: paymentId },
@@ -6036,6 +6293,12 @@ async function handlePaymentProviderWebhook(root, { providerId, event, headers }
           data: { status: "authorized", data: resource }
         });
       } else if (voided) {
+        const currentPayment = await tx.payment.findUnique({
+          where: { id: paymentId },
+          select: { amount: true, currencyCode: true }
+        });
+        if (!currentPayment) throw new Error("Payment not found for provider event");
+        assertProviderAmount(provider.code, resource, currentPayment);
         await tx.payment.update({
           where: { id: paymentId },
           data: { status: "canceled", canceledAt: /* @__PURE__ */ new Date(), data: resource }
@@ -6999,7 +7262,7 @@ var cancelShippingLabel_default = cancelShippingLabel;
 init_access();
 
 // features/keystone/mutations/createOrderFulfillment.ts
-var import_node_crypto5 = __toESM(require("node:crypto"));
+var import_node_crypto6 = __toESM(require("node:crypto"));
 init_access();
 function trackingUrl(carrier, number) {
   const value = encodeURIComponent(number);
@@ -7046,7 +7309,7 @@ async function createOrderFulfillment(root, {
   if (!idempotencyKey?.trim()) throw new Error("Fulfillment idempotency key is required");
   const normalizedIdempotencyKey = idempotencyKey.trim();
   const isIntegrationTrackingRelay = normalizedIdempotencyKey.startsWith("openship-tracking:");
-  const businessKey = `fulfillment:${orderId}:${import_node_crypto5.default.createHash("sha256").update(normalizedIdempotencyKey).digest("hex")}`;
+  const businessKey = `fulfillment:${orderId}:${import_node_crypto6.default.createHash("sha256").update(normalizedIdempotencyKey).digest("hex")}`;
   const sudo = context.sudo();
   const orderIdentity = await sudo.query.Order.findOne({
     where: { id: orderId },
@@ -7827,7 +8090,7 @@ async function getCustomerAccounts(root, { limit = 10, offset = 0 }, context) {
 var getCustomerAccounts_default = getCustomerAccounts;
 
 // features/keystone/mutations/createInvoiceFromLineItems.ts
-var import_node_crypto6 = __toESM(require("node:crypto"));
+var import_node_crypto7 = __toESM(require("node:crypto"));
 init_access();
 async function createInvoiceFromLineItems(root, { accountId, regionId, lineItemIds, dueDate }, context) {
   if (!lineItemIds?.length || new Set(lineItemIds).size !== lineItemIds.length) {
@@ -7961,7 +8224,7 @@ async function createInvoiceFromLineItems(root, { accountId, regionId, lineItemI
         data: {
           userId: account.user.id,
           accountId,
-          invoiceNumber: `INV-${(/* @__PURE__ */ new Date()).getFullYear()}-${import_node_crypto6.default.randomBytes(4).toString("hex").toUpperCase()}`,
+          invoiceNumber: `INV-${(/* @__PURE__ */ new Date()).getFullYear()}-${import_node_crypto7.default.randomBytes(4).toString("hex").toUpperCase()}`,
           currencyId: region2.currency.id,
           totalAmount,
           title: `${region2.name} Invoice for Account ${account.id}`,
@@ -9078,7 +9341,7 @@ init_access();
 // features/keystone/models/WebhookEndpoint.ts
 var import_core = require("@keystone-6/core");
 var import_fields4 = require("@keystone-6/core/fields");
-var import_node_crypto8 = __toESM(require("node:crypto"));
+var import_node_crypto9 = __toESM(require("node:crypto"));
 init_access();
 
 // features/keystone/models/trackingFields.ts
@@ -9103,7 +9366,7 @@ function trackingFieldsFor() {
 var trackingFields = trackingFieldsFor();
 
 // features/webhooks/subscriptions.ts
-var import_node_crypto7 = __toESM(require("node:crypto"));
+var import_node_crypto8 = __toESM(require("node:crypto"));
 function normalizeWebhookUrl(value) {
   let url;
   try {
@@ -9148,7 +9411,7 @@ function requireWebhookScope(actual, required) {
 function webhookSubscriptionKey(scope, ownerId, registrationKey) {
   if (scope === "USER" && !ownerId) throw new Error("USER webhook subscriptions require an owner");
   const principal = scope === "USER" ? ownerId : "store";
-  return import_node_crypto7.default.createHash("sha256").update(`webhook-subscription:v1\0${scope}\0${principal}\0${registrationKey}`).digest("hex");
+  return import_node_crypto8.default.createHash("sha256").update(`webhook-subscription:v1\0${scope}\0${principal}\0${registrationKey}`).digest("hex");
 }
 
 // features/keystone/models/WebhookEndpoint.ts
@@ -9212,7 +9475,7 @@ var WebhookEndpoint = (0, import_core.list)({
         if (!context.session?.itemId) return resolvedData;
         const scope = isCustomerTokenSession(context.session) ? "USER" : "STORE";
         const registrationKey = normalizeWebhookRegistrationKey(
-          resolvedData.registrationKey || `manual:${import_node_crypto8.default.randomUUID()}`
+          resolvedData.registrationKey || `manual:${import_node_crypto9.default.randomUUID()}`
         );
         return {
           ...resolvedData,
@@ -9301,7 +9564,7 @@ var WebhookEndpoint = (0, import_core.list)({
       hooks: {
         resolveInput: ({ resolvedData, operation }) => {
           if (operation === "create" && !resolvedData.secret) {
-            return import_node_crypto8.default.randomBytes(32).toString("hex");
+            return import_node_crypto9.default.randomBytes(32).toString("hex");
           }
           return resolvedData.secret;
         }
@@ -9359,7 +9622,7 @@ async function registerWebhookEndpoint(_root, {
     throw new Error("Customer tokens may subscribe only to fulfillment.created");
   }
   const sudo = context.sudo();
-  const endpoint2 = await sudo.prisma.$transaction(async (tx) => {
+  const endpoint3 = await sudo.prisma.$transaction(async (tx) => {
     const saved = await tx.webhookEndpoint.upsert({
       where: { subscriptionKey },
       create: {
@@ -9393,12 +9656,12 @@ async function registerWebhookEndpoint(_root, {
     });
     return saved;
   });
-  return context.db.WebhookEndpoint.findOne({ where: { id: endpoint2.id } });
+  return context.db.WebhookEndpoint.findOne({ where: { id: endpoint3.id } });
 }
 var registerWebhookEndpoint_default = registerWebhookEndpoint;
 
 // features/keystone/queries/getFinanceClose.ts
-var import_node_crypto9 = __toESM(require("node:crypto"));
+var import_node_crypto10 = __toESM(require("node:crypto"));
 init_access();
 var PAGE_SIZE = 100;
 var NESTED_LIMIT = 100;
@@ -9498,7 +9761,7 @@ async function getFinanceClose(root, { start, end }, context) {
     exceptions: rows.filter((row) => row.exception),
     control: {
       rowCount: rows.length,
-      sha256: import_node_crypto9.default.createHash("sha256").update(controlPayload).digest("hex")
+      sha256: import_node_crypto10.default.createHash("sha256").update(controlPayload).digest("hex")
     }
   };
 }
@@ -9564,7 +9827,7 @@ async function regulatedCommerceReadiness(_root, _args, context) {
     blockers,
     integrationStates,
     transactionMode,
-    claimBoundary: "Checkout opens when a merchant profile is active, its kill switch is off and it has a launch jurisdiction. Each order is still checked against the compliance rules for its cart.",
+    claimBoundary: "Checkout opens when a merchant profile is active, its kill switch is off and it has a launch jurisdiction, and the store has published its legal name, licence numbers and all five policies. Each order is still checked against the compliance rules for its cart.",
     profiles,
     activeRuleSets,
     approvedClassifications: usableClassifications,
@@ -10254,6 +10517,7 @@ var extendGraphqlSchema = (schema) => (0, import_schema.mergeSchemas)({
           cartId: ID!
           paymentProviderId: String!
         ): PaymentSession
+        authorizeCardPaymentSession(cartId: ID!, sessionId: ID!, opaqueData: JSON!): JSON!
         handlePaymentProviderWebhook(providerId: ID!, event: JSON!, headers: JSON!): WebhookResult!
         importInventory: Boolean
         adjustInventory(variantId: ID!, delta: Int!, reason: String!, note: String): ProductVariant
@@ -10343,6 +10607,7 @@ var extendGraphqlSchema = (schema) => (0, import_schema.mergeSchemas)({
       completeActiveCart: completeActiveCart_default,
       addActiveCartShippingMethod: addActiveCartShippingMethod_default,
       initiatePaymentSession: releaseGuard(initiatePaymentSession_default),
+      authorizeCardPaymentSession: releaseGuard(authorizeCardPaymentSession),
       handlePaymentProviderWebhook: handlePaymentProviderWebhook_default,
       importInventory,
       adjustInventory: adjustInventory_default,
@@ -17094,6 +17359,12 @@ var Product = (0, import_core55.list)({
       ref: "ProductTag.products",
       many: true
     }),
+    // Pods, coils, liquids and accessories this product works with (one-way).
+    compatibleWith: (0, import_fields56.relationship)({
+      ref: "Product",
+      many: true,
+      label: "Compatible with"
+    }),
     taxRates: (0, import_fields56.relationship)({
       ref: "TaxRate.products",
       many: true
@@ -17108,7 +17379,7 @@ var Product = (0, import_core55.list)({
     validateInput: async ({ operation, resolvedData, item, context, addValidationError }) => {
       const nextStatus = resolvedData.status ?? item?.status;
       const regulated = resolvedData.regulatedCommerceRequired ?? item?.regulatedCommerceRequired ?? true;
-      const marketingChanged = ["title", "subtitle", "description", "metadata"].some((key) => resolvedData[key] !== void 0);
+      const marketingChanged = ["title", "subtitle", "description", "metadata", "compatibleWith"].some((key) => resolvedData[key] !== void 0);
       if (!regulated) {
         const reference = resolvedData.regulatedExemptionReference ?? item?.regulatedExemptionReference;
         const digest = resolvedData.regulatedExemptionDigest ?? item?.regulatedExemptionDigest;
@@ -17136,7 +17407,7 @@ var Product = (0, import_core55.list)({
     },
     afterOperation: async ({ operation, resolvedData, item, context }) => {
       if (operation !== "update") return;
-      const marketingChanged = ["title", "subtitle", "description", "metadata"].some((key) => resolvedData[key] !== void 0);
+      const marketingChanged = ["title", "subtitle", "description", "metadata", "compatibleWith"].some((key) => resolvedData[key] !== void 0);
       if (!marketingChanged || item?.status === "published" || item?.regulatedCommerceRequired === false) return;
       const product = await context.sudo().query.Product.findOne({
         where: { id: item.id },
@@ -17499,6 +17770,11 @@ var REGULATED_VARIANT_REVIEW_FIELDS = [
   "originCountry",
   "midCode",
   "material",
+  "batteryCapacityMah",
+  "liquidCapacityMl",
+  "nicotineStrengthMgMl",
+  "coilResistanceOhm",
+  "coilType",
   "metadata",
   "product",
   "regulatedClassification",
@@ -17561,6 +17837,13 @@ var ProductVariant = (0, import_core63.list)({
     originCountry: (0, import_fields64.text)(),
     midCode: (0, import_fields64.text)(),
     material: (0, import_fields64.text)(),
+    // Structured device and liquid specs. Blank means "not stated"; the storefront shows
+    // only what is filled in. Changing any of them revokes the variant's compliance review.
+    batteryCapacityMah: (0, import_fields64.integer)({ label: "Battery (mAh)", validation: { min: 0 } }),
+    liquidCapacityMl: (0, import_fields64.decimal)({ scale: 2, precision: 8, label: "Capacity (ml)", validation: { min: "0" } }),
+    nicotineStrengthMgMl: (0, import_fields64.decimal)({ scale: 2, precision: 8, label: "Nicotine strength (mg/ml)", validation: { min: "0" } }),
+    coilResistanceOhm: (0, import_fields64.decimal)({ scale: 3, precision: 8, label: "Resistance (\u03A9)", validation: { min: "0" } }),
+    coilType: (0, import_fields64.text)({ label: "Coil type" }),
     metadata: (0, import_fields64.json)(),
     variantRank: (0, import_fields64.integer)({
       defaultValue: 0
@@ -18705,6 +18988,20 @@ var Store = (0, import_core81.list)({
         }
       }
     }),
+    // 21 CFR 1143.3(b): the storefront advertises nicotine products, so every page that
+    // shows products carries the fixed FDA warning. Compliance owns the switch; the
+    // wording is fixed in code and cannot be edited here.
+    nicotineWarningRequired: (0, import_fields82.checkbox)({
+      defaultValue: true,
+      label: "Show the FDA nicotine warning on the storefront",
+      access: {
+        create: permissions.canManageCompliance,
+        update: permissions.canManageCompliance
+      },
+      ui: {
+        description: "Required while the shop sells or shows nicotine products (21 CFR 1143.3). Turn off only after a compliance review."
+      }
+    }),
     metadata: (0, import_fields82.json)(),
     swapLinkTemplate: (0, import_fields82.text)(),
     paymentLinkTemplate: (0, import_fields82.text)(),
@@ -19500,10 +19797,74 @@ function validateAuthorityRevision({ item, resolvedData, inputData, addValidatio
   }
 }
 
+// features/keystone/regulated/labels.ts
+var CLASSIFICATION_CATEGORY_LABELS = {
+  ends_device: "Device (ENDS)",
+  e_liquid: "E-liquid",
+  component: "Component (pod, coil, tank)",
+  accessory: "Accessory",
+  tobacco_derived_nicotine: "Raw nicotine, tobacco-derived",
+  synthetic_nicotine: "Raw nicotine, synthetic"
+};
+var NICOTINE_SOURCE_LABELS = {
+  none: "No nicotine",
+  tobacco: "Tobacco-derived",
+  synthetic: "Synthetic",
+  other: "Other",
+  unknown: "Unknown"
+};
+var REVIEW_STATUS_LABELS = {
+  pending: "Pending",
+  approved: "Approved",
+  rejected: "Rejected",
+  revoked: "Revoked"
+};
+var CLASSIFICATION_STATUS_LABELS = {
+  draft: "Draft",
+  review: "In review",
+  approved: "Approved",
+  rejected: "Rejected",
+  revoked: "Revoked"
+};
+var AUTHORIZATION_TYPE_LABELS = {
+  federal_marketing_order: "FDA marketing order",
+  preexisting_status: "Pre-existing product status",
+  state_directory: "State directory listing",
+  local_directory: "Local directory listing"
+};
+var AUTHORIZATION_STATUS_LABELS = {
+  pending: "Pending",
+  authorized: "Authorized",
+  suspended: "Suspended",
+  delisted: "Delisted",
+  denied: "Denied",
+  expired: "Expired"
+};
+var PROVIDER_PURPOSE_LABELS = {
+  identity: "Identity verification",
+  payment: "Payment",
+  tax: "Tax",
+  registry: "Registry",
+  carrier: "Adult-signature carrier"
+};
+var PROVIDER_APPROVAL_STATUS_LABELS = {
+  unconfigured: "Not configured",
+  review: "In review",
+  active: "Active",
+  suspended: "Suspended",
+  expired: "Expired",
+  revoked: "Revoked"
+};
+function regulatedLabel(labels, value) {
+  if (!value) return "";
+  return labels[value] || value.replaceAll("_", " ").replace(/^\w/, (character) => character.toUpperCase());
+}
+
 // features/keystone/models/RegulatedAuthority.ts
-var state = (values, defaultValue) => (0, import_fields90.select)({
+var state = (values, defaultValue, labels = {}, label) => (0, import_fields90.select)({
   type: "enum",
-  options: values.map((value) => ({ label: value.replaceAll("_", " "), value })),
+  label,
+  options: values.map((value) => ({ label: regulatedLabel(labels, value), value })),
   defaultValue,
   validation: { isRequired: true }
 });
@@ -19603,7 +19964,7 @@ var ProviderApproval = (0, import_core90.list)({
   access: managedComplianceAccess,
   fields: {
     profile: (0, import_fields90.relationship)({ ref: "RegulatedMerchantProfile.providerApprovals" }),
-    purpose: state(["identity", "payment", "tax", "registry", "carrier"], "identity"),
+    purpose: state(["identity", "payment", "tax", "registry", "carrier"], "identity", PROVIDER_PURPOSE_LABELS),
     providerCode: (0, import_fields90.text)({ validation: { isRequired: true } }),
     paymentProvider: (0, import_fields90.relationship)({ ref: "PaymentProvider" }),
     shippingProvider: (0, import_fields90.relationship)({ ref: "ShippingProvider" }),
@@ -19611,8 +19972,8 @@ var ProviderApproval = (0, import_core90.list)({
     coveredJurisdictionCodes: (0, import_fields90.json)({ defaultValue: [] }),
     capabilities: (0, import_fields90.json)({ defaultValue: [] }),
     approvalReference: (0, import_fields90.text)({ validation: { isRequired: true } }),
-    evidenceDigest: (0, import_fields90.text)({ access: { read: import_access128.denyAll }, validation: { isRequired: true } }),
-    status: state(["unconfigured", "review", "active", "suspended", "expired", "revoked"], "unconfigured"),
+    evidenceDigest: (0, import_fields90.text)({ label: "Evidence SHA-256", access: { read: import_access128.denyAll }, validation: { isRequired: true } }),
+    status: state(["unconfigured", "review", "active", "suspended", "expired", "revoked"], "unconfigured", PROVIDER_APPROVAL_STATUS_LABELS),
     effectiveAt: (0, import_fields90.timestamp)(),
     expiresAt: (0, import_fields90.timestamp)(),
     validatedAt: (0, import_fields90.timestamp)(),
@@ -19668,9 +20029,10 @@ var RegulatedRuleSet = (0, import_core90.list)({
 var import_core91 = require("@keystone-6/core");
 var import_access130 = require("@keystone-6/core/access");
 var import_fields91 = require("@keystone-6/core/fields");
-var state2 = (values, defaultValue) => (0, import_fields91.select)({
+var state2 = (values, defaultValue, labels = {}, label) => (0, import_fields91.select)({
   type: "enum",
-  options: values.map((value) => ({ label: value.replaceAll("_", " "), value })),
+  label,
+  options: values.map((value) => ({ label: regulatedLabel(labels, value), value })),
   defaultValue,
   validation: { isRequired: true }
 });
@@ -19699,21 +20061,21 @@ var RegulatedProductClassification = (0, import_core91.list)({
       "accessory",
       "tobacco_derived_nicotine",
       "synthetic_nicotine"
-    ], "ends_device"),
-    nicotineSource: state2(["none", "tobacco", "synthetic", "other", "unknown"], "unknown"),
-    nicotineConcentrationMgMl: (0, import_fields91.decimal)({ scale: 3 }),
-    flavor: (0, import_fields91.text)(),
-    packageUnits: (0, import_fields91.integer)({ defaultValue: 1, validation: { min: 1, isRequired: true } }),
-    liquidVolumeMl: (0, import_fields91.decimal)({ scale: 3, validation: { min: "0" } }),
+    ], "ends_device", CLASSIFICATION_CATEGORY_LABELS, "Product type"),
+    nicotineSource: state2(["none", "tobacco", "synthetic", "other", "unknown"], "unknown", NICOTINE_SOURCE_LABELS, "Nicotine source"),
+    nicotineConcentrationMgMl: (0, import_fields91.decimal)({ scale: 3, label: "Nicotine strength (mg/ml)" }),
+    flavor: (0, import_fields91.text)({ label: "Flavour" }),
+    packageUnits: (0, import_fields91.integer)({ label: "Units per pack", defaultValue: 1, validation: { min: 1, isRequired: true } }),
+    liquidVolumeMl: (0, import_fields91.decimal)({ scale: 3, label: "Liquid volume (ml)", validation: { min: "0" } }),
     manufacturer: (0, import_fields91.text)({ validation: { isRequired: true } }),
     brand: (0, import_fields91.text)({ validation: { isRequired: true } }),
-    sourceReference: (0, import_fields91.text)({ validation: { isRequired: true } }),
-    evidenceDigest: (0, import_fields91.text)({ access: { read: import_access130.denyAll }, validation: { isRequired: true } }),
-    marketingReviewStatus: state2(["pending", "approved", "rejected", "revoked"], "pending"),
-    marketingEvidenceDigest: (0, import_fields91.text)({ access: { read: import_access130.denyAll } }),
-    marketingReviewedAt: (0, import_fields91.timestamp)(),
-    reviewedBy: (0, import_fields91.relationship)({ ref: "User" }),
-    status: state2(["draft", "review", "approved", "rejected", "revoked"], "draft"),
+    sourceReference: (0, import_fields91.text)({ label: "Source reference", validation: { isRequired: true } }),
+    evidenceDigest: (0, import_fields91.text)({ label: "Evidence SHA-256", access: { read: import_access130.denyAll }, validation: { isRequired: true } }),
+    marketingReviewStatus: state2(["pending", "approved", "rejected", "revoked"], "pending", REVIEW_STATUS_LABELS, "Marketing review"),
+    marketingEvidenceDigest: (0, import_fields91.text)({ label: "Marketing evidence SHA-256", access: { read: import_access130.denyAll } }),
+    marketingReviewedAt: (0, import_fields91.timestamp)({ label: "Marketing reviewed at" }),
+    reviewedBy: (0, import_fields91.relationship)({ ref: "User", label: "Reviewed by" }),
+    status: state2(["draft", "review", "approved", "rejected", "revoked"], "draft", CLASSIFICATION_STATUS_LABELS),
     effectiveAt: (0, import_fields91.timestamp)(),
     expiresAt: (0, import_fields91.timestamp)(),
     authorizations: (0, import_fields91.relationship)({ ref: "ProductAuthorization.classification", many: true }),
@@ -19742,12 +20104,12 @@ var ProductAuthorization = (0, import_core91.list)({
     classification: (0, import_fields91.relationship)({ ref: "RegulatedProductClassification.authorizations" }),
     jurisdiction: (0, import_fields91.relationship)({ ref: "Jurisdiction" }),
     authority: (0, import_fields91.text)({ validation: { isRequired: true } }),
-    authorizationType: state2(["federal_marketing_order", "preexisting_status", "state_directory", "local_directory"], "federal_marketing_order"),
-    authorizationIdentifier: (0, import_fields91.text)({ validation: { isRequired: true } }),
-    evidenceUrl: (0, import_fields91.text)({ validation: { isRequired: true } }),
-    evidenceDigest: (0, import_fields91.text)({ access: { read: import_access130.denyAll }, validation: { isRequired: true } }),
+    authorizationType: state2(["federal_marketing_order", "preexisting_status", "state_directory", "local_directory"], "federal_marketing_order", AUTHORIZATION_TYPE_LABELS, "Authorization type"),
+    authorizationIdentifier: (0, import_fields91.text)({ label: "Authorization number", validation: { isRequired: true } }),
+    evidenceUrl: (0, import_fields91.text)({ label: "Evidence URL", validation: { isRequired: true } }),
+    evidenceDigest: (0, import_fields91.text)({ label: "Evidence SHA-256", access: { read: import_access130.denyAll }, validation: { isRequired: true } }),
     claimRestrictions: (0, import_fields91.text)({ ui: { displayMode: "textarea" } }),
-    status: state2(["pending", "authorized", "suspended", "delisted", "denied", "expired"], "pending"),
+    status: state2(["pending", "authorized", "suspended", "delisted", "denied", "expired"], "pending", AUTHORIZATION_STATUS_LABELS),
     effectiveAt: (0, import_fields91.timestamp)({ validation: { isRequired: true } }),
     expiresAt: (0, import_fields91.timestamp)(),
     delistedAt: (0, import_fields91.timestamp)(),
@@ -20111,15 +20473,14 @@ function passwordResetEmail({ url }) {
     </body>
   `;
 }
-async function sendPasswordResetEmail(resetToken, to, baseUrl) {
+async function sendPasswordResetEmail(resetToken, to, baseUrl, storefrontCountryCode) {
   const frontendUrl = baseUrl || getBaseUrlForEmails();
+  const url = storefrontCountryCode ? `${frontendUrl}/${storefrontCountryCode}/account/reset?token=${encodeURIComponent(resetToken)}&email=${encodeURIComponent(to)}` : `${frontendUrl}${basePath && basePath}/reset?token=${resetToken}`;
   const info = await transport.sendMail({
     to,
     from: process.env.SMTP_FROM,
-    subject: "Your password reset token!",
-    html: passwordResetEmail({
-      url: `${frontendUrl}${basePath && basePath}/reset?token=${resetToken}`
-    })
+    subject: "Reset your password",
+    html: passwordResetEmail({ url })
   });
   if (process.env.MAIL_USER?.includes("ethereal.email")) {
     console.log(`\u{1F4E7} Message Sent!  Preview it at ${(0, import_nodemailer.getTestMessageUrl)(info)}`);
@@ -20132,6 +20493,18 @@ var cookie = __toESM(require("cookie"));
 init_access();
 var import_bcryptjs = __toESM(require("bcryptjs"));
 init_token_crypto();
+
+// features/keystone/lib/s3-storage.ts
+function s3ForcePathStyle(endpoint3) {
+  let hostname = "";
+  try {
+    hostname = endpoint3 ? new URL(endpoint3).hostname : "";
+  } catch {
+  }
+  return !(hostname === "storageapi.dev" || hostname.endsWith(".storageapi.dev"));
+}
+
+// features/keystone/index.ts
 function requiredEnv(name) {
   const value = process.env[name];
   if (!value) throw new Error(`${name} is required`);
@@ -20177,7 +20550,7 @@ var bucketName = productionEnv("S3_BUCKET_NAME", "keystone-test");
 var region = productionEnv("S3_REGION", "ap-southeast-2");
 var accessKeyId = productionEnv("S3_ACCESS_KEY_ID", "keystone");
 var secretAccessKey = productionEnv("S3_SECRET_ACCESS_KEY", "keystone");
-var endpoint = productionEnv("S3_ENDPOINT", "https://sfo3.digitaloceanspaces.com");
+var endpoint2 = productionEnv("S3_ENDPOINT", "https://sfo3.digitaloceanspaces.com");
 function statelessSessions({
   secret,
   maxAge = 60 * 60 * 24 * 360,
@@ -20465,7 +20838,26 @@ var { withAuth } = (0, import_auth.createAuth)({
   },
   passwordResetLink: {
     async sendToken(args) {
-      await sendPasswordResetEmail(args.token, args.identity);
+      let storefrontCountryCode;
+      try {
+        const sudo = args.context.sudo();
+        const user = await sudo.query.User.findOne({
+          where: { id: String(args.itemId) },
+          query: "id role { canAccessDashboard }"
+        });
+        if (!user?.role?.canAccessDashboard) {
+          const regions = await sudo.query.Region.findMany({
+            take: 1,
+            orderBy: { createdAt: "asc" },
+            query: "countries(take: 1) { iso2 }"
+          });
+          const iso2 = String(regions?.[0]?.countries?.[0]?.iso2 || "").toLowerCase();
+          storefrontCountryCode = /^[a-z]{2}$/.test(iso2) ? iso2 : "us";
+        }
+      } catch {
+        storefrontCountryCode = void 0;
+      }
+      await sendPasswordResetEmail(args.token, args.identity, void 0, storefrontCountryCode);
     }
   },
   sessionData: `id name email role { ${permissionsList.join(" ")} }`
@@ -20486,9 +20878,9 @@ var keystone_default = withAuth(
           region,
           accessKeyId,
           secretAccessKey,
-          endpoint,
+          endpoint: endpoint2,
           signed: { expiry: 5e3 },
-          forcePathStyle: true
+          forcePathStyle: s3ForcePathStyle(endpoint2)
         }
       },
       graphql: {
