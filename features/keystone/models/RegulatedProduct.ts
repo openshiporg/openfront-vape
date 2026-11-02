@@ -4,7 +4,7 @@ import { decimal, integer, relationship, select, text, timestamp } from "@keysto
 
 import { trackingFields } from "./trackingFields";
 import { managedComplianceAccess } from "./regulatedAccess";
-import { validateAuthorityRevision } from "../regulated/authority-revision";
+import { relationLinkedAfter, validateAuthorityRevision } from "../regulated/authority-revision";
 import {
   AUTHORIZATION_STATUS_LABELS, AUTHORIZATION_TYPE_LABELS, CLASSIFICATION_CATEGORY_LABELS, CLASSIFICATION_STATUS_LABELS,
   NICOTINE_SOURCE_LABELS, REVIEW_STATUS_LABELS, regulatedLabel,
@@ -20,7 +20,6 @@ const state = (values: string[], defaultValue: string, labels: Record<string, st
 
 const SHA256 = /^[a-f0-9]{64}$/i;
 const next = (resolvedData: any, item: any, key: string) => resolvedData[key] !== undefined ? resolvedData[key] : item?.[key];
-const linked = (value: any) => Boolean(value && value.disconnect !== true && (typeof value === "string" || value.connect?.id || value.id));
 
 async function draftLinkedProduct(context: any, classificationId: string | null | undefined) {
   if (!classificationId) return;
@@ -66,8 +65,7 @@ export const RegulatedProductClassification = list({
       const { resolvedData, item, addValidationError } = args;
       validateAuthorityRevision(args, ["approved"], ["variant", "category", "nicotineSource", "nicotineConcentrationMgMl", "flavor", "packageUnits", "liquidVolumeMl", "manufacturer", "brand", "sourceReference", "evidenceDigest", "marketingReviewStatus", "marketingEvidenceDigest", "marketingReviewedAt", "reviewedBy", "effectiveAt", "expiresAt"]);
       if (next(resolvedData, item, "status") !== "approved") return;
-      const reviewer = resolvedData.reviewedBy !== undefined ? resolvedData.reviewedBy : item?.reviewedBy;
-      if (!linked(reviewer) || !next(resolvedData, item, "effectiveAt") || !next(resolvedData, item, "expiresAt") ||
+      if (!relationLinkedAfter(resolvedData, item, "reviewedBy") || !next(resolvedData, item, "effectiveAt") || !next(resolvedData, item, "expiresAt") ||
           !SHA256.test(next(resolvedData, item, "evidenceDigest") || "") ||
           next(resolvedData, item, "marketingReviewStatus") !== "approved" ||
           !SHA256.test(next(resolvedData, item, "marketingEvidenceDigest") || "") ||

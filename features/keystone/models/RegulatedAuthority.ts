@@ -6,7 +6,7 @@ import { trackingFields } from "./trackingFields";
 import { managedComplianceAccess } from "./regulatedAccess";
 import { permissions } from "../access";
 import { validateRules } from "../../regulated-commerce/core/policy-validation";
-import { effectiveValue, validateAuthorityRevision } from "../regulated/authority-revision";
+import { effectiveValue, relationLinkedAfter, validateAuthorityRevision } from "../regulated/authority-revision";
 import { PROVIDER_APPROVAL_STATUS_LABELS, PROVIDER_PURPOSE_LABELS, regulatedLabel } from "../regulated/labels";
 
 const state = (values: string[], defaultValue: string, labels: Record<string, string> = {}, label?: string) => select({
@@ -19,7 +19,6 @@ const state = (values: string[], defaultValue: string, labels: Record<string, st
 
 const SHA256 = /^[a-f0-9]{64}$/i;
 const next = effectiveValue;
-const linked = (value: any) => Boolean(value && value.disconnect !== true && (typeof value === "string" || value.connect?.id || value.id));
 
 export const Jurisdiction = list({
   access: managedComplianceAccess,
@@ -77,10 +76,9 @@ export const RegulatedMerchantProfile = list({
       const { resolvedData, item, addValidationError } = args;
       validateAuthorityRevision(args, ["active"], ["store", "legalName", "enabledCategories", "launchJurisdictions", "originJurisdiction", "pactRegistered", "pactRegistrationReference", "pactEvidenceDigest", "effectiveAt", "expiresAt"]);
       if (next(resolvedData, item, "status") !== "active") return;
-      const origin = resolvedData.originJurisdiction !== undefined ? resolvedData.originJurisdiction : item?.originJurisdiction;
       if (!next(resolvedData, item, "pactRegistered") || !next(resolvedData, item, "pactRegistrationReference") ||
           !SHA256.test(next(resolvedData, item, "pactEvidenceDigest") || "") ||
-          !linked(origin) || !next(resolvedData, item, "effectiveAt") || !next(resolvedData, item, "expiresAt")) {
+          !relationLinkedAfter(resolvedData, item, "originJurisdiction") || !next(resolvedData, item, "effectiveAt") || !next(resolvedData, item, "expiresAt")) {
         addValidationError("Active merchant profiles require origin, current PACT evidence and bounded dates. The kill switch may always stop an active profile");
       }
     },
@@ -140,16 +138,13 @@ export const ProviderApproval = list({
       const { resolvedData, item, addValidationError } = args;
       validateAuthorityRevision(args, ["active"], ["profile", "purpose", "providerCode", "paymentProvider", "shippingProvider", "coveredCategories", "coveredJurisdictionCodes", "capabilities", "approvalReference", "evidenceDigest", "effectiveAt", "expiresAt", "validatedAt"]);
       if (next(resolvedData, item, "status") !== "active") return;
-      const profile = resolvedData.profile !== undefined ? resolvedData.profile : item?.profile;
       const purpose = next(resolvedData, item, "purpose");
-      const paymentProvider = resolvedData.paymentProvider !== undefined ? resolvedData.paymentProvider : item?.paymentProvider;
-      const shippingProvider = resolvedData.shippingProvider !== undefined ? resolvedData.shippingProvider : item?.shippingProvider;
-      if (!linked(profile) || !next(resolvedData, item, "effectiveAt") || !next(resolvedData, item, "expiresAt") ||
+      if (!relationLinkedAfter(resolvedData, item, "profile") || !next(resolvedData, item, "effectiveAt") || !next(resolvedData, item, "expiresAt") ||
           !next(resolvedData, item, "validatedAt") || !SHA256.test(next(resolvedData, item, "evidenceDigest") || "") ||
           !(next(resolvedData, item, "coveredCategories") || []).length ||
           !(next(resolvedData, item, "coveredJurisdictionCodes") || []).length ||
           !(next(resolvedData, item, "capabilities") || []).length ||
-          (purpose === "payment" && !linked(paymentProvider)) || (purpose === "carrier" && !linked(shippingProvider))) {
+          (purpose === "payment" && !relationLinkedAfter(resolvedData, item, "paymentProvider")) || (purpose === "carrier" && !relationLinkedAfter(resolvedData, item, "shippingProvider"))) {
         addValidationError("Active provider approvals require merchant scope, bounded validated evidence, category/jurisdiction capabilities, and bound commerce providers where applicable");
       }
     },
@@ -178,10 +173,9 @@ export const RegulatedRuleSet = list({
       const { resolvedData, item, addValidationError } = args;
       validateAuthorityRevision(args, ["active", "approved"], ["jurisdiction", "packName", "version", "policyHash", "authorityCitations", "rules", "effectiveAt", "expiresAt", "reviewedBy", "approvedAt", "signatureDigest"]);
       if (next(resolvedData, item, "status") !== "active") return;
-      const reviewer = resolvedData.reviewedBy !== undefined ? resolvedData.reviewedBy : item?.reviewedBy;
       const validation = validateRules(next(resolvedData, item, "rules"));
       if (!next(resolvedData, item, "approvedAt") || !SHA256.test(next(resolvedData, item, "signatureDigest") || "") ||
-          !linked(reviewer) || !(next(resolvedData, item, "authorityCitations") || []).length || !validation.valid) {
+          !relationLinkedAfter(resolvedData, item, "reviewedBy") || !(next(resolvedData, item, "authorityCitations") || []).length || !validation.valid) {
         addValidationError(`Active rule sets require reviewer approval, signed policy evidence, citations, and valid rules${validation.errors.length ? `: ${validation.errors.join('; ')}` : ''}`);
       }
     },

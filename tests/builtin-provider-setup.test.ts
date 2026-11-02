@@ -42,3 +42,12 @@ test("the manual provider is approved for pay at pickup only", () => {
   assert.deepEqual(payment.capabilities, ["pay_at_pickup"]);
   assert.equal(payment.paymentProviderId, "pp0");
 });
+
+import { relationLinkedAfter } from "../features/keystone/regulated/authority-revision";
+
+test("a relation stays linked when an update omits it (Keystone keeps the link on <field>Id)", () => {
+  assert.equal(relationLinkedAfter({}, { originJurisdictionId: "j1" }, "originJurisdiction"), true);
+  assert.equal(relationLinkedAfter({}, {}, "originJurisdiction"), false);
+  assert.equal(relationLinkedAfter({ originJurisdiction: { disconnect: true } }, { originJurisdictionId: "j1" }, "originJurisdiction"), false);
+  assert.equal(relationLinkedAfter({ originJurisdiction: { connect: { id: "j2" } } }, {}, "originJurisdiction"), true);
+});

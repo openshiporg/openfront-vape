@@ -1,6 +1,20 @@
 /** Effective state must distinguish an explicit null from an omitted update. */
 export const effectiveValue = (resolved: any, item: any, field: string) => resolved[field] !== undefined ? resolved[field] : item?.[field];
 
+/**
+ * Whether a to-one relation is linked after this update. Keystone stores the
+ * existing link on the item as `<field>Id`; only fields in the update appear
+ * under their own name. Reading `item.<field>` finds nothing and makes every
+ * update that omits the relation look unlinked.
+ */
+export function relationLinkedAfter(resolved: any, item: any, field: string): boolean {
+  if (resolved[field] !== undefined) {
+    const value = resolved[field];
+    return Boolean(value && value.disconnect !== true && (typeof value === "string" || value.connect?.id || value.id));
+  }
+  return Boolean(item?.[`${field}Id`]);
+}
+
 export function validateAuthorityRevision({ item, resolvedData, inputData, addValidationError }: any, usable: string[], fields: string[]) {
   const nextStatus = effectiveValue(resolvedData, item, "status");
   if (item && usable.includes(item.status)) {
