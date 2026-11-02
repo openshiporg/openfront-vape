@@ -4,7 +4,6 @@ import LocalizedClientLink from "@/features/storefront/modules/common/components
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
 import { retrievePricedProductById } from "@/features/storefront/lib/data/products"
-import { DISPLAY_ONLY, isDisplayOnly } from "@/features/storefront/lib/display-only"
 
 import { StoreRegion } from "@/features/storefront/types/storefront";
 
@@ -75,12 +74,7 @@ export default async function ProductPreview({
               <dt className="shrink-0 text-vp-ink-2">Price</dt>
               <dd className="min-w-0 text-right">
                 {cheapestPrice ? (
-                  <span className="inline-flex flex-wrap items-baseline justify-end gap-x-2">
-                    <PreviewPrice price={cheapestPrice} region={region} from={hasRange} />
-                    {isDisplayOnly(product) && (
-                      <span className="text-[12px] text-vp-ink-2" data-testid="display-only">{DISPLAY_ONLY}</span>
-                    )}
-                  </span>
+                  <PreviewPrice price={cheapestPrice} region={region} from={hasRange} />
                 ) : (
                   <span className="text-[13px] text-vp-ink-2">Unavailable</span>
                 )}

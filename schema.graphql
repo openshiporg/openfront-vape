@@ -8804,9 +8804,6 @@ type Store {
   logoIcon: String
   logoColor: String
   nicotineWarningRequired: Boolean
-  demoCatalogue: Boolean
-  demoCatalogueChangedAt: DateTime
-  demoCatalogueChangedBy: String
   metadata: JSON
   swapLinkTemplate: String
   paymentLinkTemplate: String
@@ -8839,9 +8836,6 @@ input StoreWhereInput {
   logoIcon: StringFilter
   logoColor: StringFilter
   nicotineWarningRequired: BooleanFilter
-  demoCatalogue: BooleanFilter
-  demoCatalogueChangedAt: DateTimeNullableFilter
-  demoCatalogueChangedBy: StringFilter
   swapLinkTemplate: StringFilter
   paymentLinkTemplate: StringFilter
   inviteLinkTemplate: StringFilter
@@ -8865,9 +8859,6 @@ input StoreOrderByInput {
   logoIcon: OrderDirection
   logoColor: OrderDirection
   nicotineWarningRequired: OrderDirection
-  demoCatalogue: OrderDirection
-  demoCatalogueChangedAt: OrderDirection
-  demoCatalogueChangedBy: OrderDirection
   swapLinkTemplate: OrderDirection
   paymentLinkTemplate: OrderDirection
   inviteLinkTemplate: OrderDirection
@@ -8883,9 +8874,6 @@ input StoreUpdateInput {
   logoIcon: String
   logoColor: String
   nicotineWarningRequired: Boolean
-  demoCatalogue: Boolean
-  demoCatalogueChangedAt: DateTime
-  demoCatalogueChangedBy: String
   metadata: JSON
   swapLinkTemplate: String
   paymentLinkTemplate: String
@@ -8915,9 +8903,6 @@ input StoreCreateInput {
   logoIcon: String
   logoColor: String
   nicotineWarningRequired: Boolean
-  demoCatalogue: Boolean
-  demoCatalogueChangedAt: DateTime
-  demoCatalogueChangedBy: String
   metadata: JSON
   swapLinkTemplate: String
   paymentLinkTemplate: String

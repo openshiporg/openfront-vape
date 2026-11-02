@@ -4,7 +4,6 @@ import { graphql, group, list } from "@keystone-6/core";
 import { denyAll } from "@keystone-6/core/access";
 import { integer, relationship, virtual } from "@keystone-6/core/fields";
 import { permissions } from "../access";
-import { publicProductStatuses } from "../regulated/demo-catalogue";
 import { trackingFieldsFor } from "./trackingFields";
 
 interface PriceListProjection { id: string; type: string; status: string; startsAt?: string | null; endsAt?: string | null }
@@ -29,7 +28,7 @@ export const MoneyAmount = list<Lists.MoneyAmount.TypeInfo>({
       update: permissions.canManageProducts,
       delete: permissions.canManageProducts,
     },
-    filter: { query: async ({ session, context }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { productVariant: { product: { status: { in: await publicProductStatuses(context) } } } } as any },
+    filter: { query: ({ session }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { productVariant: { product: { status: { equals: "published" } } } } },
   },
   fields: {
     amount: integer({

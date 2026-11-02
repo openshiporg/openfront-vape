@@ -8,7 +8,6 @@ import {
 import { deliverWebhookEventsById } from "../../webhooks/webhook-plugin";
 import { cartEvidenceFingerprint } from "../regulated/cart-fingerprint";
 import { evaluateCartCompliance } from "../regulated/enforcement";
-import { assertCartLinesForSale } from "../regulated/demo-catalogue";
 import {
   acceptedCheckoutEvidenceWhere,
   matchesCurrentAcceptedCheckoutSnapshot,
@@ -25,7 +24,6 @@ const WEBHOOK_ADDRESS_SELECT = {
 
 export async function createOrderFromCartAtomically(cart: any, sudo: any): Promise<{ id: string; [key: string]: unknown }> {
   await assertCommerceReleaseEnabled(sudo);
-  await assertCartLinesForSale(sudo, cart.id);
   // Persisted outbox delivery is post-commit work; never send inside the fence.
   const deliverAfterCommit = !insideCommerceFence(sudo);
   const commit = deliverAfterCommit

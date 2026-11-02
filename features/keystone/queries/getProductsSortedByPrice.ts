@@ -1,5 +1,4 @@
 import { Prisma } from "@prisma/client";
-import { publicProductStatuses } from "../regulated/demo-catalogue";
 
 interface GetProductsSortedByPriceArgs {
   countryCode: string;
@@ -29,8 +28,6 @@ export default async function getProductsSortedByPrice(
     }
   }
   const prisma = context.prisma;
-  // Same rule as the Product access filter: published, plus drafts under the demo catalogue.
-  const statuses = await publicProductStatuses(context);
   const region = await prisma.region.findFirst({
     where: { countries: { some: { iso2: countryCode.toLowerCase() } } },
     select: { id: true },
@@ -53,7 +50,7 @@ export default async function getProductsSortedByPrice(
     FROM "Product" p
     JOIN "ProductVariant" pv ON pv."product" = p."id"
     JOIN "MoneyAmount" ma ON ma."productVariant" = pv."id"
-    WHERE ma."region" = ${region.id} AND p."status"::text IN (${Prisma.join(statuses)})
+    WHERE ma."region" = ${region.id} AND p."status" = 'published'
     ${collection} ${category}`;
   const rows: Array<{ id: string }> = await prisma.$queryRaw(Prisma.sql`
     SELECT p."id", MIN(ma."amount") AS min_price ${from}
@@ -62,7 +59,7 @@ export default async function getProductsSortedByPrice(
   const counts: Array<{ count: bigint }> = await prisma.$queryRaw(Prisma.sql`
     SELECT COUNT(DISTINCT p."id") AS count ${from}`);
   const products = rows.length ? await prisma.product.findMany({
-    where: { id: { in: rows.map(row => row.id) }, status: { in: statuses as any } },
+    where: { id: { in: rows.map(row => row.id) }, status: "published" },
   }) : [];
   const byId = new Map(products.map((product: any) => [product.id, product]));
   return { products: rows.map(row => byId.get(row.id)).filter(Boolean), count: Number(counts[0]?.count ?? 0) };

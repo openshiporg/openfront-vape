@@ -58,7 +58,6 @@ type RegionInfoForActions = StoreRegion;
 
 // Corresponds to Product in schema
 import { StoreProduct } from "@/features/storefront/types/storefront";
-import { DISPLAY_ONLY, isDisplayOnly } from "@/features/storefront/lib/display-only";
 
 type ProductInfoForActions = StoreProduct;
 
@@ -73,7 +72,6 @@ type ProductActionsProps = {
 export default function ProductActions({ product, region, disabled, onVariantChange, category }: ProductActionsProps) {
   const [options, setOptions] = useState<any>({});
   const [isAdding, setIsAdding] = useState(false);
-  const [cartError, setCartError] = useState<string | null>(null);
 
   const params = useParams();
   const countryCode = params?.countryCode as string;
@@ -147,16 +145,13 @@ export default function ProductActions({ product, region, disabled, onVariantCha
   const inView = useIntersection(actionsRef, "0px");
 
   const handleAddToCart = async () => {
-    if (isDisplayOnly(product)) return;
     if (!variant?.id) return null;
     setIsAdding(true);
-    setCartError(null);
-    const error = await addToCart({
+    await addToCart({
       variantId: variant.id,
       quantity: 1,
       countryCode,
     });
-    if (error) setCartError(error);
     setIsAdding(false);
   };
 
@@ -187,9 +182,6 @@ export default function ProductActions({ product, region, disabled, onVariantCha
     : quantity !== null && quantity <= 5
     ? { tone: "warn" as const, label: `${quantity} left` }
     : { tone: "ok" as const, label: "In stock" };
-
-  // Draft shown through the demo catalogue: no bag button, "Display only" on the price line.
-  const displayOnly = isDisplayOnly(product);
 
   const buttonLabel = isAdding
     ? "Adding"
@@ -237,18 +229,14 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           )}
           <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
             <ProductPrice product={product} variant={variant} region={region} />
-            {displayOnly ? (
-              <span className="text-[14px] text-vp-ink-2" data-testid="display-only">{DISPLAY_ONLY}</span>
-            ) : (
-              <span className="inline-flex items-baseline gap-1.5 text-[13px] text-vp-ink-2" data-testid="product-stock">
-                <StatusDot tone={stock.tone} />
-                {stock.label}
-              </span>
-            )}
+            <span className="inline-flex items-baseline gap-1.5 text-[13px] text-vp-ink-2" data-testid="product-stock">
+              <StatusDot tone={stock.tone} />
+              {stock.label}
+            </span>
           </div>
         </div>
 
-        {!displayOnly && variants?.length > 1 && (
+        {variants?.length > 1 && (
           <div className="flex flex-col gap-5">
             {(product.productOptions || []).map((option: any) => (
               <OptionSelect
@@ -263,9 +251,6 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           </div>
         )}
 
-        {cartError && <p role="alert" className="text-[14px] text-vp-ink">{cartError}</p>}
-        {!displayOnly && (
-        <>
         <button
           type="button"
           onClick={handleAddToCart}
@@ -288,8 +273,6 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           show={!inView}
           optionsDisabled={!!disabled || isAdding}
         />
-        </>
-        )}
       </div>
     </>
   );

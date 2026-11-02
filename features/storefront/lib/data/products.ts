@@ -4,7 +4,6 @@ import { openfrontClient } from "../config"
 import { cache } from "react"
 import { ProductWhereClause } from "../../types/storefront"
 import { searchWhere } from "../search-query"
-import { getStore } from "./store"
 
 interface GetProductsListParams {
   pageParam?: number;
@@ -125,7 +124,6 @@ export const retrievePricedProductById = cache(async function ({
         id
         title
         handle
-        status
         thumbnail
         productCategories {
           id
@@ -400,9 +398,8 @@ export const searchProducts = cache(async function ({
       productsCount(where: $where)
     }
   `;
-  const store = await getStore();
   const data = await openfrontClient.request(SEARCH_PRODUCTS_QUERY, {
-    where: searchWhere(query, countryCode, store?.demoCatalogue ? ["published", "draft"] : ["published"]),
+    where: searchWhere(query, countryCode),
     limit,
   });
   return { products: data.products || [], count: data.productsCount || 0 };

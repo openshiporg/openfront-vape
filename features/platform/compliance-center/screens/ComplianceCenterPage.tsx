@@ -8,7 +8,6 @@ import { DataTable, ListBand, PageTitle, SectionTitle, Stamp, Td, Th, Tr, button
 import { getComplianceReadiness } from '../actions/getReadiness';
 import { MerchantSafetyActions } from '../components/MerchantSafetyActions';
 import { StorefrontWarningControl } from '../components/StorefrontWarningControl';
-import { DemoCatalogueControl } from '../components/DemoCatalogueControl';
 import { getStorefrontWarning } from '../actions/storefrontWarning';
 import { LaunchSteps, ReleaseBar, fixClass } from '../components/ReleaseBar';
 import { PROFILES_PATH, launchSteps } from '../lib/blockers';
@@ -109,11 +108,8 @@ export async function ComplianceCenterPage() {
 
         {warning && (
           <section>
-            <SectionTitle>Storefront</SectionTitle>
+            <SectionTitle>Storefront warning</SectionTitle>
             <StorefrontWarningControl storeId={warning.storeId} on={warning.on} />
-            <div className="mt-3">
-              <DemoCatalogueControl storeId={warning.storeId} on={warning.demoCatalogue} changedAt={warning.demoCatalogueChangedAt} />
-            </div>
           </section>
         )}
 

@@ -590,9 +590,6 @@ export async function addToCart({ variantId, quantity, countryCode }: { variantI
     );
     revalidateTag("cart");
   } catch (error) {
-    if ((error as any)?.response?.errors?.some((entry: any) => entry.extensions?.code === "DEMO_ITEM_NOT_FOR_SALE")) {
-      return "This item is display only.";
-    }
     console.error("Error adding to cart:", error instanceof Error ? error.message : String(error));
     return error instanceof Error ? error.message : String(error);
   }

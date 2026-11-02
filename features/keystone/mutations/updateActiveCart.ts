@@ -1,7 +1,6 @@
 import { assertAddressAccess, withCartMutationLock } from "../security/cart-access";
 import { cartQuantity, parseCartUpdate } from "../security/cart-input";
 import { assertVariantPublicationEvidence, invalidateCartCompliance } from "../regulated/enforcement";
-import { assertVariantForSale } from "../regulated/demo-catalogue";
 import { shippingDestinationWithinRegion } from "../security/shipping-eligibility";
 
 export default async function updateActiveCart(_root: unknown, { cartId, data: input }: { cartId: string; data: unknown }, context: any) {
@@ -49,8 +48,8 @@ export default async function updateActiveCart(_root: unknown, { cartId, data: i
       }
       lines.create = [];
       for (const [variantId, quantity] of creates) {
-        // Drafts can be visible (demo catalogue) but are never sellable.
-        await assertVariantForSale(tx, variantId);
+        const variant = await sudo.query.ProductVariant.findOne({ where: { id: variantId }, query: "id product { status }" });
+        if (variant?.product?.status !== "published") throw new Error("Product variant is not available");
         await assertVariantPublicationEvidence(tx, variantId);
         const existing = cart.lineItems.find((line: any) => line.productVariant?.id === variantId);
         if (existing) {

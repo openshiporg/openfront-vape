@@ -16,7 +16,6 @@ import { document } from "@keystone-6/fields-document";
 import { permissions } from "../access";
 import { trackingFieldsFor } from "./trackingFields";
 import { assertProductPublicationEvidence } from "../regulated/enforcement";
-import { publicProductStatuses } from "../regulated/demo-catalogue";
 
 export const Product = list<Lists.Product.TypeInfo>({
   access: {
@@ -27,12 +26,15 @@ export const Product = list<Lists.Product.TypeInfo>({
       delete: permissions.canManageProducts,
     },
     filter: {
-      query: async ({ session, context }) => {
+      query: ({ session }) => {
         if (permissions.canReadProducts({ session }) || permissions.canManageProducts({ session })) {
           return true;
         }
-        // Published only, plus drafts when the store's demo catalogue is on (display only).
-        return { status: { in: await publicProductStatuses(context) } } as any;
+        return {
+          status: {
+            equals: "published",
+          },
+        };
       },
     },
   },
