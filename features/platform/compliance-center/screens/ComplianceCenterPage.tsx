@@ -9,6 +9,7 @@ import { getComplianceReadiness } from '../actions/getReadiness';
 import { MerchantSafetyActions } from '../components/MerchantSafetyActions';
 import { StorefrontWarningControl } from '../components/StorefrontWarningControl';
 import { getStorefrontWarning } from '../actions/storefrontWarning';
+import { ApproveBuiltInButton } from '../components/ApproveBuiltInButton';
 import { LaunchSteps, ReleaseBar, fixClass } from '../components/ReleaseBar';
 import { PROFILES_PATH, launchSteps } from '../lib/blockers';
 import { keystoneClient } from '@/features/dashboard/lib/keystoneClient';
@@ -111,6 +112,10 @@ export async function ComplianceCenterPage() {
             <SectionTitle>Storefront warning</SectionTitle>
             <StorefrontWarningControl storeId={warning.storeId} on={warning.on} />
           </section>
+        )}
+
+        {readiness.profiles[0] && readiness.integrationStates.some(integration => integration.status !== 'recorded_active') && (
+          <ApproveBuiltInButton profileId={readiness.profiles[0].id} />
         )}
 
         {/* Missing providers already appear as launch steps with their Add approval fix; this line only counts them. */}
