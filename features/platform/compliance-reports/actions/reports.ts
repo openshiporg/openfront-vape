@@ -77,6 +77,12 @@ function readFailure(error: unknown) {
   return "Unable to load compliance reports. Check that you have compliance access.";
 }
 
+// Keystone query results have null prototypes, which React refuses to pass to
+// client components. Copy them into plain objects before returning.
+function plain<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
+
 export async function getReports(input: { status: string | null; page: number }): Promise<
   | { success: true; items: ReportRow[]; count: number; total: number; counts: Record<string, number>; canManage: boolean }
   | { success: false; error: string }
@@ -99,7 +105,7 @@ export async function getReports(input: { status: string | null; page: number })
     ]);
     return {
       success: true,
-      items: [...items] as unknown as ReportRow[],
+      items: plain(items) as unknown as ReportRow[],
       count,
       total,
       counts: Object.fromEntries(STATUSES.map((status, index) => [status, counts[index] as number])),
@@ -134,9 +140,9 @@ export async function getReport(id: string): Promise<
     return {
       success: true,
       data: {
-        report: report as unknown as ReportRow,
+        report: plain(report) as unknown as ReportRow,
         receipt: receipt.status === 'fulfilled' ? ((receipt.value as any)?.filingReceiptReference ?? null) : null,
-        events: events.status === 'fulfilled' ? [...events.value] : [],
+        events: events.status === 'fulfilled' ? plain([...events.value]) : [],
         canManage,
       },
     };
@@ -154,8 +160,8 @@ export async function getReportOptions(): Promise<ReportOptions | null> {
   ]);
   if (profiles.status !== 'fulfilled' || jurisdictions.status !== 'fulfilled') return null;
   return {
-    profiles: [...profiles.value] as ReportOptions['profiles'],
-    jurisdictions: ([...jurisdictions.value] as ReportOptions['jurisdictions']).sort((a, b) => a.code.localeCompare(b.code)),
+    profiles: plain(profiles.value) as ReportOptions['profiles'],
+    jurisdictions: (plain(jurisdictions.value) as ReportOptions['jurisdictions']).sort((a, b) => a.code.localeCompare(b.code)),
   };
 }
 
