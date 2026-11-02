@@ -12,6 +12,7 @@ interface Store {
   homepageDescription?: string;
   logoIcon?: string;
   logoColor?: string;
+  nicotineWarningRequired?: boolean | null;
   metadata?: any;
 }
 
@@ -29,6 +30,7 @@ export const getStore = cache(async function (): Promise<Store | null> {
         homepageDescription
         logoIcon
         logoColor
+        nicotineWarningRequired
         metadata
       }
     }

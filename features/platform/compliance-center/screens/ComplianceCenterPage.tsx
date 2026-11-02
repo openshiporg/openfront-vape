@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { DataTable, ListBand, PageTitle, SectionTitle, Stamp, Td, Th, Tr, buttonClass } from '@/features/platform/components/vape-ui';
 import { getComplianceReadiness } from '../actions/getReadiness';
 import { MerchantSafetyActions } from '../components/MerchantSafetyActions';
+import { StorefrontWarningControl } from '../components/StorefrontWarningControl';
+import { getStorefrontWarning } from '../actions/storefrontWarning';
 import { LaunchSteps, ReleaseBar, fixClass } from '../components/ReleaseBar';
 import { PROFILES_PATH, launchSteps } from '../lib/blockers';
 import { keystoneClient } from '@/features/dashboard/lib/keystoneClient';
@@ -60,6 +62,7 @@ export async function ComplianceCenterPage() {
   }
 
   const readiness = response.data;
+  const warning = await getStorefrontWarning();
   const storeResponse = await keystoneClient<{ stores: Array<{ metadata: unknown }> }>(`query ComplianceStoreInfo { stores(take: 1) { metadata } }`);
   const missingInfo = storeResponse.success ? missingStoreInfo(storeResponse.data.stores[0]?.metadata) : [];
   const steps = launchSteps(readiness.blockers, { missingInfo, profiles: readiness.profiles });
@@ -102,6 +105,13 @@ export async function ComplianceCenterPage() {
             <p className="mt-2 text-[12px] text-muted-foreground">{readiness.claimBoundary}</p>
           )}
         </section>
+
+        {warning && (
+          <section>
+            <SectionTitle>Storefront warning</SectionTitle>
+            <StorefrontWarningControl storeId={warning.storeId} on={warning.on} />
+          </section>
+        )}
 
         {/* Missing providers already appear as launch steps with their Add approval fix; this line only counts them. */}
         <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[13px]">

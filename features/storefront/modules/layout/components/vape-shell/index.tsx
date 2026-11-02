@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import { getStore } from "@/features/storefront/lib/data/store"
 import { storeBrand } from "@/features/storefront/lib/vape-brand"
 import AgeGate from "../age-gate"
+import NicotineWarning from "../nicotine-warning"
 import { AGE_COOKIE } from "../age-gate/constants"
 import { BodyTheme } from "./body-theme"
 import { vpMono, vpSans, vpSign } from "./fonts"
@@ -20,6 +21,7 @@ export default async function VapeShell({ children }: { children: ReactNode }) {
       style={{ "--vp-h": hue } as CSSProperties}
     >
       <BodyTheme className={themeClass} hue={hue} />
+      <NicotineWarning store={store} />
       {children}
       <AgeGate storeName={store?.name || "Store"} confirmed={ageConfirmed} />
     </div>
