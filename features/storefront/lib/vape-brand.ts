@@ -13,7 +13,7 @@ export const VAPE_LOGO_ICON =
 type BrandSource = { logoIcon?: string | null; logoColor?: string | null } | null | undefined
 
 export function storeBrand(store: BrandSource) {
-  // The header shows only the mark saved in Store Settings; with none, the wordmark stands alone.
+  // The saved mark always shows beside the name; with none saved the platform default icon stands in.
   const logoSvg = storeOwnMark(store?.logoIcon)
   const rotation = store?.logoIcon ? Number.parseFloat(store?.logoColor || "0") : Number.parseFloat(VAPE_LOGO_COLOR)
   const safeRotation = Number.isFinite(rotation) ? rotation : 0
