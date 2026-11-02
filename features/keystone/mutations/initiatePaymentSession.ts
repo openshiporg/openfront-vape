@@ -1,6 +1,7 @@
 "use server";
 
 import { createPayment } from "../utils/paymentProviderAdapter";
+import { cartIsPickup } from "../regulated/pickup";
 import { assertCartAccess } from "../security/cart-access";
 import { isPaymentProviderConfigured } from "../utils/paymentProviderConfig";
 import { regulatedTaxAmountForCart, requireAllowedCartCompliance } from "../regulated/enforcement";
@@ -21,6 +22,7 @@ async function initiatePaymentSession(
       rawTotal
       metadata
       shippingAddress { id country { iso2 } }
+      shippingMethods { shippingOption { data } }
       billingAddress { id }
       lineItems { productVariant { product { productTags { id } } } }
       region {
@@ -81,6 +83,10 @@ async function initiatePaymentSession(
     !cart.region.paymentProviders?.some((item: any) => item.id === provider.id)
   ) {
     throw new Error("Payment provider not found, installed, and configured for this region");
+  }
+  // Manual tender is the pay-at-pickup path; a delivery cart must pay by card.
+  if (provider.code === "pp_system_default" && !cartIsPickup(cart)) {
+    throw new Error("Pay in store is only available for pickup orders. Choose a card to have this order delivered.");
   }
   const compliance = await requireAllowedCartCompliance({
     context,
