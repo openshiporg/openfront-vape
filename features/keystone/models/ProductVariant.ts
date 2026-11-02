@@ -11,6 +11,7 @@ import {
   virtual,
 } from "@keystone-6/core/fields";
 import { permissions } from "../access";
+import { publicProductStatuses } from "../regulated/demo-catalogue";
 import { hasRegulatedVariantReviewChange, shouldBlockVariantEvidenceMutation } from "../regulated/variant-review";
 import { trackingFieldsFor } from "./trackingFields";
 
@@ -22,7 +23,7 @@ export const ProductVariant = list<Lists.ProductVariant.TypeInfo>({
       update: permissions.canManageProducts,
       delete: permissions.canManageProducts,
     },
-    filter: { query: ({ session }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { product: { status: { equals: "published" } } } },
+    filter: { query: async ({ session, context }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { product: { status: { in: await publicProductStatuses(context) } } } as any },
   },
   fields: {
     fullTitle: virtual<Lists.ProductVariant.TypeInfo>({

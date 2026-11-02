@@ -1,9 +1,10 @@
 
 import { list } from "@keystone-6/core";
 import { denyAll } from "@keystone-6/core/access";
-import { checkbox, json, text, relationship, virtual } from "@keystone-6/core/fields";
+import { checkbox, json, text, relationship, timestamp, virtual } from "@keystone-6/core/fields";
 import { permissions } from "../access";
 import { trackingFields } from "./trackingFields";
+import { DEMO_CATALOGUE_ACTIVE, resetDemoCatalogueCache } from "../regulated/demo-catalogue";
 import { graphql } from "@keystone-6/core";
 import {
   DEFAULT_STORE_LOGO_COLOR,
@@ -81,6 +82,28 @@ export const Store = list({
         description: "Required while the shop sells or shows nicotine products (21 CFR 1143.3). Turn off only after a compliance review.",
       },
     }),
+    // Demo catalogue: the public may see draft products as display only. Nothing becomes
+    // sellable (carts and checkout refuse unpublished products) and the release gate shows
+    // DEMO_CATALOGUE_ACTIVE while it is on. Compliance owns it; it is never seeded.
+    demoCatalogue: checkbox({
+      defaultValue: false,
+      label: "Demo catalogue (drafts visible as display only)",
+      access: {
+        create: denyAll,
+        update: permissions.canManageCompliance,
+      },
+      ui: {
+        description: "Shows draft products on the storefront as display only. Nothing can be bought while it is on. Refused while an active merchant profile is selling.",
+      },
+    }),
+    demoCatalogueChangedAt: timestamp({
+      access: { create: denyAll, update: denyAll },
+      ui: { createView: { fieldMode: "hidden" }, itemView: { fieldMode: "read" } },
+    }),
+    demoCatalogueChangedBy: text({
+      access: { create: denyAll, update: denyAll },
+      ui: { createView: { fieldMode: "hidden" }, itemView: { fieldMode: "read" } },
+    }),
     metadata: json(),
     swapLinkTemplate: text(),
     paymentLinkTemplate: text(),
@@ -119,5 +142,36 @@ export const Store = list({
       ui: { query: '{ provider publishableKey }' },
     }),
     ...trackingFields,
+  },
+  hooks: {
+    resolveInput: async ({ operation, resolvedData, item, context }: any) => {
+      if (operation === "update" && typeof resolvedData.demoCatalogue === "boolean" && resolvedData.demoCatalogue !== item?.demoCatalogue) {
+        resolvedData.demoCatalogueChangedAt = new Date().toISOString();
+        resolvedData.demoCatalogueChangedBy = String(context.session?.itemId || "");
+      }
+      return resolvedData;
+    },
+    validateInput: async ({ operation, resolvedData, item, context, addValidationError }: any) => {
+      if (operation !== "update" || resolvedData.demoCatalogue !== true || item?.demoCatalogue === true) return;
+      // A store that is actually cleared to sell can't drop into demo mode.
+      const selling = await context.sudo().prisma.regulatedMerchantProfile.count({ where: { status: "active", killSwitch: false } });
+      if (selling > 0) addValidationError("Demo catalogue can't be turned on while an active merchant profile is selling. Turn on its kill switch first.");
+    },
+    afterOperation: async ({ operation, originalItem, item, context }: any) => {
+      resetDemoCatalogueCache();
+      if (operation !== "update" || !item || Boolean(originalItem?.demoCatalogue) === Boolean(item.demoCatalogue)) return;
+      const on = Boolean(item.demoCatalogue);
+      await context.sudo().prisma.complianceEvent.create({
+        data: {
+          eventType: on ? "store.demo_catalogue_enabled" : "store.demo_catalogue_disabled",
+          resourceType: "Store",
+          resourceId: item.id,
+          actorId: String(context.session?.itemId || ""),
+          reasonCode: on ? DEMO_CATALOGUE_ACTIVE : "DEMO_CATALOGUE_OFF",
+          data: { demoCatalogue: on },
+          occurredAt: new Date(),
+        },
+      });
+    },
   },
 });

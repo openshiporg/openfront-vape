@@ -4,6 +4,7 @@ import { validateRules } from "../../regulated-commerce/core/policy-validation";
 import { assertCommerceReleaseEnabled, releaseBlockers } from "../../regulated-commerce/core/release-gate";
 import { cartEvidenceFingerprint } from "./cart-fingerprint";
 import { boundedComplianceSnapshotExpiry } from "./snapshot-expiry";
+import { assertCartLinesForSale } from "./demo-catalogue";
 
 const FEDERAL_AUTHORIZATION_TYPES = new Set(["federal_marketing_order", "preexisting_status"]);
 const SHA256 = /^[a-f0-9]{64}$/i;
@@ -15,7 +16,6 @@ function hasCurrentRegulatedExemption(product: any, now = new Date()) {
     Boolean(product.regulatedExemptionReviewedAt) &&
     new Date(product.regulatedExemptionExpiresAt || 0).getTime() > now.getTime();
 }
-
 export async function assertVariantPublicationEvidence(context: any, variantId: string, now = new Date()) {
   const variant = await context.sudo().query.ProductVariant.findOne({
     where: { id: variantId },
@@ -424,6 +424,8 @@ export async function requireApprovedCarrierProvider(
 }
 
 export async function requireAllowedCartCompliance(args: Parameters<typeof evaluateCartCompliance>[0]) {
+  // Payment, checkout and fulfilment never proceed with a display-only (unpublished) product.
+  await assertCartLinesForSale(args.context, args.cartId);
   if (args.purpose !== "fulfillment") await assertCommerceReleaseEnabled(args.context);
   const result = await evaluateCartCompliance({ ...args, persist: true });
   if (result.regulated && result.decision?.result !== "allow") {

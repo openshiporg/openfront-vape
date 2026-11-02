@@ -3,6 +3,7 @@ import { list } from "@keystone-6/core";
 import { allowAll, denyAll } from "@keystone-6/core/access";
 import { json, text, relationship, image, integer } from "@keystone-6/core/fields";
 import { permissions } from "../access";
+import { publicProductStatuses } from "../regulated/demo-catalogue";
 import { trackingFields } from "./trackingFields";
 
 export const ProductImage = list({
@@ -16,7 +17,11 @@ export const ProductImage = list({
       update: permissions.canManageProducts,
       delete: permissions.canManageProducts,
     },
-    filter: { query: ({ session }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { OR: [{ products: { some: { status: { equals: "published" } } } }, { productVariants: { some: { product: { status: { equals: "published" } } } } }] } },
+    filter: { query: async ({ session, context }) => {
+      if (permissions.canReadProducts({ session }) || permissions.canManageProducts({ session })) return true;
+      const statuses = await publicProductStatuses(context);
+      return { OR: [{ products: { some: { status: { in: statuses } } } }, { productVariants: { some: { product: { status: { in: statuses } } } } }] } as any;
+    } },
   },
   hooks: {
     afterOperation: async ({ operation, item, inputData, context }: any) => {

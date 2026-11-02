@@ -2422,9 +2422,13 @@ async function releaseBlockers(context) {
       where: { status: { equals: "active" } },
       query: "id killSwitch launchJurisdictionsCount"
     }),
-    context.sudo().query.Store.findMany({ take: 1, query: "metadata" })
+    context.sudo().query.Store.findMany({ take: 1, query: "metadata demoCatalogue" })
   ]);
-  const storeInfo = missingStoreInfo(stores[0]?.metadata).length ? ["STORE_POLICIES_REQUIRED"] : [];
+  const storeInfo = [
+    // Demo catalogue is display only: it always keeps the gate closed.
+    ...stores[0]?.demoCatalogue ? ["DEMO_CATALOGUE_ACTIVE"] : [],
+    ...missingStoreInfo(stores[0]?.metadata).length ? ["STORE_POLICIES_REQUIRED"] : []
+  ];
   if (!profiles.length) return ["ACTIVE_MERCHANT_PROFILE_REQUIRED", ...storeInfo];
   const live = profiles.filter((profile) => !profile.killSwitch);
   if (!live.length) return ["KILL_SWITCH_ENABLED", ...storeInfo];
@@ -2470,6 +2474,43 @@ function boundedComplianceSnapshotExpiry(now, evidence) {
     return Number.isFinite(expiry) ? expiry : nowMs;
   });
   return new Date(Math.min(nowMs + COMPLIANCE_SNAPSHOT_MAX_AGE_MS, ...expiryTimes));
+}
+
+// features/keystone/regulated/demo-catalogue.ts
+var DEMO_ITEM_NOT_FOR_SALE = "DEMO_ITEM_NOT_FOR_SALE";
+var DEMO_CATALOGUE_ACTIVE = "DEMO_CATALOGUE_ACTIVE";
+var TTL_MS = 5e3;
+var cached = null;
+function resetDemoCatalogueCache() {
+  cached = null;
+}
+async function isDemoCatalogueOn(context) {
+  if (cached && Date.now() - cached.at < TTL_MS) return cached.on;
+  const store = await context.sudo().prisma.store.findFirst({ select: { demoCatalogue: true } }).catch(() => null);
+  const on = store?.demoCatalogue === true;
+  cached = { on, at: Date.now() };
+  return on;
+}
+function publicStatusesFor(demoOn) {
+  return demoOn ? ["published", "draft"] : ["published"];
+}
+async function publicProductStatuses(context) {
+  return publicStatusesFor(await isDemoCatalogueOn(context));
+}
+function assertProductForSale(status) {
+  if (status !== "published") {
+    throw new Error(`${DEMO_ITEM_NOT_FOR_SALE}: This product is display only and can't be bought.`);
+  }
+}
+async function assertVariantForSale(context, variantId) {
+  const variant = await context.sudo().query.ProductVariant.findOne({ where: { id: variantId }, query: "id product { status }" });
+  if (!variant) throw new Error("Product variant is not available");
+  assertProductForSale(variant.product?.status);
+}
+async function assertCartLinesForSale(context, cartId) {
+  const cart = await context.sudo().query.Cart.findOne({ where: { id: cartId }, query: "id lineItems { id productVariant { id product { status } } }" });
+  if (!cart) throw new Error("Cart not found");
+  for (const line of cart.lineItems || []) assertProductForSale(line.productVariant?.product?.status);
 }
 
 // features/keystone/regulated/enforcement.ts
@@ -2834,6 +2875,7 @@ async function requireApprovedCarrierProvider(context, cartId, orderId, shipping
   return { ...compliance, carrierEvidence: decisions[0] };
 }
 async function requireAllowedCartCompliance(args) {
+  await assertCartLinesForSale(args.context, args.cartId);
   if (args.purpose !== "fulfillment") await assertCommerceReleaseEnabled(args.context);
   const result = await evaluateCartCompliance({ ...args, persist: true });
   if (result.regulated && result.decision?.result !== "allow") {
@@ -3167,8 +3209,7 @@ async function updateActiveCart(_root, { cartId, data: input }, context) {
       }
       lines.create = [];
       for (const [variantId, quantity] of creates) {
-        const variant = await sudo.query.ProductVariant.findOne({ where: { id: variantId }, query: "id product { status }" });
-        if (variant?.product?.status !== "published") throw new Error("Product variant is not available");
+        await assertVariantForSale(tx, variantId);
         await assertVariantPublicationEvidence(tx, variantId);
         const existing = cart.lineItems.find((line) => line.productVariant?.id === variantId);
         if (existing) {
@@ -3191,6 +3232,7 @@ async function updateActiveCartLineItem(_root, { cartId, lineId, quantity: input
     const sudo = tx.sudo();
     const line = await sudo.query.LineItem.findOne({ where: { id: lineId }, query: "id quantity cart { id } productVariant { id }" });
     if (line?.cart?.id !== cartId || !line.productVariant?.id) throw new Error("Line item not found");
+    await assertVariantForSale(tx, line.productVariant.id);
     await assertVariantPublicationEvidence(tx, line.productVariant.id);
     if (line.quantity === quantity) {
       return sudo.db.Cart.findOne({ where: { id: cartId } });
@@ -3647,6 +3689,7 @@ async function createActiveCartPaymentSessions(root, { cartId }, context) {
     if (!cart) {
       throw new Error("Cart not found");
     }
+    await assertCartLinesForSale(context2, cartId);
     const configuredProviders = cart.region?.paymentProviders?.filter(
       (provider) => provider.isInstalled && isPaymentProviderConfigured(provider.code || "")
     ) || [];
@@ -4700,6 +4743,7 @@ var WEBHOOK_ADDRESS_SELECT = {
 };
 async function createOrderFromCartAtomically(cart, sudo) {
   await assertCommerceReleaseEnabled(sudo);
+  await assertCartLinesForSale(sudo, cart.id);
   const deliverAfterCommit = !insideCommerceFence(sudo);
   const commit = deliverAfterCommit ? await withCartFence(sudo, cart.id, "checkout", (locked) => commitOrderFromCart(cart, locked.sudo())) : await commitOrderFromCart(cart, sudo);
   if (deliverAfterCommit && commit.webhookEventIds.length) {
@@ -9077,6 +9121,7 @@ async function getProductsSortedByPrice(_root, { countryCode, limit = 12, offset
     }
   }
   const prisma = context.prisma;
+  const statuses = await publicProductStatuses(context);
   const region2 = await prisma.region.findFirst({
     where: { countries: { some: { iso2: countryCode.toLowerCase() } } },
     select: { id: true }
@@ -9095,7 +9140,7 @@ async function getProductsSortedByPrice(_root, { countryCode, limit = 12, offset
     FROM "Product" p
     JOIN "ProductVariant" pv ON pv."product" = p."id"
     JOIN "MoneyAmount" ma ON ma."productVariant" = pv."id"
-    WHERE ma."region" = ${region2.id} AND p."status" = 'published'
+    WHERE ma."region" = ${region2.id} AND p."status"::text IN (${import_client.Prisma.join(statuses)})
     ${collection} ${category}`;
   const rows = await prisma.$queryRaw(import_client.Prisma.sql`
     SELECT p."id", MIN(ma."amount") AS min_price ${from}
@@ -9104,7 +9149,7 @@ async function getProductsSortedByPrice(_root, { countryCode, limit = 12, offset
   const counts = await prisma.$queryRaw(import_client.Prisma.sql`
     SELECT COUNT(DISTINCT p."id") AS count ${from}`);
   const products = rows.length ? await prisma.product.findMany({
-    where: { id: { in: rows.map((row) => row.id) }, status: "published" }
+    where: { id: { in: rows.map((row) => row.id) }, status: { in: statuses } }
   }) : [];
   const byId = new Map(products.map((product) => [product.id, product]));
   return { products: rows.map((row) => byId.get(row.id)).filter(Boolean), count: Number(counts[0]?.count ?? 0) };
@@ -13759,8 +13804,8 @@ var Account = (0, import_core26.list)({
   hooks: {
     resolveInput({ operation, resolvedData }) {
       if (operation === "create" && !resolvedData.accountNumber) {
-        const timestamp33 = Date.now();
-        resolvedData.accountNumber = `ACC-${(/* @__PURE__ */ new Date()).getFullYear()}-${String(timestamp33).slice(-6)}`;
+        const timestamp34 = Date.now();
+        resolvedData.accountNumber = `ACC-${(/* @__PURE__ */ new Date()).getFullYear()}-${String(timestamp34).slice(-6)}`;
       }
       return resolvedData;
     }
@@ -14142,8 +14187,8 @@ var Invoice = (0, import_core28.list)({
   hooks: {
     resolveInput({ operation, resolvedData }) {
       if (operation === "create" && !resolvedData.invoiceNumber) {
-        const timestamp33 = Date.now();
-        resolvedData.invoiceNumber = `INV-${(/* @__PURE__ */ new Date()).getFullYear()}-${String(timestamp33).slice(-6)}`;
+        const timestamp34 = Date.now();
+        resolvedData.invoiceNumber = `INV-${(/* @__PURE__ */ new Date()).getFullYear()}-${String(timestamp34).slice(-6)}`;
       }
       return resolvedData;
     }
@@ -15037,7 +15082,7 @@ var MoneyAmount = (0, import_core36.list)({
       update: permissions.canManageProducts,
       delete: permissions.canManageProducts
     },
-    filter: { query: ({ session }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { productVariant: { product: { status: { equals: "published" } } } } }
+    filter: { query: async ({ session, context }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { productVariant: { product: { status: { in: await publicProductStatuses(context) } } } } }
   },
   fields: {
     amount: (0, import_fields39.integer)({
@@ -17150,15 +17195,11 @@ var Product = (0, import_core55.list)({
       delete: permissions.canManageProducts
     },
     filter: {
-      query: ({ session }) => {
+      query: async ({ session, context }) => {
         if (permissions.canReadProducts({ session }) || permissions.canManageProducts({ session })) {
           return true;
         }
-        return {
-          status: {
-            equals: "published"
-          }
-        };
+        return { status: { in: await publicProductStatuses(context) } };
       }
     }
   },
@@ -17575,7 +17616,11 @@ var ProductImage = (0, import_core58.list)({
       update: permissions.canManageProducts,
       delete: permissions.canManageProducts
     },
-    filter: { query: ({ session }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { OR: [{ products: { some: { status: { equals: "published" } } } }, { productVariants: { some: { product: { status: { equals: "published" } } } } }] } }
+    filter: { query: async ({ session, context }) => {
+      if (permissions.canReadProducts({ session }) || permissions.canManageProducts({ session })) return true;
+      const statuses = await publicProductStatuses(context);
+      return { OR: [{ products: { some: { status: { in: statuses } } } }, { productVariants: { some: { product: { status: { in: statuses } } } } }] };
+    } }
   },
   hooks: {
     afterOperation: async ({ operation, item, inputData, context }) => {
@@ -17800,7 +17845,7 @@ var ProductVariant = (0, import_core63.list)({
       update: permissions.canManageProducts,
       delete: permissions.canManageProducts
     },
-    filter: { query: ({ session }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { product: { status: { equals: "published" } } } }
+    filter: { query: async ({ session, context }) => permissions.canReadProducts({ session }) || permissions.canManageProducts({ session }) ? true : { product: { status: { in: await publicProductStatuses(context) } } } }
   },
   fields: {
     fullTitle: (0, import_fields64.virtual)({
@@ -18824,6 +18869,7 @@ var StockMovement = (0, import_core80.list)({
 
 // features/keystone/models/Store.ts
 var import_core81 = require("@keystone-6/core");
+var import_access116 = require("@keystone-6/core/access");
 var import_fields82 = require("@keystone-6/core/fields");
 init_access();
 var import_core82 = require("@keystone-6/core");
@@ -19002,6 +19048,28 @@ var Store = (0, import_core81.list)({
         description: "Required while the shop sells or shows nicotine products (21 CFR 1143.3). Turn off only after a compliance review."
       }
     }),
+    // Demo catalogue: the public may see draft products as display only. Nothing becomes
+    // sellable (carts and checkout refuse unpublished products) and the release gate shows
+    // DEMO_CATALOGUE_ACTIVE while it is on. Compliance owns it; it is never seeded.
+    demoCatalogue: (0, import_fields82.checkbox)({
+      defaultValue: false,
+      label: "Demo catalogue (drafts visible as display only)",
+      access: {
+        create: import_access116.denyAll,
+        update: permissions.canManageCompliance
+      },
+      ui: {
+        description: "Shows draft products on the storefront as display only. Nothing can be bought while it is on. Refused while an active merchant profile is selling."
+      }
+    }),
+    demoCatalogueChangedAt: (0, import_fields82.timestamp)({
+      access: { create: import_access116.denyAll, update: import_access116.denyAll },
+      ui: { createView: { fieldMode: "hidden" }, itemView: { fieldMode: "read" } }
+    }),
+    demoCatalogueChangedBy: (0, import_fields82.text)({
+      access: { create: import_access116.denyAll, update: import_access116.denyAll },
+      ui: { createView: { fieldMode: "hidden" }, itemView: { fieldMode: "read" } }
+    }),
     metadata: (0, import_fields82.json)(),
     swapLinkTemplate: (0, import_fields82.text)(),
     paymentLinkTemplate: (0, import_fields82.text)(),
@@ -19035,6 +19103,36 @@ var Store = (0, import_core81.list)({
       ui: { query: "{ provider publishableKey }" }
     }),
     ...trackingFields
+  },
+  hooks: {
+    resolveInput: async ({ operation, resolvedData, item, context }) => {
+      if (operation === "update" && typeof resolvedData.demoCatalogue === "boolean" && resolvedData.demoCatalogue !== item?.demoCatalogue) {
+        resolvedData.demoCatalogueChangedAt = (/* @__PURE__ */ new Date()).toISOString();
+        resolvedData.demoCatalogueChangedBy = String(context.session?.itemId || "");
+      }
+      return resolvedData;
+    },
+    validateInput: async ({ operation, resolvedData, item, context, addValidationError }) => {
+      if (operation !== "update" || resolvedData.demoCatalogue !== true || item?.demoCatalogue === true) return;
+      const selling = await context.sudo().prisma.regulatedMerchantProfile.count({ where: { status: "active", killSwitch: false } });
+      if (selling > 0) addValidationError("Demo catalogue can't be turned on while an active merchant profile is selling. Turn on its kill switch first.");
+    },
+    afterOperation: async ({ operation, originalItem, item, context }) => {
+      resetDemoCatalogueCache();
+      if (operation !== "update" || !item || Boolean(originalItem?.demoCatalogue) === Boolean(item.demoCatalogue)) return;
+      const on = Boolean(item.demoCatalogue);
+      await context.sudo().prisma.complianceEvent.create({
+        data: {
+          eventType: on ? "store.demo_catalogue_enabled" : "store.demo_catalogue_disabled",
+          resourceType: "Store",
+          resourceId: item.id,
+          actorId: String(context.session?.itemId || ""),
+          reasonCode: on ? DEMO_CATALOGUE_ACTIVE : "DEMO_CATALOGUE_OFF",
+          data: { demoCatalogue: on },
+          occurredAt: /* @__PURE__ */ new Date()
+        }
+      });
+    }
   }
 });
 
@@ -19309,7 +19407,7 @@ var Team = (0, import_core86.list)({
 
 // features/keystone/models/User.ts
 var import_core87 = require("@keystone-6/core");
-var import_access122 = require("@keystone-6/core/access");
+var import_access123 = require("@keystone-6/core/access");
 var import_fields87 = require("@keystone-6/core/fields");
 init_access();
 
@@ -19407,7 +19505,7 @@ var User = (0, import_core87.list)({
     hasAccount: (0, import_fields87.checkbox)(),
     addresses: (0, import_fields87.relationship)({
       ref: "Address.user",
-      access: { create: import_access122.denyAll, update: import_access122.denyAll },
+      access: { create: import_access123.denyAll, update: import_access123.denyAll },
       many: true
     }),
     orders: (0, import_fields87.relationship)({
@@ -19420,7 +19518,7 @@ var User = (0, import_core87.list)({
     }),
     carts: (0, import_fields87.relationship)({
       ref: "Cart.user",
-      access: { create: import_access122.denyAll, update: import_access122.denyAll },
+      access: { create: import_access123.denyAll, update: import_access123.denyAll },
       many: true
     }),
     customerGroups: (0, import_fields87.relationship)({
@@ -19747,11 +19845,11 @@ var WebhookEvent = (0, import_core89.list)({
 
 // features/keystone/models/RegulatedAuthority.ts
 var import_core90 = require("@keystone-6/core");
-var import_access128 = require("@keystone-6/core/access");
+var import_access129 = require("@keystone-6/core/access");
 var import_fields90 = require("@keystone-6/core/fields");
 
 // features/keystone/models/regulatedAccess.ts
-var import_access126 = require("@keystone-6/core/access");
+var import_access127 = require("@keystone-6/core/access");
 init_access();
 var complianceRead = ({ session }) => permissions.canReadCompliance({ session }) || permissions.canManageCompliance({ session });
 var complianceManage = ({ session }) => permissions.canManageCompliance({ session });
@@ -19762,15 +19860,15 @@ var managedComplianceAccess = {
     query: complianceRead,
     create: complianceManage,
     update: complianceManage,
-    delete: import_access126.denyAll
+    delete: import_access127.denyAll
   }
 };
 var immutableComplianceAccess = {
   operation: {
     query: complianceRead,
-    create: import_access126.denyAll,
-    update: import_access126.denyAll,
-    delete: import_access126.denyAll
+    create: import_access127.denyAll,
+    update: import_access127.denyAll,
+    delete: import_access127.denyAll
   }
 };
 
@@ -19906,7 +20004,7 @@ var RegulatedMerchantProfile = (0, import_core90.list)({
     insuranceReference: (0, import_fields90.text)(),
     pactRegistered: (0, import_fields90.checkbox)({ defaultValue: false }),
     pactRegistrationReference: (0, import_fields90.text)(),
-    pactEvidenceDigest: (0, import_fields90.text)({ access: { read: import_access128.denyAll } }),
+    pactEvidenceDigest: (0, import_fields90.text)({ access: { read: import_access129.denyAll } }),
     status: state(["draft", "review", "active", "suspended", "revoked"], "draft"),
     effectiveAt: (0, import_fields90.timestamp)(),
     expiresAt: (0, import_fields90.timestamp)(),
@@ -19942,7 +20040,7 @@ var MerchantLicense = (0, import_core90.list)({
     licenseNumber: (0, import_fields90.text)({ validation: { isRequired: true } }),
     issuingAuthority: (0, import_fields90.text)({ validation: { isRequired: true } }),
     authorityReference: (0, import_fields90.text)({ validation: { isRequired: true } }),
-    evidenceDigest: (0, import_fields90.text)({ access: { read: import_access128.denyAll }, validation: { isRequired: true } }),
+    evidenceDigest: (0, import_fields90.text)({ access: { read: import_access129.denyAll }, validation: { isRequired: true } }),
     verificationSource: (0, import_fields90.text)({ validation: { isRequired: true } }),
     status: state(["draft", "active", "conditioned", "suspended", "expired", "revoked"], "draft"),
     effectiveAt: (0, import_fields90.timestamp)({ validation: { isRequired: true } }),
@@ -19972,7 +20070,7 @@ var ProviderApproval = (0, import_core90.list)({
     coveredJurisdictionCodes: (0, import_fields90.json)({ defaultValue: [] }),
     capabilities: (0, import_fields90.json)({ defaultValue: [] }),
     approvalReference: (0, import_fields90.text)({ validation: { isRequired: true } }),
-    evidenceDigest: (0, import_fields90.text)({ label: "Evidence SHA-256", access: { read: import_access128.denyAll }, validation: { isRequired: true } }),
+    evidenceDigest: (0, import_fields90.text)({ label: "Evidence SHA-256", access: { read: import_access129.denyAll }, validation: { isRequired: true } }),
     status: state(["unconfigured", "review", "active", "suspended", "expired", "revoked"], "unconfigured", PROVIDER_APPROVAL_STATUS_LABELS),
     effectiveAt: (0, import_fields90.timestamp)(),
     expiresAt: (0, import_fields90.timestamp)(),
@@ -20008,7 +20106,7 @@ var RegulatedRuleSet = (0, import_core90.list)({
     expiresAt: (0, import_fields90.timestamp)({ validation: { isRequired: true } }),
     reviewedBy: (0, import_fields90.relationship)({ ref: "User" }),
     approvedAt: (0, import_fields90.timestamp)(),
-    signatureDigest: (0, import_fields90.text)({ access: { read: import_access128.denyAll } }),
+    signatureDigest: (0, import_fields90.text)({ access: { read: import_access129.denyAll } }),
     ...trackingFields
   },
   hooks: {
@@ -20027,7 +20125,7 @@ var RegulatedRuleSet = (0, import_core90.list)({
 
 // features/keystone/models/RegulatedProduct.ts
 var import_core91 = require("@keystone-6/core");
-var import_access130 = require("@keystone-6/core/access");
+var import_access131 = require("@keystone-6/core/access");
 var import_fields91 = require("@keystone-6/core/fields");
 var state2 = (values, defaultValue, labels = {}, label) => (0, import_fields91.select)({
   type: "enum",
@@ -20070,9 +20168,9 @@ var RegulatedProductClassification = (0, import_core91.list)({
     manufacturer: (0, import_fields91.text)({ validation: { isRequired: true } }),
     brand: (0, import_fields91.text)({ validation: { isRequired: true } }),
     sourceReference: (0, import_fields91.text)({ label: "Source reference", validation: { isRequired: true } }),
-    evidenceDigest: (0, import_fields91.text)({ label: "Evidence SHA-256", access: { read: import_access130.denyAll }, validation: { isRequired: true } }),
+    evidenceDigest: (0, import_fields91.text)({ label: "Evidence SHA-256", access: { read: import_access131.denyAll }, validation: { isRequired: true } }),
     marketingReviewStatus: state2(["pending", "approved", "rejected", "revoked"], "pending", REVIEW_STATUS_LABELS, "Marketing review"),
-    marketingEvidenceDigest: (0, import_fields91.text)({ label: "Marketing evidence SHA-256", access: { read: import_access130.denyAll } }),
+    marketingEvidenceDigest: (0, import_fields91.text)({ label: "Marketing evidence SHA-256", access: { read: import_access131.denyAll } }),
     marketingReviewedAt: (0, import_fields91.timestamp)({ label: "Marketing reviewed at" }),
     reviewedBy: (0, import_fields91.relationship)({ ref: "User", label: "Reviewed by" }),
     status: state2(["draft", "review", "approved", "rejected", "revoked"], "draft", CLASSIFICATION_STATUS_LABELS),
@@ -20107,7 +20205,7 @@ var ProductAuthorization = (0, import_core91.list)({
     authorizationType: state2(["federal_marketing_order", "preexisting_status", "state_directory", "local_directory"], "federal_marketing_order", AUTHORIZATION_TYPE_LABELS, "Authorization type"),
     authorizationIdentifier: (0, import_fields91.text)({ label: "Authorization number", validation: { isRequired: true } }),
     evidenceUrl: (0, import_fields91.text)({ label: "Evidence URL", validation: { isRequired: true } }),
-    evidenceDigest: (0, import_fields91.text)({ label: "Evidence SHA-256", access: { read: import_access130.denyAll }, validation: { isRequired: true } }),
+    evidenceDigest: (0, import_fields91.text)({ label: "Evidence SHA-256", access: { read: import_access131.denyAll }, validation: { isRequired: true } }),
     claimRestrictions: (0, import_fields91.text)({ ui: { displayMode: "textarea" } }),
     status: state2(["pending", "authorized", "suspended", "delisted", "denied", "expired"], "pending", AUTHORIZATION_STATUS_LABELS),
     effectiveAt: (0, import_fields91.timestamp)({ validation: { isRequired: true } }),
@@ -20135,7 +20233,7 @@ var ProductAuthorization = (0, import_core91.list)({
 
 // features/keystone/models/RegulatedTransaction.ts
 var import_core92 = require("@keystone-6/core");
-var import_access131 = require("@keystone-6/core/access");
+var import_access132 = require("@keystone-6/core/access");
 var import_fields92 = require("@keystone-6/core/fields");
 var state3 = (values, defaultValue) => (0, import_fields92.select)({
   type: "enum",
@@ -20175,8 +20273,8 @@ var RegulatedTaxQuote = (0, import_core92.list)({
     order: (0, import_fields92.relationship)({ ref: "Order" }),
     jurisdiction: (0, import_fields92.relationship)({ ref: "Jurisdiction" }),
     providerCode: (0, import_fields92.text)({ validation: { isRequired: true } }),
-    cartFingerprint: (0, import_fields92.text)({ defaultValue: "", access: { read: import_access131.denyAll } }),
-    providerReference: (0, import_fields92.text)({ access: { read: import_access131.denyAll }, validation: { isRequired: true } }),
+    cartFingerprint: (0, import_fields92.text)({ defaultValue: "", access: { read: import_access132.denyAll } }),
+    providerReference: (0, import_fields92.text)({ access: { read: import_access132.denyAll }, validation: { isRequired: true } }),
     idempotencyKey: (0, import_fields92.text)({ isIndexed: "unique", validation: { isRequired: true } }),
     status: state3(["quoted", "committed", "voided", "reversed", "failed", "expired"], "quoted"),
     salesTaxAmount: (0, import_fields92.integer)({ validation: { min: 0, isRequired: true } }),
@@ -20190,7 +20288,7 @@ var RegulatedTaxQuote = (0, import_core92.list)({
     issuedAt: (0, import_fields92.timestamp)({ validation: { isRequired: true } }),
     expiresAt: (0, import_fields92.timestamp)({ validation: { isRequired: true } }),
     committedAt: (0, import_fields92.timestamp)(),
-    reversalReference: (0, import_fields92.text)({ access: { read: import_access131.denyAll } }),
+    reversalReference: (0, import_fields92.text)({ access: { read: import_access132.denyAll } }),
     ...trackingFields
   }
 });
@@ -20202,7 +20300,7 @@ var CarrierEligibilityDecision = (0, import_core92.list)({
     order: (0, import_fields92.relationship)({ ref: "Order" }),
     providerApproval: (0, import_fields92.relationship)({ ref: "ProviderApproval" }),
     shippingOption: (0, import_fields92.relationship)({ ref: "ShippingOption" }),
-    cartFingerprint: (0, import_fields92.text)({ defaultValue: "", access: { read: import_access131.denyAll } }),
+    cartFingerprint: (0, import_fields92.text)({ defaultValue: "", access: { read: import_access132.denyAll } }),
     rateId: (0, import_fields92.text)(),
     packageDigest: (0, import_fields92.text)(),
     carrierCode: (0, import_fields92.text)({ validation: { isRequired: true } }),
@@ -20238,9 +20336,9 @@ var ComplianceDecision = (0, import_core92.list)({
     reasonCodes: (0, import_fields92.json)({ defaultValue: [] }),
     evidenceReferences: (0, import_fields92.json)({ defaultValue: [] }),
     snapshot: (0, import_fields92.json)({ defaultValue: {} }),
-    cartFingerprint: (0, import_fields92.text)({ defaultValue: "", access: { read: import_access131.denyAll } }),
+    cartFingerprint: (0, import_fields92.text)({ defaultValue: "", access: { read: import_access132.denyAll } }),
     snapshotDigest: (0, import_fields92.text)({ validation: { isRequired: true } }),
-    diagnosticData: (0, import_fields92.json)({ access: { read: import_access131.denyAll }, defaultValue: {} }),
+    diagnosticData: (0, import_fields92.json)({ access: { read: import_access132.denyAll }, defaultValue: {} }),
     issuedAt: (0, import_fields92.timestamp)({ validation: { isRequired: true } }),
     expiresAt: (0, import_fields92.timestamp)({ validation: { isRequired: true } }),
     idempotencyKey: (0, import_fields92.text)({ isIndexed: "unique", validation: { isRequired: true } }),
@@ -20270,15 +20368,15 @@ var ComplianceEvent = (0, import_core92.list)({
 
 // features/keystone/models/RegulatedReporting.ts
 var import_core93 = require("@keystone-6/core");
-var import_access132 = require("@keystone-6/core/access");
+var import_access133 = require("@keystone-6/core/access");
 var import_fields93 = require("@keystone-6/core/fields");
 var ComplianceReportRun = (0, import_core93.list)({
   access: {
     operation: {
       query: ({ session }) => complianceRead({ session }) || complianceReportManage({ session }),
-      create: import_access132.denyAll,
-      update: import_access132.denyAll,
-      delete: import_access132.denyAll
+      create: import_access133.denyAll,
+      update: import_access133.denyAll,
+      delete: import_access133.denyAll
     }
   },
   graphql: { omit: { create: true, update: true, delete: true } },

@@ -15,9 +15,13 @@ export async function releaseBlockers(context: KeystoneContext<any>): Promise<st
       where: { status: { equals: "active" } },
       query: "id killSwitch launchJurisdictionsCount",
     }),
-    context.sudo().query.Store.findMany({ take: 1, query: "metadata" }),
+    context.sudo().query.Store.findMany({ take: 1, query: "metadata demoCatalogue" }),
   ]);
-  const storeInfo = missingStoreInfo(stores[0]?.metadata).length ? ["STORE_POLICIES_REQUIRED"] : [];
+  const storeInfo = [
+    // Demo catalogue is display only: it always keeps the gate closed.
+    ...(stores[0]?.demoCatalogue ? ["DEMO_CATALOGUE_ACTIVE"] : []),
+    ...(missingStoreInfo(stores[0]?.metadata).length ? ["STORE_POLICIES_REQUIRED"] : []),
+  ];
   if (!profiles.length) return ["ACTIVE_MERCHANT_PROFILE_REQUIRED", ...storeInfo];
   const live = profiles.filter((profile: any) => !profile.killSwitch);
   if (!live.length) return ["KILL_SWITCH_ENABLED", ...storeInfo];
