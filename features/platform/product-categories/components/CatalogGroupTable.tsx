@@ -114,10 +114,10 @@ export function GroupRow({
     <Fragment>
       <Tr>
         <Td className="max-w-0 w-[34%]">
-          <Link href={href} className="block truncate font-medium text-foreground underline-offset-4 hover:underline">
+          <Link href={href} className="block break-words font-medium text-foreground underline-offset-4 hover:underline">
             {title}
           </Link>
-          {handle && <span className="block truncate font-mono text-[12px] text-muted-foreground">{handle}</span>}
+          {handle && <span className="block break-all font-mono text-[12px] text-muted-foreground">{handle}</span>}
         </Td>
         <Td>
           <StatusWord tone={status.tone}>{status.label}</StatusWord>

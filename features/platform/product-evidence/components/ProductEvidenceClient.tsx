@@ -92,14 +92,14 @@ function ProductLink({ variant }: { variant: EvidenceVariant | null }) {
   if (!variant) return <span className="truncate">No variant</span>
   const label = variant.productTitle || variant.sku || 'Product'
   return (
-    <span className="flex min-w-0 items-baseline gap-2">
+    <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
       {variant.productId ? (
-        <Link href={`/dashboard/platform/products/${variant.productId}`} className="inline-flex min-w-0 max-w-[65%] shrink-0 items-baseline gap-0.5 font-medium text-foreground underline-offset-4 hover:underline">
-          <span className="truncate">{label}</span>
+        <Link href={`/dashboard/platform/products/${variant.productId}`} className="inline-flex min-w-0 items-baseline gap-0.5 break-words font-medium text-foreground underline-offset-4 hover:underline">
+          <span>{label}</span>
           <ArrowUpRight className="size-3 shrink-0 translate-y-[0.1em] text-muted-foreground" />
         </Link>
-      ) : <span className="max-w-[65%] shrink-0 truncate font-medium text-foreground">{label}</span>}
-      {variant.title && <span className="min-w-0 truncate text-[12px] text-muted-foreground">{variant.title}</span>}
+      ) : <span className="min-w-0 break-words font-medium text-foreground">{label}</span>}
+      {variant.title && <span className="min-w-0 text-[12px] text-muted-foreground">{variant.title}</span>}
     </span>
   )
 }
