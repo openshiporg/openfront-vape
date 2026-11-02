@@ -109,6 +109,10 @@ async function hasCurrentCarrierDecision(context: any, cartId: string, shippingO
  * option never ends up with two valid decisions.
  */
 export async function prepareCarrierDecisions(context: any, cartId: string) {
+  return issueCarrierDecisions(context, cartId);
+}
+
+async function issueCarrierDecisions(context: any, cartId: string) {
   const scope = await regulatedCartScope(context, cartId);
   if (!scope) return { regulated: false, issued: 0 };
   const compliance = await evaluateCartCompliance({ context, cartId, purpose: "cart" });

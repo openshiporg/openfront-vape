@@ -13,6 +13,7 @@ export const MANUAL_ADULT_SIGNATURE_CARRIER = "store_arranged";
 export const MANUAL_ADULT_SIGNATURE_SERVICE = "adult_signature_21_plus";
 export const MANUAL_ADULT_SIGNATURE_AGE = 21;
 export const MANUAL_ADULT_SIGNATURE_TTL_MS = 60 * 60 * 1000;
+const DECISION_BUCKET_MS = 5 * 60 * 1000;
 
 /** Age the service collects, from a code such as `adult_signature_21_plus`. */
 export function signatureAgeFromService(serviceCode: unknown): number {
@@ -40,7 +41,11 @@ export function buildManualAdultSignatureDecision(input: ManualCarrierInput) {
   if (!origin || !destination || !input.lines.length) return null;
   if (!input.launchJurisdictionCodes.includes(destination)) return null;
   if ((input.signatureMinimumAge ?? MANUAL_ADULT_SIGNATURE_AGE) > MANUAL_ADULT_SIGNATURE_AGE) return null;
-  const now = input.now ?? new Date();
+  // Issue times are bucketed so concurrent requests for the same cart and option build
+  // the same decision (same idempotency key) instead of two valid rows, which the
+  // shipping-option filter treats as ambiguous.
+  const clock = (input.now ?? new Date()).getTime();
+  const now = new Date(Math.floor(clock / DECISION_BUCKET_MS) * DECISION_BUCKET_MS);
   const lines = [...input.lines].sort((a, b) => a.variantId.localeCompare(b.variantId));
   const packageMarkings = [...new Set(input.packageMarkings)].sort();
   const packageDigest = evidenceDigest({ lines, packageMarkings });
