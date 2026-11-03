@@ -27,6 +27,7 @@ function load(env, mail) {
     '../../regulated-commerce/core/release-gate': { assertCommerceReleaseEnabled: async () => {} },
     '../regulated/cart-fingerprint': { cartEvidenceFingerprint: async () => 'fp' },
     '../regulated/enforcement': { evaluateCartCompliance: async () => ({ regulated: false }) },
+    '../lib/shopperError': { shopperError: (message, code) => Object.assign(new Error(message), { extensions: { code } }) },
     './accepted-compliance-snapshot': { acceptedCheckoutEvidenceWhere: () => ({}), matchesCurrentAcceptedCheckoutSnapshot: () => true },
   };
   vm.runInNewContext(output, {

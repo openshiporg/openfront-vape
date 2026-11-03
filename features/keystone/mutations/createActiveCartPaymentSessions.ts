@@ -3,6 +3,8 @@ import type { KeystoneContext } from "@keystone-6/core/types";
 import { assertCartAccess, withCartMutationLock } from "../security/cart-access";
 import { isPaymentProviderConfigured } from "../utils/paymentProviderConfig";
 import { evaluateCartCompliance } from "../regulated/enforcement";
+import { shopperError } from "../lib/shopperError";
+import { cartNotFound } from "../security/cart-access";
 
 async function createActiveCartPaymentSessions(root: unknown, { cartId }: { cartId: string }, context: KeystoneContext<any>) {
   return withCartMutationLock(context, cartId, async context => {
@@ -35,7 +37,7 @@ async function createActiveCartPaymentSessions(root: unknown, { cartId }: { cart
   });
 
   if (!cart) {
-    throw new Error("Cart not found");
+    throw cartNotFound();
   }
 
   // Get available payment providers from region

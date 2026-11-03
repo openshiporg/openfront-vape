@@ -1,4 +1,5 @@
 import { getOrCreateIdempotencyAttempt } from "../utils/idempotency";
+import { shopperError } from "../lib/shopperError";
 
 type CartInventoryLine = {
   quantity: number;
@@ -40,7 +41,7 @@ export async function getOrCreateCheckoutAttempt(
     },
     data: { lockedAt: new Date() },
   });
-  if (acquired.count !== 1) throw new Error("Checkout is already in progress");
+  if (acquired.count !== 1) throw shopperError("Checkout is already in progress", "CHECKOUT_IN_PROGRESS");
   return prisma.idempotencyKey.findUnique({ where: { id: attempt.id } });
 }
 
@@ -98,7 +99,7 @@ export async function reserveCartInventory(
         data: { inventoryQuantity: { decrement: quantity } },
       });
       if (result.count !== 1) {
-        throw new Error(`Insufficient stock for ${variant.title || variant.id}`);
+        throw shopperError(`Insufficient stock for ${variant.title || "this item"}`, "OUT_OF_STOCK");
       }
 
       await tx.stockMovement.create({
@@ -144,10 +145,10 @@ export async function reserveDiscountUsage(
         current.startsAt > now ||
         (current.endsAt && current.endsAt <= now)
       ) {
-        throw new Error(`Discount ${discount.code || discount.id} is no longer active`);
+        throw shopperError(`Discount ${discount.code || "code"} is no longer active`, "DISCOUNT_NOT_ACTIVE");
       }
       if (current.usageLimit !== null && current.usageCount >= current.usageLimit) {
-        throw new Error(`Discount ${discount.code || discount.id} has reached its usage limit`);
+        throw shopperError(`Discount ${discount.code || "code"} has reached its usage limit`, "DISCOUNT_USAGE_LIMIT");
       }
       const result = await tx.discount.updateMany({
         where: {
@@ -159,7 +160,7 @@ export async function reserveDiscountUsage(
         },
         data: { usageCount: { increment: 1 } },
       });
-      if (result.count !== 1) throw new Error("Discount usage changed; retry checkout");
+      if (result.count !== 1) throw shopperError("Discount usage changed; retry checkout", "DISCOUNT_CHANGED");
     }
     if (checkoutAttemptId) {
       await tx.idempotencyKey.update({

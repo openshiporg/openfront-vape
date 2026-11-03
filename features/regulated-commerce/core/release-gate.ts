@@ -1,6 +1,7 @@
 import type { KeystoneContext } from "@keystone-6/core/types";
 
 import { missingStoreInfo } from "../../platform/store-settings/lib/store-info";
+import { shopperError } from "../../keystone/lib/shopperError";
 
 /**
  * Store-level commerce gate, derived from recorded merchant authority.
@@ -27,6 +28,6 @@ export async function releaseBlockers(context: KeystoneContext<any>): Promise<st
 
 export async function assertCommerceReleaseEnabled(context: KeystoneContext<any>) {
   if ((await releaseBlockers(context)).length) {
-    throw new Error("Checkout isn't available for this store yet.");
+    throw shopperError("Checkout isn't available for this store yet.", "CHECKOUT_UNAVAILABLE");
   }
 }

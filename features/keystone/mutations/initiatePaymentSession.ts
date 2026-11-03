@@ -5,6 +5,8 @@ import { cartIsPickup } from "../regulated/pickup";
 import { assertCartAccess } from "../security/cart-access";
 import { isPaymentProviderConfigured } from "../utils/paymentProviderConfig";
 import { regulatedTaxAmountForCart, requireAllowedCartCompliance } from "../regulated/enforcement";
+import { shopperError } from "../lib/shopperError";
+import { cartNotFound } from "../security/cart-access";
 
 async function initiatePaymentSession(
   root: any,
@@ -53,11 +55,11 @@ async function initiatePaymentSession(
   });
 
   if (!cart) {
-    throw new Error("Cart not found");
+    throw cartNotFound();
   }
 
   if (!cart.shippingAddress?.id || !cart.billingAddress?.id || cart.rawTotal <= 0) {
-    throw new Error("A positive cart with billing and shipping addresses is required");
+    throw shopperError("A positive cart with billing and shipping addresses is required", "CART_INCOMPLETE");
   }
 
   // Get payment provider with all required fields
@@ -82,11 +84,11 @@ async function initiatePaymentSession(
     !isPaymentProviderConfigured(provider.code) ||
     !cart.region.paymentProviders?.some((item: any) => item.id === provider.id)
   ) {
-    throw new Error("Payment provider not found, installed, and configured for this region");
+    throw shopperError("Payment provider not found, installed, and configured for this region", "PAYMENT_PROVIDER_UNAVAILABLE");
   }
   // Manual tender is the pay-at-pickup path; a delivery cart must pay by card.
   if (provider.code === "pp_system_default" && !cartIsPickup(cart)) {
-    throw new Error("Pay in store is only available for pickup orders. Choose a card to have this order delivered.");
+    throw shopperError("Pay in store is only available for pickup orders. Choose a card to have this order delivered.", "PAY_IN_STORE_PICKUP_ONLY");
   }
   const compliance = await requireAllowedCartCompliance({
     context,

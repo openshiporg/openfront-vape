@@ -12,6 +12,7 @@ import {
   acceptedCheckoutEvidenceWhere,
   matchesCurrentAcceptedCheckoutSnapshot,
 } from "./accepted-compliance-snapshot";
+import { shopperError } from "../lib/shopperError";
 
 // Checkout writes the order through Prisma, so Keystone hooks (and the Order webhook
 // enricher) never run for it: order.created is built here and must carry everything
@@ -147,10 +148,10 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
   const regulated = currentCompliance.regulated;
   const acceptanceReferences = currentCompliance.regulated ? currentCompliance.acceptanceReferences : null;
   if (regulated && currentCompliance.decision?.result !== "allow") {
-    throw new Error("A current allowed checkout compliance snapshot is required");
+    throw shopperError("A current allowed checkout compliance snapshot is required", "COMPLIANCE_SNAPSHOT_REQUIRED");
   }
   const cartFingerprint = await cartEvidenceFingerprint(sudo, cart.id);
-  if (!cart.acceptedCheckoutFingerprint || cart.acceptedCheckoutFingerprint !== cartFingerprint) throw new Error("Your cart changed during checkout. Review it and try again.");
+  if (!cart.acceptedCheckoutFingerprint || cart.acceptedCheckoutFingerprint !== cartFingerprint) throw shopperError("Your cart changed during checkout. Review it and try again.", "CART_CHANGED");
   const now = new Date();
   const complianceDecision = regulated ? await sudo.prisma.complianceDecision.findFirst({
     where: {
@@ -170,7 +171,7 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
     current: acceptanceReferences,
     now,
   }))) {
-    throw new Error("A current allowed checkout compliance snapshot is required");
+    throw shopperError("A current allowed checkout compliance snapshot is required", "COMPLIANCE_SNAPSHOT_REQUIRED");
   }
 
   const { userId, isGuest } = resolveOrderCustomer(cart);
@@ -329,14 +330,14 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
         },
         data: { orderId: order.id },
       });
-      if (linkedDecision.count !== 1) throw new Error("Accepted compliance snapshot expired, changed, or was already consumed");
+      if (linkedDecision.count !== 1) throw shopperError("Accepted compliance snapshot expired, changed, or was already consumed", "COMPLIANCE_EVIDENCE_CHANGED");
       for (const [model, where] of [
         [tx.ageVerificationAttempt, evidenceWhere.age],
         [tx.regulatedTaxQuote, evidenceWhere.tax],
         [tx.carrierEligibilityDecision, evidenceWhere.carrier],
       ]) {
         const linked = await model.updateMany({ where, data: { orderId: order.id } });
-        if (linked.count !== 1) throw new Error("Accepted evidence was expired, changed, or already consumed");
+        if (linked.count !== 1) throw shopperError("Accepted evidence was expired, changed, or already consumed", "COMPLIANCE_EVIDENCE_CHANGED");
       }
       await tx.complianceEvent.create({
         data: {

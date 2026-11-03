@@ -5,6 +5,8 @@ import { assertCommerceReleaseEnabled, releaseBlockers } from "../../regulated-c
 import { signatureAgeFromService } from "../../regulated-commerce/providers/builtin/carrier-manual-adult-signature";
 import { cartEvidenceFingerprint } from "./cart-fingerprint";
 import { boundedComplianceSnapshotExpiry } from "./snapshot-expiry";
+import { shopperError } from "../lib/shopperError";
+import { cartNotFound } from "../security/cart-access";
 
 const FEDERAL_AUTHORIZATION_TYPES = new Set(["federal_marketing_order", "preexisting_status"]);
 const SHA256 = /^[a-f0-9]{64}$/i;
@@ -30,12 +32,12 @@ export async function assertVariantPublicationEvidence(context: any, variantId: 
   if (!classification || classification.status !== "approved" || classification.marketingReviewStatus !== "approved" ||
     !classification.marketingEvidenceDigest || !classification.marketingReviewedAt ||
     !isCurrentEvidence(classification, ["approved"], now)) {
-    throw new Error("Regulated product classification must be approved and current before publication or cart use");
+    throw shopperError("Regulated product classification must be approved and current before publication or cart use", "PRODUCT_NOT_AVAILABLE");
   }
   const federal = classification.authorizations?.find((authorization: any) =>
     FEDERAL_AUTHORIZATION_TYPES.has(authorization.authorizationType) &&
     !authorization.delistedAt && isCurrentEvidence(authorization, ["authorized"], now));
-  if (!federal) throw new Error("Current federal product authorization evidence is required");
+  if (!federal) throw shopperError("Current federal product authorization evidence is required", "PRODUCT_NOT_AVAILABLE");
   return classification;
 }
 
@@ -124,7 +126,7 @@ export async function evaluateCartCompliance({
       shippingMethods { shippingOption { id name } }
     `,
   });
-  if (!cart) throw new Error("Cart not found");
+  if (!cart) throw cartNotFound();
   const regulatedLines = cart.lineItems.filter((line: any) =>
     !hasCurrentRegulatedExemption(line.productVariant?.product),
   );
@@ -330,7 +332,7 @@ export async function currentRegulatedTaxQuote(context: any, cartId: string, acc
 
 export async function regulatedTaxAmountForCart(context: any, cartId: string, acceptedStatuses: string[]) {
   const quote = await currentRegulatedTaxQuote(context, cartId, acceptedStatuses);
-  if (!quote) throw new Error("Current regulated tax amount is unavailable");
+  if (!quote) throw shopperError("Current regulated tax amount is unavailable", "TAX_UNAVAILABLE");
   const amounts = [quote.salesTaxAmount, quote.exciseTaxAmount, quote.localFeeAmount];
   if (!amounts.every((amount: unknown) => Number.isSafeInteger(amount) && Number(amount) >= 0)) {
     throw new Error("Regulated tax amount is invalid");
@@ -434,7 +436,7 @@ export async function requireAllowedCartCompliance(args: Parameters<typeof evalu
   if (args.purpose !== "fulfillment") await assertCommerceReleaseEnabled(args.context);
   const result = await evaluateCartCompliance({ ...args, persist: true });
   if (result.regulated && result.decision?.result !== "allow") {
-    throw new Error(`Regulated commerce denied: ${result.decision?.reasonCodes.join(", ") || "UNKNOWN"}`);
+    throw shopperError(`Regulated commerce denied: ${result.decision?.reasonCodes.join(", ") || "UNKNOWN"}`, "REGULATED_COMMERCE_DENIED");
   }
   return result;
 }

@@ -4,6 +4,7 @@ import type { GraphQLResolveInfo } from 'graphql';
 import { assertCartAccess } from '../security/cart-access';
 import { cartIsPickup } from '../regulated/pickup';
 import { isPaymentProviderConfigured } from '../utils/paymentProviderConfig';
+import { shopperError } from "../lib/shopperError";
 
 // Define args structure if simple
 interface ActiveCartPaymentProvidersArgs {
@@ -18,7 +19,7 @@ async function activeCartPaymentProviders(
     info?: GraphQLResolveInfo // Optional info
 ): Promise<readonly any[]> { // Basic Promise<readonly any[]> return type
   if (!regionId) {
-    throw new Error('Region ID is required');
+    throw shopperError("Region ID is required", "REGION_REQUIRED");
   }
 
   if ((await releaseBlockers(context)).length) return [];

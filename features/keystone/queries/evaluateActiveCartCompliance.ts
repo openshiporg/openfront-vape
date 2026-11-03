@@ -1,5 +1,6 @@
 import { evaluateCartCompliance } from "../regulated/enforcement";
 import { assertCartAccess } from "../security/cart-access";
+import { shopperError } from "../lib/shopperError";
 
 const purposes = new Set(["cart", "shipping", "payment", "checkout"]);
 
@@ -9,7 +10,7 @@ export default async function evaluateActiveCartCompliance(
   context: any,
 ) {
   await assertCartAccess(context, cartId);
-  if (!purposes.has(purpose)) throw new Error("Unsupported storefront compliance purpose");
+  if (!purposes.has(purpose)) throw shopperError("Unsupported storefront compliance purpose", "INVALID_PURPOSE");
   const result = await evaluateCartCompliance({
     context,
     cartId,

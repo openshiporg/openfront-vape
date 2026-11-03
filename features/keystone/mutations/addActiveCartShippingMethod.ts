@@ -7,6 +7,7 @@ import {
   shippingSubtotalRequirementsMet,
 } from "../security/shipping-eligibility";
 import { evaluateCartCompliance, invalidateCartCompliance } from "../regulated/enforcement";
+import { shopperError } from "../lib/shopperError";
 
 async function addActiveCartShippingMethod(
   root: any,
@@ -39,7 +40,7 @@ async function addActiveCartShippingMethod(
       cart.shippingAddress?.country?.iso2,
     )
   ) {
-    throw new Error("Shipping option not found");
+    throw shopperError("Shipping option not found", "SHIPPING_OPTION_NOT_FOUND");
   }
   const price = shippingOptionCharge(option.priceType, option.amount);
   const subtotal = await calculateCartSubtotalMinorUnits(sudo, cart);
@@ -47,13 +48,13 @@ async function addActiveCartShippingMethod(
     price === null ||
     !shippingSubtotalRequirementsMet(option.shippingOptionRequirements, subtotal)
   ) {
-    throw new Error("Shipping option is not eligible for this cart");
+    throw shopperError("Shipping option is not eligible for this cart", "SHIPPING_OPTION_NOT_ELIGIBLE");
   }
 
   const compliance = await evaluateCartCompliance({ context, cartId, purpose: "cart" });
   if (compliance.regulated) {
     if (compliance.decision?.result !== "allow") {
-      throw new Error(`Regulated shipping denied: ${compliance.decision?.reasonCodes.join(", ")}`);
+      throw shopperError(`Regulated shipping denied: ${compliance.decision?.reasonCodes.join(", ")}`, "REGULATED_SHIPPING_DENIED");
     }
     const scope = compliance.carrierScope;
     if (
@@ -61,7 +62,7 @@ async function addActiveCartShippingMethod(
       !scope.destinationJurisdictionCode ||
       !scope.originJurisdictionCode
     ) {
-      throw new Error("A current approved carrier decision is required");
+      throw shopperError("A current approved carrier decision is required", "CARRIER_DECISION_REQUIRED");
     }
     const { cartFingerprint, destinationJurisdictionCode, originJurisdictionCode } = scope;
     const now = new Date();
@@ -95,7 +96,7 @@ async function addActiveCartShippingMethod(
         now,
       }),
     );
-    if (currentDecisions.length !== 1) throw new Error("A current approved carrier decision is required");
+    if (currentDecisions.length !== 1) throw shopperError("A current approved carrier decision is required", "CARRIER_DECISION_REQUIRED");
   }
 
   { const tx = context;

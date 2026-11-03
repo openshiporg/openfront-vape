@@ -2,6 +2,8 @@ import type { PaymentSessionSelection } from '../models/commerce-projections';
 import type { KeystoneContext } from "@keystone-6/core/types";
 import { assertCartAccess, withCartMutationLock } from "../security/cart-access";
 import { invalidateCartCompliance, requireAllowedCartCompliance } from "../regulated/enforcement";
+import { shopperError } from "../lib/shopperError";
+import { cartNotFound } from "../security/cart-access";
 
 async function setActiveCartPaymentSession(root: unknown, { cartId, providerId }: { cartId: string; providerId: string }, context: KeystoneContext<any>) {
   return withCartMutationLock(context, cartId, async context => {
@@ -26,11 +28,11 @@ async function setActiveCartPaymentSession(root: unknown, { cartId, providerId }
   });
 
   if (!cart) {
-    throw new Error("Cart not found");
+    throw cartNotFound();
   }
 
   if (!cart.paymentCollection) {
-    throw new Error("Cart has no payment collection");
+    throw shopperError("Cart has no payment collection", "PAYMENT_COLLECTION_MISSING");
   }
 
   // Find and update the selected session
@@ -39,7 +41,7 @@ async function setActiveCartPaymentSession(root: unknown, { cartId, providerId }
   );
 
   if (!selectedSession) {
-    throw new Error("Payment session not found");
+    throw shopperError("Payment session not found", "PAYMENT_SESSION_NOT_FOUND");
   }
 
   await requireAllowedCartCompliance({ context, cartId, purpose: "payment", paymentProviderId: providerId });

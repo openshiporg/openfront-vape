@@ -25,6 +25,8 @@ import {
   subscribedWebhookEndpointIds,
 } from "../../webhooks/outbox";
 import { regulatedTaxAmountForCart, requireAllowedCartCompliance } from "../regulated/enforcement";
+import { shopperError } from "../lib/shopperError";
+import { cartNotFound } from "../security/cart-access";
 
 async function completeActiveCart(
   root: any,
@@ -167,7 +169,7 @@ async function completeActiveCart(
   });
 
   if (!cart) {
-    throw new Error("Cart not found");
+    throw cartNotFound();
   }
 
     if (cart.order?.id) return { cart, attempt: null };
@@ -394,7 +396,7 @@ async function handlePaidOrder(cart: any, paymentSessionId: string, sudoContext:
     throw new Error("Payment provider code is missing");
   }
   if (selectedSession.amount !== cart.rawTotal) {
-    throw new Error("Payment session amount no longer matches cart total");
+    throw shopperError("Payment session amount no longer matches cart total", "CART_TOTAL_CHANGED");
   }
 
   // Reserve online, pay at the counter: a pickup cart paying with the manual
@@ -450,7 +452,7 @@ async function settlePaymentSession(session: any, cart: any) {
   const provider = session.paymentProvider;
   if (provider.code === 'pp_system_default') {
     // Pickup carts never reach here (they reserve instead); delivery stays card-only.
-    throw new Error('Manual tender cannot complete storefront checkout');
+    throw shopperError('Manual tender cannot complete storefront checkout', 'PAYMENT_METHOD_NOT_ALLOWED');
   }
 
   const paymentId =

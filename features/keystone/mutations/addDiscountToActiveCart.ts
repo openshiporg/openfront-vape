@@ -14,6 +14,8 @@ import type { KeystoneContext } from "@keystone-6/core/types";
 import { assertCartAccess, withCartMutationLock } from "../security/cart-access";
 import { discountHasUsageCapacity, discountRegionEligible } from "../security/discount-eligibility";
 import { invalidateCartCompliance } from "../regulated/enforcement";
+import { shopperError } from "../lib/shopperError";
+import { cartNotFound } from "../security/cart-access";
 
 async function addDiscountToActiveCart(root: unknown, { cartId, code }: { cartId: string; code: string }, context: KeystoneContext<any>) {
   return withCartMutationLock(context, cartId, async context => {
@@ -46,11 +48,11 @@ async function addDiscountToActiveCart(root: unknown, { cartId, code }: { cartId
   });
 
   if (!cart) {
-    throw new Error(`Cart not found`);
+    throw cartNotFound();
   }
 
   if (!cart.lineItems || cart.lineItems.length === 0) {
-    throw new Error(`Cannot apply discount to an empty cart`);
+    throw shopperError("Cannot apply discount to an empty cart", "EMPTY_CART");
   }
 
   // Find the discount with full details
@@ -87,37 +89,37 @@ async function addDiscountToActiveCart(root: unknown, { cartId, code }: { cartId
   });
 
   if (!discount) {
-    throw new Error(`Invalid discount code: ${code}`);
+    throw shopperError(`Invalid discount code: ${code}`, "INVALID_DISCOUNT_CODE");
   }
 
   const cartDiscounts: Array<{ id: string; stackable: boolean }> = cart.discounts || [];
   // Check if discount is already applied
   if (cartDiscounts?.some(d => d.id === discount.id)) {
-    throw new Error(`Discount ${code} is already applied to this cart`);
+    throw shopperError(`Discount ${code} is already applied to this cart`, "DISCOUNT_ALREADY_APPLIED");
   }
 
   // Validate discount is enabled
   if (discount.isDisabled) {
-    throw new Error(`Discount ${code} is no longer available`);
+    throw shopperError(`Discount ${code} is no longer available`, "DISCOUNT_UNAVAILABLE");
   }
 
   // Check date validity
   const now = new Date();
   if (discount.startsAt && new Date(discount.startsAt) > now) {
-    throw new Error(`Discount ${code} is not yet active`);
+    throw shopperError(`Discount ${code} is not yet active`, "DISCOUNT_NOT_ACTIVE");
   }
   if (discount.endsAt && new Date(discount.endsAt) < now) {
-    throw new Error(`Discount ${code} has expired`);
+    throw shopperError(`Discount ${code} has expired`, "DISCOUNT_EXPIRED");
   }
 
   // Check usage limits
   if (!discountHasUsageCapacity(discount.usageLimit, discount.usageCount)) {
-    throw new Error(`Discount ${code} has reached its usage limit`);
+    throw shopperError(`Discount ${code} has reached its usage limit`, "DISCOUNT_USAGE_LIMIT");
   }
 
   // Validate region eligibility (if discount has region restrictions)
   if (!discountRegionEligible(discount.regions, cart.region?.id)) {
-    throw new Error(`Discount ${code} is not available in your region`);
+    throw shopperError(`Discount ${code} is not available in your region`, "DISCOUNT_REGION");
   }
 
   // Validate customer group eligibility
@@ -136,10 +138,10 @@ async function addDiscountToActiveCart(root: unknown, { cartId, code }: { cartId
       const hasMatch = customerGroupIds.some(id => conditionGroupIds.includes(id));
 
       if (condition.operator === 'in' && !hasMatch) {
-        throw new Error(`Discount ${code} is not available for your customer group`);
+        throw shopperError(`Discount ${code} is not available for your customer group`, "DISCOUNT_CUSTOMER_GROUP");
       }
       if (condition.operator === 'not_in' && hasMatch) {
-        throw new Error(`Discount ${code} is not available for your customer group`);
+        throw shopperError(`Discount ${code} is not available for your customer group`, "DISCOUNT_CUSTOMER_GROUP");
       }
     }
   }

@@ -1,5 +1,6 @@
 import { withCommerceFence, currentCommerceActor } from "../security/commerce-fence";
 import { createCartProof } from "../security/token-crypto";
+import { shopperError } from "../lib/shopperError";
 
 async function createActiveCart(
   _root: unknown,
@@ -8,13 +9,13 @@ async function createActiveCart(
 ) {
   return withCommerceFence(context, async original => {
   const context = await currentCommerceActor(original);
-  if (!regionId) throw new Error("Region ID is required");
+  if (!regionId) throw shopperError("Region ID is required", "REGION_REQUIRED");
 
   const region = await context.query.Region.findOne({
     where: { id: regionId },
     query: "id",
   });
-  if (!region) throw new Error("Region not found");
+  if (!region) throw shopperError("Region not found", "REGION_NOT_FOUND");
 
   const cart = await context.sudo().query.Cart.createOne({
     data: {

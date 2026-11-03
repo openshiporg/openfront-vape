@@ -25,6 +25,8 @@ import { evaluateCartCompliance } from "./enforcement";
 import { recordVerifiedIdentityResult } from "./evidence-ingestion";
 import { reverseRegulatedTaxCommit } from "./reversals";
 import { commitRegulatedTaxQuote, recordCarrierEligibility, recordRegulatedTaxQuote } from "./transaction-evidence";
+import { shopperError } from "../lib/shopperError";
+import { cartNotFound } from "../security/cart-access";
 
 const EXEMPT = (product: any) =>
   product?.regulatedCommerceRequired === false &&
@@ -46,7 +48,7 @@ async function regulatedCartScope(context: any, cartId: string) {
         regulatedClassification { category packageUnits }
       } }`,
   });
-  if (!cart) throw new Error("Cart not found");
+  if (!cart) throw cartNotFound();
   const regulatedLines = cart.lineItems.filter((line: any) => !EXEMPT(line.productVariant?.product));
   if (!regulatedLines.length) return null;
   const country = String(cart.shippingAddress?.country?.iso2 || "").toUpperCase();
@@ -188,9 +190,9 @@ export async function submitAgeCheck(
 ) {
   const scope = await regulatedCartScope(context, cartId);
   if (!scope) return { regulated: false };
-  if (!scope.destination || !scope.jurisdiction || !scope.merchant) throw new Error("Regulated commerce denied: DESTINATION_JURISDICTION_UNRESOLVED");
+  if (!scope.destination || !scope.jurisdiction || !scope.merchant) throw shopperError("Regulated commerce denied: DESTINATION_JURISDICTION_UNRESOLVED", "REGULATED_COMMERCE_DENIED");
   const selected = scope.cart.shippingMethods[0]?.shippingOption?.id;
-  if (!selected) throw new Error("Choose a delivery method first.");
+  if (!selected) throw shopperError("Choose a delivery method first.", "DELIVERY_METHOD_REQUIRED");
 
   await releaseStaleTaxCommits(context, cartId, scope);
   const cartFingerprint = await cartEvidenceFingerprint(context, cartId);
@@ -211,7 +213,7 @@ export async function submitAgeCheck(
 
   if (!(await hasCurrentCarrierDecision(context, cartId, selected, cartFingerprint))) {
     const decision = carrierDecisionFor(scope, selected, cartFingerprint, isPickupOption(scope.cart.shippingMethods[0]?.shippingOption));
-    if (!decision) throw new Error("Regulated commerce denied: APPROVED_ADULT_SIGNATURE_CARRIER_REQUIRED");
+    if (!decision) throw shopperError("Regulated commerce denied: APPROVED_ADULT_SIGNATURE_CARRIER_REQUIRED", "REGULATED_COMMERCE_DENIED");
     await recordCarrierEligibility({ context, cartId, shippingOptionId: selected, providerCode: MANUAL_ADULT_SIGNATURE_PROVIDER_CODE, decision });
   }
 

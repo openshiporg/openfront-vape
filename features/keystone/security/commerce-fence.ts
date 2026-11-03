@@ -1,4 +1,5 @@
 import type { KeystoneContext } from "@keystone-6/core/types";
+import { shopperError } from "../lib/shopperError";
 
 const transactions = new WeakSet<object>();
 export type CommerceContext = KeystoneContext<any>;
@@ -53,7 +54,7 @@ export async function withCartSetFence<T>(context: CommerceContext, ids: readonl
     const access = { allowCompleted: mode === "recovery" || mode === "checkout" };
     for (const id of cartIds) await assertCartAccess(tx, id, access);
     const discovered = await tx.prisma.cart.findMany({ where: { id: { in: cartIds } }, select: { id: true, shippingAddressId: true, billingAddressId: true } });
-    if (discovered.length !== cartIds.length) throw new Error("Cart not found");
+    if (discovered.length !== cartIds.length) throw shopperError("Cart not found", "CART_NOT_FOUND");
     for (const id of sortedIds([...proposed, ...discovered.flatMap((cart: { shippingAddressId: string | null; billingAddressId: string | null }) => [cart.shippingAddressId, cart.billingAddressId])])) {
       await tx.prisma.$queryRaw`SELECT id FROM "Address" WHERE id = ${id} FOR UPDATE`;
     }

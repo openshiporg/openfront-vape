@@ -1,6 +1,7 @@
 import type { KeystoneContext } from "@keystone-6/core/types";
 import { assertCartAccess, withCartMutationLock } from "../security/cart-access";
 import { invalidateCartCompliance } from "../regulated/enforcement";
+import { shopperError } from "../lib/shopperError";
 
 async function removeDiscountFromActiveCart(root: unknown, { cartId, code }: { cartId: string; code: string }, context: KeystoneContext<any>) {
   return withCartMutationLock(context, cartId, async context => {
@@ -13,7 +14,7 @@ async function removeDiscountFromActiveCart(root: unknown, { cartId, code }: { c
   });
 
   if (!discount) {
-    throw new Error(`No discount found with code: ${code}`);
+    throw shopperError(`No discount found with code: ${code}`, "DISCOUNT_NOT_FOUND");
   }
 
   const cart = await sudoContext.db.Cart.updateOne({

@@ -2,6 +2,7 @@ import { GraphQLError } from "graphql";
 import { permissions } from "../access";
 import { verifyCartProof } from "./token-crypto";
 import { currentCommerceActor, withCartFence } from "./commerce-fence";
+import { shopperError } from "../lib/shopperError";
 
 // A missing cart and someone else's cart get the same clear refusal. A GraphQLError is not
 // masked as "Unexpected error." by Yoga, and the message matches existing checks.
@@ -47,7 +48,7 @@ export async function assertCartAccess(
   cartId: string,
   options: CartAccessOptions = {}
 ): Promise<{ id: string; user?: { id: string } | null; order?: { id: string } | null }> {
-  if (!cartId) throw new Error("Cart ID is required");
+  if (!cartId) throw shopperError("Cart ID is required", "CART_ID_REQUIRED");
 
   context = await currentCommerceActor(context);
   const canManage = permissions.canManageOrders({ session: context.session });
@@ -73,7 +74,7 @@ export async function assertCartAccess(
   }
 
   if (!options.allowCompleted && cart.order?.id) {
-    throw new Error("Cart has already been completed");
+    throw shopperError("Cart has already been completed", "CART_COMPLETED");
   }
 
   return cart;
@@ -89,7 +90,7 @@ export async function assertLineItemBelongsToCart(
     where: { id: lineItemId },
     query: "id cart { id }",
   });
-  if (lineItem?.cart?.id !== cartId) throw new Error("Line item not found");
+  if (lineItem?.cart?.id !== cartId) throw shopperError("Line item not found", "LINE_ITEM_NOT_FOUND");
 }
 
 export async function assertAddressAccess(
@@ -106,7 +107,7 @@ export async function assertAddressAccess(
     !address ||
     (!canManage && (!context.session?.itemId || address.user?.id !== context.session.itemId))
   ) {
-    throw new Error("Address not found");
+    throw shopperError("Address not found", "ADDRESS_NOT_FOUND");
   }
   return address;
 }
@@ -126,6 +127,6 @@ export async function assertPaymentSessionBelongsToCart(
       (session: any) => session.id === paymentSessionId
     )
   ) {
-    throw new Error("Payment session not found");
+    throw shopperError("Payment session not found", "PAYMENT_SESSION_NOT_FOUND");
   }
 }
