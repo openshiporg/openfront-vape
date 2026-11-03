@@ -1,6 +1,13 @@
+import { GraphQLError } from "graphql";
 import { permissions } from "../access";
 import { verifyCartProof } from "./token-crypto";
 import { currentCommerceActor, withCartFence } from "./commerce-fence";
+
+// A missing cart and someone else's cart get the same clear refusal. A GraphQLError is not
+// masked as "Unexpected error." by Yoga, and the message matches existing checks.
+export function cartNotFound() {
+  return new GraphQLError("Cart not found", { extensions: { code: "CART_NOT_FOUND" } });
+}
 
 type CartAccessOptions = {
   allowCompleted?: boolean;
@@ -49,7 +56,7 @@ export async function assertCartAccess(
 
   // Anonymous callers must prove possession before any privileged lookup.
   if (!canManage && !sessionUserId && !verifyCartProof(proof, cartId)) {
-    throw new Error("Cart not found");
+    throw cartNotFound();
   }
 
   const cart = await context.sudo().query.Cart.findOne({
@@ -57,12 +64,12 @@ export async function assertCartAccess(
     query: "id user { id } order { id }",
   });
 
-  if (!cart) throw new Error("Cart not found");
+  if (!cart) throw cartNotFound();
 
   if (!canManage) {
     const ownsCart = Boolean(sessionUserId && cart.user?.id === sessionUserId);
     const ownsGuestProof = Boolean(!cart.user && verifyCartProof(proof, cartId));
-    if (!ownsCart && !ownsGuestProof) throw new Error("Cart not found");
+    if (!ownsCart && !ownsGuestProof) throw cartNotFound();
   }
 
   if (!options.allowCompleted && cart.order?.id) {
