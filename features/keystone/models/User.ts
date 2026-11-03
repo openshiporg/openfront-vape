@@ -43,14 +43,20 @@ export const User = list<Lists.User.TypeInfo>({
     },
   },
   hooks: {
-    resolveInput: async ({ operation, inputData, resolvedData, context }) => {
+    resolveInput: ({ operation, inputData, resolvedData, context }) => {
       if (operation === 'create' && !permissions.canManageUsers({ session: context.session })) {
-        // A returning guest frees the email held by their earlier guest record.
-        // Registered customers (hasAccount true) are never touched.
-        await retireReturningGuest(context.prisma, resolvedData.email);
         return resolvePublicUserCreateData({ inputData, resolvedData });
       }
       return resolvedData;
+    },
+    // Runs only after resolveInput AND all field/list validation have passed, immediately before the
+    // DB write. A returning guest frees the email held by their earlier guest record here, so a create
+    // that then fails validation (short password, bad email, ...) never retires anyone. Registered
+    // members (hasAccount true) and sign-ups without a cart/order are never touched.
+    beforeOperation: async ({ operation, resolvedData, context }) => {
+      if (operation === 'create' && !permissions.canManageUsers({ session: context.session })) {
+        await retireReturningGuest(context.prisma, resolvedData.email);
+      }
     },
   },
   ui: {

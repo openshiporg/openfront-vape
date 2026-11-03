@@ -67,3 +67,80 @@ test('retireReturningGuest only runs for a public create, and the User hook wire
   const retire = hook.indexOf('retireReturningGuest(context.prisma, resolvedData.email)');
   assert.ok(guard > 0 && retire > guard, 'retirement only for non-managers');
 });
+
+// ---- retire only AFTER validation (Keystone: beforeOperation runs after resolveInput + all field/list validation) ----
+function loadUserHooks() {
+  const guest = load('features/keystone/security/guest-user.ts');
+  const create = load('features/keystone/security/user-create.ts', { '../access': { permissions: { canManageUsers: ({ session }) => session?.manager === true } } });
+  const filename = path.join(root, 'features/keystone/models/User.ts');
+  const out = ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const m = { exports: {} };
+  let captured;
+  const field = () => ({});
+  const mocks = {
+    '@keystone-6/core': { list: (cfg) => { captured = cfg; return cfg; }, graphql: { field: () => ({}), String: {}, Boolean: {}, Int: {} }, group: (x) => x },
+    '@keystone-6/core/access': { denyAll: () => false },
+    '@keystone-6/core/fields': new Proxy({}, { get: () => field }),
+    '../access': { isSignedIn: () => true, permissions: { canManageUsers: ({ session }) => session?.manager === true }, rules: new Proxy({}, { get: () => () => true }) },
+    './trackingFields': { trackingFieldsFor: () => ({}) },
+    '../security/guest-user': guest,
+    '../security/user-create': create,
+  };
+  vm.runInNewContext(out, { module: m, exports: m.exports, process: { env: {} }, Date, Number, String, Set, Object, Boolean, Array, JSON, Promise, Error,
+    require: (s) => { if (s in mocks) return mocks[s]; throw new Error(`Unmocked ${s}`); } }, { filename });
+  return captured.hooks;
+}
+
+function guestDb(rows) {
+  return { rows, user: {
+    findFirst: async ({ where }) => rows.find((u) => u.email.toLowerCase() === where.email.equals.toLowerCase()) || null,
+    update: async ({ where, data }) => Object.assign(rows.find((u) => u.id === where.id), data),
+  } };
+}
+const GUEST_ROW = () => ({ id: 'g1', email: 'g@x.com', hasAccount: false, createdAt: NEW, roleId: null, accounts: [], carts: [{ id: 'c' }], addresses: [], orders: [] });
+
+test('resolveInput never retires anyone any more (it runs before validation)', async () => {
+  const hooks = loadUserHooks();
+  const prisma = guestDb([GUEST_ROW()]);
+  const data = await hooks.resolveInput({ operation: 'create', inputData: { email: 'g@x.com', password: 'x' }, resolvedData: { email: 'g@x.com', password: 'x' }, context: { session: null, prisma } });
+  assert.equal(prisma.rows[0].email, 'g@x.com', 'resolveInput left the guest alone');
+  assert.equal(data.hasAccount, true, 'and still applies the member default');
+});
+
+test('INVALID create (short password): Keystone fails validation before beforeOperation, so the guest email is NOT retired', async () => {
+  const hooks = loadUserHooks();
+  const prisma = guestDb([GUEST_ROW()]);
+  const input = { email: 'g@x.com', name: 'x', password: 'short' };
+  const resolved = await hooks.resolveInput({ operation: 'create', inputData: input, resolvedData: { ...input }, context: { session: null, prisma } });
+  // Keystone's pipeline: resolveInput -> field + list validation -> beforeOperation -> DB write.
+  const validation = (data) => (String(data.password).length >= 8 ? [] : ['Password must be at least 8 characters long']);
+  const errors = validation(resolved);
+  assert.ok(errors.length, 'validation rejects the short password');
+  if (!errors.length) await hooks.beforeOperation({ operation: 'create', resolvedData: resolved, context: { session: null, prisma } });
+  assert.equal(prisma.rows[0].email, 'g@x.com', 'guest email untouched after a failed create');
+});
+
+test('VALID guest create: beforeOperation retires the earlier guest record (only with a cart/order)', async () => {
+  const hooks = loadUserHooks();
+  const prisma = guestDb([GUEST_ROW()]);
+  const input = { email: 'g@x.com', name: 'x', password: 'long-enough-password', hasAccount: false };
+  const resolved = await hooks.resolveInput({ operation: 'create', inputData: input, resolvedData: { ...input }, context: { session: null, prisma } });
+  await hooks.beforeOperation({ operation: 'create', resolvedData: resolved, context: { session: null, prisma } });
+  assert.match(prisma.rows[0].email, /^retired-guest\+g1@guest\.invalid$/);
+  const noCart = guestDb([{ ...GUEST_ROW(), carts: [] }]);
+  await hooks.beforeOperation({ operation: 'create', resolvedData: resolved, context: { session: null, prisma: noCart } });
+  assert.equal(noCart.rows[0].email, 'g@x.com', 'a guest-flagged row with no cart/order is still never retired');
+});
+
+test('beforeOperation retires only on a non-manager create, never a member, update or manager create', async () => {
+  const hooks = loadUserHooks();
+  const run = async (op, session, row) => {
+    const prisma = guestDb([row]);
+    await hooks.beforeOperation({ operation: op, resolvedData: { email: row.email }, context: { session, prisma } });
+    return prisma.rows[0].email;
+  };
+  assert.equal(await run('create', null, { ...GUEST_ROW(), hasAccount: true }), 'g@x.com', 'a member is never retired');
+  assert.equal(await run('update', null, GUEST_ROW()), 'g@x.com', 'not on update');
+  assert.equal(await run('create', { manager: true }, GUEST_ROW()), 'g@x.com', 'not on a manager create');
+  assert.match(await run('create', null, GUEST_ROW()), /@guest\.invalid$/);
+});
