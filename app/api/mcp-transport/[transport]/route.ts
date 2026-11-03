@@ -43,7 +43,7 @@ import {
   isListType,
   isInputObjectType,
 } from 'graphql';
-import { getBaseUrl } from '@/features/dashboard/lib/getBaseUrl';
+import { getBaseUrl, getServerGraphQLTarget } from '@/features/dashboard/lib/getBaseUrl';
 import { requireMcpSession } from '@/features/keystone/mcpGate';
 
 // Get simple type name for display
@@ -58,8 +58,8 @@ function getSimpleTypeName(type: any): string {
 }
 
 // Execute GraphQL query with authentication
-async function executeGraphQL(query: string, graphqlEndpoint: string, cookie: string, variables?: any): Promise<any> {
-  const response = await fetch(graphqlEndpoint, {
+async function executeGraphQLWith(doFetch: typeof fetch, query: string, graphqlEndpoint: string, cookie: string, variables?: any): Promise<any> {
+  const response = await doFetch(graphqlEndpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -76,8 +76,8 @@ async function executeGraphQL(query: string, graphqlEndpoint: string, cookie: st
 }
 
 // Get GraphQL schema from introspection
-async function getGraphQLSchema(graphqlEndpoint: string, cookie: string): Promise<GraphQLSchema> {
-  const response = await fetch(graphqlEndpoint, {
+async function getGraphQLSchemaWith(doFetch: typeof fetch, graphqlEndpoint: string, cookie: string): Promise<GraphQLSchema> {
+  const response = await doFetch(graphqlEndpoint, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
@@ -106,8 +106,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
     const { transport } = await params;
     
     // Construct GraphQL endpoint
-    const baseUrl = await getBaseUrl();
-    const graphqlEndpoint = `${baseUrl}/api/graphql`;
+    // Server-to-self GraphQL goes over loopback with the visitor's signed identity (public URL if PORT is unknown).
+    const target = await getServerGraphQLTarget(request.headers);
+    const graphqlEndpoint = target.endpoint;
+    const doFetch: typeof fetch = target.fetch ?? fetch;
+    const executeGraphQL = (query: string, endpoint: string, cookieValue: string, variables?: any) =>
+      executeGraphQLWith(doFetch, query, endpoint, cookieValue, variables);
+    const getGraphQLSchema = (endpoint: string, cookieValue: string) => getGraphQLSchemaWith(doFetch, endpoint, cookieValue);
     
     // Extract cookie from request
     const cookie = request.headers.get('cookie') || ''

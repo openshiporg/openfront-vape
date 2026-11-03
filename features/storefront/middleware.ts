@@ -35,7 +35,8 @@ async function getRegionMap(request: NextRequest) {
           }
         }`,
         {},
-        headers
+        headers,
+        request.headers
       );
 
       regionMapCache.regionMap.clear();

@@ -8,6 +8,7 @@ import { keystoneContext } from '@/features/keystone/context';
 import { permissions } from '@/features/keystone/access';
 import { PUBLIC_REQUEST_ERROR, safeErrorSummary } from '@/features/dashboard/lib/security';
 import { createScopedMcpFetch } from './scopedMcpFetch';
+import { loopbackOrigin, clientSourceFromHeaders } from '@/features/keystone/lib/internal-origin';
 
 export async function POST(req: Request) {
   let mcpClient: any = null;
@@ -78,13 +79,21 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Unable to validate AI credentials.' }, { status: 401 });
     }
 
-    const baseUrl = await getBaseUrl();
-    const mcpEndpoint = `${baseUrl}/api/mcp-transport/http`;
+    // Self-call to the MCP transport over loopback (never the public host); public URL only if PORT is unknown.
+    const origin = loopbackOrigin() ?? (await getBaseUrl());
+    const mcpEndpoint = `${origin}/api/mcp-transport/http`;
     const cookie = req.headers.get('cookie') || '';
+    // Carry the visitor's real address so the next hop can sign it as the end-user identity.
+    const clientSource = clientSourceFromHeaders(req.headers);
+    const forwardClient: typeof fetch = (input, init) => {
+      const headers = new Headers(init?.headers);
+      if (clientSource) headers.set('x-real-ip', clientSource);
+      return fetch(input, { ...init, headers });
+    };
 
     const endpoint = new URL(mcpEndpoint);
     const transport = new StreamableHTTPClientTransport(endpoint, {
-      fetch: createScopedMcpFetch(endpoint, cookie),
+      fetch: createScopedMcpFetch(endpoint, cookie, forwardClient as any),
     });
     mcpClient = await createMCPClient({ transport });
     const aiTools = await mcpClient.tools();
