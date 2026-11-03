@@ -158,30 +158,34 @@
     gap: 5px;
     padding: 5px 4px;
   }
+  /* Photo in the upper area, name and price in their own band below it (filled with the
+     photo's sampled floor colour), so a two-line name grows the band instead of covering
+     the product. */
   .deneb-tile {
     position: relative;
-    display: block;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     border-radius: 3px;
     aspect-ratio: 194 / 218;
+    background: var(--sw-b, #e6e8eb);
     isolation: isolate;
   }
-  .deneb-tile[data-row="1"] { aspect-ratio: 194 / 182; }
-  .deneb-tile-photo { position: absolute; inset: 0; z-index: -1; }
+  .deneb-tile[data-row="1"] { aspect-ratio: 194 / 190; }
+  .deneb-tile-photo { position: relative; flex: 1 1 auto; min-height: 0; }
   .deneb-tile-photo::after {
     content: "";
     position: absolute;
     inset: auto 0 0 0;
-    height: 34%;
-    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--sw-b, #e6e8eb) 88%, transparent) 70%);
+    height: 18%;
+    background: linear-gradient(180deg, transparent, var(--sw-b, #e6e8eb));
+    pointer-events: none;
   }
-  .deneb-tile[data-dark="true"] .deneb-tile-photo { inset: 0; }
-  .deneb-tile-copy { position: absolute; left: 13px; right: 10px; bottom: 9px; }
+  .deneb-tile-copy { flex: none; padding: 2px 10px 9px 13px; }
   .deneb-tile-copy h2 { font-size: 13px; line-height: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--deneb-ink); }
   .deneb-tile-price { margin-top: 1px; font-size: 13px; line-height: 17px; color: var(--deneb-ink); }
   .deneb-tile[data-dark="true"] .deneb-tile-copy h2,
   .deneb-tile[data-dark="true"] .deneb-tile-price { color: #fff; }
-  .deneb-tile[data-dark="true"] .deneb-tile-photo::after { background: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.6)); }
 
   /* ---------- Home: desktop devices ---------- */
   .deneb-devices {
