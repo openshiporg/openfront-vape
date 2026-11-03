@@ -10,6 +10,7 @@ import {
   livePolicies,
 } from "@/features/platform/store-settings/lib/store-info"
 import TabBar from "./tab-bar"
+import { nicotineWarningText } from "@/features/storefront/lib/nicotine-warning"
 
 // The age line the storefront carries on every page. Checkout runs the 21+ age check;
 // delivery adds adult signature and ID.
@@ -30,6 +31,7 @@ export default async function Footer() {
     getUser(),
   ])
   const storeName = store?.name || "Store"
+  const warning = nicotineWarningText(store as any)
   const business = readStoreBusiness(store?.metadata)
   const policies = livePolicies(store?.metadata)
   const policyLinks = POLICY_PAGES.filter((p) => policies[p.key])
@@ -97,6 +99,11 @@ export default async function Footer() {
               © {new Date().getFullYear()} {business.legalName || storeName}
             </p>
           </div>
+          {warning && (
+            <p className="border-t border-white/10 py-3 text-[12px] font-semibold leading-[18px] text-white" data-testid="footer-nicotine-warning">
+              {warning}
+            </p>
+          )}
         </div>
       </footer>
       <TabBar ageLine={AGE_LINE} />

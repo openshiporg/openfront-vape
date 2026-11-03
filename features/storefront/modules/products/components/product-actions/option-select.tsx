@@ -4,7 +4,8 @@ import React from "react"
 
 import { onlyUnique } from "../../../../lib/util/only-unique"
 import { displayOptionValue } from "@/features/storefront/lib/util/vape-specs"
-import { SegmentedButton, SegmentedTrack } from "@/features/storefront/modules/common/components/vape/segmented"
+import { isColourOption, swatchFill } from "@/features/storefront/modules/common/components/deneb/facts"
+import { cn } from "@/lib/utils"
 
 const SIZE_ORDER = {
   "XXS": 1, "XS": 2, "S": 3, "M": 4, "L": 5, "XL": 6, "XXL": 7, "XXXL": 8
@@ -47,26 +48,38 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
 
   const isNumeric = values.every((v) => numeric(v) !== null)
 
+  const colour = isColourOption(title)
+
+  // Deneb: label at left, choices at right. Colours show a swatch beside the name; other
+  // options are outlined buttons. The choice handler is unchanged.
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="text-[13px] font-medium text-vp-ink">{title}</span>
-        <span className="font-vp-mono text-[12px] text-vp-ink-2">{current ? displayOptionValue(current) : "Choose"}</span>
+    <div className="deneb-option" data-testid={dataTestId} role="group" aria-label={title}>
+      <span className="deneb-option-label">{title}</span>
+      <div className="deneb-option-values">
+        {values.map((v) => {
+          const active = current === v
+          const fill = colour ? swatchFill(v) : null
+          return (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={active}
+              data-active={active}
+              disabled={disabled}
+              onClick={() => updateOption({ [option.id]: v })}
+              className={cn(colour ? "deneb-swatch-choice" : "deneb-choice", isNumeric && "tabular-nums")}
+              data-testid="option-button"
+            >
+              {colour && (
+                <span className="deneb-swatch-ring" aria-hidden="true">
+                  <span style={{ background: fill || "#d9dce0" }} />
+                </span>
+              )}
+              <span>{displayOptionValue(v)}</span>
+            </button>
+          )
+        })}
       </div>
-      <SegmentedTrack label={title} stretch={values.length <= 4} data-testid={dataTestId}>
-        {values.map((v) => (
-          <SegmentedButton
-            key={v}
-            active={current === v}
-            disabled={disabled}
-            onClick={() => updateOption({ [option.id]: v })}
-            className={isNumeric ? "font-vp-mono" : undefined}
-            data-testid="option-button"
-          >
-            {displayOptionValue(v)}
-          </SegmentedButton>
-        ))}
-      </SegmentedTrack>
     </div>
   );
 }

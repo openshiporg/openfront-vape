@@ -193,9 +193,9 @@ export default function ProductActions({ product, region, disabled, onVariantCha
 
   return (
     <>
-      <div className="flex flex-col gap-6" ref={actionsRef}>
-        <div className="flex flex-col gap-3">
-          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-2 text-[13px] text-vp-ink-2">
+      <div className="deneb-pdp-actions flex flex-col" ref={actionsRef}>
+        <div className="flex flex-col">
+          <nav aria-label="Breadcrumb" className="deneb-pdp-crumbs flex flex-wrap items-center gap-x-2 text-[13px] text-[#3a3d42]">
             <LocalizedClientLink href="/store" className="inline-flex min-h-10 items-center hover:text-vp-ink hover:underline underline-offset-4">
               Shop all
             </LocalizedClientLink>
@@ -212,13 +212,13 @@ export default function ProductActions({ product, region, disabled, onVariantCha
             )}
           </nav>
           <h1
-            className="vp-sign text-[44px] text-vp-ink sm:text-[60px]"
+            className="deneb-pdp-title"
             data-testid="product-title"
           >
             {product.title}
           </h1>
           {facts.length > 0 && (
-            <dl className="mt-2 grid border-t border-vp-ink text-[13px] leading-[18px]">
+            <dl className="sr-only">
               {facts.map((f) => (
                 <div key={f.label} className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-3 border-b border-vp-line py-2">
                   <dt className="text-vp-ink-2">{f.label}</dt>
@@ -227,9 +227,9 @@ export default function ProductActions({ product, region, disabled, onVariantCha
               ))}
             </dl>
           )}
-          <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+          <div className="deneb-pdp-price flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
             <ProductPrice product={product} variant={variant} region={region} />
-            <span className="inline-flex items-baseline gap-1.5 text-[13px] text-vp-ink-2" data-testid="product-stock">
+            <span className="inline-flex items-baseline gap-1.5 text-[13px] text-[#3a3d42]" data-testid="product-stock">
               <StatusDot tone={stock.tone} />
               {stock.label}
             </span>
@@ -237,7 +237,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
         </div>
 
         {variants?.length > 1 && (
-          <div className="flex flex-col gap-5">
+          <div className="deneb-pdp-options flex flex-col">
             {(product.productOptions || []).map((option: any) => (
               <OptionSelect
                 key={option.id}
@@ -255,7 +255,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
           type="button"
           onClick={handleAddToCart}
           disabled={disabled || isAdding || ((!inStock || !variant || !isValidVariant) && !hasOnlyOneVariant)}
-          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-[4px] bg-vp-ink text-[16px] font-semibold text-vp-on-ink transition-opacity hover:opacity-90 disabled:bg-vp-well disabled:text-vp-ink-3"
+          className="deneb-pdp-add inline-flex h-[46px] w-full items-center justify-center gap-2 rounded-[4px] bg-[#0b0c0e] text-[18px] font-semibold text-white transition-opacity hover:opacity-90 disabled:bg-[#e6e8eb] disabled:text-[#5b6066]"
           data-testid="add-product-button"
         >
           {isAdding && <RiLoader2Fill className="size-4 animate-spin" />}

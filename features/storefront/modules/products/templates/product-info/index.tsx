@@ -1,5 +1,6 @@
 import LocalizedClientLink from "../../../common/components/localized-client-link"
 import { DocumentRenderer } from "./DocumentRenderer"
+import { descriptionSpecs } from "@/features/storefront/modules/common/components/deneb/facts"
 
 type ProductDescription = {
   document?: any;
@@ -69,7 +70,7 @@ const renderers = {
     paragraph: ({ children, textAlign }: { children: React.ReactNode, textAlign?: string }) => {
       return (
         <p // Replaced Text with p
-          className={`text-vp-ink-2 mb-3 last:mb-0 ${
+          className={`text-[#3a3d42] mb-3 last:mb-0 ${
             textAlign ? `text-${textAlign}` : ''
           }`}
         >
@@ -102,20 +103,36 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
   const hasDescription =
     (typeof product.description === "string" && product.description.trim()) ||
     (typeof product.description === "object" && product.description?.document)
+  const specs = descriptionSpecs(product.description as any)
 
   if (!hasDescription) return null
 
   return (
-    <section id="product-info" className="flex flex-col gap-3 border-t border-vp-line pt-6">
-      <h2 className="text-[13px] font-medium text-vp-ink">Details</h2>
-      <div className="text-[15px] leading-[24px]" data-testid="product-description">
-        {typeof product.description === "string" ? (
-          <p className="whitespace-pre-line text-vp-ink-2">{product.description}</p>
-        ) : product.description?.document ? (
-          <DocumentRenderer document={product.description.document} renderers={renderers} />
-        ) : null}
-      </div>
-    </section>
+    <>
+      {specs.length > 0 && (
+        <section className="deneb-specs" aria-labelledby="deneb-specs-title">
+          <h2 id="deneb-specs-title">Specifications</h2>
+          <dl>
+            {specs.map((s) => (
+              <div key={s.label}>
+                <dt>{s.label}</dt>
+                <dd>{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+      <section id="product-info" className="deneb-details">
+        <h2>Details</h2>
+        <div className="text-[15px] leading-[23px]" data-testid="product-description">
+          {typeof product.description === "string" ? (
+            <p className="whitespace-pre-line text-[#3a3d42]">{product.description}</p>
+          ) : product.description?.document ? (
+            <DocumentRenderer document={product.description.document} renderers={renderers} />
+          ) : null}
+        </div>
+      </section>
+    </>
   )
 }
 

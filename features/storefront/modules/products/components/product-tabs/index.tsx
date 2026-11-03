@@ -45,13 +45,13 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   rows.push(["Returns", "See the store's returns policy"])
 
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-[13px] font-medium text-vp-ink">Facts</h2>
-      <dl className="vp-band divide-y divide-vp-line px-4">
+    <section className="deneb-facts" aria-labelledby="deneb-facts-title">
+      <h2 id="deneb-facts-title">Facts</h2>
+      <dl>
         {rows.map(([label, value]) => (
-          <div key={label} className="flex items-baseline justify-between gap-6 py-3">
-            <dt className="text-[13px] text-vp-ink-2">{label}</dt>
-            <dd className="text-right text-[14px] text-vp-ink">{value}</dd>
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
           </div>
         ))}
       </dl>

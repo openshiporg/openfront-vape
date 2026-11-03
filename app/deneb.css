@@ -262,3 +262,182 @@
   /* ---------- Footer ---------- */
   .deneb-footer .deneb-wordmark { font-size: 20px; }
 }
+
+/* ---------- Product page ---------- */
+@layer components {
+  .deneb-pdp {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding-bottom: 24px;
+  }
+  .deneb-pdp-buy { padding: 0 16px; }
+  @media (min-width: 1024px) {
+    .deneb-pdp {
+      grid-template-columns: 59.8% minmax(0, 1fr);
+      gap: 0;
+      padding-bottom: 0;
+    }
+    .deneb-pdp-media { position: sticky; top: 64px; align-self: start; }
+    .deneb-pdp-buy { padding: 26px 48px 32px 38px; max-width: 590px; }
+  }
+
+  /* Gallery: the photo on its sweep, thumbnails stacked at left on desktop. */
+  .deneb-gallery {
+    position: relative;
+    background:
+      linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--sw-b, #e6e8eb) 70%, transparent) 100%),
+      linear-gradient(90deg, var(--sw-l, #eef0f2), var(--sw-r, #eef0f2));
+  }
+  .deneb-gallery-main { position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; }
+  .deneb-gallery-thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 8px 16px; }
+  .deneb-gallery-thumb {
+    position: relative;
+    flex: none;
+    width: 64px;
+    height: 72px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
+    opacity: 0.8;
+  }
+  .deneb-gallery-thumb.is-active { opacity: 1; box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px rgb(0 0 0 / 0.25); }
+  @media (min-width: 1024px) {
+    .deneb-gallery-main { aspect-ratio: auto; height: calc(100vh - 64px - 64px); min-height: 560px; max-height: 660px; }
+    .deneb-gallery-thumbs {
+      position: absolute;
+      top: 31px;
+      left: 73px;
+      flex-direction: column;
+      gap: 11px;
+      padding: 0;
+      overflow: visible;
+    }
+    .deneb-gallery-thumb { width: 104px; height: 118px; }
+  }
+
+  .deneb-pdp-crumbs { margin-bottom: 4px; }
+  .deneb-pdp-crumbs a { min-height: 32px; }
+  .deneb-pdp-title {
+    font-size: 30px;
+    line-height: 1.08;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    color: #0b0c0e;
+    text-wrap: balance;
+  }
+  .deneb-pdp-price {
+    margin-top: 6px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e3e5e8;
+  }
+  .deneb-pdp-price [data-testid="product-price"] {
+    font-family: inherit;
+    font-size: 24px;
+    line-height: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #0b0c0e;
+  }
+  @media (min-width: 1024px) {
+    .deneb-pdp-title { font-size: 38px; line-height: 44px; }
+  }
+
+  .deneb-pdp-actions { gap: 0; }
+  .deneb-pdp-options { padding-top: 10px; }
+  .deneb-option {
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+  }
+  .deneb-option-label { font-size: 13px; font-weight: 600; color: #0b0c0e; }
+  .deneb-option-values { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+  .deneb-choice {
+    min-height: 36px;
+    padding: 0 18px;
+    border-radius: 5px;
+    border: 1px solid #d6d9dd;
+    background: transparent;
+    font-size: 13px;
+    color: #0b0c0e;
+  }
+  .deneb-choice[data-active="true"] { border: 1.5px solid #0b0c0e; font-weight: 600; }
+  .deneb-swatch-choice { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; font-size: 13px; color: #0b0c0e; }
+  .deneb-swatch-ring {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1.5px solid transparent;
+  }
+  .deneb-swatch-ring > span {
+    display: block;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2);
+  }
+  .deneb-swatch-choice[data-active="true"] .deneb-swatch-ring { border-color: #0b0c0e; }
+  .deneb-swatch-choice[data-active="true"] { font-weight: 600; }
+  .deneb-choice:disabled, .deneb-swatch-choice:disabled { opacity: 0.6; cursor: not-allowed; }
+  .deneb-choice:focus-visible, .deneb-swatch-choice:focus-visible { outline: 2px solid #0b0c0e; outline-offset: 2px; border-radius: 6px; }
+
+  .deneb-pdp-add { margin-top: 12px; border-radius: 4px; }
+
+  .deneb-specs, .deneb-details, .deneb-facts, .deneb-works { margin-top: 22px; }
+  .deneb-specs h2, .deneb-details h2, .deneb-facts h2, .deneb-works h2, .deneb-related h2 {
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: #0b0c0e;
+    margin-bottom: 8px;
+  }
+  .deneb-specs dl, .deneb-facts dl { border-top: 1px solid #e3e5e8; }
+  .deneb-specs dl > div, .deneb-facts dl > div {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 12px;
+    padding: 6px 6px;
+    border-bottom: 1px solid #e3e5e8;
+    font-size: 13px;
+    line-height: 17px;
+  }
+  .deneb-specs dt, .deneb-facts dt { color: #0b0c0e; }
+  .deneb-specs dd, .deneb-facts dd { color: #0b0c0e; }
+
+  .deneb-works ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .deneb-works-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 72px;
+    padding: 6px 12px 6px 6px;
+    border-radius: 6px;
+    background: #f2f3f5;
+  }
+  .deneb-works-photo {
+    position: relative;
+    flex: none;
+    width: 116px;
+    height: 60px;
+    overflow: hidden;
+    border-radius: 4px;
+    background:
+      linear-gradient(90deg, var(--sw-l, #eef0f2), var(--sw-r, #eef0f2));
+  }
+  .deneb-works-title { display: block; font-size: 12px; line-height: 16px; font-weight: 600; color: #0b0c0e; }
+  .deneb-works-price { display: block; margin-top: 2px; font-size: 13px; line-height: 17px; color: #0b0c0e; }
+  .deneb-works-item:hover .deneb-works-title { text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 479px) {
+    .deneb-works ul { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .deneb-related { padding: 36px 0 28px; border-top: 1px solid #e3e5e8; margin-top: 24px; }
+  .deneb-related h2 { font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 16px; }
+}

@@ -1,10 +1,11 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useState } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 
 import SpecTile from "@/features/storefront/modules/common/components/vape/spec-tile"
 import { cn } from "@/lib/utils"
+import type { PhotoTone } from "@/features/storefront/modules/common/components/deneb/photo-tone"
 
 type ImageGalleryProps = {
   images: any[];
@@ -13,9 +14,13 @@ type ImageGalleryProps = {
   title?: string;
   kicker?: string | null;
   specs?: { label: string; value: string }[];
+  tone?: PhotoTone;
 };
 
-const ImageGallery = ({ images, title, kicker, specs }: ImageGalleryProps) => {
+const ImageGallery = ({ images, title, kicker, specs, tone }: ImageGalleryProps) => {
+  const sweep = tone
+    ? ({ "--sw-l": tone.left, "--sw-r": tone.right, "--sw-b": tone.bottom, "--focus-x": `${tone.focusX}%` } as CSSProperties)
+    : undefined
   const [selectedVariant, setSelectedVariant] = useState<any>(null)
   const [active, setActive] = useState(0)
 
@@ -51,20 +56,21 @@ const ImageGallery = ({ images, title, kicker, specs }: ImageGalleryProps) => {
   const current = sources[Math.min(active, sources.length - 1)]
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[4px] bg-vp-well sm:aspect-square lg:aspect-[4/5]" id={current.id}>
+    <div className="deneb-gallery" style={sweep} data-dark={tone?.dark || undefined}>
+      <div className="deneb-gallery-main" id={current.id}>
         <Image
           key={current.id}
           src={current.src}
           priority
           className="object-cover"
+          style={{ objectPosition: "var(--focus-x, 50%) 50%" }}
           alt={current.alt || title || "Product image"}
           fill
-          sizes="(max-width: 1024px) 100vw, 640px"
+          sizes="(max-width: 1023px) 100vw, 60vw"
         />
       </div>
       {sources.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="deneb-gallery-thumbs no-scrollbar">
           {sources.map((image, index) => (
             <button
               key={image.id}
@@ -72,12 +78,9 @@ const ImageGallery = ({ images, title, kicker, specs }: ImageGalleryProps) => {
               onClick={() => setActive(index)}
               aria-label={`Image ${index + 1}`}
               aria-pressed={index === active}
-              className={cn(
-                "relative size-16 shrink-0 overflow-hidden rounded-[4px] bg-vp-well ring-offset-2 ring-offset-vp-bg sm:size-20",
-                index === active ? "ring-2 ring-vp-ink" : "opacity-70 hover:opacity-100"
-              )}
+              className={cn("deneb-gallery-thumb", index === active && "is-active")}
             >
-              <Image src={image.src} alt="" fill sizes="80px" className="object-cover" />
+              <Image src={image.src} alt="" fill sizes="120px" className="object-cover" />
             </button>
           ))}
         </div>

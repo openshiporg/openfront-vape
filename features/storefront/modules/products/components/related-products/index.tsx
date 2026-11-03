@@ -1,4 +1,10 @@
-import { getProductsList } from "../../../../lib/data/products"
+import Image from "next/image"
+import type { CSSProperties } from "react"
+import { getProductByHandle, getProductsList } from "../../../../lib/data/products"
+import { getProductPrice } from "@/features/storefront/lib/util/get-product-price"
+import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
+import { formatMoney, mentions } from "@/features/storefront/modules/common/components/deneb/facts"
+import { photoTone } from "@/features/storefront/modules/common/components/deneb/photo-tone"
 import { getRegion } from "../../../../lib/data/regions"
 import ProductPreview from "../product-preview"
 // Define ProductPreviewType locally since product-preview doesn't export it
@@ -36,18 +42,25 @@ type ProductListQueryParams = {
 };
 
 type RelatedProductsProps = {
-  product: ProductForRelated; // Use defined type
+  product: ProductForRelated & { title?: string; description?: any }; // Use defined type
   countryCode: string;
+  /** "works-with": the parts whose own description names this product (beside the buy column). */
+  variant?: "related" | "works-with";
 };
 
 export default async function RelatedProducts({
   product,
   countryCode,
+  variant = "related",
 }: RelatedProductsProps) {
   const region: StoreRegion | null = await getRegion(countryCode) // Add type for region
 
   if (!region) {
     return null
+  }
+
+  if (variant === "works-with") {
+    return <WorksWith product={product} region={region} countryCode={countryCode} />
   }
 
   // Define query parameters for related products
@@ -79,17 +92,73 @@ export default async function RelatedProducts({
   }
 
   return (
-    <section className="py-10 sm:py-14">
-      <div className="mb-6 flex items-baseline gap-3 border-t border-vp-line pt-5">
-        <h2 className="vp-sign text-[30px] text-vp-ink">Related</h2>
-        <span className="font-vp-mono text-[12px] text-vp-ink-3">{Math.min(filteredProducts.length, 4)}</span>
-      </div>
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4">
+    <section className="deneb-related">
+      <h2>You may also like</h2>
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4">
         {filteredProducts.slice(0, 4).map((productPreview: ProductPreviewType) => (
           <li key={productPreview.id}>
             <ProductPreview region={region} productPreview={productPreview} />
           </li>
         ))}
+      </ul>
+    </section>
+  )
+}
+
+// Parts and accessories made for this product: their own descriptions name it
+// ("Refillable 2 ml replacement pods for the Nova Pod Kit").
+async function WorksWith({
+  product,
+  region,
+  countryCode,
+}: {
+  product: { id: string; title?: string; description?: any }
+  region: StoreRegion
+  countryCode: string
+}) {
+  const {
+    response: { products },
+  } = await getProductsList({ queryParams: { limit: 60 }, countryCode })
+  const candidates = (products || []).filter((p: any) => p.id !== product.id)
+  const full = await Promise.all(
+    candidates.map((p: any) =>
+      getProductByHandle({ handle: p.handle, regionId: region.id })
+        .then((r: any) => r.product)
+        .catch(() => null)
+    )
+  )
+  const parts = full.filter((p: any) => p && product.title && mentions(p, { title: product.title })).slice(0, 2)
+  if (!parts.length) return null
+
+  return (
+    <section className="deneb-works" aria-labelledby="deneb-works-title">
+      <h2 id="deneb-works-title">Works with</h2>
+      <ul>
+        {parts.map(async (p: any) => {
+          const { cheapestPrice } = getProductPrice({ product: p, region })
+          const tone = await photoTone(p.thumbnail)
+          return (
+            <li key={p.id}>
+              <LocalizedClientLink
+                href={`/products/${p.handle}`}
+                className="deneb-works-item"
+                style={{ "--sw-l": tone.left, "--sw-r": tone.right, "--sw-b": tone.bottom } as CSSProperties}
+              >
+                <span className="deneb-works-photo">
+                  {p.thumbnail && <Image src={p.thumbnail} alt="" fill sizes="120px" className="object-cover" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="deneb-works-title">{p.title}</span>
+                  {cheapestPrice && (
+                    <span className="deneb-works-price">
+                      {formatMoney(cheapestPrice.calculatedAmount, cheapestPrice.currencyCode, region.locale)}
+                    </span>
+                  )}
+                </span>
+              </LocalizedClientLink>
+            </li>
+          )
+        })}
       </ul>
     </section>
   )
