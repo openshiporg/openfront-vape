@@ -407,6 +407,7 @@ async function createAccount(formData: FormData): Promise<string | null> {
           password: customer.password,
           name: `${customer.firstName} ${customer.lastName}`,
           phone: customer.phone,
+          hasAccount: true,
         },
       }
     );

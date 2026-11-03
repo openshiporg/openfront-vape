@@ -22,6 +22,70 @@ const WEBHOOK_ADDRESS_SELECT = {
   country: { select: { id: true, iso2: true } },
 };
 
+// Guest checkout (storefront/lib/data/cart.ts) creates a NEW customer record with
+// hasAccount:false, after the cart exists, and signs it in so cart.user and
+// shippingAddress.user both point at it. That record is a guest: the order must be
+// flagged guest, carry a secret-key link and not be linked to the user. Registered
+// customers are hasAccount:true, or (legacy rows) were created before this cart.
+export function resolveOrderCustomer(cart: any): { userId: string | undefined; isGuest: boolean } {
+  const customer = cart.user || cart.shippingAddress?.user;
+  if (!customer?.id) return { userId: undefined, isGuest: true };
+  const createdAt = customer.createdAt ? new Date(customer.createdAt).getTime() : NaN;
+  const cartCreatedAt = cart.createdAt ? new Date(cart.createdAt).getTime() : NaN;
+  const isGuest =
+    customer.hasAccount === false && Number.isFinite(createdAt) && Number.isFinite(cartCreatedAt) &&
+    createdAt >= cartCreatedAt;
+  return { userId: isGuest ? undefined : customer.id, isGuest };
+}
+
+const CONFIRMATION_PENDING = "pending_delivery";
+
+async function deliverOrderConfirmation(sudo: any, orderId: string) {
+  const notification = await sudo.prisma.notification.findFirst({
+    where: { eventName: "ORDER_CONFIRMATION", resourceType: "Order", resourceId: orderId },
+    select: { id: true, data: true },
+  });
+  if (!notification) return;
+  const mark = (status: string, extra: Record<string, unknown> = {}) =>
+    sudo.prisma.notification.update({
+      where: { id: notification.id },
+      data: { data: { ...(notification.data || {}), orderId, status, ...extra } },
+    });
+  // Claim the row atomically; a replay or concurrent completion finds it already claimed.
+  const claim = await sudo.prisma.notification.updateMany({
+    where: { id: notification.id, data: { path: ["status"], equals: CONFIRMATION_PENDING } },
+    data: { data: { ...(notification.data || {}), orderId, status: "sending" } },
+  });
+  if (claim.count !== 1) return;
+  try {
+    if (!process.env.SMTP_HOST) {
+      console.warn("Order confirmation email skipped: SMTP is not configured", orderId);
+      await mark("skipped_not_configured");
+      return;
+    }
+    const order = await sudo.query.Order.findOne({
+      where: { id: orderId },
+      query: `
+        id displayId email secretKey subtotal shipping discount tax total
+        lineItems { id title variantTitle sku quantity formattedUnitPrice formattedTotal }
+        shippingAddress { firstName lastName company address1 address2 city province postalCode phone country { iso2 displayName } }
+      `,
+    });
+    // Loaded lazily: lib/mail imports the keystone index, which imports this module.
+    const { sendOrderConfirmationEmail } = await import("../lib/mail");
+    const result = await sendOrderConfirmationEmail(order);
+    if (result?.sent) await mark("sent", { sentAt: new Date().toISOString(), ...(result.messageId ? { messageId: result.messageId } : {}) });
+    else await mark("failed", { error: result?.error || "send_failed" });
+  } catch (error) {
+    console.error("Order confirmation email failed:", error instanceof Error ? error.message : "Unknown error");
+    try {
+      await mark("failed", { error: error instanceof Error ? error.message : "send_failed" });
+    } catch {
+      // The order is already committed; status bookkeeping must never surface.
+    }
+  }
+}
+
 export async function createOrderFromCartAtomically(cart: any, sudo: any): Promise<{ id: string; [key: string]: unknown }> {
   await assertCommerceReleaseEnabled(sudo);
   // Persisted outbox delivery is post-commit work; never send inside the fence.
@@ -41,6 +105,10 @@ export async function createOrderFromCartAtomically(cart: any, sudo: any): Promi
     }
   }
 
+  // After the commit, never inside it: a mail failure must not fail or roll back the order.
+  // Only a newly created order sends (a replay finds the existing order and sends nothing).
+  if (commit.created) await deliverOrderConfirmation(sudo, commit.orderId);
+
   const order = await sudo.query.Order.findOne({
     where: { id: commit.orderId },
     query: `
@@ -52,7 +120,7 @@ export async function createOrderFromCartAtomically(cart: any, sudo: any): Promi
   return order;
 }
 
-async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: string; webhookEventIds: string[] }> {
+async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: string; webhookEventIds: string[]; created: boolean }> {
   const prepared: Array<{ line: any; price: any; thumbnail: any }> = [];
   for (const line of cart.lineItems) {
     const prices = await sudo.query.MoneyAmount.findMany({
@@ -105,7 +173,7 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
     throw new Error("A current allowed checkout compliance snapshot is required");
   }
 
-  const userId = cart.user?.id || cart.shippingAddress?.user?.id;
+  const { userId, isGuest } = resolveOrderCustomer(cart);
   const orderWebhookEndpointIds = await subscribedWebhookEndpointIds(
     sudo,
     'order.created',
@@ -140,7 +208,7 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
   // This callback already owns the native Context transaction and reciprocal fence.
   const commit = await (async (tx: any) => {
     const existing = await tx.order.findFirst({ where: { cart: { id: cart.id } }, select: { id: true } });
-    if (existing) return { orderId: existing.id, webhookEventIds: [] as string[] };
+    if (existing) return { orderId: existing.id, webhookEventIds: [] as string[], created: false };
 
     const lineItemIds = [];
     const webhookLineItems: any[] = [];
@@ -231,7 +299,7 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
         events: {
           create: {
             type: "ORDER_PLACED",
-            data: { cartId: cart.id, isGuestOrder: !userId },
+            data: { cartId: cart.id, isGuestOrder: isGuest },
           },
         },
       },
@@ -322,7 +390,7 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
         },
       });
     }
-    return { orderId: order.id, webhookEventIds };
+    return { orderId: order.id, webhookEventIds, created: true };
   })(sudo.prisma);
   return commit;
 }

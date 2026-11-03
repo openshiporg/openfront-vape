@@ -14,7 +14,7 @@ import {
   reserveDiscountUsage,
   updateCheckoutAttempt,
 } from "../checkout/recovery";
-import { createOrderFromCartAtomically } from "../checkout/order-commit";
+import { createOrderFromCartAtomically, resolveOrderCustomer } from "../checkout/order-commit";
 import { withCartFence } from "../security/commerce-fence";
 import { cartEvidenceFingerprint } from "../regulated/cart-fingerprint";
 import { cartIsPickup } from '../regulated/pickup';
@@ -47,6 +47,7 @@ async function completeActiveCart(
     query: `
       id
       email
+      createdAt
       rawTotal
       metadata
       order {
@@ -61,6 +62,7 @@ async function completeActiveCart(
       user {
         id
         hasAccount
+        createdAt
       }
       shippingAddress {
         id
@@ -68,6 +70,7 @@ async function completeActiveCart(
         user {
           id
           hasAccount
+          createdAt
         }
       }
       region {
@@ -604,7 +607,7 @@ async function recordPayAtPickup(order: any, selectedSession: any, cart: any, su
         idempotencyKey: checkoutKey(cart.id),
         paymentCollectionId: cart.paymentCollection.id,
         orderId: order.id,
-        userId: cart.user?.id || cart.shippingAddress?.user?.id || null,
+        userId: resolveOrderCustomer(cart).userId || null,
       },
     });
     await tx.orderEvent.create({
@@ -649,7 +652,7 @@ async function createPaymentRecord(
         capturedAt: new Date(),
         paymentCollectionId: cart.paymentCollection.id,
         orderId: order.id,
-        userId: cart.user?.id || cart.shippingAddress?.user?.id || null,
+        userId: resolveOrderCustomer(cart).userId || null,
       },
     });
     await tx.capture.create({
