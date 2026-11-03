@@ -19,12 +19,20 @@ type GuestCandidate = {
   createdAt: Date | string | null;
   roleId?: string | null;
   accounts?: unknown[];
+  /** Cart, cart-linked address or order owned by this user. A guest exists because of a cart. */
+  carts?: unknown[];
+  addresses?: unknown[];
+  orders?: unknown[];
 };
 
 export function isRetirableGuest(user: GuestCandidate | null | undefined, epoch: Date = GUEST_FLAG_EPOCH): boolean {
   if (!user || user.hasAccount !== false) return false;
   if (user.roleId) return false;
   if (user.accounts && user.accounts.length) return false;
+  // Provably a guest: the guest flow creates the user for a cart, so a record with no
+  // cart, cart address or order is a sign-up and is never retired.
+  const hasCommerce = Boolean(user.carts?.length || user.addresses?.length || user.orders?.length);
+  if (!hasCommerce) return false;
   const created = user.createdAt ? new Date(user.createdAt).getTime() : NaN;
   return Number.isFinite(created) && created >= epoch.getTime();
 }
@@ -33,13 +41,20 @@ export function retiredGuestEmail(id: string) {
   return `retired-guest+${id}@guest.invalid`;
 }
 
-/** Frees `email` for a new guest/registration when the current holder is a retirable guest. */
+/** Frees `email` for a new guest/registration only when the current holder is a provable guest. */
 export async function retireReturningGuest(prisma: any, email: unknown): Promise<boolean> {
   const normalized = String(email || "").trim();
   if (!normalized) return false;
   const existing = await prisma.user.findFirst({
     where: { email: { equals: normalized, mode: "insensitive" } },
-    select: { id: true, hasAccount: true, createdAt: true, roleId: true, accounts: { select: { id: true }, take: 1 } },
+    select: {
+      id: true, hasAccount: true, createdAt: true, roleId: true,
+      accounts: { select: { id: true }, take: 1 },
+      // A guest's cart hangs off its address (Cart.user stays null), so look at all three.
+      carts: { select: { id: true }, take: 1 },
+      addresses: { where: { cartId: { not: null } }, select: { id: true }, take: 1 },
+      orders: { select: { id: true }, take: 1 },
+    },
   });
   if (!isRetirableGuest(existing)) return false;
   await prisma.user.update({ where: { id: existing.id }, data: { email: retiredGuestEmail(existing.id) } });

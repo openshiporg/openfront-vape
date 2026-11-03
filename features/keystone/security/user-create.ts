@@ -11,7 +11,7 @@ const PUBLIC_USER_CREATE_FIELDS = new Set([
   // hooks run. Public callers cannot supply role because User.role field access
   // is enforced before resolveInput; allowing it here preserves the first admin.
   "role",
-  // Guest checkout sends false, signUp sends true. Display/guest flag only.
+  // Guest checkout sends false; sign-ups send true or nothing (nothing means member).
   "hasAccount",
 ]);
 
@@ -39,8 +39,10 @@ export function resolvePublicUserCreateData({
     }
   }
 
-  // hasAccount only marks a customer as registered (storefront signUp sends true;
-  // guest checkout sends false). It grants no privileges, so it is not forced.
-  restrictedData.hasAccount = inputData?.hasAccount === true;
+  // A new account is a MEMBER unless the guest-checkout flow says otherwise by sending
+  // hasAccount:false explicitly. Defaulting to guest (=== true) made every sign-up that does
+  // not send the flag look like a guest, and guest records can have their email retired
+  // (security/guest-user.ts), which was an account takeover. The flag grants no privilege.
+  restrictedData.hasAccount = inputData?.hasAccount !== false;
   return restrictedData;
 }

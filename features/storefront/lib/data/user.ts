@@ -157,6 +157,7 @@ export async function createCustomer(data: CreateCustomerData) {
         firstName: data.firstName,
         lastName: data.lastName,
         phone: data.phone,
+        hasAccount: true,
       },
     },
     headers

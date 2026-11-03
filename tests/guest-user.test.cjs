@@ -13,8 +13,9 @@ vm.runInNewContext(out, { module: m, exports: m.exports, process: { env: {} }, D
 const { isRetirableGuest, retireReturningGuest, retiredGuestEmail } = m.exports;
 
 const NEW = '2026-11-02T19:16:00.000Z', OLD = '2026-01-01T00:00:00.000Z';
+const CART = [{ id: 'c1' }];
 function db(users) {
-  const rows = users.map((u) => ({ roleId: null, accounts: [], ...u }));
+  const rows = users.map((u) => ({ roleId: null, accounts: [], carts: [], addresses: [], orders: [], ...u }));
   return { rows, user: {
     findFirst: async ({ where }) => rows.find((u) => u.email.toLowerCase() === where.email.equals.toLowerCase()) || null,
     update: async ({ where, data }) => { Object.assign(rows.find((u) => u.id === where.id), data); },
@@ -22,7 +23,7 @@ function db(users) {
 }
 
 test('repeat guest email: the earlier guest record is retired so the email is free', async () => {
-  const prisma = db([{ id: 'g1', email: 'a@x.com', hasAccount: false, createdAt: NEW }]);
+  const prisma = db([{ id: 'g1', email: 'a@x.com', hasAccount: false, createdAt: NEW, carts: CART }]);
   assert.equal(await retireReturningGuest(prisma, 'A@x.com'), true);
   assert.equal(prisma.rows[0].email, retiredGuestEmail('g1'));
   assert.equal(await prisma.user.findFirst({ where: { email: { equals: 'a@x.com' } } }), null);
@@ -36,9 +37,9 @@ test('a real account (hasAccount true) is never retired or hijacked', async () =
 
 test('older hasAccount:false rows (possible pre-fix members), staff and business-account users are kept', async () => {
   for (const u of [
-    { id: 'o', hasAccount: false, createdAt: OLD },
-    { id: 's', hasAccount: false, createdAt: NEW, roleId: 'r1' },
-    { id: 'b', hasAccount: false, createdAt: NEW, accounts: [{ id: 'acc' }] },
+    { id: 'o', hasAccount: false, createdAt: OLD, carts: CART },
+    { id: 's', hasAccount: false, createdAt: NEW, roleId: 'r1', carts: CART },
+    { id: 'b', hasAccount: false, createdAt: NEW, accounts: [{ id: 'acc' }], carts: CART },
   ]) {
     const prisma = db([{ email: 'a@x.com', ...u }]);
     assert.equal(await retireReturningGuest(prisma, 'a@x.com'), false);
@@ -47,7 +48,7 @@ test('older hasAccount:false rows (possible pre-fix members), staff and business
 });
 
 test('second guest never inherits the first guest: the old record keeps its data, the email moves on', async () => {
-  const prisma = db([{ id: 'g1', email: 'a@x.com', hasAccount: false, createdAt: NEW }]);
+  const prisma = db([{ id: 'g1', email: 'a@x.com', hasAccount: false, createdAt: NEW, carts: CART }]);
   await retireReturningGuest(prisma, 'a@x.com');
   // The new guest is a brand new user row, so Address/Cart filters (user.id == session) cannot match g1's data.
   prisma.rows.push({ id: 'g2', email: 'a@x.com', hasAccount: false, createdAt: NEW });
@@ -60,4 +61,19 @@ test('empty or unknown email does nothing', async () => {
   assert.equal(await retireReturningGuest(prisma, ''), false);
   assert.equal(await retireReturningGuest(prisma, 'none@x.com'), false);
   assert.equal(isRetirableGuest(null), false);
+});
+
+test('P0: a guest record with no cart, cart address or order is a sign-up and is never retired', async () => {
+  const prisma = db([{ id: 'x1', email: 'a@x.com', hasAccount: false, createdAt: NEW }]);
+  assert.equal(await retireReturningGuest(prisma, 'a@x.com'), false);
+  assert.equal(prisma.rows[0].email, 'a@x.com');
+  assert.equal(isRetirableGuest({ id: 'x', hasAccount: false, createdAt: NEW }), false);
+  for (const link of [{ carts: CART }, { addresses: [{ id: 'a' }] }, { orders: [{ id: 'o' }] }]) {
+    assert.equal(isRetirableGuest({ id: 'x', hasAccount: false, createdAt: NEW, ...link }), true);
+  }
+});
+
+test('P0: a member (hasAccount true), with or without a cart, is never retired', () => {
+  assert.equal(isRetirableGuest({ id: 'm', hasAccount: true, createdAt: NEW, carts: CART, orders: [{ id: 'o' }] }), false);
+  assert.equal(isRetirableGuest({ id: 'm', hasAccount: null, createdAt: NEW, carts: CART }), false);
 });
