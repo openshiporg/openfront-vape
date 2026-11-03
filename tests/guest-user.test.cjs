@@ -77,3 +77,14 @@ test('P0: a member (hasAccount true), with or without a cart, is never retired',
   assert.equal(isRetirableGuest({ id: 'm', hasAccount: true, createdAt: NEW, carts: CART, orders: [{ id: 'o' }] }), false);
   assert.equal(isRetirableGuest({ id: 'm', hasAccount: null, createdAt: NEW, carts: CART }), false);
 });
+
+test('the guest lookup finds a cart through the address (shipping/billing), where the guest flow attaches it', async () => {
+  let seen;
+  const prisma = { user: { findFirst: async (args) => { seen = args; return null; }, update: async () => {} } };
+  await retireReturningGuest(prisma, 'a@x.com');
+  const where = JSON.stringify(seen.select.addresses.where);
+  assert.match(where, /cartsUsingAsShippingAddress/);
+  assert.match(where, /cartsUsingAsBillingAddress/);
+  assert.match(where, /cartId/);
+  assert.ok(seen.select.carts && seen.select.orders);
+});

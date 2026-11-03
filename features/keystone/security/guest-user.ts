@@ -50,9 +50,14 @@ export async function retireReturningGuest(prisma: any, email: unknown): Promise
     select: {
       id: true, hasAccount: true, createdAt: true, roleId: true,
       accounts: { select: { id: true }, take: 1 },
-      // A guest's cart hangs off its address (Cart.user stays null), so look at all three.
+      // A guest's cart hangs off its address (Cart.user stays null): the cart uses the address as its
+      // shipping/billing address, so look through the address as well as carts and orders.
       carts: { select: { id: true }, take: 1 },
-      addresses: { where: { cartId: { not: null } }, select: { id: true }, take: 1 },
+      addresses: {
+        where: { OR: [{ cartId: { not: null } }, { cartsUsingAsShippingAddress: { some: {} } }, { cartsUsingAsBillingAddress: { some: {} } }] },
+        select: { id: true },
+        take: 1,
+      },
       orders: { select: { id: true }, take: 1 },
     },
   });
