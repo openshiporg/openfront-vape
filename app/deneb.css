@@ -1,0 +1,264 @@
+/* Deneb: the owner's chosen vape storefront (state/storefront-themes/vape/deneb).
+   Apple-like product pages: each device on a soft single-colour sweep, few words, specs first.
+   Sweeps are CSS: --sw-l / --sw-r / --sw-b are sampled from the product photo's own edges so the
+   background runs on from any plain or transparent photo. Measurements follow the mocks at
+   1440 (desktop, x0.861) and 402 (phone, x0.472). */
+
+@layer components {
+  .deneb {
+    --deneb-ink: #111214;
+    --deneb-ink-2: #3a3d42;
+    --deneb-line: #e3e5e8;
+    --deneb-band: #eef1f4;
+    font-family: var(--deneb-font), ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: #ffffff;
+    color: var(--deneb-ink);
+    font-feature-settings: "cv11", "ss01";
+  }
+  body.deneb { background: #ffffff; }
+
+  /* ---------- Header ---------- */
+  .deneb-header-bar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--deneb-line);
+  }
+  .deneb-header-inner {
+    height: 48px;
+    max-width: 1290px;
+    grid-template-columns: 44px minmax(0, 1fr) 88px;
+    padding-left: 8px;
+    padding-right: 6px;
+  }
+  .deneb-wordmark {
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .deneb-nav-link { font-size: 13px; font-weight: 450; letter-spacing: -0.005em; }
+  @media (min-width: 1024px) {
+    .deneb-header-inner {
+      height: 64px;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 32px;
+    }
+    .deneb-wordmark { font-size: 22px; }
+    .deneb-nav-link { font-size: 15px; }
+    /* Home: the header floats on the hero's sweep, a lighter band across the top of it. */
+    .deneb-header[data-home="true"] .deneb-header-bar {
+      background: rgb(255 255 255 / 0.42);
+      border-bottom-color: transparent;
+      -webkit-backdrop-filter: blur(14px) saturate(1.2);
+      backdrop-filter: blur(14px) saturate(1.2);
+    }
+    .deneb-header[data-home="true"] .deneb-header-inner { height: 42px; max-width: 958px; padding: 0; }
+    .deneb-header[data-home="true"] .deneb-nav-link { font-size: 13px; }
+  }
+
+  /* ---------- Buttons ---------- */
+  .deneb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 999px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: opacity 150ms ease, background-color 150ms ease;
+  }
+  .deneb-btn-dark { background: #0f1b2b; color: #ffffff; }
+  .deneb-btn-dark:hover { opacity: 0.88; }
+  .deneb-btn-outline { border: 1.5px solid #1b1d21; color: #1b1d21; background: transparent; }
+  .deneb-btn-outline:hover { background: rgb(255 255 255 / 0.4); }
+  .deneb-btn:focus-visible { outline: 2px solid #1b1d21; outline-offset: 2px; }
+
+  /* ---------- Sweeps ---------- */
+  .deneb-hero,
+  .deneb-device,
+  .deneb-tile,
+  .deneb-compare-photo,
+  .deneb-refill-photo {
+    background:
+      linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--sw-b, #e6e8eb) 70%, transparent) 100%),
+      linear-gradient(90deg, var(--sw-l, #eef0f2), var(--sw-r, #eef0f2));
+  }
+
+  /* ---------- Home: hero ---------- */
+  .deneb-hero {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    height: 278px;
+  }
+  .deneb-hero-photo {
+    position: absolute;
+    inset: 0 0 0 30%;
+    z-index: -1;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent 0, #000 22%, #000 92%, transparent);
+  }
+  .deneb-hero-inner { height: 100%; padding: 0 22px; display: flex; align-items: center; }
+  .deneb-hero-copy { display: flex; flex-direction: column; align-items: flex-start; padding-top: 6px; }
+  .deneb-hero-name {
+    font-size: 58px;
+    line-height: 0.95;
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    color: #0c1626;
+  }
+  .deneb-hero-tagline {
+    margin-top: 6px;
+    max-width: 16em;
+    font-size: 19px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: #14202f;
+  }
+  .deneb-hero-price {
+    margin-top: 10px;
+    font-size: 22px;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #0c1626;
+  }
+  .deneb-hero-actions { margin-top: 12px; display: flex; gap: 12px; align-items: flex-start; }
+  .deneb-btn-buy { height: 34px; min-width: 108px; padding: 0 22px; font-size: 15px; font-weight: 600; }
+  .deneb-from { font-size: 12px; font-weight: 450; color: var(--deneb-ink-2); letter-spacing: 0; }
+
+  @media (min-width: 1024px) {
+    .deneb-hero {
+      height: 282px;
+      margin-top: -42px;
+      --hero-h: 282px;
+    }
+    /* The photo keeps its own shape and is placed so the device stands at ~69% across. */
+    .deneb-hero-photo {
+      inset: 0 auto 0 auto;
+      width: calc(var(--hero-h) * var(--aspect, 1.5));
+      left: calc(69% - var(--fx, 0.5) * var(--hero-h) * var(--aspect, 1.5));
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent);
+      mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent);
+    }
+    .deneb-hero-inner { max-width: 958px; margin: 0 auto; padding: 42px 0 0; }
+    .deneb-hero-copy { padding-top: 0; }
+    .deneb-hero-name { font-size: 64px; line-height: 0.98; }
+    .deneb-hero-tagline { margin-top: 0; max-width: none; font-size: 48px; line-height: 1.02; font-weight: 700; letter-spacing: -0.04em; color: #0c1626; }
+    .deneb-hero-price { margin-top: 10px; font-size: 24px; }
+    .deneb-hero-actions { margin-top: 16px; gap: 13px; }
+    .deneb-btn-buy, .deneb-hero-actions .deneb-btn { height: 33px; min-width: 118px; padding: 0 26px; font-size: 13px; font-weight: 500; }
+    .deneb-hero-actions .deneb-btn-outline { min-width: 147px; }
+  }
+
+  /* ---------- Home: phone tiles ---------- */
+  .deneb-tiles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    padding: 5px 4px;
+  }
+  .deneb-tile {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 3px;
+    aspect-ratio: 194 / 218;
+    isolation: isolate;
+  }
+  .deneb-tile[data-row="1"] { aspect-ratio: 194 / 182; }
+  .deneb-tile-photo { position: absolute; inset: 0; z-index: -1; }
+  .deneb-tile-photo::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 34%;
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--sw-b, #e6e8eb) 88%, transparent) 70%);
+  }
+  .deneb-tile[data-dark="true"] .deneb-tile-photo { inset: 0; }
+  .deneb-tile-copy { position: absolute; left: 13px; right: 10px; bottom: 9px; }
+  .deneb-tile-copy h2 { font-size: 13px; line-height: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--deneb-ink); }
+  .deneb-tile-price { margin-top: 1px; font-size: 13px; line-height: 17px; color: var(--deneb-ink); }
+  .deneb-tile[data-dark="true"] .deneb-tile-copy h2,
+  .deneb-tile[data-dark="true"] .deneb-tile-price { color: #fff; }
+  .deneb-tile[data-dark="true"] .deneb-tile-photo::after { background: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.6)); }
+
+  /* ---------- Home: desktop devices ---------- */
+  .deneb-devices {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    background: #ffffff;
+  }
+  .deneb-device {
+    position: relative;
+    display: grid;
+    grid-template-columns: 46% 54%;
+    align-items: center;
+    height: 172px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .deneb-device-photo {
+    position: absolute;
+    inset: 4px 54% 0 6%;
+    z-index: -1;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+  }
+  .deneb-device-copy { grid-column: 2; padding-right: 16px; }
+  .deneb-device-copy h2 { font-size: 19px; line-height: 23px; font-weight: 600; letter-spacing: -0.02em; }
+  .deneb-device-price { margin-top: 1px; font-size: 17px; line-height: 21px; font-weight: 600; letter-spacing: -0.01em; }
+  .deneb-device-spec { margin-top: 3px; font-size: 13px; line-height: 17px; color: var(--deneb-ink-2); }
+  .deneb-device:hover h2 { text-decoration: underline; text-underline-offset: 4px; }
+
+  .deneb-swatches { display: flex; gap: 12px; margin-top: 12px; }
+  .deneb-swatches span[aria-hidden] {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25), 0 0 0 1px rgb(255 255 255 / 0.6);
+  }
+  .deneb-swatches-sm { gap: 8px; margin-top: 4px; }
+  .deneb-swatches-sm span[aria-hidden] { width: 12px; height: 12px; }
+
+  /* ---------- Home: refills ---------- */
+  .deneb-refills { padding: 12px 41px 18px; }
+  .deneb-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .deneb-section-head h2 { font-size: 26px; line-height: 32px; font-weight: 700; letter-spacing: -0.035em; }
+  .deneb-more { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; font-size: 13px; color: var(--deneb-ink); }
+  .deneb-more:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .deneb-refill-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 18px; }
+  .deneb-refill { display: flex; flex-direction: column; }
+  .deneb-refill-photo {
+    position: relative;
+    height: 122px;
+    overflow: hidden;
+    border-radius: 4px;
+  }
+  .deneb-refill h3 { margin-top: 10px; font-size: 13px; line-height: 16px; color: var(--deneb-ink); }
+  .deneb-refill-price { margin-top: 3px; font-size: 13px; line-height: 16px; font-weight: 600; }
+  .deneb-refill:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+
+  /* ---------- Home: compare ---------- */
+  .deneb-compare {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px;
+    padding: 2px 41px;
+    background: var(--deneb-band);
+  }
+  .deneb-compare h2 { font-size: 23px; line-height: 28px; font-weight: 700; letter-spacing: -0.035em; }
+  .deneb-compare > ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .deneb-compare > ul > li + li { border-left: 1px solid #c9ced5; }
+  .deneb-compare-item { display: flex; align-items: center; gap: 14px; padding: 4px 28px; }
+  .deneb-compare-photo { position: relative; flex: none; width: 56px; height: 64px; overflow: hidden; border-radius: 3px; }
+  .deneb-compare h3 { font-size: 12px; line-height: 15px; font-weight: 600; }
+  .deneb-compare-price { font-size: 12px; line-height: 15px; font-weight: 600; }
+  .deneb-compare-spec { font-size: 12px; line-height: 15px; color: var(--deneb-ink-2); }
+
+  /* ---------- Footer ---------- */
+  .deneb-footer .deneb-wordmark { font-size: 20px; }
+}

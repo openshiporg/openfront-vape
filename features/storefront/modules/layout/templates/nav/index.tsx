@@ -1,62 +1,64 @@
 import { Suspense } from 'react';
+import { Search, ShoppingBag, UserRound } from 'lucide-react';
 
 import { listRegions } from '@/features/storefront/lib/data/regions';
 import { getCategoriesList } from '@/features/storefront/lib/data/categories';
 import { getCollectionsList } from '@/features/storefront/lib/data/collections';
+import { getStore } from '@/features/storefront/lib/data/store';
+import { hasBusinessDetails, readStoreBusiness } from '@/features/platform/store-settings/lib/store-info';
 
 import LocalizedClientLink from '@/features/storefront/modules/common/components/localized-client-link';
 import CartButton from '@/features/storefront/modules/layout/components/cart-button';
 import SideMenu from '@/features/storefront/modules/layout/components/side-menu';
-import Logo from '@/features/storefront/modules/layout/components/logo';
+import Wordmark from '@/features/storefront/modules/common/components/deneb/wordmark';
 import NavLinks from './nav-links';
-import SearchBox from '@/features/storefront/modules/search/components/search-box';
+import HeaderFrame, { HomeOnly } from './header-frame';
+
+const icon = 'inline-flex size-11 items-center justify-center rounded-full text-[#16181b] transition-colors hover:bg-black/5';
 
 export default async function Nav() {
-  const [{ regions }, { productCategories }, { collections }] = await Promise.all([
+  const [{ regions }, { productCategories }, { collections }, store] = await Promise.all([
     listRegions(),
     getCategoriesList(0, 8),
     getCollectionsList(0, 6),
+    getStore(),
   ]);
 
   const categories = (productCategories || [])
     .filter((c: any) => !c.parentCategory && !c.isInternal && c.isActive !== false)
     .map((c: any) => ({ id: c.id, title: c.title, handle: c.handle }));
   const collectionLinks = (collections || []).map((c: any) => ({ id: c.id, title: c.title, handle: c.handle }));
+  const support = hasBusinessDetails(readStoreBusiness(store?.metadata));
 
   return (
-    <div className="sticky top-0 inset-x-0 z-50">
-      <div className="border-b border-vp-line bg-vp-surface text-vp-ink">
-        <div className="mx-auto flex h-8 max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-6 text-[12px]">
-          <span className="font-semibold">Adults 21+ only</span>
-          <span className="hidden text-vp-ink-2 sm:inline">Adult signature may be required on delivery</span>
-        </div>
-      </div>
-      <header className="border-b border-vp-line bg-vp-surface">
-        <nav className="mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
-          <div className="lg:hidden -ml-2">
+    <HeaderFrame>
+      <header className="deneb-header-bar">
+        <nav className="deneb-header-inner mx-auto grid items-center px-3 lg:px-6">
+          <div className="flex items-center lg:hidden">
             <SideMenu regions={regions} categories={categories} collections={collectionLinks} />
           </div>
-          <Logo />
-          <NavLinks categories={categories} />
-          <div className="ml-auto flex items-center gap-1 sm:gap-2">
-            <Suspense fallback={null}>
-              <SearchBox />
-            </Suspense>
-            <LocalizedClientLink
-              className="hidden lg:inline-flex min-h-11 items-center rounded-[4px] px-3 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink"
-              href="/account"
-              data-testid="nav-account-link"
-            >
-              Account
+          <div className="flex min-w-0 justify-center lg:justify-start">
+            <Wordmark />
+          </div>
+          <NavLinks categories={categories} support={support} />
+          <div className="flex items-center justify-end gap-0.5 lg:gap-3">
+            <LocalizedClientLink href="/search" aria-label="Search" className={icon} data-testid="nav-search-link">
+              <Search className="size-[22px] lg:size-5" strokeWidth={1.75} aria-hidden="true" />
             </LocalizedClientLink>
+            <HomeOnly not>
+              <LocalizedClientLink
+                href="/account"
+                aria-label="Account"
+                className={`${icon} max-lg:hidden`}
+                data-testid="nav-account-link"
+              >
+                <UserRound className="size-5" strokeWidth={1.75} aria-hidden="true" />
+              </LocalizedClientLink>
+            </HomeOnly>
             <Suspense
               fallback={
-                <LocalizedClientLink
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-[4px] px-2 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink sm:px-3"
-                  href="/cart"
-                  data-testid="nav-cart-link"
-                >
-                  Bag <span className="font-vp-mono text-[13px] text-vp-ink-3">0</span>
+                <LocalizedClientLink className={icon} href="/cart" aria-label="View bag" data-testid="nav-cart-link">
+                  <ShoppingBag className="size-[22px] lg:size-5" strokeWidth={1.75} aria-hidden="true" />
                 </LocalizedClientLink>
               }
             >
@@ -65,6 +67,6 @@ export default async function Nav() {
           </div>
         </nav>
       </header>
-    </div>
+    </HeaderFrame>
   );
 }

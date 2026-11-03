@@ -7,6 +7,8 @@ import { getStore } from "@/features/storefront/lib/data/store"
 import InteractiveLink from "@/features/storefront/modules/common/components/interactive-link"
 import StorefrontServer from "./StorefrontServer"
 import VapeShell from "@/features/storefront/modules/layout/components/vape-shell"
+import { denebSans } from "@/features/storefront/modules/common/components/deneb/fonts"
+import { DenebBodyClass } from "@/features/storefront/modules/common/components/deneb/body-class"
 
 // Page titles read "<page> | <store name>"; the store record is already fetched by the shell.
 export async function generateMainMetadata(): Promise<Metadata> {
@@ -29,10 +31,14 @@ export async function MainLayout({ children }: { children: React.ReactNode }) {
       prefetchCategories={true}
     >
       <VapeShell>
-        <Nav />
-        <main className="min-h-[60vh]">{children}</main>
-        <Footer />
-        {!hideBranding && <OpenfrontCTA />}
+        {/* Deneb: the owner's chosen storefront theme (state/storefront-themes/vape/deneb). */}
+        <div className={`deneb ${denebSans.variable}`}>
+          <DenebBodyClass className={`deneb ${denebSans.variable}`} />
+          <Nav />
+          <main className="min-h-[60vh]">{children}</main>
+          <Footer />
+          {!hideBranding && <OpenfrontCTA />}
+        </div>
       </VapeShell>
     </StorefrontServer>
   )

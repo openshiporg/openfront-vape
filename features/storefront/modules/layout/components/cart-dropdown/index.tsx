@@ -1,6 +1,7 @@
 "use client";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { usePathname } from "next/navigation"
+import { ShoppingBag } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import LinkStatus from "@/features/storefront/modules/common/components/link-status"
 import LineItemOptions from "@/features/storefront/modules/common/components/line-item-options"
@@ -84,8 +85,15 @@ const CartDropdown = ({
     }
   }, [totalItems, pathname])
 
-  const countBadge = (
-    <span className="font-vp-mono text-[13px] text-vp-ink-3 group-data-[filled=true]:text-vp-accent">{totalItems}</span>
+  const bagIcon = (
+    <span className="relative inline-flex">
+      <ShoppingBag className="size-[22px] lg:size-5" strokeWidth={1.75} aria-hidden="true" />
+      {totalItems > 0 && (
+        <span className="absolute -top-1.5 -right-2 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#16181b] px-1 text-[12px] leading-none font-semibold text-white">
+          {totalItems}
+        </span>
+      )}
+    </span>
   )
 
   return (
@@ -99,23 +107,23 @@ const CartDropdown = ({
               <button
                 type="button"
                 data-filled={totalItems > 0}
-                className="group inline-flex min-h-11 items-center gap-1.5 rounded-[4px] px-3 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink"
+                className="group inline-flex size-11 items-center justify-center rounded-full text-[#16181b] transition-colors hover:bg-black/5"
                 aria-label={`Open bag${totalItems > 0 ? `, ${totalItems} ${totalItems === 1 ? "item" : "items"}` : ""}`}
                 data-testid="nav-cart-trigger"
                 suppressHydrationWarning
               >
-                Bag {countBadge}
+                {bagIcon}
               </button>
             </PopoverTrigger>
           </div>
           <LocalizedClientLink
             data-filled={totalItems > 0}
-            className="group inline-flex min-h-11 items-center gap-1.5 rounded-[4px] px-2 text-[14px] font-medium text-vp-ink-2 hover:text-vp-ink sm:hidden"
+            className="group inline-flex size-11 items-center justify-center rounded-full text-[#16181b] transition-colors hover:bg-black/5 sm:hidden"
             href="/cart"
             aria-label={`View bag${totalItems > 0 ? `, ${totalItems} ${totalItems === 1 ? "item" : "items"}` : ""}`}
             data-testid="nav-cart-link"
           >
-            Bag {countBadge}
+            {bagIcon}
           </LocalizedClientLink>
           <PopoverContent
             className="vape-sf hidden sm:block w-[400px] rounded-[4px] border-vp-line bg-vp-bg p-0 text-vp-ink shadow-[0_18px_60px_rgb(20_24_22/0.18)]"

@@ -1,7 +1,6 @@
 import { getCategoriesList } from "@/features/storefront/lib/data/categories"
-import { getCollectionsList } from "@/features/storefront/lib/data/collections"
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
-import Logo from "@/features/storefront/modules/layout/components/logo"
+import Wordmark from "@/features/storefront/modules/common/components/deneb/wordmark"
 import { getStore } from "@/features/storefront/lib/data/store"
 import { getUser } from "@/features/storefront/lib/data/user"
 import {
@@ -10,10 +9,22 @@ import {
   readStoreBusiness,
   livePolicies,
 } from "@/features/platform/store-settings/lib/store-info"
+import TabBar from "./tab-bar"
+
+// The age line the storefront carries on every page. Checkout runs the 21+ age check;
+// delivery adds adult signature and ID.
+export const AGE_LINE = "21+ only. Age checked at checkout."
+
+const SHORT_POLICY: Record<string, string> = {
+  shipping: "Shipping",
+  returns: "Returns",
+  "age-verification": "Age policy",
+  privacy: "Privacy",
+  terms: "Terms",
+}
 
 export default async function Footer() {
-  const [{ collections }, { productCategories }, store, customer] = await Promise.all([
-    getCollectionsList(0, 6),
+  const [{ productCategories }, store, customer] = await Promise.all([
     getCategoriesList(0, 8),
     getStore(),
     getUser(),
@@ -27,97 +38,68 @@ export default async function Footer() {
     (c: any) => !c.parentCategory && !c.isInternal && c.isActive !== false
   )
 
-  const heading = "vp-sign vp-gold mb-3 text-[22px]"
-  const link = "inline-flex min-h-10 items-center text-[14px] text-white/80 underline-offset-4 hover:text-white hover:underline"
+  const link = "inline-flex min-h-10 items-center text-[13px] text-white/85 underline-offset-4 hover:text-white hover:underline"
 
   return (
-    <footer className="vp-window mt-16 sm:mt-24">
-      <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
-        <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
-          <div className="flex flex-col gap-4">
-            {/* The homepage sentence lives in the window band; the footer carries only the sign. */}
-            <Logo tone="glass" size="lg" />
-          </div>
-          {categories.length > 0 && (
-            <div>
-              <p className={heading}>Shop</p>
-              <ul>
-                {categories.slice(0, 6).map((c: any) => (
-                  <li key={c.id}>
-                    <LocalizedClientLink className={link} href={`/categories/${c.handle}`}>
-                      {c.title}
-                    </LocalizedClientLink>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {collections && collections.length > 0 && (
-            <div>
-              <p className={heading}>Collections</p>
-              <ul>
-                {collections.slice(0, 6).map((c: any) => (
-                  <li key={c.id}>
-                    <LocalizedClientLink className={link} href={`/collections/${c.handle}`}>
-                      {c.title}
-                    </LocalizedClientLink>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {(policyLinks.length > 0 || showContact) && (
-            <div>
-              <p className={heading}>Policies</p>
-              <ul>
-                {policyLinks.map((p) => (
-                  <li key={p.slug}>
-                    <LocalizedClientLink className={link} href={`/policies/${p.slug}`}>
-                      {p.title}
-                    </LocalizedClientLink>
-                  </li>
-                ))}
-                {showContact && (
-                  <li><LocalizedClientLink className={link} href="/policies/contact">Contact</LocalizedClientLink></li>
-                )}
-              </ul>
-            </div>
-          )}
-          <div>
-            <p className={heading}>Account</p>
-            <ul>
-              <li>
-                <LocalizedClientLink className={link} href="/account" data-testid="footer-account-link">
-                  {customer ? "Account" : "Sign in"}
+    <>
+      <footer className="deneb-footer bg-[#1d1f22] text-white" data-testid="footer">
+        <div className="mx-auto max-w-[1600px] px-5 lg:px-12">
+          <div className="flex flex-col gap-5 py-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-8 lg:py-3">
+            <Wordmark tone="light" className="deneb-footer-mark" />
+            <p className="text-[14px] text-white/90 max-lg:hidden">{AGE_LINE}</p>
+            <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-0 lg:justify-end lg:gap-x-8">
+              {showContact && (
+                <LocalizedClientLink className={link} href="/policies/contact">
+                  Support
                 </LocalizedClientLink>
-              </li>
-              <li><LocalizedClientLink className={link} href="/account/orders">Orders</LocalizedClientLink></li>
-              <li><LocalizedClientLink className={link} href="/cart">Bag</LocalizedClientLink></li>
-            </ul>
+              )}
+              {policyLinks.map((p) => (
+                <LocalizedClientLink key={p.slug} className={link} href={`/policies/${p.slug}`}>
+                  {SHORT_POLICY[p.slug] || p.title}
+                </LocalizedClientLink>
+              ))}
+            </nav>
           </div>
-        </div>
-        <div className="flex flex-col gap-2 border-t border-vp-glass-line py-6 text-[12px] text-white/75 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex flex-col gap-1.5">
-            {showContact && (
+          <div className="flex flex-col gap-1 border-t border-white/10 py-4 lg:hidden">
+            <nav aria-label="Departments" className="flex flex-wrap gap-x-6">
+              {categories.slice(0, 6).map((c: any) => (
+                <LocalizedClientLink key={c.id} className={link} href={`/categories/${c.handle}`}>
+                  {c.title}
+                </LocalizedClientLink>
+              ))}
+              <LocalizedClientLink className={link} href="/account" data-testid="footer-account-link">
+                {customer ? "Account" : "Sign in"}
+              </LocalizedClientLink>
+            </nav>
+          </div>
+          <div className="flex flex-col gap-2 border-t border-white/10 py-4 text-[12px] leading-[18px] text-white/70 lg:flex-row lg:items-start lg:justify-between">
+            {showContact ? (
               <p className="flex flex-wrap gap-x-4 gap-y-1" data-testid="footer-business">
-                {business.legalName && <span className="text-white">{business.legalName}</span>}
+                {business.legalName && <span className="text-white/90">{business.legalName}</span>}
                 {business.licenses.map((l) => (
-                  <span key={l} className="font-vp-mono break-all">{l}</span>
+                  <span key={l} className="break-all">{l}</span>
                 ))}
                 {business.email && (
-                  <a href={`mailto:${business.email}`} className="break-all hover:text-white hover:underline">{business.email}</a>
+                  <a href={`mailto:${business.email}`} className="break-all hover:text-white hover:underline">
+                    {business.email}
+                  </a>
                 )}
                 {business.phone && (
-                  <a href={`tel:${business.phone.replace(/[^\d+]/g, "")}`} className="font-vp-mono hover:text-white hover:underline">{business.phone}</a>
+                  <a href={`tel:${business.phone.replace(/[^\d+]/g, "")}`} className="hover:text-white hover:underline">
+                    {business.phone}
+                  </a>
                 )}
               </p>
+            ) : (
+              <span />
             )}
+            <p suppressHydrationWarning className="shrink-0">
+              © {new Date().getFullYear()} {business.legalName || storeName}
+            </p>
           </div>
-          <p suppressHydrationWarning className="shrink-0">
-            © {new Date().getFullYear()} {business.legalName || storeName}
-          </p>
         </div>
-      </div>
-    </footer>
+      </footer>
+      <TabBar ageLine={AGE_LINE} />
+    </>
   )
 }

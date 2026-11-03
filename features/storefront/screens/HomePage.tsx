@@ -1,12 +1,10 @@
 import { Metadata } from "next"
 
-import FeaturedProducts, { ComingSoonShelf } from "@/features/storefront/modules/home/components/featured-products"
-import Hero from "@/features/storefront/modules/home/components/hero"
-import { getCategoriesList } from "@/features/storefront/lib/data/categories"
-import { getCollectionsListByRegion } from "@/features/storefront/lib/data/collections"
+import { ComingSoonShelf } from "@/features/storefront/modules/home/components/featured-products"
+import DenebHome from "@/features/storefront/modules/home/components/deneb-home"
 import { getRegion } from "@/features/storefront/lib/data/regions"
 import { getStore } from "@/features/storefront/lib/data/store"
-import type { StoreCollection, StoreRegion } from "@/features/storefront/types/storefront"
+import type { StoreRegion } from "@/features/storefront/types/storefront"
 
 export async function generateMetadata(): Promise<Metadata> {
   const store = await getStore()
@@ -22,41 +20,15 @@ export async function generateMetadata(): Promise<Metadata> {
 export async function HomePage(props: {
   params: Promise<{ countryCode: string }>
 }) {
-  const params = await props.params
+  const { countryCode } = await props.params
 
-  const { countryCode } = params
-
-  const [region, store, { productCategories }] = await Promise.all([
+  const [region, store] = await Promise.all([
     getRegion(countryCode) as Promise<StoreRegion | undefined>,
     getStore(),
-    getCategoriesList(0, 8),
   ])
 
-  const { collections }: { collections: StoreCollection[] } = region
-    ? await getCollectionsListByRegion(0, 3, region.id)
-    : { collections: [] }
+  const home = region ? await DenebHome({ region, countryCode }) : null
 
-  const categories = (productCategories || [])
-    .filter((c: any) => !c.parentCategory && !c.isInternal && c.isActive !== false)
-    .map((c: any) => ({ id: c.id, title: c.title, handle: c.handle }))
-
-  return (
-    <>
-      <Hero
-        storeName={store?.name}
-        title={store?.homepageTitle}
-        description={store?.homepageDescription}
-        categories={categories}
-      />
-      {/* The shelves sit on the same cool white as every other page and run straight into the footer:
-          the negative margin cancels the footer's top margin instead of filling it with a blank band. */}
-      <div className="-mb-16 bg-vp-bg pb-8 sm:-mb-24 sm:pb-10">
-        {region ? (
-          <FeaturedProducts collections={collections || []} region={region} storeName={store?.name} />
-        ) : (
-          <ComingSoonShelf storeName={store?.name} />
-        )}
-      </div>
-    </>
-  )
+  // With nothing published the release gate explains why the shelves are empty.
+  return home ?? <ComingSoonShelf storeName={store?.name} />
 }

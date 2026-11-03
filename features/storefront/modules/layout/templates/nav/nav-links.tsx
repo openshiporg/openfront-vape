@@ -6,18 +6,18 @@ import LocalizedClientLink from "@/features/storefront/modules/common/components
 
 type Link = { id: string; title: string; handle: string }
 
-export default function NavLinks({ categories }: { categories: Link[] }) {
+export default function NavLinks({ categories, support }: { categories: Link[]; support?: boolean }) {
   const pathname = usePathname() || ""
   const { countryCode } = useParams() as { countryCode?: string }
   const base = countryCode ? `/${countryCode}` : ""
 
   const items = [
-    { key: "all", title: "Shop all", href: "/store" },
     ...categories.slice(0, 5).map((c) => ({ key: c.id, title: c.title, href: `/categories/${c.handle}` })),
+    ...(support ? [{ key: "support", title: "Support", href: "/policies/contact" }] : []),
   ]
 
   return (
-    <div className="hidden lg:flex items-center gap-1">
+    <div className="hidden items-center justify-center gap-[clamp(16px,2.2vw,44px)] lg:flex">
       {items.map((item) => {
         const active = pathname === `${base}${item.href}` || pathname.startsWith(`${base}${item.href}/`)
         return (
@@ -25,7 +25,7 @@ export default function NavLinks({ categories }: { categories: Link[] }) {
             key={item.key}
             href={item.href}
             data-active={active}
-            className="inline-flex min-h-11 items-center rounded-[4px] px-3 text-[14px] font-medium text-vp-ink-2 underline-offset-[6px] decoration-2 transition-colors hover:text-vp-ink data-[active=true]:text-vp-ink data-[active=true]:underline"
+            className="deneb-nav-link inline-flex min-h-11 items-center whitespace-nowrap text-[#16181b] underline-offset-[6px] transition-opacity hover:opacity-70 data-[active=true]:underline"
           >
             {item.title}
           </LocalizedClientLink>
