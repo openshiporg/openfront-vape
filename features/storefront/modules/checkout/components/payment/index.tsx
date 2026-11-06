@@ -52,8 +52,16 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3 }: PaymentProps)
   const [cardBrand, setCardBrand] = useState<string | null>(null);
   const [cardComplete, setCardComplete] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    activeSession?.paymentProvider?.code ?? ""
+    activeSession?.paymentProvider?.code ??
+      (availablePaymentMethods?.length === 1 ? availablePaymentMethods[0].code : "")
   );
+
+  // A single method (e.g. pay in store for pickup) needs no choice; select it once it appears
+  useEffect(() => {
+    if (!selectedPaymentMethod && availablePaymentMethods?.length === 1) {
+      setSelectedPaymentMethod(availablePaymentMethods[0].code);
+    }
+  }, [availablePaymentMethods, selectedPaymentMethod]);
 
   const searchParams = useSearchParams() ?? new URLSearchParams();
   const router = useRouter();

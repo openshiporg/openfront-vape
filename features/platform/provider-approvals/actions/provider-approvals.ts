@@ -42,6 +42,9 @@ const QUERY = `id purpose providerCode status approvalReference effectiveAt expi
   coveredCategories coveredJurisdictionCodes capabilities
   profile { id legalName } paymentProvider { id name } shippingProvider { id name }`;
 
+// Keystone query results carry null-prototype nested objects that cannot cross into Client Components
+const plain = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+
 const list = (value: unknown) => (Array.isArray(value) ? value.map(String) : []);
 
 function row(item: any): ApprovalRow {
@@ -70,7 +73,7 @@ export async function getProviderApprovals(): Promise<SaveResult<ApprovalRow[]>>
   if (!context.session?.itemId) return { success: false, error: 'Sign in again to view compliance records.' };
   try {
     const items = await context.query.ProviderApproval.findMany({ orderBy: [{ updatedAt: 'desc' }], take: 500, query: QUERY });
-    return { success: true, data: items.map(row) };
+    return { success: true, data: plain(items.map(row)) };
   } catch (error: any) {
     console.error('Provider approvals read failed', { name: error?.name, code: error?.extensions?.code });
     return { success: false, error: 'Unable to load compliance records.' };
@@ -90,7 +93,7 @@ export async function getProviderApproval(id: string): Promise<SaveResult<Approv
       ? await context.query.Jurisdiction.findMany({ where: { code: { in: approval.coveredJurisdictionCodes } }, query: 'code name' }).catch(() => [])
       : [];
     const jurisdictionNames = Object.fromEntries(jurisdictions.map((jurisdiction: any) => [jurisdiction.code, jurisdiction.name]));
-    return { success: true, data: { ...approval, hasEvidence: Boolean(evidence?.evidenceDigest), jurisdictionNames } };
+    return { success: true, data: plain({ ...approval, hasEvidence: Boolean(evidence?.evidenceDigest), jurisdictionNames }) };
   } catch (error: any) {
     console.error('Provider approval read failed', { name: error?.name, code: error?.extensions?.code });
     return { success: false, error: 'Unable to load compliance records.' };

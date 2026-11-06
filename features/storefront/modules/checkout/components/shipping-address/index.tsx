@@ -186,7 +186,7 @@ const ShippingAddress = ({
           />
         )}
         <Input
-          placeholder="ZIP / Postal code"
+          placeholder="ZIP code"
           name="shippingAddress.postalCode"
           autoComplete="postal-code"
           inputMode="text"

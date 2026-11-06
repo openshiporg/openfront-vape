@@ -113,7 +113,8 @@ export async function getJurisdiction(id: string): Promise<Read<JurisdictionDeta
 
     return {
       success: true,
-      data: {
+      // Keystone query results carry null-prototype nested objects that cannot cross into Client Components
+      data: JSON.parse(JSON.stringify({
         id: jurisdiction.id,
         code: jurisdiction.code,
         name: jurisdiction.name,
@@ -163,7 +164,7 @@ export async function getJurisdiction(id: string): Promise<Read<JurisdictionDeta
             product: product ? { id: product.id, title: `${product.title}${variantTitle}` } : null,
           };
         }),
-      },
+      })),
     };
   } catch (error) {
     return readFailure('detail', error);
