@@ -77,7 +77,7 @@ function DeleteButton({ list, value, onError }: { list: any; value: Record<strin
       <AlertDialogTrigger asChild>
         <Button variant="ghost" size="sm" className="rounded-[4px] text-destructive hover:bg-destructive/10 hover:text-destructive">
           <Trash2 className="size-3.5" />
-          Delete
+          <span className="max-sm:sr-only">Delete</span>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -283,12 +283,12 @@ export function ProductItemPageClient({ list, item, itemId }: ProductItemPageCli
           <PageBreadcrumbs
             items={breadcrumbItems}
             actions={
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 {!list.hideDelete && <DeleteButton list={list} value={value} onError={setErrorDialogValue} />}
                 {hasChanges && (
                   <Button variant="outline" size="sm" className="rounded-[4px]" onClick={handleReset}>
                     <RotateCcw className="size-3.5" />
-                    Reset
+                    <span className="max-sm:sr-only">Reset</span>
                   </Button>
                 )}
                 <Button
