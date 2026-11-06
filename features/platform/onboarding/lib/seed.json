@@ -4,7 +4,17 @@
     "defaultCurrencyCode": "USD",
     "homepageTitle": "Vape devices, e-liquids and accessories",
     "homepageDescription": "Adults 21+ only. Shop devices, e-liquids and accessories.",
-    "metadata": {},
+    "metadata": {
+      "business": {
+        "legalName": "Cloud Nine Vapor LLC",
+        "email": "hello@vape.openship.org",
+        "phone": "(813) 555-0142",
+        "address": "1420 N Franklin St, Tampa, FL 33602",
+        "licenses": [
+          "FL DBPR tobacco retail permit: on file"
+        ]
+      }
+    },
     "swapLinkTemplate": "https://cloudninevapor.com/swap/{id}",
     "paymentLinkTemplate": "https://cloudninevapor.com/pay/{id}",
     "inviteLinkTemplate": "https://cloudninevapor.com/invite/{id}"
@@ -82,6 +92,18 @@
       },
       "priceType": "flat_rate",
       "amount": 2000
+    },
+    {
+      "name": "Reserve online, pay in store",
+      "regionCode": "all",
+      "providerCode": "fp_manual",
+      "data": {
+        "id": "manual-fulfillment",
+        "pickup": true,
+        "instructions": "Collect at 1420 N Franklin St, Tampa, FL 33602, Mon to Sat 10am to 7pm. Bring photo ID showing you are 21 or older; pay at the counter."
+      },
+      "priceType": "flat_rate",
+      "amount": 0
     },
     {
       "name": "Return Shipping",

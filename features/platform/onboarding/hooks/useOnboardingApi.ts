@@ -529,6 +529,7 @@ export function useOnboardingApi({
         data: {
           store: { connect: { id: storeId } },
           legalName: legalName || 'Cloud Nine Vapor',
+          escalationContacts: user.email ? [user.email] : [],
           complianceOwner: user.name || user.email,
           status: 'draft',
           killSwitch: true,
@@ -823,6 +824,8 @@ export function useOnboardingApi({
             priceType: option.priceType,
             amount: option.amount,
             isReturn: option.isReturn || false,
+            // Store pickup is flagged in data (pickup + collection instructions).
+            ...(option.data?.pickup ? { data: option.data } : {}),
             uniqueKey,
             fulfillmentProvider: {
               connect: { id: fulfillmentProviderIds['fp_manual'] },
