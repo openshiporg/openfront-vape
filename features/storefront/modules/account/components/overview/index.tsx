@@ -1,10 +1,10 @@
+import { AccountDate } from "@/features/storefront/modules/account/components/account-ui/account-date"
 import { ChevronRight } from "lucide-react"
 
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
 import {
   AccountPageHeader,
   OrderStatusDot,
-  formatAccountDate,
   orderStatus,
 } from "@/features/storefront/modules/account/components/account-ui"
 import { CustomerProfile, OrderSummary, OrdersList } from "@/features/storefront/types/account"
@@ -59,7 +59,7 @@ const Overview = ({ user, orders }: OverviewProps) => {
                       </div>
                       <div className="mt-1 flex flex-wrap items-baseline gap-x-2 text-[13px] text-vp-ink-2">
                         <span className="font-vp-mono" data-testid="order-created-date">
-                          {formatAccountDate(order.createdAt)}
+                          <AccountDate value={order.createdAt} />
                         </span>
                         {orderStatus(status) && (
                           <>

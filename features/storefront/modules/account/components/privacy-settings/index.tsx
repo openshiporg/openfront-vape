@@ -1,5 +1,6 @@
 "use client"
 
+import { AccountDate } from "@/features/storefront/modules/account/components/account-ui/account-date"
 import { useState } from "react"
 import { RiLoader2Fill } from "@remixicon/react"
 
@@ -12,7 +13,7 @@ import {
 } from "@/features/storefront/lib/data/privacy"
 import { SegmentedButton, SegmentedTrack } from "@/features/storefront/modules/common/components/vape/segmented"
 import StatusDot from "@/features/storefront/modules/common/components/vape/status-dot"
-import { InlineError, formatAccountDate, rowPillClass } from "@/features/storefront/modules/account/components/account-ui"
+import { InlineError, rowPillClass } from "@/features/storefront/modules/account/components/account-ui"
 
 type PreferenceKey = "analytics" | "marketingEmail"
 
@@ -119,7 +120,7 @@ export default function PrivacySettings({
           <h3 id="privacy-preferences" className="text-[17px] leading-[24px] font-semibold text-vp-ink">Preferences</h3>
           {preferences.recordedAt && (
             <span className="font-vp-mono text-[12px] text-vp-ink-3" data-testid="privacy-recorded-at">
-              Saved {formatAccountDate(preferences.recordedAt)}
+              Saved <AccountDate value={preferences.recordedAt} />
             </span>
           )}
         </div>
@@ -232,7 +233,7 @@ export default function PrivacySettings({
                   <p className="flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-vp-ink-2">
                     <span data-testid="privacy-request-status">{status.label}</span>
                     {request.requestedAt && (
-                      <span className="font-vp-mono text-vp-ink-3">{formatAccountDate(request.requestedAt)}</span>
+                      <span className="font-vp-mono text-vp-ink-3"><AccountDate value={request.requestedAt} /></span>
                     )}
                     {request.id && <span className="break-all font-vp-mono text-vp-ink-3">Ref {request.id}</span>}
                   </p>

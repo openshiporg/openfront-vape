@@ -1,5 +1,6 @@
 "use client"
 
+import { AccountDate } from "@/features/storefront/modules/account/components/account-ui/account-date"
 import type { StorefrontAccountCustomer as User } from "@/features/storefront/types"
 import { Copy, RefreshCw, CheckIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -13,7 +14,6 @@ import StatusDot from "@/features/storefront/modules/common/components/vape/stat
 import { SegmentedButton, SegmentedTrack } from "@/features/storefront/modules/common/components/vape/segmented"
 import {
   fieldClass,
-  formatAccountDate,
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/features/storefront/modules/account/components/account-ui"
@@ -169,7 +169,7 @@ const InvoicingTab = ({ customer, businessAccount, businessAccountRequest, order
         <dl className="vp-band divide-y divide-vp-line">
           {businessAccountRequest?.submittedAt && (
             <FactRow label="Submitted">
-              <span className="font-vp-mono">{formatAccountDate(businessAccountRequest.submittedAt)}</span>
+              <span className="font-vp-mono"><AccountDate value={businessAccountRequest.submittedAt} /></span>
             </FactRow>
           )}
           <FactRow label="Next">Email when approved, with your customer token</FactRow>

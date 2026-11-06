@@ -1,3 +1,4 @@
+import { AccountDate } from "@/features/storefront/modules/account/components/account-ui/account-date"
 import { useMemo } from "react";
 import type { StorefrontOrderOverviewItem } from "@/features/storefront/types";
 
@@ -5,7 +6,6 @@ import Thumbnail from "@/features/storefront/modules/products/components/thumbna
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link";
 import {
   OrderStatusDot,
-  formatAccountDate,
   orderStatus,
   rowPillClass,
 } from "@/features/storefront/modules/account/components/account-ui";
@@ -46,7 +46,7 @@ const OrderCard = ({ order }: OrderCardProps) => {
           </div>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-2 text-[13px] text-vp-ink-2">
             <span className="font-vp-mono" data-testid="order-created-at">
-              {formatAccountDate(order.createdAt)}
+              <AccountDate value={order.createdAt} />
             </span>
             {status && (
               <>
