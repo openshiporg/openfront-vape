@@ -26,6 +26,7 @@ import {
   customerName,
   fulfilmentState,
   isHeld,
+  isPickupOrder,
   orderStatusLabel,
   orderStatusTone,
   paymentState,
@@ -91,6 +92,7 @@ export function OrderTable({ orders }: { orders: any[] }) {
         {orders.map((order) => {
           const pay = paymentState(order.paymentDetails);
           const ful = fulfilmentState(order.fulfillmentStatus);
+          const pickup = isPickupOrder(order);
           return (
             <Tr key={order.id}>
               <Td className="whitespace-nowrap">
@@ -108,11 +110,11 @@ export function OrderTable({ orders }: { orders: any[] }) {
               <Td className="max-w-[14rem]">
                 <div className="truncate text-foreground">{customerName(order)}</div>
                 <div className="truncate text-[12px] text-muted-foreground lg:hidden">
-                  {shipToRegion(order.shippingAddress) ?? "No address"}
+                  {pickup ? "Store pickup" : shipToRegion(order.shippingAddress) ?? "No address"}
                 </div>
               </Td>
               <Td priority={3} className="max-w-[12rem] truncate text-muted-foreground">
-                {shipToRegion(order.shippingAddress) ?? "No address"}
+                {pickup ? "Store pickup" : shipToRegion(order.shippingAddress) ?? "No address"}
               </Td>
               <Td priority={2}>
                 <StatusWord tone={orderStatusTone(order.status)}>{orderStatusLabel(order.status)}</StatusWord>
@@ -158,6 +160,7 @@ export function OrderQueue({ orders }: { orders: any[] }) {
       <tbody>
         {orders.map((order) => {
           const held = isHeld(order);
+          const pickup = isPickupOrder(order);
           return (
             <Tr key={order.id}>
               <Td className="whitespace-nowrap">
@@ -172,7 +175,7 @@ export function OrderQueue({ orders }: { orders: any[] }) {
                 {held ? (
                   <StatusWord tone="warn">Held, needs action</StatusWord>
                 ) : (
-                  <StatusWord tone="ok">Paid, ready to ship</StatusWord>
+                  <StatusWord tone="ok">{pickup ? "Paid, ready for pickup" : "Paid, ready to ship"}</StatusWord>
                 )}
               </Td>
               <Td priority={2} className="whitespace-nowrap tabular-nums text-muted-foreground">
@@ -180,17 +183,17 @@ export function OrderQueue({ orders }: { orders: any[] }) {
               </Td>
               <Td priority={2} className="max-w-[14rem] truncate text-foreground">{customerName(order)}</Td>
               <Td priority={3} className="max-w-[12rem] truncate text-muted-foreground">
-                {shipToRegion(order.shippingAddress) ?? "No address"}
+                {pickup ? "Store pickup" : shipToRegion(order.shippingAddress) ?? "No address"}
               </Td>
               <Td align="right" priority={3} className="whitespace-nowrap text-foreground">
                 {order.total}
               </Td>
               <Td align="right" className="whitespace-nowrap">
                 <Link
-                  href={held ? orderHref(order) : `${orderHref(order)}/fulfill`}
+                  href={held || pickup ? orderHref(order) : `${orderHref(order)}/fulfill`}
                   className={cn(buttonClass.base, held ? buttonClass.outline : buttonClass.primary)}
                 >
-                  {held ? "Review" : "Fulfil"}
+                  {held ? "Review" : pickup ? "Hand over" : "Fulfil"}
                 </Link>
               </Td>
             </Tr>

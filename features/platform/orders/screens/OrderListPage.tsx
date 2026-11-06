@@ -118,6 +118,7 @@ export async function OrderListPage({ searchParams }: PageProps) {
     tax
     fulfillmentStatus
     paymentDetails
+    shippingMethods { id shippingOption { id data } }
     currency {
       id
       code

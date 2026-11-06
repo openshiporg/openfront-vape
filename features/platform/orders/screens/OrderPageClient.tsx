@@ -110,12 +110,14 @@ interface OrderPageClientProps {
   fieldPositions?: Record<string, unknown>;
   uiConfig?: Record<string, unknown>;
   compliance?: ReactNode;
+  isPickup?: boolean;
 }
 
 export function OrderPageClient({
   order,
   listKey,
   compliance,
+  isPickup = false,
 }: OrderPageClientProps) {
   const [showComments, setShowComments] = useState(false);
   const [editDrawerConfig, setEditDrawerConfig] = useState<{
@@ -155,11 +157,11 @@ export function OrderPageClient({
     : order.status === "requires_action"
       ? { label: "Held, needs action", tone: "warn" }
       : needsFulfilment && (pay.key === "captured" || pay.key === "authorized")
-        ? { label: ful.key === "partial" ? "Partly shipped, rest ready" : "Paid, ready to ship", tone: "ok" }
+        ? { label: isPickup ? "Paid, ready for pickup" : ful.key === "partial" ? "Partly shipped, rest ready" : "Paid, ready to ship", tone: "ok" }
         : needsFulfilment
-          ? { label: "Awaiting payment", tone: "warn" }
+          ? { label: isPickup ? "Reserved, pay at pickup" : "Awaiting payment", tone: "warn" }
           : ful.key === "shipped" || ful.key === "fulfilled"
-            ? { label: ful.label, tone: "ok" }
+            ? { label: isPickup ? "Picked up" : ful.label, tone: "ok" }
             : { label: orderStatusLabel(order.status), tone: orderStatusTone(order.status) };
   const humanize = (value: string) =>
     value.replace(/[_-]+/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
@@ -213,7 +215,7 @@ export function OrderPageClient({
                 Placed {formatDate(order.createdAt)} · {itemCount} {itemCount === 1 ? "item" : "items"} · {order.total}
               </div>
             </div>
-            {!closed && (
+            {!closed && !isPickup && (
               <Link
                 href={`/dashboard/platform/orders/${order.id}/fulfill`}
                 className={cn(
@@ -235,8 +237,10 @@ export function OrderPageClient({
             ["Fulfilment", <StatusWord key="f" tone={ful.tone}>{ful.label}</StatusWord>],
             ["Paid", <span key="t" className="tabular-nums text-foreground">{order.formattedTotalPaid ?? "None"}</span>],
             ["Customer", <span key="c" className="block truncate text-foreground">{order.user?.name || order.email || "Guest"}</span>],
-            ["Ship to", <span key="s" className="block truncate text-foreground">{ship ? [ship.city, ship.province].filter(Boolean).join(", ") || "Address on file" : "No address"}</span>],
-            ["Shipments", <span key="n" className="tabular-nums text-foreground">{fulfillments.filter((f) => !f.canceledAt).length}</span>],
+            isPickup
+              ? ["Delivery", <span key="s" className="block truncate text-foreground">Store pickup</span>]
+              : ["Ship to", <span key="s" className="block truncate text-foreground">{ship ? [ship.city, ship.province].filter(Boolean).join(", ") || "Address on file" : "No address"}</span>],
+            [isPickup ? "Handovers" : "Shipments", <span key="n" className="tabular-nums text-foreground">{fulfillments.filter((f) => !f.canceledAt).length}</span>],
             ["Total", <span key="g" className="font-medium tabular-nums text-foreground">{order.total}</span>],
           ].map(([term, value]) => (
             <div key={term as string} className="min-w-0">

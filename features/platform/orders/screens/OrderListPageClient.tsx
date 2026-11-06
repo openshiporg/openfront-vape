@@ -13,7 +13,7 @@ import { PageContainer } from '../../../dashboard/components/PageContainer'
 import { PlatformFilterBar } from '../../components/PlatformFilterBar'
 import { StatusTabs } from '../components/StatusTabs'
 import { OrderQueue, OrderTable } from '../components/OrderTable'
-import { isHeld, isReadyToShip } from '../lib/order-state'
+import { isHeld, isPickupOrder, isReadyToShip } from '../lib/order-state'
 import { cn } from '@/lib/utils'
 import { Pagination } from '../../../dashboard/components/Pagination'
 import { FilterList } from '../../../dashboard/components/FilterList'
@@ -138,6 +138,7 @@ export function OrderListPageClient({
     tax
     fulfillmentStatus
     paymentDetails
+    shippingMethods { id shippingOption { id data } }
     currency {
       id
       code
@@ -320,7 +321,8 @@ export function OrderListPageClient({
     ...items.filter(isReadyToShip).sort(byOldest),
   ]
   const heldCount = items.filter(isHeld).length
-  const shipCount = queue.length - heldCount
+  const pickupCount = items.filter((order) => isReadyToShip(order) && isPickupOrder(order)).length
+  const shipCount = queue.length - heldCount - pickupCount
 
   return (
     <PageContainer title="Orders" header={header} breadcrumbs={breadcrumbs}>
@@ -329,7 +331,7 @@ export function OrderListPageClient({
           <SectionTitle
             meta={
               <span>
-                {heldCount} held · {shipCount} to ship
+                {[`${heldCount} held`, `${shipCount} to ship`, ...(pickupCount ? [`${pickupCount} for pickup`] : [])].join(' · ')}
               </span>
             }
           >

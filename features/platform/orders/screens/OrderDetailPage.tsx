@@ -34,6 +34,10 @@ export async function OrderDetailPage({ params }: OrderPageParams) {
   }
 
   // Extract UI configuration
+  // Store pickup: every shipping method is the pickup option (see regulated/pickup.ts).
+  const methods: any[] = order.shippingMethods || [];
+  const isPickup = methods.length > 0 && methods.every((method: any) => method?.shippingOption?.data?.pickup === true);
+
   const uiConfig = {
     hideDelete: false,
   };
@@ -50,6 +54,7 @@ export async function OrderDetailPage({ params }: OrderPageParams) {
       />
       <OrderPageClient
         order={order}
+        isPickup={isPickup}
         id={itemId}
         listKey="orders"
         fieldModes={{}}
@@ -57,7 +62,14 @@ export async function OrderDetailPage({ params }: OrderPageParams) {
         uiConfig={uiConfig}
         compliance={
           <>
-            <PickupOrderActions orderId={order.id} status={order.status} payAtPickupPending={Boolean(order.payments?.some((payment: any) => payment.status === 'pending'))} />
+            <PickupOrderActions
+              orderId={order.id}
+              status={order.status}
+              isPickup={isPickup}
+              payAtPickupPending={Boolean(order.payments?.some((payment: any) => payment.status === 'pending'))}
+              paid={Boolean(order.payments?.some((payment: any) => payment.status === 'captured'))}
+              handedOver={order.status === 'completed'}
+            />
             <OrderComplianceSection orderId={order.id} />
           </>
         }

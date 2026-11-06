@@ -116,6 +116,7 @@ export async function getOrder(orderId: string) {
         totalPaid
         formattedTotalPaid
         payments { id status amount }
+        shippingMethods { id shippingOption { id name data } }
         lineItems {
           id
           quantity
@@ -234,6 +235,21 @@ export async function markPickupOrderPaid(orderId: string) {
     { id: orderId }
   );
   if (response.success) revalidatePath(`/dashboard/platform/orders/${orderId}`);
+  return response;
+}
+
+/**
+ * Counter handover for a pickup order: ID checked (21+), items handed over, order completed.
+ */
+export async function completePickupOrderHandover(orderId: string, idType: string) {
+  const response = await keystoneClient(
+    `mutation CompletePickupHandover($id: ID!, $idType: String) { completePickupHandover(orderId: $id, idChecked: true, idType: $idType) { id status } }`,
+    { id: orderId, idType }
+  );
+  if (response.success) {
+    revalidatePath(`/dashboard/platform/orders/${orderId}`);
+    revalidatePath('/dashboard/platform/orders');
+  }
   return response;
 }
 

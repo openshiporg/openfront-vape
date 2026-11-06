@@ -12000,6 +12000,8 @@ type Mutation {
   redeemUserPasswordResetToken(email: String!, token: String!, password: String!): RedeemUserPasswordResetTokenResult
   updateActiveUser(data: UserUpdateProfileInput!): User
   createActiveCart(regionId: ID!): JSON!
+  markPickupPaid(orderId: ID!): Order
+  completePickupHandover(orderId: ID!, idChecked: Boolean!, idType: String): Order
   updateActiveCart(cartId: ID!, data: CartUpdateInput, code: String): Cart
   updateActiveCartLineItem(cartId: ID!, lineId: ID!, quantity: Int!): Cart
   updateActiveUserPassword(oldPassword: String!, newPassword: String!, confirmPassword: String!): User

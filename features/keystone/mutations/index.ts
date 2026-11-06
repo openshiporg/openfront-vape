@@ -3,6 +3,7 @@ import type { GraphQLSchema } from 'graphql'
 import redirectToInit from "./redirectToInit";
 import activeCart from "./activeCart";
 import markPickupPaid from './markPickupPaid';
+import completePickupHandover from './completePickupHandover';
 import updateActiveCart from "./updateActiveCart";
 import updateActiveCartLineItem from "./updateActiveCartLineItem";
 import updateActiveUser from "./updateActiveUser";
@@ -257,6 +258,7 @@ export const extendGraphqlSchema = (schema: GraphQLSchema) =>
         updateActiveUser(data: UserUpdateProfileInput!): User
         createActiveCart(regionId: ID!): JSON!
         markPickupPaid(orderId: ID!): Order
+        completePickupHandover(orderId: ID!, idChecked: Boolean!, idType: String): Order
         updateActiveCart(cartId: ID!, data: CartUpdateInput, code: String): Cart
         updateActiveCartLineItem(cartId: ID!, lineId: ID!, quantity: Int!): Cart
         updateActiveUserPassword(
@@ -356,6 +358,7 @@ export const extendGraphqlSchema = (schema: GraphQLSchema) =>
         updateActiveUserPassword,
         createActiveCart,
         markPickupPaid,
+        completePickupHandover,
         updateActiveCart,
         updateActiveCartLineItem,
         updateActiveUser,

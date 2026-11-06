@@ -70,6 +70,12 @@ export function isReadyToShip(order: any) {
   return order?.status === "pending" && isPaid(order?.paymentDetails) && isUnfulfilled(order?.fulfillmentStatus);
 }
 
+/** Store pickup: every shipping method is the pickup option (data.pickup === true). */
+export function isPickupOrder(order: any) {
+  const methods: any[] = order?.shippingMethods ?? [];
+  return methods.length > 0 && methods.every((method) => method?.shippingOption?.data?.pickup === true);
+}
+
 export function isHeld(order: any) {
   return order?.status === "requires_action";
 }
