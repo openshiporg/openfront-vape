@@ -2,6 +2,7 @@
 
 import { Home, Search, ShoppingBag, UserRound } from "lucide-react"
 import { useParams, usePathname } from "next/navigation"
+import { useLayoutEffect, useRef } from "react"
 
 import LocalizedClientLink from "@/features/storefront/modules/common/components/localized-client-link"
 import { cn } from "@/lib/utils"
@@ -21,6 +22,23 @@ export default function TabBar({ ageLine }: { ageLine: string }) {
   const base = countryCode ? `/${countryCode}` : ""
   const rest = pathname.slice(base.length) || ""
   const product = rest.startsWith("/products/")
+  const barRef = useRef<HTMLElement>(null)
+
+  // The spacer always equals the bar's real height (safe-area inset and wrapped text included),
+  // so no page content ever scrolls underneath the fixed bar.
+  useLayoutEffect(() => {
+    const bar = barRef.current
+    if (!bar || product) return
+    const root = document.documentElement
+    const sync = () => root.style.setProperty("--tabbar-h", `${Math.ceil(bar.getBoundingClientRect().height)}px`)
+    sync()
+    const observer = new ResizeObserver(sync)
+    observer.observe(bar)
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty("--tabbar-h")
+    }
+  }, [product])
   const activeTab =
     rest === "" || rest === "/"
       ? "Shop"
@@ -34,11 +52,15 @@ export default function TabBar({ ageLine }: { ageLine: string }) {
 
   return (
     <>
-      {!product && <div aria-hidden="true" className="h-[92px] lg:hidden" />}
+      {/* Fallback before hydration: 54px tabs + 18px age line + 1px border + the bottom padding. */}
+      {!product && (
+        <div aria-hidden="true" className="h-[var(--tabbar-h,calc(73px+max(8px,env(safe-area-inset-bottom))))] shrink-0 lg:hidden" />
+      )}
       <nav
+        ref={barRef}
         aria-label="Shop navigation"
         className={cn(
-          "deneb-tabbar z-[60] border-t border-black/10 bg-[#fafafa] lg:hidden",
+          "deneb-tabbar z-[60] border-t border-[#e3e3e3] bg-[#fafafa] [backdrop-filter:none] lg:hidden",
           product ? "relative" : "fixed inset-x-0 bottom-0"
         )}
         data-testid="tab-bar"
