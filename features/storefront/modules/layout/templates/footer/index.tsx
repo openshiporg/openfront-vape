@@ -24,7 +24,8 @@ const SHORT_POLICY: Record<string, string> = {
   terms: "Terms",
 }
 
-export default async function Footer() {
+// `branding` renders above the phone tab bar's spacer so nothing sits under the fixed bar.
+export default async function Footer({ branding }: { branding?: React.ReactNode } = {}) {
   const [{ productCategories }, store, customer] = await Promise.all([
     getCategoriesList(0, 8),
     getStore(),
@@ -106,6 +107,7 @@ export default async function Footer() {
           )}
         </div>
       </footer>
+      {branding}
       <TabBar ageLine={AGE_LINE} />
     </>
   )

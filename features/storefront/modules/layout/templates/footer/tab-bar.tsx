@@ -38,7 +38,7 @@ export default function TabBar({ ageLine }: { ageLine: string }) {
       <nav
         aria-label="Shop navigation"
         className={cn(
-          "deneb-tabbar z-[60] border-t border-black/10 bg-[#fafafa]/95 backdrop-blur-md lg:hidden",
+          "deneb-tabbar z-[60] border-t border-black/10 bg-[#fafafa] lg:hidden",
           product ? "relative" : "fixed inset-x-0 bottom-0"
         )}
         data-testid="tab-bar"

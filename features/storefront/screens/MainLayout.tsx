@@ -36,8 +36,7 @@ export async function MainLayout({ children }: { children: React.ReactNode }) {
           <DenebBodyClass className={`deneb ${denebSans.variable}`} />
           <Nav />
           <main className="min-h-[60vh]">{children}</main>
-          <Footer />
-          {!hideBranding && <OpenfrontCTA />}
+          <Footer branding={hideBranding ? null : <OpenfrontCTA />} />
         </div>
       </VapeShell>
     </StorefrontServer>
