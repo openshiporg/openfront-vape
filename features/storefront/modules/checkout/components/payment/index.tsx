@@ -6,6 +6,7 @@ import { checkoutErrorText, type CheckoutCompliance } from "../../lib/compliance
 import { CreditCard } from "lucide-react";
 import AuthorizeNetCardForm from "../authorizenet-card-form";
 import { authorizeCardPaymentSession } from "@/features/storefront/lib/data/authorizenet";
+import { setShippingMethod } from "@/features/storefront/lib/data/cart";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import ErrorMessage from "../error-message";
@@ -40,9 +41,11 @@ interface PaymentProps {
     code: string;
   }>;
   stepIndex?: number;
+  /** Set when delivery cannot be paid by card: the pickup option to switch to. */
+  pickupOptionId?: string | null;
 }
 
-const Payment = ({ cart, availablePaymentMethods, stepIndex = 3 }: PaymentProps) => {
+const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId = null }: PaymentProps) => {
   const activeSession = cart.paymentCollection?.paymentSessions?.find(
     (session) => session.isSelected
   );
@@ -272,9 +275,35 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3 }: PaymentProps)
         {!paidByGiftcard && !(availablePaymentMethods?.length > 0) && (
           <p role="status" className="text-[14px] leading-[20px] text-vp-ink-2" data-testid="no-payment-methods">
             {hasShipping
-              ? "Card payment isn't available for delivery yet. Choose Reserve online, pay in store to collect and pay at the counter."
+              ? "Card payment isn't available for delivery yet. Reserve online and pay in store when you collect."
               : "Payment options appear once you choose how to receive your order."}
           </p>
+        )}
+
+        {isOpen && !paidByGiftcard && !(availablePaymentMethods?.length > 0) && hasShipping && pickupOptionId && (
+          <div>
+            <button
+              type="button"
+              disabled={isLoading}
+              data-testid="switch-to-pickup-button"
+              className={cn(vpPrimaryButton, "w-full sm:w-auto sm:px-8")}
+              onClick={async () => {
+                setIsLoading(true);
+                setError(null);
+                try {
+                  await setShippingMethod(pickupOptionId);
+                  router.refresh();
+                } catch (err) {
+                  setError(checkoutErrorText(err));
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
+              {isLoading && <RiLoader2Fill className="h-4 w-4 animate-spin" />}
+              Switch to pay in store
+            </button>
+          </div>
         )}
 
         {paidByGiftcard && (
@@ -285,7 +314,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3 }: PaymentProps)
 
         <CompliancePanel compliance={compliance} loading={complianceLoading} />
 
-        <div>
+        <div className={!paidByGiftcard && !(availablePaymentMethods?.length > 0) && hasShipping && pickupOptionId ? "hidden" : undefined}>
           <button
             type="button"
             onClick={handleSubmit}

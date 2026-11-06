@@ -35,18 +35,27 @@ interface ShippingProps {
   };
   availableShippingMethods: ShippingOption[] | null
   nextStep?: "age" | "payment"
+  /** False when no card provider is set up, so only pay-in-store pickup can be paid. */
+  deliveryCardAvailable?: boolean
 }
 
 const Shipping: React.FC<ShippingProps> = ({
   cart,
   availableShippingMethods,
   nextStep = "payment",
+  deliveryCardAvailable = true,
 }) => {
+  const pickupId = availableShippingMethods?.find((option) => option.data?.pickup === true)?.id ?? null
+  // Without card payment a delivery order cannot be paid; steer to pickup, which is paid at the counter.
+  const deliveryBlocked = !deliveryCardAvailable && Boolean(pickupId)
+  const initialOption = () => {
+    const current = cart?.shippingMethods?.[0]?.shippingOption?.id || null
+    if (deliveryBlocked && current !== pickupId) return pickupId
+    return current
+  }
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedOption, setSelectedOption] = useState<string | null>(
-    cart?.shippingMethods?.[0]?.shippingOption?.id || null
-  )
+  const [selectedOption, setSelectedOption] = useState<string | null>(initialOption)
 
   const searchParams = useSearchParams() ?? new URLSearchParams()
   const router = useRouter()
@@ -79,8 +88,9 @@ const Shipping: React.FC<ShippingProps> = ({
   useEffect(() => {
     setIsLoading(false)
     setError(null)
-    setSelectedOption(cart?.shippingMethods?.[0]?.shippingOption?.id || null)
-  }, [isOpen, cart?.shippingMethods])
+    setSelectedOption(initialOption())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, cart?.shippingMethods, deliveryBlocked, pickupId])
 
   const hasMethod = (cart?.shippingMethods?.length ?? 0) > 0
   const canEdit = !isOpen && !!cart?.shippingAddress && !!cart?.billingAddress && !!cart?.email
@@ -97,6 +107,11 @@ const Shipping: React.FC<ShippingProps> = ({
       />
       {isOpen ? (
         <div className="flex flex-col gap-5 pb-2">
+          {deliveryBlocked && (
+            <p role="status" className="text-[14px] leading-[20px] text-vp-ink-2" data-testid="delivery-card-unavailable">
+              Delivery needs card payment, which isn&apos;t available yet. Reserve online and pay in store when you collect.
+            </p>
+          )}
           <div data-testid="delivery-options-container">
             <RadioGroup
               value={selectedOption || ""}
@@ -105,7 +120,7 @@ const Shipping: React.FC<ShippingProps> = ({
               className="vp-band flex flex-col gap-0.5 p-1"
             >
               {availableShippingMethods?.map((option) => {
-                const isDisabled = false
+                const isDisabled = deliveryBlocked && option.data?.pickup !== true
                 const selected = option.id === selectedOption
 
                 return (
@@ -145,6 +160,9 @@ const Shipping: React.FC<ShippingProps> = ({
                           </span>
                           {option.data?.pickup && option.data.instructions && (
                             <span className="text-[13px] leading-[18px] text-vp-ink-3">{option.data.instructions}</span>
+                          )}
+                          {isDisabled && (
+                            <span className="text-[13px] leading-[18px] text-vp-ink-3">Card payment for delivery isn&apos;t available yet</span>
                           )}
                         </span>
                       </span>
