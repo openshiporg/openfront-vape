@@ -37,11 +37,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 function Tags({ values, empty = 'None' }: { values: string[]; empty?: string }) {
   if (!values.length) return <p className="px-4 py-3 text-[13px] text-muted-foreground">{empty}</p>;
   return (
-    <div className="flex flex-wrap gap-1.5 px-4 py-3">
-      {values.map(value => (
-        <span key={value} className="rounded-[4px] border border-border bg-background px-2 py-0.5 text-[12px] text-foreground">{value}</span>
-      ))}
-    </div>
+    <p className="px-4 py-3 text-[13px] text-foreground">{values.join(', ')}</p>
   );
 }
 

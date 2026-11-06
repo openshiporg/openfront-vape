@@ -28,7 +28,7 @@ const STAMP_FILL: Record<DotTone, string> = {
   danger: "bg-[oklch(0.52_0.17_27/0.12)]",
   info: "bg-sky-500/12",
   accent: "bg-foreground/10",
-  muted: "bg-muted",
+  muted: "",
 }
 
 /** Square status mark meant to sit on a title line: give the parent `items-baseline`. Always beside its word. */
@@ -57,6 +57,15 @@ export function Stamp({
   className?: string
   children: ReactNode
 }) {
+  // A muted (neutral) state is plain muted text: the owner bans grey plates.
+  if (tone === "muted") {
+    return (
+      <span className={cn("inline-flex max-w-full items-center gap-1.5 whitespace-nowrap text-[13px] font-medium text-muted-foreground", className)}>
+        <span className="truncate">{children}</span>
+        {serial != null && serial !== "" && <span className="hidden font-mono text-xs font-medium opacity-80 sm:inline">{serial}</span>}
+      </span>
+    )
+  }
   return (
     <span
       className={cn(

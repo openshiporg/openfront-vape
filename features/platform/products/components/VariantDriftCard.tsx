@@ -175,7 +175,7 @@ function PendingVariantCard({
   renderOptionValue = (ov) => (
     <Badge
       color="zinc"
-      className="rounded-[4px] bg-muted px-1.5 py-0.5 text-[12px] font-medium"
+      className="px-0 py-0.5 text-[12px] font-medium"
     >
       <span className="mr-1 font-sans opacity-70">{ov.option}</span>
       {ov.label}
@@ -609,7 +609,7 @@ export function VariantDriftCard({
                               <Badge
                                 key={i}
                                 color="zinc"
-                                className="rounded-[4px] bg-muted px-1.5 py-0.5 text-[12px] font-medium"
+                                className="px-0 py-0.5 text-[12px] font-medium"
                               >
                                 <span className="mr-1 font-sans opacity-70">
                                   {ov.productOption.title}
