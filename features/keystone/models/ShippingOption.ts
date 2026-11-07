@@ -65,6 +65,7 @@ export const ShippingOption = list<Lists.ShippingOption.TypeInfo>({
     amount: integer({
       validation: {
         isRequired: false,
+        min: 0,
       },
     }),
     isReturn: checkbox(),

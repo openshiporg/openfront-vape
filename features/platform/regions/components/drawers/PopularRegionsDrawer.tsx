@@ -115,7 +115,7 @@ export function PopularRegionsDrawer({
                       </span>
                     </Td>
                     <Td priority={2} align="right">{template.currencies.length}</Td>
-                    <Td priority={2} align="right">{template.taxRate}%</Td>
+                    <Td priority={2} align="right">{Math.round(template.taxRate * 10000) / 100}%</Td>
                     <Td priority={3} className="font-mono">{template.defaultCurrency}</Td>
                     <Td align="right" className="w-px whitespace-nowrap py-1">
                       <Button

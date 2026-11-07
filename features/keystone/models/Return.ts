@@ -58,6 +58,7 @@ export const Return = list({
     refundAmount: integer({
       validation: {
         isRequired: true,
+        min: 0,
       },
     }),
     receivedAt: timestamp(),

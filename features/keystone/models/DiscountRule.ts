@@ -47,6 +47,7 @@ export const DiscountRule = list({
     value: integer({
       validation: {
         isRequired: true,
+        min: 0,
       },
     }),
     allocation: select({
@@ -76,5 +77,14 @@ export const DiscountRule = list({
       many: true,
     }),
     ...trackingFields,
+  },
+  hooks: {
+    validateInput: ({ resolvedData, item, addValidationError }: any) => {
+      const type = resolvedData.type ?? item?.type;
+      const value = resolvedData.value ?? item?.value;
+      if (type === "percentage" && typeof value === "number" && value > 100) {
+        addValidationError("A percentage discount cannot be more than 100 percent.");
+      }
+    },
   },
 });

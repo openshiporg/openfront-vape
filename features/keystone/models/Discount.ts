@@ -45,11 +45,14 @@ export const Discount = list({
       },
     }),
     metadata: json(),
-    usageLimit: integer(),
+    usageLimit: integer({ validation: { min: 0 } }),
+    // Checkout reserves and releases uses atomically; a hand edit would let a capped code be reused.
     usageCount: integer({
       defaultValue: 0,
+      access: { create: () => false, update: () => false },
       validation: {
         isRequired: true,
+        min: 0,
       },
     }),
     validDuration: text(),
@@ -76,6 +79,17 @@ export const Discount = list({
     ...trackingFields,
   },
   hooks: {
+    validateInput: ({ resolvedData, item, addValidationError }: any) => {
+      const startsAt = resolvedData.startsAt ?? item?.startsAt;
+      const endsAt = resolvedData.endsAt !== undefined ? resolvedData.endsAt : item?.endsAt;
+      if (startsAt && endsAt && new Date(endsAt).getTime() <= new Date(startsAt).getTime()) {
+        addValidationError("The discount must end after it starts.");
+      }
+      const usageLimit = resolvedData.usageLimit !== undefined ? resolvedData.usageLimit : item?.usageLimit;
+      if (typeof usageLimit === "number" && typeof item?.usageCount === "number" && usageLimit < item.usageCount) {
+        addValidationError(`This discount has already been used ${item.usageCount} times, so its limit cannot be lower than that.`);
+      }
+    },
     async afterOperation({ operation, item, context }) {
       if (operation === "create" || operation === "update") {
         const sudoContext = context.sudo();

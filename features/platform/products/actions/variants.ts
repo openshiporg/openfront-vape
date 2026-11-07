@@ -315,7 +315,7 @@ export async function updateProductVariant(variantId: string, data: {
   if (data.ean !== undefined) input.ean = data.ean;
   if (data.upc !== undefined) input.upc = data.upc;
   if (data.material !== undefined) input.material = data.material;
-  if (data.inventoryQuantity !== undefined) input.inventoryQuantity = data.inventoryQuantity;
+  // Stock is not edited here: adjustInventory moves it atomically and records the movement.
   if (data.manageInventory !== undefined) input.manageInventory = data.manageInventory;
   if (data.allowBackorder !== undefined) input.allowBackorder = data.allowBackorder;
   if (data.hsCode !== undefined) input.hsCode = data.hsCode;

@@ -24,6 +24,13 @@ export const GiftCard = list({
     },
   },
   hooks: {
+    validateInput: ({ resolvedData, item, addValidationError }: any) => {
+      const value = resolvedData.value ?? item?.value;
+      const balance = resolvedData.balance ?? item?.balance;
+      if (typeof value === "number" && typeof balance === "number" && balance > value) {
+        addValidationError("A gift card balance cannot be more than its value.");
+      }
+    },
     async afterOperation({ operation, item, context }) {
       if (operation === "create" || operation === "update") {
         const sudoContext = context.sudo();
@@ -57,11 +64,13 @@ export const GiftCard = list({
     value: integer({
       validation: {
         isRequired: true,
+        min: 0,
       },
     }),
     balance: integer({
       validation: {
         isRequired: true,
+        min: 0,
       },
     }),
     isDisabled: checkbox(),

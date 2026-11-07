@@ -47,16 +47,21 @@ export const Account = list<Lists.Account.TypeInfo>({
     }),
 
     // Financial fields (amounts in cents)
+    // Ledger totals move only with posted orders and invoice payments (checkout, invoice payment, cancellation).
     totalAmount: integer({
       defaultValue: 0,
+      access: { create: () => false, update: () => false },
+      validation: { min: 0 },
     }),
     
     paidAmount: integer({
       defaultValue: 0,
+      access: { create: () => false, update: () => false },
+      validation: { min: 0 },
     }),
     
     creditLimit: integer({
-      validation: { isRequired: true },
+      validation: { isRequired: true, min: 0 },
       defaultValue: 100000, // $1000 default
     }),
     

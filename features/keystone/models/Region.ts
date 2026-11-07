@@ -33,9 +33,12 @@ export const Region = list({
         isRequired: true,
       },
     }),
+    // A fraction (0.08 = 8%); carts and orders multiply by it directly.
     taxRate: float({
       validation: {
         isRequired: true,
+        min: 0,
+        max: 1,
       },
     }),
     taxCode: text(),

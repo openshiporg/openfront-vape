@@ -26,13 +26,14 @@ export const ReturnItem = list({
     quantity: integer({
       validation: {
         isRequired: true,
+        min: 1,
       },
     }),
     isRequested: checkbox({
       defaultValue: true,
     }),
-    requestedQuantity: integer(),
-    receivedQuantity: integer(),
+    requestedQuantity: integer({ validation: { min: 0 } }),
+    receivedQuantity: integer({ validation: { min: 0 } }),
     metadata: json(),
     note: text(),
     return: relationship({

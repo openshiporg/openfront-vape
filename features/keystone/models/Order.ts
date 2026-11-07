@@ -38,6 +38,11 @@ async function regulatedOrderTax(context: any, orderId: string) {
   return quote ? quote.salesTaxAmount + quote.exciseTaxAmount + quote.localFeeAmount : 0;
 }
 
+// Tax uses the rate accepted at checkout (Order.taxRate); editing the region later must not rewrite past orders.
+function orderTaxRate(order: { taxRate?: number | null; region?: { taxRate?: number | null } | null }) {
+  return order.taxRate ?? order.region?.taxRate ?? 0;
+}
+
 export const Order = list<Lists.Order.TypeInfo>({
   access: {
     operation: {
@@ -90,7 +95,10 @@ export const Order = list<Lists.Order.TypeInfo>({
         update: () => false,
       },
     }),
+    // Drawn from Order_displayId_seq at checkout; unique so two orders can never share a number.
     displayId: integer({
+      isIndexed: "unique",
+      access: { create: () => false, update: () => false },
       validation: {
         isRequired: true,
       },
@@ -398,6 +406,7 @@ export const Order = list<Lists.Order.TypeInfo>({
                       value
                     }
                   }
+                  taxRate
                   region {
                     taxRate
                     currency {
@@ -433,7 +442,7 @@ export const Order = list<Lists.Order.TypeInfo>({
               }
 
               const taxableAmount = subtotal - totalDiscountAmount;
-              const tax = taxableAmount * (order.region?.taxRate || 0) +
+              const tax = taxableAmount * orderTaxRate(order) +
                 await regulatedOrderTax(context, item.id);
 
               const currencyCode = order.region?.currency?.code || "USD";
@@ -476,6 +485,7 @@ export const Order = list<Lists.Order.TypeInfo>({
                   shippingMethods {
                     price
                   }
+                  taxRate
                   region {
                     taxRate
                     currency {
@@ -524,7 +534,7 @@ export const Order = list<Lists.Order.TypeInfo>({
 
               // Calculate tax
               const taxableAmount = subtotal - totalDiscountAmount;
-              const tax = taxableAmount * (order.region?.taxRate || 0);
+              const tax = taxableAmount * orderTaxRate(order);
 
               // Regulated tax is committed by the external tax adapter and is
               // separate from the generic region rate (which must be zero).
@@ -571,6 +581,7 @@ export const Order = list<Lists.Order.TypeInfo>({
                   shippingMethods {
                     price
                   }
+                  taxRate
                   region {
                     taxRate
                     currency {
@@ -619,7 +630,7 @@ export const Order = list<Lists.Order.TypeInfo>({
 
               // Calculate tax
               const taxableAmount = subtotal - totalDiscountAmount;
-              const tax = taxableAmount * (order.region?.taxRate || 0);
+              const tax = taxableAmount * orderTaxRate(order);
 
               // Calculate total, including immutable provider-committed regulated tax evidence.
               return Math.round(subtotal - totalDiscountAmount + shipping + tax +

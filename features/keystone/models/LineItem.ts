@@ -60,7 +60,7 @@ export const LineItem = list<Lists.LineItem.TypeInfo>({
   fields: {
     // Core fields
     quantity: integer({
-      validation: { isRequired: true },
+      validation: { isRequired: true, min: 1 },
     }),
     metadata: json(),
     isReturn: checkbox(),

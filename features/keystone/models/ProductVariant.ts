@@ -46,7 +46,11 @@ export const ProductVariant = list<Lists.ProductVariant.TypeInfo>({
     barcode: text(),
     ean: text(),
     upc: text(),
+    // Opening stock is set on create; every later change goes through adjustInventory (or checkout),
+    // which moves it atomically and records a StockMovement. An absolute write here would overwrite a
+    // concurrent checkout decrement and oversell.
     inventoryQuantity: integer({
+      access: { update: () => false },
       validation: {
         isRequired: true,
       },
@@ -69,6 +73,7 @@ export const ProductVariant = list<Lists.ProductVariant.TypeInfo>({
     metadata: json(),
     variantRank: integer({
       defaultValue: 0,
+      validation: { min: 0 },
     }),
     product: relationship({
       ref: "Product.productVariants",

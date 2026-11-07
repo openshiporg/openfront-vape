@@ -489,7 +489,6 @@ export function VariantsTab({ product: initialProduct }: VariantsTab2Props) {
         ean: variant.ean,
         upc: variant.upc,
         material: variant.material,
-        inventoryQuantity: variant.inventoryQuantity,
         manageInventory: variant.manageInventory,
         allowBackorder: variant.allowBackorder,
         hsCode: variant.hsCode,
@@ -770,12 +769,13 @@ export const VariantForm = ({ variant, onChange, onSave, onCancel }: any) => (
             <Label className="text-xs">Stock</Label>
             <Input
               type="number"
-              value={variant.inventoryQuantity}
-              onChange={(e) =>
-                onChange({ ...variant, inventoryQuantity: parseInt(e.target.value) })
-              }
+              value={variant.inventoryQuantity ?? 0}
+              readOnly
+              disabled
+              title="Change stock from Inventory so the movement is recorded"
               className="mt-1 h-8 text-sm"
             />
+            <p className="mt-1 text-[11px] text-muted-foreground">Change stock from Inventory.</p>
           </div>
           <div>
             <Label className="text-xs">HS Code</Label>

@@ -87,6 +87,14 @@ async function deliverOrderConfirmation(sudo: any, orderId: string) {
   }
 }
 
+/** Order numbers come from a sequence, so two checkouts in the same second never share one. */
+export async function nextOrderDisplayId(tx: any): Promise<number> {
+  const rows = await tx.$queryRaw`SELECT nextval('"Order_displayId_seq"')::int AS "displayId"`;
+  const displayId = Number(rows?.[0]?.displayId);
+  if (!Number.isSafeInteger(displayId) || displayId <= 0) throw new Error("Order number could not be assigned");
+  return displayId;
+}
+
 export async function createOrderFromCartAtomically(cart: any, sudo: any): Promise<{ id: string; [key: string]: unknown }> {
   await assertCommerceReleaseEnabled(sudo);
   // Persisted outbox delivery is post-commit work; never send inside the fence.
@@ -293,7 +301,7 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
         shippingMethods: { connect: (cart.shippingMethods || []).map((item: any) => ({ id: item.id })) },
         lineItems: { connect: lineItemIds.map((id) => ({ id })) },
         status: "pending",
-        displayId: Math.floor(Date.now() / 1000),
+        displayId: await nextOrderDisplayId(tx),
         taxRate: cart.region.taxRate || 0,
         metadata: { ...(cart.metadata || {}), commercialSnapshot },
         secretKey,

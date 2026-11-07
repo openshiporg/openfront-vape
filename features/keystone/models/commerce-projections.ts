@@ -67,6 +67,7 @@ export interface PaymentProjection extends IdProjection {
   paymentCollection?: { paymentSessions: Array<{ id: string; amount: number; isSelected: boolean; paymentProvider?: { name: string } }> } | null;
 }
 export interface OrderPricingProjection {
+  taxRate?: number | null;
   lineItems: OrderLineProjection[];
   discounts: DiscountProjection[];
   shippingMethods: ShippingMethodProjection[];

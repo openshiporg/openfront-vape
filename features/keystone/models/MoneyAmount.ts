@@ -37,9 +37,9 @@ export const MoneyAmount = list<Lists.MoneyAmount.TypeInfo>({
         isRequired: true,
       },
     }),
-    compareAmount: integer(),
-    minQuantity: integer(),
-    maxQuantity: integer(),
+    compareAmount: integer({ validation: { min: 0 } }),
+    minQuantity: integer({ validation: { min: 1 } }),
+    maxQuantity: integer({ validation: { min: 1 } }),
     productVariant: relationship({
       ref: "ProductVariant.prices",
     }),
@@ -228,6 +228,15 @@ export const MoneyAmount = list<Lists.MoneyAmount.TypeInfo>({
       },
     }),
     ...trackingFieldsFor<Lists.MoneyAmount.TypeInfo>(),
+  },
+  hooks: {
+    validateInput: ({ resolvedData, item, addValidationError }: any) => {
+      const min = resolvedData.minQuantity !== undefined ? resolvedData.minQuantity : item?.minQuantity;
+      const max = resolvedData.maxQuantity !== undefined ? resolvedData.maxQuantity : item?.maxQuantity;
+      if (typeof min === "number" && typeof max === "number" && max < min) {
+        addValidationError("The maximum quantity cannot be lower than the minimum quantity.");
+      }
+    },
   },
   ui: {
     labelField: "displayPrice",

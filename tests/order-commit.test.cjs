@@ -56,6 +56,7 @@ const MEMBER = { id: 'u2', hasAccount: true, createdAt: T_OLD };
 function env({ failTx = false, existing = false, smtp = true, mail } = {}) {
   const state = { orderData: null, notif: { id: 'n1', data: { orderId: 'o1', status: 'pending_delivery' } }, mailCalls: [] };
   const tx = {
+    $queryRaw: async () => [{ displayId: 1001 }],
     order: {
       findFirst: async () => (existing ? { id: 'o1' } : null),
       create: async ({ data }) => { if (failTx) throw new Error('tx boom'); state.orderData = data; return { id: 'o1', displayId: 1, email: data.email, status: 'pending' }; },
@@ -78,7 +79,7 @@ function env({ failTx = false, existing = false, smtp = true, mail } = {}) {
       },
       update: async ({ data }) => { state.notif.data = data.data; return {}; },
     },
-    $queryRaw: undefined,
+    $queryRaw: async () => [{ displayId: 1001 }],
   };
   const sudo = { prisma, query: {
     MoneyAmount: { findMany: async () => [{ calculatedPrice: { calculatedAmount: 100, originalAmount: 100 } }] },

@@ -4870,6 +4870,7 @@ enum OrderStatusType {
 
 input OrderWhereUniqueInput {
   id: ID
+  displayId: Int
   draftOrder: DraftOrderWhereUniqueInput
   cart: CartWhereUniqueInput
 }
@@ -12014,6 +12015,7 @@ type Mutation {
   setActiveCartPaymentSession(cartId: ID!, providerId: ID!): Cart
   completeActiveCart(cartId: ID!, paymentSessionId: ID): JSON
   addActiveCartShippingMethod(cartId: ID!, shippingMethodId: ID!): Cart
+  submitActiveCartAgeCheck(cartId: ID!, dateOfBirth: String!, idNameMatchesShipping: Boolean!): JSON!
   initiatePaymentSession(cartId: ID!, paymentProviderId: String!): PaymentSession
   authorizeCardPaymentSession(cartId: ID!, sessionId: ID!, opaqueData: JSON!): JSON!
   handlePaymentProviderWebhook(providerId: ID!, event: JSON!, headers: JSON!): WebhookResult!
@@ -12373,7 +12375,7 @@ type Query {
   redirectToInit: Boolean
   activeCart(cartId: ID!): JSON
   activeCartShippingOptions(cartId: ID!): [ShippingOption!]
-  activeCartPaymentProviders(regionId: ID!): [PaymentProvider!]
+  activeCartPaymentProviders(regionId: ID!, cartId: ID): [PaymentProvider!]
   activeCartRegion(countryCode: String!): Region
   getCustomerOrder(orderId: ID!, secretKey: String): JSON
   getCustomerOrders(limit: Int, offset: Int): JSON
