@@ -15,6 +15,7 @@ import { withWebhooks } from "../webhooks/webhook-plugin";
 import { customerTokenDigest } from "./security/token-crypto";
 import { findOAuthToken } from "./security/oauth-credentials";
 import { s3ForcePathStyle } from "./lib/s3-storage";
+import { pooledDatabaseUrl } from './database-url';
 // Add rate limiting on storefront queries and mutations
 // import { ApolloArmor } from "@escape.tech/graphql-armor";
 // import { applyMiddleware } from "graphql-middleware";
@@ -475,7 +476,7 @@ export default withAuth(
     config({
       db: {
         provider: "postgresql",
-        url: databaseURL,
+        url: pooledDatabaseUrl(databaseURL),
         async onConnect(context) {
           startInvoiceOverdueSweep(context);
         },
