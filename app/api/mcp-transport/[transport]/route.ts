@@ -1333,7 +1333,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
                   title
                   sku
                   inventoryQuantity
-                  prices(where: { region: { countries: { some: { iso2: { equals: "${countryCode.toUpperCase()}" } } } } }) {
+                  prices(where: { region: { countries: { some: { iso2: { equals: "${String(countryCode).toLowerCase().replace(/[^a-z]/g, '')}" } } } } }) {
                     id
                     amount
                     currency {
@@ -1431,7 +1431,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
                   sku
                   inventoryQuantity
                   allowBackorder
-                  prices(where: { region: { countries: { some: { iso2: { equals: "${countryCode.toUpperCase()}" } } } } }) {
+                  prices(where: { region: { countries: { some: { iso2: { equals: "${String(countryCode).toLowerCase().replace(/[^a-z]/g, '')}" } } } } }) {
                     id
                     amount
                     currency {
