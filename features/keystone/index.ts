@@ -5,6 +5,7 @@ import { permissionsList } from "./models/fields";
 import "dotenv/config";
 import { extendGraphqlSchema } from "./mutations";
 import { models } from "./models";
+import { startInvoiceOverdueSweep } from "./lib/invoiceOverdue";
 import { sendPasswordResetEmail } from "./lib/mail";
 import Iron from "@hapi/iron";
 import * as cookie from "cookie";
@@ -475,6 +476,9 @@ export default withAuth(
       db: {
         provider: "postgresql",
         url: databaseURL,
+        async onConnect(context) {
+          startInvoiceOverdueSweep(context);
+        },
       },
       lists: models,
       storage: {

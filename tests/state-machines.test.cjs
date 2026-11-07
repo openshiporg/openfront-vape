@@ -32,3 +32,14 @@ test('business account requests: approved is final (account exists)', () => {
 test('assertTransition throws a clear error', () => {
   assert.throws(() => sm.assertTransition('Return', sm.RETURN_TRANSITIONS, 'received', 'canceled'), /Return cannot move from "received" to "canceled"/);
 });
+
+test('overdue sweep only moves sent invoices past their due date', async () => {
+  const ts = require('typescript');
+  const m = { exports: {} };
+  new Function('module', 'exports', ts.transpileModule(fs.readFileSync(path.join(root, 'features/keystone/lib/invoiceOverdue.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(m, m.exports);
+  let seen; const now = new Date();
+  const n = await m.exports.markOverdueInvoices({ invoice: { updateMany: async (a) => { seen = a; return { count: 2 }; } } }, now);
+  assert.equal(n, 2);
+  assert.deepEqual(seen.where, { status: 'sent', dueDate: { lt: now } });
+  assert.equal(seen.data.status, 'overdue');
+});
