@@ -1,6 +1,7 @@
 "use server";
 
 import { handleWebhook } from "../utils/paymentProviderAdapter";
+import { canTransition, PAYMENT_TRANSITIONS } from "../lib/state-machines";
 import { reconcileOrderFulfillmentStatus } from "../orders/order-lifecycle";
 
 const NO_DIVISION_CURRENCIES = new Set([
@@ -181,6 +182,8 @@ async function handlePaymentProviderWebhook(
   }
 
   await sudo.prisma.$transaction(async (tx: any) => {
+    // Provider events arrive late and out of order: a stale "failed" must not undo a capture.
+    let paymentMoved = true;
     if (succeeded && checkoutAttemptId && checkoutPaymentResult) {
       await tx.idempotencyKey.update({
         where: { id: checkoutAttemptId },
@@ -192,7 +195,16 @@ async function handlePaymentProviderWebhook(
       });
     }
     if (paymentId) {
-      if (succeeded) {
+      const nextPaymentStatus = succeeded ? "captured" : failed ? "failed" : authorized ? "authorized" : voided ? "canceled" : null;
+      const existing = nextPaymentStatus
+        ? await tx.payment.findUnique({ where: { id: paymentId }, select: { status: true } })
+        : null;
+      if (nextPaymentStatus && existing && !canTransition(PAYMENT_TRANSITIONS, existing.status, nextPaymentStatus)) {
+        paymentMoved = false;
+      }
+      if (!paymentMoved) {
+        // Stale or duplicate event: recorded as handled, no state change.
+      } else if (succeeded) {
         const currentPayment = await tx.payment.findUnique({
           where: { id: paymentId },
           select: { amount: true, currencyCode: true },
@@ -229,7 +241,10 @@ async function handlePaymentProviderWebhook(
         assertProviderAmount(provider.code, resource, currentPayment);
         await tx.payment.update({
           where: { id: paymentId },
-          data: { status: "refunded", data: resource },
+          // Payment.status has no refunded value: the refund itself is tracked by Refund rows and
+          // amountRefunded (written by processReturnRefund). Writing "refunded" here is an invalid enum
+          // value, which failed the whole transaction and made the provider retry the event forever.
+          data: { data: resource },
         });
       } else if (failed) {
         await tx.payment.update({
@@ -255,7 +270,7 @@ async function handlePaymentProviderWebhook(
       }
     }
 
-    if (orderId) {
+    if (orderId && paymentMoved) {
       if (succeeded) {
         await reconcileOrderFulfillmentStatus(tx, orderId, {
           reason: "payment_provider_capture_reconciled",

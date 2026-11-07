@@ -12,6 +12,7 @@ import {
 } from "@keystone-6/core/fields";
 import { permissions } from "../access";
 import { trackingFields } from "./trackingFields";
+import { canTransition, RETURN_TRANSITIONS } from "../lib/state-machines";
 
 export const Return = list({
   access: {
@@ -82,6 +83,12 @@ export const Return = list({
     ...trackingFields,
   },
   hooks: {
+    validateInput: ({ operation, resolvedData, item, addValidationError }: any) => {
+      if (operation !== "update" || !resolvedData.status || !item) return;
+      if (!canTransition(RETURN_TRANSITIONS, item.status as string, resolvedData.status as string)) {
+        addValidationError(`A ${item.status} return cannot become ${resolvedData.status}`);
+      }
+    },
     afterOperation: async ({ operation, item, context }: any) => {
       if (operation !== "create" || !item?.orderId) return;
       await context.sudo().db.OrderEvent.createOne({

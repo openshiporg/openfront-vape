@@ -1,4 +1,5 @@
 import type { Lists } from '.keystone/types';
+import { canTransition, BUSINESS_ACCOUNT_REQUEST_TRANSITIONS } from '../lib/state-machines';
 import { list, group, graphql } from '@keystone-6/core';
 import { 
   text,
@@ -228,6 +229,9 @@ export const BusinessAccountRequest = list<Lists.BusinessAccountRequest.TypeInfo
       const approved = resolvedData.approvedCreditLimit ?? item?.approvedCreditLimit;
       if ((resolvedData.status ?? item?.status) === 'approved' && (!Number.isSafeInteger(approved) || Number(approved) <= 0)) {
         addValidationError('A positive approved credit limit is required');
+      }
+      if (operation === 'update' && item && resolvedData.status && !canTransition(BUSINESS_ACCOUNT_REQUEST_TRANSITIONS, item.status as string, resolvedData.status as string)) {
+        addValidationError(`A ${item.status} request cannot become ${resolvedData.status}`);
       }
       if (item?.generatedAccountId && ['status', 'approvedCreditLimit', 'user'].some(key => key in resolvedData)) {
         addValidationError('An approved request is retained; manage its account through the account workflow');

@@ -20,10 +20,16 @@ async function cancelShippingLabel(
   const sudo = context.sudo();
   const localLabel = await sudo.query.ShippingLabel.findOne({
     where: { id: labelId },
-    query: "id data metadata provider { id }",
+    query: "id status data metadata provider { id }",
   });
   if (!localLabel || localLabel.provider?.id !== providerId) {
     throw new Error("Shipping label not found");
+  }
+  // The "cancelled" state lives in metadata.cancellation (status stays purchased), so guard on it here.
+  if (localLabel.status !== "purchased") throw new Error("Only purchased labels can be cancelled");
+  const priorCancellation = (localLabel.metadata as any)?.cancellation?.status;
+  if (priorCancellation === "confirmed" || priorCancellation === "pending") {
+    throw new Error("This label is already cancelled; the refund is being processed by the carrier");
   }
 
   const provider = await sudo.db.ShippingProvider.findOne({

@@ -1,5 +1,6 @@
 import { permissions } from "../access";
 import { refundPayment } from "../utils/paymentProviderAdapter";
+import { RETURN_REFUNDABLE } from "../lib/state-machines";
 import {
   enqueueWebhookOutbox,
   subscribedWebhookEndpointIds,
@@ -52,6 +53,10 @@ async function processReturnRefund(
   if (!returnRecord?.order?.id || returnRecord.refundAmount <= 0) {
     throw new Error("Return is not refundable");
   }
+  // Declined (canceled) and already-received returns are final; a fresh idempotency key must not refund them again.
+  if (!priorAttempt && !RETURN_REFUNDABLE.includes(returnRecord.status)) {
+    throw new Error(`A ${returnRecord.status} return cannot be refunded`);
+  }
   if (!returnRecord.order.payments?.some((payment: any) => payment.id === paymentId)) {
     throw new Error("Payment does not belong to return order");
   }
@@ -59,7 +64,7 @@ async function processReturnRefund(
   const payment = await sudo.query.Payment.findOne({
     where: { id: paymentId },
     query: `
-      id amount amountRefunded currencyCode data
+      id status amount amountRefunded currencyCode data
       refunds { id amount idempotencyKey }
       paymentCollection {
         paymentSessions {
@@ -72,6 +77,9 @@ async function processReturnRefund(
     `,
   });
   if (!payment) throw new Error("Payment not found");
+  if (!priorAttempt && payment.status !== "captured") {
+    throw new Error("Only captured payments can be refunded");
+  }
   const alreadyRefunded = payment.refunds?.reduce((sum: number, refund: any) => sum + refund.amount, 0) || 0;
   if (alreadyRefunded + returnRecord.refundAmount > payment.amount) {
     throw new Error("Refund exceeds captured payment amount");
@@ -181,8 +189,9 @@ async function processReturnRefund(
         metadata: { providerId: provider.id, providerResult },
       },
     });
-    await tx.return.update({
-      where: { id: returnId },
+    // Compare-and-set: two refund keys racing on one return cannot both settle it.
+    const claimedReturn = await tx.return.updateMany({
+      where: { id: returnId, status: { in: [...RETURN_REFUNDABLE] } },
       data: {
         status: "received",
         receivedAt: new Date(),
@@ -193,6 +202,7 @@ async function processReturnRefund(
         },
       },
     });
+    if (claimedReturn.count !== 1) throw new Error("Return was already settled");
     await tx.orderEvent.create({
       data: {
         orderId: returnRecord.order.id,
