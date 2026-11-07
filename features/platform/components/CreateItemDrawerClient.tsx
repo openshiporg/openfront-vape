@@ -80,6 +80,12 @@ export function CreateItemDrawerClient({
 
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
         <div className="flex-1 overflow-y-auto p-4">
+          {createItem.state === 'error' && createItem.error?.graphQLErrors?.length ? (
+            <div role="alert" className="mb-4 flex gap-2 rounded-[4px] border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+              <p className="whitespace-pre-line">{createItem.error.graphQLErrors.map((err: any) => err.message).filter(Boolean).join('\n')}</p>
+            </div>
+          ) : null}
           <Fields
             {...createItem.props}
             fields={enhancedFields}

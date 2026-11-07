@@ -28,8 +28,13 @@ const UNSAFE_DETAIL = /prisma|invocation|\bat\s+\S+\s*\(|\bat\s+\/|node_modules|
 const MAX_MESSAGE_LENGTH = 400;
 
 function cleanMessage(message: string): string | null {
-  // Keystone lists failures as "  - List.field: message"; keep only the message
-  const text = message.replace(/^\s*-\s*\w+(\.\w+)+:\s*/gm, '').replace(/\s+\n/g, '\n').trim();
+  // Keystone lists failures under a generic heading as "  - List.field: message" (or "  - List: message"
+  // for list-level hooks); drop the heading and keep only the messages.
+  const text = message
+    .replace(/^You provided invalid data for this operation\.\s*\n?/, '')
+    .replace(/^\s*-\s*\w+(\.\w+)*:\s*/gm, '')
+    .replace(/\s+\n/g, '\n')
+    .trim();
   if (!text || text.length > MAX_MESSAGE_LENGTH || UNSAFE_DETAIL.test(text)) return null;
   return text;
 }
