@@ -29,7 +29,7 @@ const formatCurrency = (amount: number, currencyCode: string) => {
 
 async function regulatedOrderTax(context: any, orderId: string) {
   const quotes = await context.sudo().query.RegulatedTaxQuote.findMany({
-    where: { order: { id: { equals: orderId } }, status: { in: ["committed", "reversed"] } },
+    where: { order: { id: { equals: orderId } }, status: { equals: "committed" } },
     take: 2,
     query: "salesTaxAmount exciseTaxAmount localFeeAmount",
   });

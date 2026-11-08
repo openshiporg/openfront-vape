@@ -1,9 +1,7 @@
-import { RateLimiterMemory } from "rate-limiter-flexible";
 import { shopperError } from "../lib/shopperError";
 import { assertCartAccess, cartNotFound, withCartMutationLock } from "../security/cart-access";
 
-// Gift card codes are bearer value: throttle guesses per cart and per client.
-const guessLimiter = new RateLimiterMemory({ points: 10, duration: 900, blockDuration: 900 });
+import { consumeGiftCardGuess } from "../security/gift-card-guess";
 
 export function normalizeGiftCardCode(code: unknown): string {
   const normalized = String(code ?? "").trim().toUpperCase().replace(/\s+/g, "");
@@ -17,12 +15,8 @@ export async function addGiftCardToActiveCart(_root: unknown, { cartId, code }: 
   return withCartMutationLock(context, cartId, async (context: any) => {
     await assertCartAccess(context, cartId);
     const normalized = normalizeGiftCardCode(code);
-    const client = context.req?.socket?.remoteAddress || "unknown-client";
-    try {
-      await guessLimiter.consume(`${cartId}:${client}`);
-    } catch {
-      throw shopperError("Too many gift card attempts. Try again in 15 minutes.", "GIFT_CARD_RATE_LIMITED");
-    }
+    // Per client IP and per shopper session, never per cart.
+    await consumeGiftCardGuess(context.req, context.session);
     const sudo = context.sudo();
     const cart = await sudo.query.Cart.findOne({
       where: { id: cartId },

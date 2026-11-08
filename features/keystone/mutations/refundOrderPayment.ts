@@ -5,6 +5,8 @@ import { enqueueWebhookOutbox, subscribedWebhookEndpointIds } from "../../webhoo
 import { findIdempotencyAttempt, getOrCreateIdempotencyAttempt } from "../utils/idempotency";
 import { GIFT_CARD_TENDER, refundGiftCardTender } from "../checkout/gift-card-tender";
 import transitionOrderStatus from "./transitionOrderStatus";
+import { appendOrderTaxReversal } from "../regulated/reversals";
+import { createStoreRateTaxAdapter, STORE_RATE_PROVIDER_CODE } from "../../regulated-commerce/providers/builtin/tax-store-rate";
 
 function refundRuleError(message: string, code: "REFUND_EXCEEDS_BALANCE" | "PAYMENT_NOT_CAPTURED") {
   return new GraphQLError(message, { extensions: { code } });
@@ -42,7 +44,24 @@ export async function cancelOrderIfFullyRefunded(context: any, orderId: string) 
   });
   if (!order || !shouldCancelAfterRefund(order)) return false;
   await transitionOrderStatus(null, { orderId, status: "canceled", reason: "Fully refunded" }, context);
+  await reverseTaxForCanceledOrder(context, orderId).catch((error: unknown) =>
+    console.error("tax reversal after cancel failed", orderId, error));
   return true;
+}
+
+/** A fully refunded, canceled order owes no tax: append the reversal row (the committed quote stays as written). */
+export async function reverseTaxForCanceledOrder(context: any, orderId: string) {
+  const prisma = context.sudo().prisma;
+  const store = {
+    ratesFor: async () => [],
+    taxable: async () => { throw new Error("not used"); },
+    findQuote: (reference: string) => prisma.regulatedTaxQuote.findFirst({ where: { providerReference: reference, status: "committed" } }),
+  };
+  return appendOrderTaxReversal({
+    context,
+    orderId,
+    adapterFor: (code) => (code === STORE_RATE_PROVIDER_CODE ? createStoreRateTaxAdapter(store) : null),
+  });
 }
 
 /** Refund part or all of one captured payment on an order. Card payments go back through the processor;

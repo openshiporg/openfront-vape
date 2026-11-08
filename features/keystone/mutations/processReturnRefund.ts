@@ -7,6 +7,7 @@ import {
 } from "../../webhooks/outbox";
 import { findIdempotencyAttempt, getOrCreateIdempotencyAttempt } from "../utils/idempotency";
 import { evidenceDigest } from "../../regulated-commerce/core/decision-engine";
+import { GIFT_CARD_TENDER, refundGiftCardTender } from "../checkout/gift-card-tender";
 
 function providerPaymentReference(payment: any): string | undefined {
   return (
@@ -85,12 +86,14 @@ async function processReturnRefund(
     throw new Error("Refund exceeds captured payment amount");
   }
 
-  const provider =
+  // A gift-card payment has no processor: the value goes back onto the cards, as ledger rows.
+  const giftCardTender = (payment.data as any)?.tender === GIFT_CARD_TENDER;
+  const provider = giftCardTender ? { id: GIFT_CARD_TENDER } : (
     payment.paymentCollection?.paymentSessions?.find((session: any) => session.isSelected)?.paymentProvider ||
-    payment.paymentCollection?.paymentSessions?.[0]?.paymentProvider;
-  const providerReference = providerPaymentReference(payment);
+    payment.paymentCollection?.paymentSessions?.[0]?.paymentProvider);
+  const providerReference = giftCardTender ? GIFT_CARD_TENDER : providerPaymentReference(payment);
   if (!provider || !providerReference) throw new Error("Refund provider reference is missing");
-  if (provider.code?.includes("manual")) {
+  if (!giftCardTender && (provider as any).code?.includes("manual")) {
     throw new Error("Manual tender refunds require operator verification");
   }
 
@@ -117,7 +120,7 @@ async function processReturnRefund(
     if (acquired.count !== 1) throw new Error("Refund is already in progress");
   }
 
-  if (attempt.recoveryPoint === "started") {
+  if (attempt.recoveryPoint === "started" && !giftCardTender) {
     await sudo.prisma.$transaction(async (tx: any) => {
       const reserved = await tx.payment.updateMany({
         where: {
@@ -138,9 +141,24 @@ async function processReturnRefund(
   }
 
   let providerResult = attempt.responseBody?.providerResult;
-  if (attempt.recoveryPoint !== "provider_refunded" || !providerResult) {
+  if (giftCardTender) {
+    // Credits the cards and records the Refund in one transaction; a replay with the same key returns the first.
+    const giftRefund = await refundGiftCardTender(sudo.prisma, {
+      orderId: returnRecord.order.id,
+      paymentId,
+      amount: returnRecord.refundAmount,
+      reason: `Return ${returnId}`,
+      businessKey,
+      userId: context.session.itemId,
+    });
+    providerResult = { status: "succeeded", tender: GIFT_CARD_TENDER, refundId: giftRefund.id };
+    await sudo.prisma.idempotencyKey.update({
+      where: { id: attempt.id },
+      data: { recoveryPoint: "provider_refunded", responseBody: { providerResult }, lockedAt: new Date() },
+    });
+  } else if (attempt.recoveryPoint !== "provider_refunded" || !providerResult) {
     providerResult = await refundPayment({
-      provider,
+      provider: provider as any,
       paymentId: providerReference,
       amount: returnRecord.refundAmount,
       currency: payment.currencyCode,
@@ -177,9 +195,10 @@ async function processReturnRefund(
     const duplicate = await tx.refund.findFirst({
       where: { idempotencyKey: businessKey },
     });
-    if (duplicate) return duplicate;
+    // A gift-card refund row was written with the ledger credit; the return still has to be settled.
+    if (duplicate && !giftCardTender) return duplicate;
 
-    const created = await tx.refund.create({
+    const created = duplicate ?? await tx.refund.create({
       data: {
         amount: returnRecord.refundAmount,
         reason: "return",

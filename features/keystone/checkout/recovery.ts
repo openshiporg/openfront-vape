@@ -1,4 +1,4 @@
-import { getOrCreateIdempotencyAttempt } from "../utils/idempotency";
+import { canonicalIdempotencyParams, getOrCreateIdempotencyAttempt, idempotencyFingerprint } from "../utils/idempotency";
 import { shopperError } from "../lib/shopperError";
 
 type CartInventoryLine = {
@@ -16,6 +16,37 @@ export function checkoutKey(cartId: string): string {
   return `checkout:${cartId}`;
 }
 
+const ATTEMPT_LOCK_MS = 5 * 60 * 1000;
+
+/**
+ * An attempt that is back at `started` holds no stock, discount, gift-card hold or payment: every
+ * pre-capture failure resets it there. It can be pinned to what the shopper now accepts, so a changed
+ * gift card mix or payment method after a failure is a fresh checkout, not a conflicting one.
+ */
+export function canRepinCheckoutAttempt(attempt: { recoveryPoint?: string; lockedAt?: Date | string | null } | null | undefined, now = Date.now()): boolean {
+  if (!attempt || attempt.recoveryPoint !== "started") return false;
+  return !attempt.lockedAt || new Date(attempt.lockedAt).getTime() < now - ATTEMPT_LOCK_MS;
+}
+
+export type ReplayStep = "none" | "payment" | "account";
+
+/**
+ * What an already-created order still needs when its cart is completed again. A gift-card-covered
+ * order has no card payment and no business account to post: it just replays.
+ */
+export function replayReconciliationStep(input: {
+  paymentSessionId?: string | null;
+  hasCardPayment: boolean;
+  coveredByGiftCards: boolean;
+  hasAccount: boolean;
+  giftCardsApplied: boolean;
+}): ReplayStep {
+  if (input.coveredByGiftCards) return "none";
+  if (input.paymentSessionId && !input.hasCardPayment) return "payment";
+  if (!input.paymentSessionId && !input.hasAccount && !input.giftCardsApplied) return "account";
+  return "none";
+}
+
 export async function getOrCreateCheckoutAttempt(
   prisma: any,
   cartId: string,
@@ -23,6 +54,15 @@ export async function getOrCreateCheckoutAttempt(
   acceptedSnapshot?: Record<string, unknown>
 ): Promise<any> {
   const idempotencyKey = checkoutKey(cartId);
+  const previous = await prisma.idempotencyKey.findUnique({ where: { idempotencyKey } });
+  if (canRepinCheckoutAttempt(previous)) {
+    const params = { cartId, paymentSessionId: paymentSessionId || null, ...(acceptedSnapshot ? { acceptedSnapshot } : {}) };
+    const normalized = canonicalIdempotencyParams(params);
+    const pinned = { ...normalized, _fingerprint: idempotencyFingerprint(params) };
+    if (JSON.stringify((previous.requestParams as any)) !== JSON.stringify(pinned)) {
+      await prisma.idempotencyKey.update({ where: { id: previous.id }, data: { requestParams: pinned, responseBody: null, responseCode: null } });
+    }
+  }
   const { attempt, replay } = await getOrCreateIdempotencyAttempt(prisma, {
     key: idempotencyKey,
     requestPath: "completeActiveCart",

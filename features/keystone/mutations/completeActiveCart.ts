@@ -5,11 +5,13 @@ import {
 import {
   capturePayment,
   getPaymentStatus,
+  refundPayment,
 } from "../utils/paymentProviderAdapter";
 import {
   checkoutKey,
   getOrCreateCheckoutAttempt,
   releaseCheckoutResources,
+  replayReconciliationStep,
   reserveCartInventory,
   reserveDiscountUsage,
   updateCheckoutAttempt,
@@ -30,7 +32,38 @@ import { regulatedTaxAmountForCart, requireAllowedCartCompliance } from "../regu
 import { shopperError } from "../lib/shopperError";
 import { cartNotFound } from "../security/cart-access";
 
-async function completeActiveCart(
+/**
+ * Stripe confirms the card in the browser before this runs, so by the time any check below can fail the
+ * money may already be taken. Any failure that leaves no order and no recoverable captured attempt
+ * refunds the charge here, so a charge never stands without an order.
+ */
+async function completeActiveCart(root: any, args: { cartId: string; paymentSessionId?: string }, context: any) {
+  try {
+    return await completeActiveCartOnce(root, args, context);
+  } catch (error) {
+    if (args.paymentSessionId && (error as any)?.extensions?.code !== 'CHECKOUT_IN_PROGRESS') {
+      await refundChargeAfterFailure(args.cartId, args.paymentSessionId, context).catch((refundError) =>
+        console.error('Refund after failed checkout could not be checked', args.cartId, refundError));
+    }
+    throw error;
+  }
+}
+
+async function refundChargeAfterFailure(cartId: string, paymentSessionId: string, context: any) {
+  const sudo = context.sudo();
+  const cart = await sudo.query.Cart.findOne({
+    where: { id: cartId },
+    query: `id order { id } region { currency { code } }
+      paymentCollection { paymentSessions { id data paymentProvider { id code refundPaymentFunction getPaymentStatusFunction credentials } } }`,
+  });
+  if (!cart || cart.order?.id) return;
+  const attempt = await sudo.prisma.idempotencyKey.findUnique({ where: { idempotencyKey: checkoutKey(cartId) } });
+  // After capture the attempt is recoverable: a retry completes the order without charging again.
+  if (attempt && ['payment_unknown', 'order_created', 'payment_confirmed', 'completed'].includes(attempt.recoveryPoint)) return;
+  await refundOrphanedCharge(cart, paymentSessionId, sudo, attempt);
+}
+
+async function completeActiveCartOnce(
   root: any,
   { cartId, paymentSessionId }: { cartId: string; paymentSessionId?: string },
   context: any
@@ -214,7 +247,18 @@ async function completeActiveCart(
     const existingAttempt = await sudoContext.prisma.idempotencyKey.findUnique({
       where: { idempotencyKey: checkoutKey(cartId) },
     });
-    if (paymentSessionId && !cart.order.payments?.some((payment: any) => payment.data?.tender !== 'gift_card')) {
+    // The order exists, so its gift-card hold is already committed: price the replay from it. The cart
+    // read above returns before allocation, so without this a covered order looked like an account order.
+    const replayHold = await findGiftCardHold(sudoContext.prisma, cartId);
+    const replayApplied = replayHold?.body.applied?.length ?? 0;
+    const step = replayReconciliationStep({
+      paymentSessionId,
+      hasCardPayment: Boolean(cart.order.payments?.some((payment: any) => payment.data?.tender !== 'gift_card')),
+      coveredByGiftCards: replayApplied > 0 && replayHold?.body.due === 0,
+      hasAccount: Boolean(cart.order.account?.id),
+      giftCardsApplied: replayApplied > 0,
+    });
+    if (step === 'payment') {
       const selectedSession = cart.paymentCollection?.paymentSessions?.find(
         (session: any) => session.id === paymentSessionId
       );
@@ -226,7 +270,7 @@ async function completeActiveCart(
       } else {
         await createPaymentRecord(paymentResult, selectedSession, cart.order, cart, sudoContext);
       }
-    } else if (!paymentSessionId && !cart.order.account?.id && !cart.giftCardAllocation?.applied?.length) {
+    } else if (step === 'account') {
       if (!user) throw new Error('Checkout requires account reconciliation');
       const accounts = await sudoContext.query.Account.findMany({
         where: {
@@ -332,6 +376,9 @@ async function completeActiveCart(
         error instanceof Error ? error.message : 'Checkout failed'
       );
       await releaseGiftCardHold(sudoContext.prisma, cartId, error instanceof Error ? error.message : 'Checkout failed');
+    } else if (!inventoryReserved && attempt.recoveryPoint === 'started') {
+      // Nothing was taken: unlock so the shopper can change the cart and try again at once.
+      await updateCheckoutAttempt(sudoContext.prisma, attempt.id, 'started', { error: error instanceof Error ? error.message : 'Checkout failed' }, 409);
     }
     throw error;
   }
@@ -476,11 +523,56 @@ async function handlePaidOrder(cart: any, paymentSessionId: string, sudoContext:
     attempt.responseBody = { paymentResult };
   }
 
-  // Create order and payment record
-  const order = await createOrderFromCartAtomically(cart, sudoContext);
+  // The card is already charged. If the order cannot be created, give the money back in this same path
+  // rather than leave a capture with no order. Rewinding the attempt lets the catch return stock and holds.
+  let order;
+  try {
+    order = await createOrderFromCartAtomically(cart, sudoContext);
+  } catch (error) {
+    const refunded = await refundOrphanedCharge(cart, paymentSessionId, sudoContext, attempt, paymentResult.paymentIntentId);
+    if (refunded) {
+      await updateCheckoutAttempt(sudoContext.prisma, attempt.id, 'resources_reserved', { autoRefund: { paymentIntentId: paymentResult.paymentIntentId } });
+      attempt.recoveryPoint = 'resources_reserved';
+    }
+    throw error;
+  }
   await createPaymentRecord(paymentResult, selectedSession, order, cart, sudoContext);
 
   return order;
+}
+
+/**
+ * Refund a card charge that has no order. Looks the intent up first, so a payment that never succeeded
+ * is left alone. On success the spent session is detached from the cart (a refunded intent still reports
+ * "succeeded", so a retry must never settle against it). If the refund itself fails the charge stays
+ * recoverable: the caller's attempt is not rewound and a retry completes the order without charging again.
+ */
+export async function refundOrphanedCharge(cart: any, paymentSessionId: string, sudoContext: any, attempt: any, knownIntentId?: string): Promise<boolean> {
+  try {
+    const session = cart.paymentCollection?.paymentSessions?.find((entry: any) => entry.id === paymentSessionId);
+    const provider = session?.paymentProvider;
+    const paymentId = knownIntentId || session?.data?.paymentIntentId || session?.data?.clientSecret?.split('_secret_')[0];
+    if (!provider || !paymentId || provider.code === 'pp_system_default') return false;
+    const status = await getPaymentStatus({ provider, paymentId });
+    if (!['succeeded', 'completed', 'captured'].includes(String(status?.status || '').toLowerCase())) return false;
+    const amount = Number(status.amount);
+    if (!Number.isInteger(amount) || amount <= 0) return false;
+    const refund = await refundPayment({
+      provider,
+      paymentId,
+      amount,
+      currency: String(status.currency || cart.region.currency.code),
+      idempotencyKey: `${checkoutKey(cart.id)}:auto-refund:${paymentId}`,
+    });
+    if (!['succeeded', 'completed', 'refunded', 'pending'].includes(String(refund?.status || '').toLowerCase())) {
+      throw new Error(`Refund status: ${refund?.status}`);
+    }
+    await sudoContext.prisma.cart.update({ where: { id: cart.id }, data: { paymentCollectionId: null } });
+    return true;
+  } catch (error) {
+    console.error('Automatic refund of a charge with no order did not complete', cart.id, error);
+    return false;
+  }
 }
 
 async function settlePaymentSession(session: any, cart: any) {
