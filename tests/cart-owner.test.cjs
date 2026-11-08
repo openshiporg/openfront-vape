@@ -58,3 +58,11 @@ test('no other Cart hook sets the owner from the session', () => {
   assert.doesNotMatch(src, /resolvedData\.user = \{ connect: \{ id: context\.session\.itemId \} \}/);
   assert.doesNotMatch(src, /return \{ connect: \{ id: context\.session\.itemId \} \}/);
 });
+
+test('the staff createCart command never makes the staff member the owner', () => {
+  const src = fs.readFileSync(path.join(root, 'features/keystone/security/cart-command.ts'), 'utf8');
+  const body = src.slice(src.indexOf('async function createControlledCart'), src.indexOf('const canManageCarts'));
+  assert.doesNotMatch(body, /let ownerId = tx\.session\.itemId/);
+  assert.match(body, /let ownerId: string \| null = null;/);
+  assert.match(body, /\.\.\.\(ownerId \? \{ user: \{ connect: \{ id: ownerId \} \} \} : \{\}\)/);
+});

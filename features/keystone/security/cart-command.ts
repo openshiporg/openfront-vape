@@ -28,7 +28,9 @@ async function createControlledCart(_root: unknown, { data }: { data: Record<str
     const { user, type, ...values } = data;
     const parsed = parseCartUpdate(values);
     if (type !== undefined && type !== "default") throw new Error("Cart could not be created");
-    let ownerId = tx.session.itemId;
+    // Staff create carts for customers: the owner is the customer they name, never the
+    // staff member. With no customer named the cart is a guest cart (no owner).
+    let ownerId: string | null = null;
     if (user !== undefined) {
       const selected = user as { connect?: { id?: string } };
       if (!selected?.connect?.id || Object.keys(selected).join() !== "connect" || Object.keys(selected.connect).join() !== "id") throw new Error("Select one existing cart owner");
@@ -40,10 +42,10 @@ async function createControlledCart(_root: unknown, { data }: { data: Record<str
       await tx.prisma.$queryRaw`SELECT id FROM "Address" WHERE id = ${id} FOR UPDATE`;
       await assertAddressAccess(tx, id);
       const address = await tx.prisma.address.findUnique({ where: { id }, select: { userId: true } });
-      if (address?.userId !== ownerId) throw new Error("Selected address does not belong to the exact cart customer");
+      if (!ownerId || address?.userId !== ownerId) throw new Error("Selected address does not belong to the exact cart customer");
     }
     // Privileged write only after current actor, customer and related-address checks.
-    return tx.sudo().db.Cart.createOne({ data: { ...parsed, type: "default", user: { connect: { id: ownerId } } } });
+    return tx.sudo().db.Cart.createOne({ data: { ...parsed, type: "default", ...(ownerId ? { user: { connect: { id: ownerId } } } : {}) } });
   });
 }
 
