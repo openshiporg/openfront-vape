@@ -73,14 +73,15 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
 
   const isOpen = searchParams?.get("step") === "payment";
 
-  const isStripePayment = isStripe(selectedPaymentMethod);
-  const isAuthorizeNetPayment = isAuthorizeNet(selectedPaymentMethod);
+  const paidByGiftcard =
+    cart?.giftCards && cart?.giftCards?.length > 0 && cart?.rawTotal === 0;
+  // Nothing left to charge: no card method applies.
+  const isStripePayment = !paidByGiftcard && isStripe(selectedPaymentMethod);
+  const isAuthorizeNetPayment = !paidByGiftcard && isAuthorizeNet(selectedPaymentMethod);
   const stripeReady = useContext(StripeContext);
 
   // Check if we're in sandbox/test mode
 
-  const paidByGiftcard =
-    cart?.giftCards && cart?.giftCards?.length > 0 && cart?.rawTotal === 0;
 
   const paymentReady =
     (activeSession && cart?.shippingMethods.length !== 0) || paidByGiftcard;
@@ -157,7 +158,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
       if (paidByGiftcard) {
         return router.push(pathname + "?" + createQueryString("step", "review"), { scroll: false });
       }
-      const shouldInputCard = isStripe(selectedPaymentMethod) && !cardComplete;
+      const shouldInputCard = isStripePayment && !cardComplete;
 
       const hasExistingSelectedSession =
         cart.paymentCollection?.paymentSessions?.some(
@@ -194,7 +195,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
     setError(null);
   }, [isOpen]);
 
-  const methodTitle = paymentInfoMap[selectedPaymentMethod]?.title || selectedPaymentMethod;
+  const methodTitle = paidByGiftcard ? "Gift card" : paymentInfoMap[selectedPaymentMethod]?.title || selectedPaymentMethod;
 
   return (
     <section className="flex flex-col gap-5 border-t border-vp-line pt-5" aria-label="Payment">
