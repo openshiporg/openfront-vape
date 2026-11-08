@@ -31,17 +31,27 @@ import {
 import { regulatedTaxAmountForCart, requireAllowedCartCompliance } from "../regulated/enforcement";
 import { shopperError } from "../lib/shopperError";
 import { cartNotFound } from "../security/cart-access";
+import { randomUUID } from "node:crypto";
+import { autoRefundKey, providerPaymentId } from "../checkout/payment-keys";
 
 /**
- * Stripe confirms the card in the browser before this runs, so by the time any check below can fail the
- * money may already be taken. Any failure that leaves no order and no recoverable captured attempt
- * refunds the charge here, so a charge never stands without an order.
+ * Stripe confirms the card in the browser before this runs, so by the time a check below fails the money
+ * may already be taken. Such a charge is refunded, but only:
+ *  - after this caller passed cart access (a stranger is refused before anything can touch the money);
+ *  - under the cart fence, by the one call that claims the checkout attempt (an in-flight checkout holds
+ *    the attempt lock, so a parallel call can never refund the charge that call is turning into an order);
+ *  - when the attempt records that claim before the refund is sent.
+ * A recoverable captured attempt (payment_unknown, payment_confirmed, order_created) is never refunded.
  */
 async function completeActiveCart(root: any, args: { cartId: string; paymentSessionId?: string }, context: any) {
+  await assertCartAccess(context, args.cartId, { allowCompleted: true });
+  if (args.paymentSessionId) {
+    await assertPaymentSessionBelongsToCart(context, args.cartId, args.paymentSessionId);
+  }
   try {
     return await completeActiveCartOnce(root, args, context);
   } catch (error) {
-    if (args.paymentSessionId && (error as any)?.extensions?.code !== 'CHECKOUT_IN_PROGRESS') {
+    if (args.paymentSessionId) {
       await refundChargeAfterFailure(args.cartId, args.paymentSessionId, context).catch((refundError) =>
         console.error('Refund after failed checkout could not be checked', args.cartId, refundError));
     }
@@ -49,18 +59,156 @@ async function completeActiveCart(root: any, args: { cartId: string; paymentSess
   }
 }
 
-async function refundChargeAfterFailure(cartId: string, paymentSessionId: string, context: any) {
-  const sudo = context.sudo();
-  const cart = await sudo.query.Cart.findOne({
-    where: { id: cartId },
-    query: `id order { id } region { currency { code } }
-      paymentCollection { paymentSessions { id data paymentProvider { id code refundPaymentFunction getPaymentStatusFunction credentials } } }`,
+const IN_FLIGHT_MS = 5 * 60 * 1000;
+const CHARGE_TAKEN = ['succeeded', 'completed', 'captured'];
+
+/** An attempt that holds no order, no recoverable capture and no live lock: nobody else is turning this charge into an order. */
+export function refundClaimable(attempt: { recoveryPoint?: string; lockedAt?: Date | string | null } | null | undefined, now = Date.now()): boolean {
+  if (!attempt) return true;
+  const unlocked = !attempt.lockedAt || new Date(attempt.lockedAt).getTime() < now - IN_FLIGHT_MS;
+  if (['started', 'failed'].includes(String(attempt.recoveryPoint))) return unlocked;
+  // A refund claim whose call died: the next call finishes it (the provider status says whether the refund went out).
+  if (attempt.recoveryPoint === 'refund_claimed') return unlocked;
+  return false;
+}
+
+export { autoRefundKey, providerPaymentId };
+
+/** Charged and not refunded at all: the only state an order may be settled against. */
+export function chargeIsHeld(status: any): boolean {
+  return CHARGE_TAKEN.includes(String(status?.status || '').toLowerCase()) && !(Number(status?.amountRefunded || 0) > 0);
+}
+
+/**
+ * Refund the card charge of a checkout that failed before any order exists. The caller has already passed
+ * cart access. The claim, the refund and the bookkeeping are three steps; the provider call never runs inside
+ * the database transaction.
+ */
+type RefundDeps = { getPaymentStatus: typeof getPaymentStatus; refundPayment: typeof refundPayment; fence: typeof withCartFence; bookkeeping: typeof lockCartForBookkeeping };
+export async function refundChargeAfterFailure(cartId: string, paymentSessionId: string, context: any, overrides: Partial<RefundDeps> = {}) {
+  const deps: RefundDeps = { getPaymentStatus, refundPayment, fence: withCartFence, bookkeeping: lockCartForBookkeeping, ...overrides };
+  const claim = randomUUID();
+  // 1. Claim, under the cart fence (re-checks access, row-locks the cart and the checkout attempt).
+  const claimed = await deps.fence(context, cartId, 'recovery', async (locked) => {
+    const tx = locked.sudo().prisma;
+    const cart = await tx.cart.findUnique({ where: { id: cartId }, select: { id: true, orderId: true, paymentCollectionId: true } });
+    if (!cart || cart.orderId || !cart.paymentCollectionId) return null;
+    const session = await tx.paymentSession.findFirst({
+      where: { id: paymentSessionId, paymentCollectionId: cart.paymentCollectionId },
+      include: { paymentProvider: true },
+    });
+    const provider = session?.paymentProvider;
+    const paymentId = providerPaymentId(session?.data);
+    if (!provider || !paymentId || provider.code === 'pp_system_default') return null;
+    // Money behind an order is never refunded from here.
+    const backing = await tx.payment.findFirst({ where: { data: { path: ['paymentIntentId'], equals: paymentId }, status: 'captured' }, select: { id: true } });
+    if (backing) return null;
+    const attempt = await tx.idempotencyKey.findUnique({ where: { idempotencyKey: checkoutKey(cartId) } });
+    if (!refundClaimable(attempt)) return null;
+    const previous = attempt && attempt.recoveryPoint !== 'refund_claimed'
+      ? { recoveryPoint: attempt.recoveryPoint, responseBody: attempt.responseBody ?? null, responseCode: attempt.responseCode ?? null }
+      : { recoveryPoint: 'started', responseBody: null, responseCode: null };
+    const body = { claim, paymentId, paymentSessionId, previous };
+    if (attempt) {
+      await tx.idempotencyKey.update({ where: { id: attempt.id }, data: { recoveryPoint: 'refund_claimed', responseBody: body, lockedAt: new Date() } });
+    } else {
+      await tx.idempotencyKey.create({
+        data: { idempotencyKey: checkoutKey(cartId), requestMethod: 'POST', requestPath: 'completeActiveCart', requestParams: { cartId }, recoveryPoint: 'refund_claimed', responseBody: body, lockedAt: new Date() },
+      });
+    }
+    return { provider, paymentId, previous, currency: null as string | null };
   });
-  if (!cart || cart.order?.id) return;
-  const attempt = await sudo.prisma.idempotencyKey.findUnique({ where: { idempotencyKey: checkoutKey(cartId) } });
-  // After capture the attempt is recoverable: a retry completes the order without charging again.
-  if (attempt && ['payment_unknown', 'order_created', 'payment_confirmed', 'completed'].includes(attempt.recoveryPoint)) return;
-  await refundOrphanedCharge(cart, paymentSessionId, sudo, attempt);
+  if (!claimed) return { refunded: false, reason: 'not_claimed' as const };
+
+  // 2. Outside the transaction: what the provider holds, and the refund.
+  let refunded = false;
+  let refundId: string | undefined;
+  let failure: string | undefined;
+  try {
+    const status = await deps.getPaymentStatus({ provider: claimed.provider, paymentId: claimed.paymentId });
+    const taken = CHARGE_TAKEN.includes(String(status?.status || '').toLowerCase());
+    const amount = Number(status?.amount);
+    const already = Number(status?.amountRefunded || 0);
+    if (taken && Number.isInteger(amount) && amount > 0) {
+      if (already >= amount) {
+        refunded = true; // an earlier claim's refund went out
+      } else {
+        const refund = await deps.refundPayment({
+          provider: claimed.provider,
+          paymentId: claimed.paymentId,
+          amount: amount - already,
+          currency: String(status.currency || 'usd'),
+          idempotencyKey: `${checkoutKey(cartId)}:auto-refund:${claimed.paymentId}`,
+        });
+        if (!['succeeded', 'completed', 'refunded', 'pending'].includes(String(refund?.status || '').toLowerCase())) {
+          throw new Error(`Refund status: ${refund?.status}`);
+        }
+        refunded = true;
+        refundId = refund?.data?.id;
+      }
+    }
+  } catch (error) {
+    failure = error instanceof Error ? error.message : String(error);
+    console.error('Automatic refund of a charge with no order did not complete', cartId, failure);
+  }
+
+  // 3. Record it. A refunded intent goes on the auto-refund ledger (the database then refuses any captured
+  // payment or new session on it) and its spent payment collection is detached, so the next payment session is
+  // a new collection and a new intent. Otherwise the attempt goes back to where it was.
+  await deps.bookkeeping(context, cartId, async (tx) => {
+    if (refunded) {
+      const ledgerKey = autoRefundKey(claimed.paymentId);
+      if (!(await tx.idempotencyKey.findUnique({ where: { idempotencyKey: ledgerKey } }))) {
+        await tx.idempotencyKey.create({
+          data: { idempotencyKey: ledgerKey, requestMethod: 'POST', requestPath: 'autoRefund', requestParams: { cartId, paymentId: claimed.paymentId }, recoveryPoint: 'completed', responseCode: 200, responseBody: { cartId, paymentId: claimed.paymentId, refundId: refundId ?? null } },
+        });
+      }
+    }
+    const attempt = await tx.idempotencyKey.findUnique({ where: { idempotencyKey: checkoutKey(cartId) } });
+    const ours = attempt?.recoveryPoint === 'refund_claimed' && attempt.responseBody?.claim === claim;
+    // A late provider webhook can mark the claimed attempt payment_confirmed for this same, now refunded, intent.
+    const webhookPromoted = refunded && attempt?.recoveryPoint === 'payment_confirmed' && attempt.responseBody?.paymentResult?.paymentIntentId === claimed.paymentId;
+    if (!attempt || !(ours || webhookPromoted)) return;
+    if (refunded) {
+      await tx.cart.update({ where: { id: cartId }, data: { paymentCollectionId: null } });
+      await tx.idempotencyKey.update({ where: { id: attempt.id }, data: { recoveryPoint: 'started', responseCode: 409, responseBody: { autoRefund: { paymentIntentId: claimed.paymentId, refundId: refundId ?? null } }, lockedAt: null } });
+    } else {
+      await tx.idempotencyKey.update({
+        where: { id: attempt.id },
+        data: { recoveryPoint: claimed.previous.recoveryPoint, responseBody: failure ? { ...(claimed.previous.responseBody || {}), autoRefundError: failure.slice(0, 300) } : claimed.previous.responseBody, responseCode: claimed.previous.responseCode, lockedAt: null },
+      });
+    }
+  });
+  return { refunded, reason: refunded ? 'refunded' as const : failure ? 'refund_failed' as const : 'nothing_held' as const };
+}
+
+/** The bookkeeping step runs even when the caller's access changed mid-refund: the money already moved. */
+async function lockCartForBookkeeping(context: any, cartId: string, run: (tx: any) => Promise<void>) {
+  const sudo = context.sudo();
+  await sudo.prisma.$transaction(async (tx: any) => {
+    await tx.$queryRaw`SELECT id FROM "Cart" WHERE id = ${cartId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM "IdempotencyKey" WHERE "idempotencyKey" = ${checkoutKey(cartId)} FOR UPDATE`;
+    await run(tx);
+  });
+}
+
+async function autoRefunded(prisma: any, paymentId: string | undefined): Promise<boolean> {
+  if (!paymentId) return false;
+  return Boolean(await prisma.idempotencyKey.findUnique({ where: { idempotencyKey: autoRefundKey(paymentId) }, select: { id: true } }));
+}
+
+function paymentRefusal(status: string) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'refunded') {
+    return shopperError('This card payment was refunded, so it cannot pay for the order. Go back to payment and pay again.', 'PAYMENT_REFUNDED');
+  }
+  if (['requires_action', 'requires_confirmation'].includes(normalized)) {
+    return shopperError('Your bank asked you to confirm this payment. Finish the card step, then place the order again.', 'PAYMENT_ACTION_REQUIRED');
+  }
+  if (normalized === 'requires_payment_method') {
+    return shopperError('Your card was declined. Try again or use another card.', 'PAYMENT_DECLINED');
+  }
+  return shopperError('The card payment did not go through. Try again or use another card.', 'PAYMENT_NOT_COMPLETED');
 }
 
 async function completeActiveCartOnce(
@@ -68,10 +216,7 @@ async function completeActiveCartOnce(
   { cartId, paymentSessionId }: { cartId: string; paymentSessionId?: string },
   context: any
 ) {
-  await assertCartAccess(context, cartId, { allowCompleted: true });
-  if (paymentSessionId) {
-    await assertPaymentSessionBelongsToCart(context, cartId, paymentSessionId);
-  }
+  // Access was checked by completeActiveCart; the fence below checks it again under the row locks.
   const sudoContext = context.sudo();
   const user = context.session?.itemId;
 
@@ -231,6 +376,11 @@ async function completeActiveCartOnce(
     cart.rawTotal = existingHold.body.due;
   } else {
     applyGiftCardsToCart(cart);
+  }
+  const pending = await sudoContext.prisma.idempotencyKey.findUnique({ where: { idempotencyKey: checkoutKey(cartId) }, select: { recoveryPoint: true } });
+  if (pending?.recoveryPoint === 'refund_claimed') {
+    // Another call is giving this charge back. completeActiveCart finishes a stale claim after this refusal.
+    throw shopperError('Your earlier card payment is being refunded. Wait a moment, then pay again.', 'PAYMENT_REFUND_IN_PROGRESS');
   }
   const attempt = await getOrCreateCheckoutAttempt(
     sudoContext.prisma,
@@ -490,9 +640,23 @@ async function handlePaidOrder(cart: any, paymentSessionId: string, sudoContext:
   }
 
   let paymentResult = attempt.responseBody?.paymentResult;
+  if (attempt.recoveryPoint === 'payment_confirmed' && paymentResult) {
+    // A recovered capture: make sure the money is still held before an order is written against it.
+    const recoveredId = paymentResult.paymentIntentId;
+    const status = await autoRefunded(sudoContext.prisma, recoveredId)
+      ? { status: 'succeeded', amountRefunded: 1 }
+      : await getPaymentStatus({ provider: selectedSession.paymentProvider, paymentId: recoveredId });
+    if (!chargeIsHeld(status)) {
+      await updateCheckoutAttempt(sudoContext.prisma, attempt.id, 'resources_reserved', { refundedPaymentResult: { ...paymentResult, status: 'refunded' } });
+      attempt.recoveryPoint = 'resources_reserved';
+      // The shopper already paid again on a new session: settle that one. Otherwise refuse.
+      if (providerPaymentId(selectedSession.data) === recoveredId) throw paymentRefusal('refunded');
+      paymentResult = null;
+    }
+  }
   if (attempt.recoveryPoint !== 'payment_confirmed' || !paymentResult) {
     try {
-      paymentResult = await settlePaymentSession(selectedSession, cart);
+      paymentResult = await settlePaymentSession(selectedSession, cart, sudoContext.prisma);
     } catch (error) {
       await updateCheckoutAttempt(
         sudoContext.prisma,
@@ -511,7 +675,7 @@ async function handlePaidOrder(cart: any, paymentSessionId: string, sudoContext:
         { paymentResult }
       );
       attempt.recoveryPoint = 'resources_reserved';
-      throw new Error(`Payment failed: ${paymentResult.error || paymentResult.status}`);
+      throw paymentRefusal(paymentResult.providerStatus || paymentResult.status);
     }
     await updateCheckoutAttempt(
       sudoContext.prisma,
@@ -523,17 +687,14 @@ async function handlePaidOrder(cart: any, paymentSessionId: string, sudoContext:
     attempt.responseBody = { paymentResult };
   }
 
-  // The card is already charged. If the order cannot be created, give the money back in this same path
-  // rather than leave a capture with no order. Rewinding the attempt lets the catch return stock and holds.
+  // This call captured the card. If the order cannot be created, rewind the attempt (the catch returns stock
+  // and holds and unlocks it); completeActiveCart then claims the attempt and refunds the charge.
   let order;
   try {
     order = await createOrderFromCartAtomically(cart, sudoContext);
   } catch (error) {
-    const refunded = await refundOrphanedCharge(cart, paymentSessionId, sudoContext, attempt, paymentResult.paymentIntentId);
-    if (refunded) {
-      await updateCheckoutAttempt(sudoContext.prisma, attempt.id, 'resources_reserved', { autoRefund: { paymentIntentId: paymentResult.paymentIntentId } });
-      attempt.recoveryPoint = 'resources_reserved';
-    }
+    await updateCheckoutAttempt(sudoContext.prisma, attempt.id, 'resources_reserved', { paymentResult, orderError: error instanceof Error ? error.message.slice(0, 300) : 'Order could not be created' });
+    attempt.recoveryPoint = 'resources_reserved';
     throw error;
   }
   await createPaymentRecord(paymentResult, selectedSession, order, cart, sudoContext);
@@ -541,54 +702,20 @@ async function handlePaidOrder(cart: any, paymentSessionId: string, sudoContext:
   return order;
 }
 
-/**
- * Refund a card charge that has no order. Looks the intent up first, so a payment that never succeeded
- * is left alone. On success the spent session is detached from the cart (a refunded intent still reports
- * "succeeded", so a retry must never settle against it). If the refund itself fails the charge stays
- * recoverable: the caller's attempt is not rewound and a retry completes the order without charging again.
- */
-export async function refundOrphanedCharge(cart: any, paymentSessionId: string, sudoContext: any, attempt: any, knownIntentId?: string): Promise<boolean> {
-  try {
-    const session = cart.paymentCollection?.paymentSessions?.find((entry: any) => entry.id === paymentSessionId);
-    const provider = session?.paymentProvider;
-    const paymentId = knownIntentId || session?.data?.paymentIntentId || session?.data?.clientSecret?.split('_secret_')[0];
-    if (!provider || !paymentId || provider.code === 'pp_system_default') return false;
-    const status = await getPaymentStatus({ provider, paymentId });
-    if (!['succeeded', 'completed', 'captured'].includes(String(status?.status || '').toLowerCase())) return false;
-    const amount = Number(status.amount);
-    if (!Number.isInteger(amount) || amount <= 0) return false;
-    const refund = await refundPayment({
-      provider,
-      paymentId,
-      amount,
-      currency: String(status.currency || cart.region.currency.code),
-      idempotencyKey: `${checkoutKey(cart.id)}:auto-refund:${paymentId}`,
-    });
-    if (!['succeeded', 'completed', 'refunded', 'pending'].includes(String(refund?.status || '').toLowerCase())) {
-      throw new Error(`Refund status: ${refund?.status}`);
-    }
-    await sudoContext.prisma.cart.update({ where: { id: cart.id }, data: { paymentCollectionId: null } });
-    return true;
-  } catch (error) {
-    console.error('Automatic refund of a charge with no order did not complete', cart.id, error);
-    return false;
-  }
-}
-
-async function settlePaymentSession(session: any, cart: any) {
+async function settlePaymentSession(session: any, cart: any, prisma: any) {
   const provider = session.paymentProvider;
   if (provider.code === 'pp_system_default') {
     // Pickup carts never reach here (they reserve instead); delivery stays card-only.
     throw shopperError('Manual tender cannot complete storefront checkout', 'PAYMENT_METHOD_NOT_ALLOWED');
   }
 
-  const paymentId =
-    session.data?.paymentIntentId ||
-    session.data?.clientSecret?.split('_secret_')[0] ||
-    session.data?.orderId;
+  const paymentId = providerPaymentId(session.data);
   if (!paymentId) throw new Error('Payment provider reference is missing');
+  // A refunded intent still reports "succeeded": never settle an order against it.
+  if (await autoRefunded(prisma, paymentId)) return { status: 'refunded', providerStatus: 'refunded', paymentIntentId: paymentId };
 
   let result = await getPaymentStatus({ provider, paymentId });
+  if (Number(result?.amountRefunded || 0) > 0) return { status: 'refunded', providerStatus: 'refunded', paymentIntentId: paymentId };
   const normalizedStatus = String(result.status || '').toLowerCase();
   if (['requires_capture', 'approved', 'authorized'].includes(normalizedStatus)) {
     result = await capturePayment({
@@ -607,7 +734,7 @@ async function settlePaymentSession(session: any, cart: any) {
   const resultCurrency = String(result.currency || expectedCurrency).toUpperCase();
 
   if (!succeeded) {
-    return { status: 'failed', paymentIntentId: paymentId, error: `Payment status: ${result.status}` };
+    return { status: 'failed', providerStatus: finalStatus, paymentIntentId: paymentId, error: `Payment status: ${result.status}` };
   }
   if (!Number.isInteger(resultAmount) || resultAmount !== cart.rawTotal) {
     throw new Error('Provider payment amount does not match cart total');

@@ -60,7 +60,8 @@ export const RegulatedTaxQuote = list({
     issuedAt: timestamp({ validation: { isRequired: true } }),
     expiresAt: timestamp({ validation: { isRequired: true } }),
     committedAt: timestamp(),
-    reversalReference: text({ access: { read: denyAll } }),
+    // The tax provider's acknowledgement of a reversal: what a compliance reader checks a reversed row against.
+    reversalReference: text({ access: { read: complianceRead } }),
     ...trackingFields,
   },
 });

@@ -4,6 +4,13 @@ import {
   subscribedWebhookEndpointIds,
 } from "../../webhooks/outbox";
 import { reverseTaxForCanceledOrder } from "../regulated/order-tax-reversal";
+import { reconcileProviderRefunds } from "../checkout/provider-refund-reconcile";
+import { GraphQLError } from "graphql";
+
+/** Correct refusals the owner should read, not "Unexpected error.". */
+function orderRuleError(message: string, code: string) {
+  return new GraphQLError(message, { extensions: { code } });
+}
 
 async function transitionOrderStatus(
   root: any,
@@ -16,6 +23,15 @@ async function transitionOrderStatus(
     throw new Error("Order status is controlled by payment and fulfillment commands");
   }
   const sudo = context.sudo();
+  if (status === "canceled") {
+    // A charge the processor already refunded counts as refunded: record it first, then the cancel can stand.
+    const payments = await sudo.prisma.payment.findMany({ where: { orderId, status: "captured" }, select: { id: true, amount: true, refunds: { select: { amount: true } } } });
+    for (const payment of payments) {
+      if (payment.refunds.reduce((sum: number, refund: any) => sum + refund.amount, 0) >= payment.amount) continue;
+      await reconcileProviderRefunds(context, payment.id).catch((error: unknown) =>
+        console.error("Provider refund reconcile before cancel failed", payment.id, error instanceof Error ? error.message : error));
+    }
+  }
   const endpointIds = await subscribedWebhookEndpointIds(sudo, `order.${status}`);
   await sudo.prisma.$transaction(async (tx: any) => {
     const order = await tx.order.findUnique({
@@ -49,12 +65,12 @@ async function transitionOrderStatus(
     if (order.status === status) return;
 
     if (status === "archived") {
-      if (order.status !== "completed") throw new Error("Only completed orders can be archived");
+      if (order.status !== "completed") throw orderRuleError("Only completed orders can be archived.", "ORDER_NOT_ARCHIVABLE");
     } else {
       if (!["pending", "completed", "requires_action"].includes(order.status)) {
-        throw new Error("Order cannot be canceled from its current state");
+        throw orderRuleError(`A ${order.status.replace(/_/g, " ")} order can't be canceled.`, "ORDER_NOT_CANCELABLE");
       }
-      if (order.fulfillments.length) throw new Error("Cancel active fulfillments before canceling the order");
+      if (order.fulfillments.length) throw orderRuleError("Cancel the order's shipments before canceling the order.", "ORDER_HAS_FULFILLMENTS");
       if (
         order.payments.some(
           (payment: any) =>
@@ -63,7 +79,7 @@ async function transitionOrderStatus(
             payment.refunds.reduce((sum: number, refund: any) => sum + refund.amount, 0) < payment.amount
         )
       ) {
-        throw new Error("Captured payments must be fully refunded before cancellation");
+        throw orderRuleError("Refund this order's payments in full before canceling it.", "ORDER_HAS_CAPTURED_PAYMENT");
       }
       for (const payment of order.payments) {
         if (payment.status === "pending") {
@@ -91,7 +107,7 @@ async function transitionOrderStatus(
           (item: any) => item.paymentStatus !== "unpaid" || item.invoiceLineItems.length
         )
       ) {
-        throw new Error("Invoiced account orders require an approved credit-note workflow");
+        throw orderRuleError("This order is on an invoice. Issue a credit note instead of canceling it.", "ORDER_INVOICED");
       }
       for (const item of order.accountLineItems) {
         await tx.accountLineItem.update({

@@ -8,6 +8,7 @@ import { applyGiftCardsToCart } from "../checkout/cart-amount-due";
 import { regulatedTaxAmountForCart, requireAllowedCartCompliance } from "../regulated/enforcement";
 import { shopperError } from "../lib/shopperError";
 import { cartNotFound } from "../security/cart-access";
+import { autoRefundKey, paymentCreateKey, providerPaymentId } from "../checkout/payment-keys";
 
 async function initiatePaymentSession(
   root: any,
@@ -124,7 +125,19 @@ async function initiatePaymentSession(
     (session: any) => session.paymentProvider.code === paymentProviderId
   );
 
+  // A session whose charge was already refunded is spent: it gets a new provider payment, never the old one.
+  const existingPaymentId = providerPaymentId(existingSession?.data);
+  const spent = existingPaymentId
+    ? Boolean(await sudoContext.prisma.idempotencyKey.findUnique({ where: { idempotencyKey: autoRefundKey(existingPaymentId) }, select: { id: true } }))
+    : false;
+  // Unique per payment collection: a cart that got a new collection after a refund gets a new intent.
+  const createKey = (provider: { code: string }) => paymentCreateKey({
+    paymentCollectionId: cart.paymentCollection.id, providerCode: provider.code, amount: cart.rawTotal,
+    currency: cart.region.currency.code, spentPaymentId: spent ? existingPaymentId : null,
+  });
+
   if (
+    !spent &&
     existingSession?.isInitiated &&
     existingSession.amount === cart.rawTotal &&
     existingSession.data &&
@@ -150,6 +163,7 @@ async function initiatePaymentSession(
       cart,
       amount: cart.rawTotal,
       currency: cart.region.currency.code,
+      idempotencyKey: createKey(provider),
     });
     await sudoContext.prisma.$transaction(async (tx: any) => {
       await tx.paymentSession.updateMany({
@@ -181,6 +195,7 @@ async function initiatePaymentSession(
       cart,
       amount: cart.rawTotal,
       currency: cart.region.currency.code,
+      idempotencyKey: createKey(provider),
     });
 
     const newSession = await sudoContext.prisma.$transaction(async (tx: any) => {

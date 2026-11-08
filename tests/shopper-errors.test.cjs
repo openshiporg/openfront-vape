@@ -86,7 +86,6 @@ test('INTERNAL errors are NOT converted: they stay plain Errors so Yoga masks th
   const read = (f) => fs.readFileSync(path.join(root, f), 'utf8');
   const stays = [
     ['features/keystone/mutations/completeActiveCart.ts', /throw new Error\('Checkout requires payment reconciliation'\)/],
-    ['features/keystone/mutations/completeActiveCart.ts', /throw new Error\(`Payment failed: \$\{paymentResult\.error \|\| paymentResult\.status\}`\)/],
     ['features/keystone/mutations/completeActiveCart.ts', /throw new Error\('Provider payment amount does not match cart total'\)/],
     ['features/keystone/mutations/completeActiveCart.ts', /throw new Error\(`Payment session not found\. Looking for session ID: \$\{paymentSessionId\}`\)/],
     ['features/keystone/mutations/authorizeCardPaymentSession.ts', /throw new Error\("Authorize\.net authorization did not match the checkout amount and currency"\)/],
@@ -95,6 +94,9 @@ test('INTERNAL errors are NOT converted: they stay plain Errors so Yoga masks th
     ['features/keystone/security/cart-command.ts', /throw new Error\("Cart could not be created"\)/],
   ];
   for (const [f, re] of stays) assert.match(read(f), re, `${f} keeps its plain Error`);
+  // A card the processor did not take is the shopper's to fix (review r2 minor 4): coded, never raw provider text.
+  assert.match(read('features/keystone/mutations/completeActiveCart.ts'), /throw paymentRefusal\(/);
+  assert.doesNotMatch(read('features/keystone/mutations/completeActiveCart.ts'), /Payment failed: \$\{/);
 });
 
 test('no converted message carries an id, email, secret or provider text', () => {

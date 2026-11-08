@@ -4,6 +4,7 @@ type CreatePaymentInput = {
   cart?: any;
   amount: number;
   currency: string;
+  idempotencyKey?: string;
 };
 
 type PaymentOperationInput = {
@@ -28,8 +29,15 @@ const getStripeClient = () => {
   });
 };
 
-export async function createPaymentFunction({ cart, amount, currency }: CreatePaymentInput) {
+/**
+ * The create key is unique per payment collection (the caller passes it). A cart whose charge was refunded
+ * gets a new collection, so its next session is a new intent rather than Stripe replaying the refunded one.
+ */
+export async function createPaymentFunction({ cart, amount, currency, idempotencyKey }: CreatePaymentInput) {
   const stripe = getStripeClient();
+  const createKey = idempotencyKey || (cart?.paymentCollection?.id
+    ? `payment:${cart.paymentCollection.id}:${amount}:${currency.toLowerCase()}`
+    : undefined);
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount,
@@ -38,7 +46,7 @@ export async function createPaymentFunction({ cart, amount, currency }: CreatePa
       enabled: true,
     },
     metadata: cart?.id ? { cartId: cart.id } : undefined,
-  }, cart?.id ? { idempotencyKey: `cart:${cart.id}:${amount}:${currency.toLowerCase()}` } : undefined);
+  }, createKey ? { idempotencyKey: createKey } : undefined);
 
   return {
     clientSecret: paymentIntent.client_secret,
@@ -79,14 +87,21 @@ export async function refundPaymentFunction({ paymentId, amount, idempotencyKey 
   };
 }
 
+/** A refunded intent still reports `succeeded`; amountRefunded and refunds say what went back to the shopper. */
 export async function getPaymentStatusFunction({ paymentId }: PaymentOperationInput) {
   const stripe = getStripeClient();
 
-  const paymentIntent = await stripe.paymentIntents.retrieve(paymentId);
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentId, { expand: ["latest_charge.refunds"] });
+  const charge = typeof paymentIntent.latest_charge === "object" ? paymentIntent.latest_charge : null;
+  const refunds = (charge?.refunds?.data || [])
+    .filter((refund) => refund.status !== "failed" && refund.status !== "canceled")
+    .map((refund) => ({ id: refund.id, amount: refund.amount, status: refund.status }));
 
   return {
     status: paymentIntent.status,
     amount: paymentIntent.amount_received || paymentIntent.amount,
+    amountRefunded: charge?.amount_refunded || 0,
+    refunds,
     currency: paymentIntent.currency,
     data: paymentIntent,
   };

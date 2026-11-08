@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { canRepinCheckoutAttempt, replayReconciliationStep, getOrCreateCheckoutAttempt } from "../features/keystone/checkout/recovery";
 import { createGiftCardGuessLimiter, guessClientKey } from "../features/keystone/security/gift-card-guess";
 import { appendOrderTaxReversal } from "../features/keystone/regulated/reversals";
-import { refundOrphanedCharge } from "../features/keystone/mutations/completeActiveCart";
 
 // ---- Fix 1: a failed checkout does not brick the cart ----
 test("only an unlocked 'started' attempt can be re-pinned; anything holding resources or money cannot", () => {
@@ -48,23 +47,7 @@ test("an attempt that reached payment still refuses a different request", async 
   await assert.rejects(getOrCreateCheckoutAttempt(prisma, "cart2", undefined, snap([])), /different request/);
 });
 
-test("a charge with no order is refunded; a payment that never succeeded is left alone", async () => {
-  const calls: string[] = [];
-  const provider = { id: "p", code: "pp_stripe_stripe" };
-  const adapters = (status: string) => ({ status, amount: 2299, currency: "usd" });
-  const cart = (status: string) => ({
-    id: "cart3", region: { currency: { code: "usd" } },
-    paymentCollection: { paymentSessions: [{ id: "ps1", data: { paymentIntentId: "pi_1" }, paymentProvider: { ...provider, __status: status } }] },
-  });
-  const updates: any[] = [];
-  const sudo = { prisma: { cart: { update: async (a: any) => { updates.push(a); } } } };
-  // Without a live adapter the lookup fails closed: nothing is claimed refunded and the cart is untouched.
-  const result = await refundOrphanedCharge(cart("succeeded"), "ps1", sudo, {}, "pi_1");
-  assert.equal(result, false);
-  assert.equal(updates.length, 0);
-  assert.deepEqual(calls, []);
-  assert.equal(adapters("x").amount, 2299);
-});
+// The automatic refund of a charge with no order is covered end to end in tests/checkout-auto-refund.test.cjs.
 
 // ---- Fix 2: a retry after a full gift-card order replays ----
 test("a replay of a gift-card-covered order needs no account and no card payment", () => {

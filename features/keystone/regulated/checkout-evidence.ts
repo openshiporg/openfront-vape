@@ -1,3 +1,4 @@
+import { GraphQLError } from "graphql";
 import { evidenceDigest } from "../../regulated-commerce/core/decision-engine";
 import { validateRules } from "../../regulated-commerce/core/policy-validation";
 import {
@@ -173,9 +174,10 @@ async function releaseStaleTaxCommits(context: any, cartId: string, scope: Scope
   }
 }
 
-export class AgeCheckFailedError extends Error {
+/** A GraphQLError, so the shopper (and the owner placing an order) reads the reason instead of "Unexpected error.". */
+export class AgeCheckFailedError extends GraphQLError {
   constructor(public reasonCode: string) {
-    super(reasonCode === "UNDER_MINIMUM_AGE" ? "AGE_CHECK_FAILED: You must be 21 or older to order." : "AGE_CHECK_FAILED: Confirm the name on your ID matches the shipping name.");
+    super(reasonCode === "UNDER_MINIMUM_AGE" ? "AGE_CHECK_FAILED: You must be 21 or older to order." : "AGE_CHECK_FAILED: Confirm the name on your ID matches the shipping name.", { extensions: { code: "AGE_CHECK_FAILED", reasonCode } });
   }
 }
 

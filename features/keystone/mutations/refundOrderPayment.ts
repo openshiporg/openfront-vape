@@ -5,19 +5,22 @@ import { enqueueWebhookOutbox, subscribedWebhookEndpointIds } from "../../webhoo
 import { findIdempotencyAttempt, getOrCreateIdempotencyAttempt } from "../utils/idempotency";
 import { GIFT_CARD_TENDER, refundGiftCardTender } from "../checkout/gift-card-tender";
 import transitionOrderStatus from "./transitionOrderStatus";
+import { paymentProviderFor, providerPaymentReference, reconcileProviderRefunds } from "../checkout/provider-refund-reconcile";
 
-function refundRuleError(message: string, code: "REFUND_EXCEEDS_BALANCE" | "PAYMENT_NOT_CAPTURED") {
+type RefundRuleCode = "REFUND_EXCEEDS_BALANCE" | "PAYMENT_NOT_CAPTURED" | "REFUND_KEY_REUSED" | "REFUND_IN_PROGRESS" | "PAYMENT_ALREADY_REFUNDED";
+function refundRuleError(message: string, code: RefundRuleCode) {
   return new GraphQLError(message, { extensions: { code } });
 }
 
-function providerPaymentReference(payment: any): string | undefined {
-  return (
-    payment.data?.purchase_units?.[0]?.payments?.captures?.[0]?.id ||
-    payment.data?.payment_intent_id ||
-    payment.data?.paymentIntentId ||
-    payment.data?.orderId ||
-    payment.data?.id
-  );
+async function findRefundAttempt(prisma: any, request: any) {
+  try {
+    return await findIdempotencyAttempt(prisma, request);
+  } catch (error) {
+    if (/different request/.test(error instanceof Error ? error.message : "")) {
+      throw refundRuleError("This refund was already sent with a different amount or reason. Open the refund again to start a new one.", "REFUND_KEY_REUSED");
+    }
+    throw error;
+  }
 }
 
 
@@ -61,7 +64,11 @@ async function refundOrderPaymentOnly(
   const sudo = context.sudo();
   const businessKey = `refund:${idempotencyKey.trim()}`;
   const idempotencyRequest = { key: businessKey, requestPath: "refundOrderPayment", requestParams: { orderId, paymentId, amount, reason: reason.trim() } };
-  const priorAttempt = await findIdempotencyAttempt(sudo.prisma, idempotencyRequest);
+  // Money the processor already returned (an automatic refund, a refund made in its dashboard) is recorded first,
+  // so this request is judged against what is really left on the charge.
+  await reconcileProviderRefunds(context, paymentId).catch((error: unknown) =>
+    console.error("Provider refund reconcile failed", paymentId, error instanceof Error ? error.message : error));
+  const priorAttempt = await findRefundAttempt(sudo.prisma, idempotencyRequest);
   if (priorAttempt?.recoveryPoint === "completed" && priorAttempt.responseBody?.refundId) {
     return sudo.db.Refund.findOne({ where: { id: priorAttempt.responseBody.refundId } });
   }
@@ -78,8 +85,11 @@ async function refundOrderPaymentOnly(
   if (payment.status !== "captured") throw refundRuleError("Only captured payments can be refunded", "PAYMENT_NOT_CAPTURED");
   const alreadyRefunded = payment.refunds?.reduce((sum: number, refund: any) => sum + refund.amount, 0) || 0;
   const reserved = Math.max(alreadyRefunded, payment.amountRefunded || 0);
+  if (!priorAttempt && reserved >= payment.amount) {
+    throw refundRuleError("This payment is already fully refunded.", "PAYMENT_ALREADY_REFUNDED");
+  }
   if (!priorAttempt && reserved + amount > payment.amount) {
-    throw refundRuleError("Refund exceeds captured payment amount", "REFUND_EXCEEDS_BALANCE");
+    throw refundRuleError(`Refund exceeds what is left on this payment (${payment.amount - reserved} available).`, "REFUND_EXCEEDS_BALANCE");
   }
 
   if (payment.data?.tender === GIFT_CARD_TENDER) {
@@ -87,9 +97,7 @@ async function refundOrderPaymentOnly(
     return sudo.db.Refund.findOne({ where: { id: refund.id } });
   }
 
-  const provider =
-    payment.paymentCollection?.paymentSessions?.find((session: any) => session.isSelected)?.paymentProvider ||
-    payment.paymentCollection?.paymentSessions?.[0]?.paymentProvider;
+  const provider = paymentProviderFor(payment);
   const providerReference = providerPaymentReference(payment);
   if (!provider || !providerReference) throw new Error("Refund provider reference is missing");
   if (provider.code?.includes("manual")) throw new Error("Manual tender refunds require operator verification");
@@ -105,7 +113,7 @@ async function refundOrderPaymentOnly(
       where: { id: attempt.id, OR: [{ lockedAt: null }, { lockedAt: { lt: new Date(Date.now() - 5 * 60 * 1000) } }] },
       data: { lockedAt: new Date() },
     });
-    if (acquired.count !== 1) throw new Error("Refund is already in progress");
+    if (acquired.count !== 1) throw refundRuleError("This refund is already being sent. Wait a moment and reload the order.", "REFUND_IN_PROGRESS");
   }
 
   if (attempt.recoveryPoint === "started") {
@@ -114,7 +122,7 @@ async function refundOrderPaymentOnly(
         where: { id: paymentId, amountRefunded: { lte: payment.amount - amount } },
         data: { amountRefunded: { increment: amount } },
       });
-      if (claimed.count !== 1) throw new Error("Concurrent refund exceeds captured payment amount");
+      if (claimed.count !== 1) throw refundRuleError("Another refund on this payment just used the remaining amount. Reload the order.", "REFUND_EXCEEDS_BALANCE");
       await tx.idempotencyKey.update({ where: { id: attempt.id }, data: { recoveryPoint: "amount_reserved", lockedAt: new Date() } });
     });
     attempt.recoveryPoint = "amount_reserved";

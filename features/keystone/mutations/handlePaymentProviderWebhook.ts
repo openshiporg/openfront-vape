@@ -168,7 +168,10 @@ async function handlePaymentProviderWebhook(
         const checkoutAttempt = await sudo.prisma.idempotencyKey.findUnique({
           where: { idempotencyKey: `checkout:${cartId}` },
         });
-        checkoutAttemptId = checkoutAttempt?.id;
+        const intent = selectedSession.data?.paymentIntentId || selectedSession.data?.orderId || resource.id;
+        // An intent the checkout refunded on its own never becomes a recoverable capture again.
+        const autoRefunded = await sudo.prisma.idempotencyKey.findUnique({ where: { idempotencyKey: `auto-refund:${intent}` }, select: { id: true } });
+        checkoutAttemptId = autoRefunded ? undefined : checkoutAttempt?.id;
         checkoutPaymentResult = {
           status: "succeeded",
           paymentIntentId:
@@ -185,8 +188,9 @@ async function handlePaymentProviderWebhook(
     // Provider events arrive late and out of order: a stale "failed" must not undo a capture.
     let paymentMoved = true;
     if (succeeded && checkoutAttemptId && checkoutPaymentResult) {
-      await tx.idempotencyKey.update({
-        where: { id: checkoutAttemptId },
+      // Never over a refund claim: that charge is being given back, and must not be turned into an order.
+      await tx.idempotencyKey.updateMany({
+        where: { id: checkoutAttemptId, recoveryPoint: { not: "refund_claimed" } },
         data: {
           recoveryPoint: "payment_confirmed",
           responseBody: { paymentResult: checkoutPaymentResult },

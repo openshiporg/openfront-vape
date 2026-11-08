@@ -128,7 +128,7 @@ export async function handleWebhookFunction({ event, headers }: PaymentWebhookIn
   };
 }
 
-export async function createPaymentFunction({ cart, amount, currency }: CreatePaymentInput) {
+export async function createPaymentFunction({ cart, amount, currency, idempotencyKey }: CreatePaymentInput & { idempotencyKey?: string }) {
   const accessToken = await getPayPalAccessToken();
   const baseUrl = getPayPalBaseUrl();
 
@@ -139,7 +139,7 @@ export async function createPaymentFunction({ cart, amount, currency }: CreatePa
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
-        ...(cart?.id ? { "PayPal-Request-Id": `cart-${cart.id}-${amount}-${currency.toUpperCase()}` } : {}),
+        ...(idempotencyKey ? { "PayPal-Request-Id": idempotencyKey } : cart?.id ? { "PayPal-Request-Id": `cart-${cart.id}-${amount}-${currency.toUpperCase()}` } : {}),
       },
       body: JSON.stringify({
         intent: "CAPTURE",

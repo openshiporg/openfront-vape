@@ -22,6 +22,11 @@ export function safeErrorSummary(error: unknown): { message: string; codes: stri
 // Keystone codes whose messages are written for the person filling the form.
 const USER_FACING_CODES = new Set([
   'KS_VALIDATION_FAILURE', 'KS_USER_INPUT_ERROR', 'KS_ACCESS_DENIED', 'KS_EXTENSION_ERROR',
+  // Order, refund and checkout refusals: correct rules whose reason the owner needs to read.
+  'ORDER_HAS_CAPTURED_PAYMENT', 'ORDER_NOT_CANCELABLE', 'ORDER_NOT_ARCHIVABLE', 'ORDER_HAS_FULFILLMENTS', 'ORDER_INVOICED',
+  'REFUND_EXCEEDS_BALANCE', 'REFUND_KEY_REUSED', 'REFUND_IN_PROGRESS', 'PAYMENT_NOT_CAPTURED', 'PAYMENT_ALREADY_REFUNDED',
+  'AGE_CHECK_FAILED', 'PAYMENT_DECLINED', 'PAYMENT_ACTION_REQUIRED', 'PAYMENT_NOT_COMPLETED', 'PAYMENT_REFUNDED',
+  'PAYMENT_REFUND_IN_PROGRESS', 'CHECKOUT_IN_PROGRESS', 'CART_TOTAL_CHANGED',
 ]);
 // Anything that looks like database, driver or stack output stays server-side.
 const UNSAFE_DETAIL = /prisma|invocation|\bat\s+\S+\s*\(|\bat\s+\/|node_modules|postgres(ql)?:\/\/|\bSQL\b|ECONN|query engine|\.ts:\d+|\.js:\d+/i;
