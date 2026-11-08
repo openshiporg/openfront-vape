@@ -52,6 +52,9 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
 
   // Deneb: label at left, choices at right. Colours show a swatch beside the name; other
   // options are outlined buttons. The choice handler is unchanged.
+  // An option left without values in the dashboard has nothing to choose.
+  if (!values.length) return null
+
   return (
     <div className="deneb-option" data-testid={dataTestId} role="group" aria-label={title}>
       <span className="deneb-option-label">{title}</span>

@@ -83,8 +83,12 @@ export default function ProductActions({ product, region, disabled, onVariantCha
   }, [variants]);
 
   useEffect(() => {
+    // An option with no values (left empty in the dashboard) can never be
+    // chosen, so it is left out; otherwise no variant would ever match and the
+    // product could not be added to the cart.
     const optionObj: any = {};
     for (const option of product.productOptions || []) {
+      if (option.productOptionValues && !option.productOptionValues.length) continue;
       Object.assign(optionObj, { [option.id]: undefined });
     }
     setOptions(optionObj);
@@ -171,7 +175,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
 
   const facts = useMemo(() => productFacts(product, 3), [product]);
   const chosen = !!variant || hasOnlyOneVariant;
-  const firstMissing = (product.productOptions || []).find((o: any) => !options[o.id]);
+  const firstMissing = (product.productOptions || []).find((o: any) => o.productOptionValues?.length && !options[o.id]);
   const quantity = typeof variant?.inventoryQuantity === "number" ? variant.inventoryQuantity : null;
   const stock = !chosen
     ? { tone: "muted" as const, label: "Choose options" }
