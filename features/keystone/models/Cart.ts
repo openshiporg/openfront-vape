@@ -16,6 +16,7 @@ import {
   checkbox,
 } from "@keystone-6/core/fields";
 import { permissions } from "../access";
+import { resolveCartOwner } from "../lib/cart-owner";
 import { trackingFieldsFor } from "./trackingFields";
 import { shippingOptionCharge } from "../security/shipping-eligibility";
 import { insideCommerceFence } from "../security/commerce-fence";
@@ -333,10 +334,7 @@ export const Cart = list<Lists.Cart.TypeInfo>({
         resolvedData.type = 'default';
       }
 
-      // Handle user connection on create if user is authenticated
-      if (operation === 'create' && context.session?.itemId && !permissions.canManageOrders({ session: context.session })) {
-        resolvedData.user = { connect: { id: context.session.itemId } };
-      }
+      // The owner comes from the user field hook (resolveCartOwner): set on shopper create only.
 
       // Handle region changes and shipping methods
       if ((operation === 'create' && resolvedData.region) || 
@@ -421,17 +419,14 @@ export const Cart = list<Lists.Cart.TypeInfo>({
       ref: "User.carts",
       many: false,
       hooks: {
+        // The owner is set only when a shopper creates the cart; updates never relink it.
         resolveInput({ operation, resolvedData, context }) {
-          // Staff creating a cart (e.g. a guest cart) do not become its owner.
-          if (
-            operation === "create" &&
-            !resolvedData.user &&
-            context.session?.itemId &&
-            !permissions.canManageOrders({ session: context.session })
-          ) {
-            return { connect: { id: context.session.itemId } };
-          }
-          return resolvedData.user;
+          return resolveCartOwner({
+            operation,
+            resolvedUser: resolvedData.user,
+            sessionUserId: context.session?.itemId ?? null,
+            editorIsStaff: Boolean(permissions.canManageOrders({ session: context.session })),
+          });
         },
       },
     }),
