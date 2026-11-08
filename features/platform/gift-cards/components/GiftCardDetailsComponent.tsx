@@ -119,12 +119,15 @@ export function GiftCardDetailsComponent({
     <>
       <Tr>
         <Td className="max-w-[14rem]">
-          <Link
-            href={`/dashboard/gift-cards/${giftcard.id}`}
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-controls={detailId}
             className="font-mono text-[13px] font-semibold text-foreground hover:underline"
           >
             {giftcard.code}
-          </Link>
+          </button>
           {giftcard.order && giftcard.order.user && (
             <div className="mt-0.5 truncate text-[12px]">
               <Link
@@ -194,6 +197,7 @@ export function GiftCardDetailsComponent({
                   head={
                     <>
                       <Th>Order</Th>
+                      <Th>Entry</Th>
                       <Th priority={2}>Date</Th>
                       <Th priority={2} align="right">Order total</Th>
                       <Th align="right">Amount</Th>
@@ -215,6 +219,7 @@ export function GiftCardDetailsComponent({
                             #{transaction.order.displayId}
                           </Link>
                         </Td>
+                        <Td className="whitespace-nowrap text-muted-foreground">{transaction.amount < 0 ? "Paid toward order" : "Refunded to card"}</Td>
                         <Td priority={2} className="whitespace-nowrap text-muted-foreground">{formatDate(transaction.createdAt)}</Td>
                         <Td priority={2} align="right" className="text-muted-foreground">{transaction.order.total}</Td>
                         <Td align="right">{transaction.amount < 0 ? "-" : "+"}{formatCurrency(Math.abs(transaction.amount))}</Td>
