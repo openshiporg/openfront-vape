@@ -1,7 +1,6 @@
 import { RateLimiterMemory } from "rate-limiter-flexible";
 import { shopperError } from "../lib/shopperError";
 import { assertCartAccess, cartNotFound, withCartMutationLock } from "../security/cart-access";
-import { invalidateCartCompliance } from "../regulated/enforcement";
 
 // Gift card codes are bearer value: throttle guesses per cart and per client.
 const guessLimiter = new RateLimiterMemory({ points: 10, duration: 900, blockDuration: 900 });
@@ -45,12 +44,12 @@ export async function addGiftCardToActiveCart(_root: unknown, { cartId, code }: 
     if (cart.giftCards?.some((applied: any) => applied.id === card.id)) {
       throw shopperError("That gift card is already applied", "GIFT_CARD_ALREADY_APPLIED");
     }
-    // Changing what is owed invalidates any payment session sized to the old total.
+    // Changing what is owed invalidates any payment session sized to the old total. Age and tax evidence
+    // are keyed to the gross cart (gift cards are not part of the fingerprint), so they stay valid.
     const updated = await sudo.db.Cart.updateOne({
       where: { id: cartId },
       data: { giftCards: { connect: [{ id: card.id }] }, paymentCollection: { disconnect: true } },
     });
-    await invalidateCartCompliance(context, cartId, "GIFT_CARD_CHANGED", true);
     return updated;
   });
 }
@@ -68,7 +67,6 @@ export async function removeGiftCardFromActiveCart(_root: unknown, { cartId, cod
       where: { id: cartId },
       data: { giftCards: { disconnect: [{ id: applied.id }] }, paymentCollection: { disconnect: true } },
     });
-    await invalidateCartCompliance(context, cartId, "GIFT_CARD_CHANGED", true);
     return updated;
   });
 }
