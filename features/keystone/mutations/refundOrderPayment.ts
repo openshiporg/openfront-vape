@@ -4,6 +4,7 @@ import { refundPayment } from "../utils/paymentProviderAdapter";
 import { enqueueWebhookOutbox, subscribedWebhookEndpointIds } from "../../webhooks/outbox";
 import { findIdempotencyAttempt, getOrCreateIdempotencyAttempt } from "../utils/idempotency";
 import { GIFT_CARD_TENDER, refundGiftCardTender } from "../checkout/gift-card-tender";
+import transitionOrderStatus from "./transitionOrderStatus";
 
 function refundRuleError(message: string, code: "REFUND_EXCEEDS_BALANCE" | "PAYMENT_NOT_CAPTURED") {
   return new GraphQLError(message, { extensions: { code } });
@@ -21,9 +22,32 @@ function providerPaymentReference(payment: any): string | undefined {
 
 const REFUND_QUERY = "id amount reason idempotencyKey metadata payment { id amount amountRefunded }";
 
+/** Once every captured payment on an order is fully refunded and nothing is being shipped, the order is
+ * canceled (stock goes back, cancel action disappears). Partial refunds and shipped orders are left alone. */
+export function shouldCancelAfterRefund(order: {
+  status: string;
+  payments: { status: string; amount: number; amountRefunded?: number | null }[];
+  fulfillments: unknown[];
+}) {
+  if (!["pending", "requires_action"].includes(order.status) || order.fulfillments.length) return false;
+  const captured = order.payments.filter((payment) => payment.status === "captured");
+  return captured.length > 0 && captured.every((payment) => (payment.amountRefunded || 0) >= payment.amount);
+}
+
+export async function cancelOrderIfFullyRefunded(context: any, orderId: string) {
+  const sudo = context.sudo();
+  const order = await sudo.prisma.order.findUnique({
+    where: { id: orderId },
+    select: { status: true, payments: { select: { status: true, amount: true, amountRefunded: true } }, fulfillments: { where: { canceledAt: null }, select: { id: true } } },
+  });
+  if (!order || !shouldCancelAfterRefund(order)) return false;
+  await transitionOrderStatus(null, { orderId, status: "canceled", reason: "Fully refunded" }, context);
+  return true;
+}
+
 /** Refund part or all of one captured payment on an order. Card payments go back through the processor;
  * gift card payments put the value back on the cards, as ledger rows. */
-async function refundOrderPayment(
+async function refundOrderPaymentOnly(
   root: any,
   { orderId, paymentId, amount, reason, idempotencyKey }: { orderId: string; paymentId: string; amount: number; reason: string; idempotencyKey: string },
   context: any
@@ -131,6 +155,14 @@ async function refundOrderPayment(
     data: { recoveryPoint: "completed", responseCode: 200, responseBody: { refundId: refund.id, providerResult }, lockedAt: null },
   });
   return sudo.query.Refund.findOne({ where: { id: refund.id }, query: REFUND_QUERY });
+}
+
+async function refundOrderPayment(root: any, args: any, context: any) {
+  const refund = await refundOrderPaymentOnly(root, args, context);
+  // The refund is already final; a failure here must not hide it.
+  await cancelOrderIfFullyRefunded(context, args.orderId).catch((error: unknown) =>
+    console.error("cancelOrderIfFullyRefunded failed", error));
+  return refund;
 }
 
 export default refundOrderPayment;
