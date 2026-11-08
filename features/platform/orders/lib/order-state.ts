@@ -46,13 +46,20 @@ export function isUnfulfilled(value: unknown) {
   return key === "unfulfilled" || key === "partial";
 }
 
-type PaymentRow = { status?: string } | null | undefined;
+type PaymentRow = { status?: string; amount?: number; amountRefunded?: number } | null | undefined;
 
 export function paymentState(details: unknown): StateWord & { key: string } {
   const rows: PaymentRow[] = Array.isArray(details) ? details : [];
   if (rows.length === 0) return { key: "none", label: "No payment", tone: "muted" };
   const has = (s: string) => rows.some((row) => row?.status === s);
-  if (has("captured")) return { key: "captured", label: "Paid", tone: "ok" };
+  const captured = rows.filter((row) => row?.status === "captured");
+  if (captured.length > 0) {
+    const paid = captured.reduce((sum, row) => sum + (row?.amount ?? 0), 0);
+    const refunded = captured.reduce((sum, row) => sum + (row?.amountRefunded ?? 0), 0);
+    if (paid > 0 && refunded >= paid) return { key: "refunded", label: "Refunded", tone: "muted" };
+    if (refunded > 0) return { key: "captured", label: "Paid, partly refunded", tone: "ok" };
+    return { key: "captured", label: "Paid", tone: "ok" };
+  }
   if (has("authorized")) return { key: "authorized", label: "Authorized", tone: "info" };
   if (has("pending")) return { key: "pending", label: "Payment pending", tone: "warn" };
   if (has("failed")) return { key: "failed", label: "Payment failed", tone: "danger" };

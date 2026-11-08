@@ -844,6 +844,7 @@ export const Order = list<Lists.Order.TypeInfo>({
                   payments {
                     id
                     amount
+                    amountRefunded
                     status
                     data
                     createdAt
@@ -871,6 +872,7 @@ export const Order = list<Lists.Order.TypeInfo>({
               return toJsonValue(order.payments.map(payment => ({
                 id: payment.id,
                 amount: payment.amount,
+                amountRefunded: (payment as any).amountRefunded ?? 0,
                 formattedAmount: order.currency ? 
                   `${order.currency.symbol}${(payment.amount / 100).toFixed(2)}` :
                   `${(payment.amount / 100).toFixed(2)}`,
@@ -893,6 +895,7 @@ export const Order = list<Lists.Order.TypeInfo>({
                 query: `
                   payments {
                     amount
+                    amountRefunded
                     status
                   }
                   accountLineItems {
@@ -907,7 +910,8 @@ export const Order = list<Lists.Order.TypeInfo>({
               // Check direct order payments first (normal checkout)
               let totalPaid = order.payments?.reduce((total, payment) => {
                 if (payment.status === 'captured') {
-                  return total + payment.amount;
+                  // Net of refunds: a fully refunded order has nothing paid.
+                  return total + Math.max(0, payment.amount - ((payment as any).amountRefunded || 0));
                 }
                 return total;
               }, 0) || 0;
@@ -944,6 +948,7 @@ export const Order = list<Lists.Order.TypeInfo>({
                 query: `
                   payments {
                     amount
+                    amountRefunded
                     status
                   }
                   accountLineItems {
@@ -962,7 +967,8 @@ export const Order = list<Lists.Order.TypeInfo>({
               // Check direct order payments first (normal checkout)
               let totalPaid = order.payments?.reduce((total, payment) => {
                 if (payment.status === 'captured') {
-                  return total + payment.amount;
+                  // Net of refunds: a fully refunded order has nothing paid.
+                  return total + Math.max(0, payment.amount - ((payment as any).amountRefunded || 0));
                 }
                 return total;
               }, 0) || 0;

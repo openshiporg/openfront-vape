@@ -44,6 +44,8 @@ interface ExtendedOrder {
   payments?: RefundablePayment[];
   paymentDetails?: Array<{
     status: string;
+    amount?: number;
+    amountRefunded?: number;
   }>;
   user?: {
     id: string;
@@ -149,16 +151,22 @@ export function OrderPageClient({
 
   const { lineItems = [] } = order;
   const pay = paymentState(order.paymentDetails);
-  const ful = fulfilmentState(order.fulfillmentStatus);
+  const refundedInFull = pay.key === "refunded";
+  // Nothing was kept, so there is nothing to ship.
+  const ful = refundedInFull && isUnfulfilled(order.fulfillmentStatus)
+    ? { key: "not_needed", label: "Not needed", tone: "muted" as const }
+    : fulfilmentState(order.fulfillmentStatus);
   const paymentCaptured = pay.key === "captured";
   const closed = order.status === "canceled" || order.status === "archived";
-  const needsFulfilment = !closed && isUnfulfilled(order.fulfillmentStatus);
+  const needsFulfilment = !closed && !refundedInFull && isUnfulfilled(order.fulfillmentStatus);
   // One headline state in words, in the order an operator acts on it.
   const headline: StateWord = closed
     ? { label: orderStatusLabel(order.status), tone: orderStatusTone(order.status) }
     : order.status === "requires_action"
       ? { label: "Held, needs action", tone: "warn" }
-      : needsFulfilment && (pay.key === "captured" || pay.key === "authorized")
+      : refundedInFull
+        ? { label: "Refunded", tone: "muted" }
+        : needsFulfilment && (pay.key === "captured" || pay.key === "authorized")
         ? { label: isPickup ? "Paid, ready for pickup" : ful.key === "partial" ? "Partly shipped, rest ready" : "Paid, ready to ship", tone: "ok" }
         : needsFulfilment
           ? { label: isPickup ? "Reserved, pay at pickup" : "Awaiting payment", tone: "warn" }
@@ -217,7 +225,7 @@ export function OrderPageClient({
                 Placed {formatDate(order.createdAt)} · {itemCount} {itemCount === 1 ? "item" : "items"} · {order.total}
               </div>
             </div>
-            {!closed && !isPickup && (
+            {!closed && !isPickup && !refundedInFull && (
               <Link
                 href={`/dashboard/platform/orders/${order.id}/fulfill`}
                 className={cn(
