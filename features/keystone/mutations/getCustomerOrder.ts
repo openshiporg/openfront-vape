@@ -103,7 +103,9 @@ async function getCustomerOrder(root: unknown, { orderId, secretKey }: { orderId
       payments {
         id
         amount
+        amountRefunded
         status
+        data
         createdAt
         paymentCollection {
           paymentSessions {
