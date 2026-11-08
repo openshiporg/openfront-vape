@@ -334,7 +334,7 @@ export const Cart = list<Lists.Cart.TypeInfo>({
       }
 
       // Handle user connection on create if user is authenticated
-      if (operation === 'create' && context.session?.itemId && (!permissions.canManageOrders({ session: context.session }) || !resolvedData.user)) {
+      if (operation === 'create' && context.session?.itemId && !permissions.canManageOrders({ session: context.session })) {
         resolvedData.user = { connect: { id: context.session.itemId } };
       }
 
@@ -422,10 +422,12 @@ export const Cart = list<Lists.Cart.TypeInfo>({
       many: false,
       hooks: {
         resolveInput({ operation, resolvedData, context }) {
+          // Staff creating a cart (e.g. a guest cart) do not become its owner.
           if (
             operation === "create" &&
             !resolvedData.user &&
-            context.session?.itemId
+            context.session?.itemId &&
+            !permissions.canManageOrders({ session: context.session })
           ) {
             return { connect: { id: context.session.itemId } };
           }
