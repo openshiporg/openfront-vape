@@ -95,6 +95,19 @@ function destinationCode(address: any): string | null {
   return country && province ? `${country}-${province}` : null;
 }
 
+// A cart fully covered by gift cards has no card processor. Age, tax and carrier evidence are still required;
+// the payment approval is then any active approval for these categories and this jurisdiction.
+export function selectPaymentApproval(
+  approvals: any[] | null | undefined,
+  opts: { paymentProviderId?: string | null; giftCardTender: boolean; code: string | null; categories: string[] },
+) {
+  const giftCardOnly = !opts.paymentProviderId && opts.giftCardTender;
+  return approvals?.find((approval: any) =>
+    approval.purpose === "payment" && (giftCardOnly || approval.paymentProvider?.id === opts.paymentProviderId) &&
+    Boolean(opts.code) && approval.coveredJurisdictionCodes?.includes(opts.code) &&
+    opts.categories.every((category: string) => approval.coveredCategories?.includes(category)));
+}
+
 export async function evaluateCartCompliance({
   context,
   cartId,
@@ -112,7 +125,7 @@ export async function evaluateCartCompliance({
   const cart = await sudo.query.Cart.findOne({
     where: { id: cartId },
     query: `
-      id user { id } region { taxRate } shippingAddress { province country { iso2 } }
+      id user { id } giftCards { id } region { taxRate } shippingAddress { province country { iso2 } }
       lineItems { id quantity productVariant {
         id product { regulatedCommerceRequired regulatedExemptionReference regulatedExemptionDigest regulatedExemptionReviewedAt regulatedExemptionExpiresAt } regulatedClassification {
           id category flavor packageUnits status effectiveAt expiresAt marketingReviewStatus
@@ -184,10 +197,9 @@ export async function evaluateCartCompliance({
   );
   const effectivePaymentProviderId = paymentProviderId ||
     cart.paymentCollection?.paymentSessions?.find((session: any) => session.isSelected)?.paymentProvider?.id;
-  const paymentApproval = merchant?.providerApprovals?.find((approval: any) =>
-    approval.purpose === "payment" && approval.paymentProvider?.id === effectivePaymentProviderId &&
-    approval.coveredJurisdictionCodes?.includes(code) &&
-    categories.every((category: string) => approval.coveredCategories?.includes(category)));
+  const paymentApproval = selectPaymentApproval(merchant?.providerApprovals, {
+    paymentProviderId: effectivePaymentProviderId, giftCardTender: Boolean(cart.giftCards?.length), code, categories,
+  });
   const carrierEvidence = carrierDecisions[0];
   const selectedShippingOption = cart.shippingMethods?.[0]?.shippingOption?.id;
   const carrierMatchesSelection = Boolean(
