@@ -3,6 +3,7 @@ import {
   enqueueWebhookOutbox,
   subscribedWebhookEndpointIds,
 } from "../../webhooks/outbox";
+import { reverseTaxForCanceledOrder } from "../regulated/order-tax-reversal";
 
 async function transitionOrderStatus(
   root: any,
@@ -140,6 +141,13 @@ async function transitionOrderStatus(
       { id: orderId, previousStatus: order.status, status, reason: reason.trim() }
     );
   }, { isolationLevel: "Serializable" });
+
+  // Cancel requires every captured payment to be refunded, so the order's regulated tax is reversed too.
+  // Append-only: the committed quote is never rewritten. The cancel is already final; a failure here is logged.
+  if (status === "canceled") {
+    await reverseTaxForCanceledOrder(context, orderId).catch((error: unknown) =>
+      console.error("tax reversal after cancel failed", orderId, error));
+  }
 
   return sudo.query.Order.findOne({
     where: { id: orderId },

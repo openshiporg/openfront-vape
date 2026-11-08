@@ -5,8 +5,6 @@ import { enqueueWebhookOutbox, subscribedWebhookEndpointIds } from "../../webhoo
 import { findIdempotencyAttempt, getOrCreateIdempotencyAttempt } from "../utils/idempotency";
 import { GIFT_CARD_TENDER, refundGiftCardTender } from "../checkout/gift-card-tender";
 import transitionOrderStatus from "./transitionOrderStatus";
-import { appendOrderTaxReversal } from "../regulated/reversals";
-import { createStoreRateTaxAdapter, STORE_RATE_PROVIDER_CODE } from "../../regulated-commerce/providers/builtin/tax-store-rate";
 
 function refundRuleError(message: string, code: "REFUND_EXCEEDS_BALANCE" | "PAYMENT_NOT_CAPTURED") {
   return new GraphQLError(message, { extensions: { code } });
@@ -22,7 +20,6 @@ function providerPaymentReference(payment: any): string | undefined {
   );
 }
 
-const REFUND_QUERY = "id amount reason idempotencyKey metadata payment { id amount amountRefunded }";
 
 /** Once every captured payment on an order is fully refunded and nothing is being shipped, the order is
  * canceled (stock goes back, cancel action disappears). Partial refunds and shipped orders are left alone. */
@@ -44,24 +41,7 @@ export async function cancelOrderIfFullyRefunded(context: any, orderId: string) 
   });
   if (!order || !shouldCancelAfterRefund(order)) return false;
   await transitionOrderStatus(null, { orderId, status: "canceled", reason: "Fully refunded" }, context);
-  await reverseTaxForCanceledOrder(context, orderId).catch((error: unknown) =>
-    console.error("tax reversal after cancel failed", orderId, error));
   return true;
-}
-
-/** A fully refunded, canceled order owes no tax: append the reversal row (the committed quote stays as written). */
-export async function reverseTaxForCanceledOrder(context: any, orderId: string) {
-  const prisma = context.sudo().prisma;
-  const store = {
-    ratesFor: async () => [],
-    taxable: async () => { throw new Error("not used"); },
-    findQuote: (reference: string) => prisma.regulatedTaxQuote.findFirst({ where: { providerReference: reference, status: "committed" } }),
-  };
-  return appendOrderTaxReversal({
-    context,
-    orderId,
-    adapterFor: (code) => (code === STORE_RATE_PROVIDER_CODE ? createStoreRateTaxAdapter(store) : null),
-  });
 }
 
 /** Refund part or all of one captured payment on an order. Card payments go back through the processor;
@@ -83,7 +63,7 @@ async function refundOrderPaymentOnly(
   const idempotencyRequest = { key: businessKey, requestPath: "refundOrderPayment", requestParams: { orderId, paymentId, amount, reason: reason.trim() } };
   const priorAttempt = await findIdempotencyAttempt(sudo.prisma, idempotencyRequest);
   if (priorAttempt?.recoveryPoint === "completed" && priorAttempt.responseBody?.refundId) {
-    return sudo.query.Refund.findOne({ where: { id: priorAttempt.responseBody.refundId }, query: REFUND_QUERY });
+    return sudo.db.Refund.findOne({ where: { id: priorAttempt.responseBody.refundId } });
   }
 
   const payment = await sudo.query.Payment.findOne({
@@ -104,7 +84,7 @@ async function refundOrderPaymentOnly(
 
   if (payment.data?.tender === GIFT_CARD_TENDER) {
     const refund = await refundGiftCardTender(sudo.prisma, { orderId, paymentId, amount, reason: reason.trim(), businessKey, userId: context.session.itemId });
-    return sudo.query.Refund.findOne({ where: { id: refund.id }, query: REFUND_QUERY });
+    return sudo.db.Refund.findOne({ where: { id: refund.id } });
   }
 
   const provider =
@@ -118,7 +98,7 @@ async function refundOrderPaymentOnly(
     ? { attempt: priorAttempt, replay: true }
     : await getOrCreateIdempotencyAttempt(sudo.prisma, idempotencyRequest);
   if (attempt.recoveryPoint === "completed" && attempt.responseBody?.refundId) {
-    return sudo.query.Refund.findOne({ where: { id: attempt.responseBody.refundId }, query: REFUND_QUERY });
+    return sudo.db.Refund.findOne({ where: { id: attempt.responseBody.refundId } });
   }
   if (replay) {
     const acquired = await sudo.prisma.idempotencyKey.updateMany({
@@ -173,7 +153,7 @@ async function refundOrderPaymentOnly(
     where: { id: attempt.id },
     data: { recoveryPoint: "completed", responseCode: 200, responseBody: { refundId: refund.id, providerResult }, lockedAt: null },
   });
-  return sudo.query.Refund.findOne({ where: { id: refund.id }, query: REFUND_QUERY });
+  return sudo.db.Refund.findOne({ where: { id: refund.id } });
 }
 
 async function refundOrderPayment(root: any, args: any, context: any) {
