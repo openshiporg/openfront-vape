@@ -14,6 +14,8 @@ import {
   reserveDiscountUsage,
   updateCheckoutAttempt,
 } from "../checkout/recovery";
+import { applyGiftCardsToCart } from "../checkout/cart-amount-due";
+import { commitGiftCardHold, findGiftCardHold, holdGiftCards, releaseGiftCardHold, type GiftCardAllocation } from "../checkout/gift-card-tender";
 import { createOrderFromCartAtomically, resolveOrderCustomer } from "../checkout/order-commit";
 import { withCartFence } from "../security/commerce-fence";
 import { cartEvidenceFingerprint } from "../regulated/cart-fingerprint";
@@ -57,7 +59,7 @@ async function completeActiveCart(
         status
         displayId
         secretKey
-        payments { id }
+        payments { id data }
         account { id }
         shippingAddress { country { iso2 } }
       }
@@ -93,7 +95,7 @@ async function completeActiveCart(
         id
         code
       }
-      giftCards { id }
+      giftCards { id code balance isDisabled endsAt region { id } }
       shippingMethods {
         id
         shippingOption { id data }
@@ -187,11 +189,21 @@ async function completeActiveCart(
   if (compliance.regulated) {
     cart.rawTotal += await regulatedTaxAmountForCart(context, cartId, ["committed"]);
   }
+  // Gift cards pay first. Once balances are held, price from the hold so a recovered checkout
+  // never re-allocates against balances that already moved. rawTotal is then what the processor collects.
+  const existingHold = await findGiftCardHold(sudoContext.prisma, cartId);
+  if (existingHold) {
+    cart.grossTotal = existingHold.body.gross;
+    cart.giftCardAllocation = existingHold.body;
+    cart.rawTotal = existingHold.body.due;
+  } else {
+    applyGiftCardsToCart(cart);
+  }
   const attempt = await getOrCreateCheckoutAttempt(
     sudoContext.prisma,
     cartId,
     paymentSessionId,
-    { cartFingerprint: cart.acceptedCheckoutFingerprint, amount: cart.rawTotal, currency: cart.region.currency.code,
+    { cartFingerprint: cart.acceptedCheckoutFingerprint, amount: cart.rawTotal, gross: cart.grossTotal, giftCards: (cart.giftCardAllocation as GiftCardAllocation).applied.map((card) => `${card.id}:${card.amount}`), currency: cart.region.currency.code,
       acceptanceDigest: evidenceDigest(compliance.regulated ? compliance.acceptanceReferences : { regulated: false }) }
   );
     return { cart, attempt };
@@ -202,7 +214,7 @@ async function completeActiveCart(
     const existingAttempt = await sudoContext.prisma.idempotencyKey.findUnique({
       where: { idempotencyKey: checkoutKey(cartId) },
     });
-    if (paymentSessionId && !cart.order.payments?.length) {
+    if (paymentSessionId && !cart.order.payments?.some((payment: any) => payment.data?.tender !== 'gift_card')) {
       const selectedSession = cart.paymentCollection?.paymentSessions?.find(
         (session: any) => session.id === paymentSessionId
       );
@@ -214,7 +226,7 @@ async function completeActiveCart(
       } else {
         await createPaymentRecord(paymentResult, selectedSession, cart.order, cart, sudoContext);
       }
-    } else if (!paymentSessionId && !cart.order.account?.id) {
+    } else if (!paymentSessionId && !cart.order.account?.id && !cart.giftCardAllocation?.applied?.length) {
       if (!user) throw new Error('Checkout requires account reconciliation');
       const accounts = await sudoContext.query.Account.findMany({
         where: {
@@ -228,6 +240,7 @@ async function completeActiveCart(
       if (!accounts[0]) throw new Error('Checkout requires account reconciliation');
       await addOrderToAccount(accounts[0].id, cart.order, sudoContext);
     }
+    await commitGiftCardHold(sudoContext.prisma, cartId, cart.order, cart.region.currency.code, resolveOrderCustomer(cart).userId);
     if (existingAttempt) {
       await updateCheckoutAttempt(
         sudoContext.prisma,
@@ -249,6 +262,10 @@ async function completeActiveCart(
       query: 'id status displayId secretKey shippingAddress { country { iso2 } }',
     });
   }
+
+  const allocation = cart.giftCardAllocation as GiftCardAllocation;
+  const giftCardsApplied = allocation.applied.length > 0;
+  const coveredByGiftCards = giftCardsApplied && allocation.due === 0;
 
   let inventoryReserved = attempt.recoveryPoint !== 'started';
   let discountsReserved = [
@@ -278,9 +295,17 @@ async function completeActiveCart(
       attempt.recoveryPoint = 'resources_reserved';
     }
 
-    const order = !paymentSessionId
-      ? await handleAccountOrder(cart, user, sudoContext, attempt)
-      : await handlePaidOrder(cart, paymentSessionId, sudoContext, attempt);
+    // Debit the cards under a durable hold; a replayed checkout finds the hold instead of debiting twice.
+    if (giftCardsApplied) await holdGiftCards(sudoContext.prisma, cartId, allocation);
+
+    const order = coveredByGiftCards
+      ? await handleGiftCardOrder(cart, sudoContext, attempt)
+      : !paymentSessionId
+        ? await handleAccountOrder(cart, user, sudoContext, attempt)
+        : await handlePaidOrder(cart, paymentSessionId, sudoContext, attempt);
+    if (giftCardsApplied) {
+      await commitGiftCardHold(sudoContext.prisma, cartId, order, cart.region.currency.code, resolveOrderCustomer(cart).userId);
+    }
 
     await updateCheckoutAttempt(
       sudoContext.prisma,
@@ -306,9 +331,19 @@ async function completeActiveCart(
         attempt.id,
         error instanceof Error ? error.message : 'Checkout failed'
       );
+      await releaseGiftCardHold(sudoContext.prisma, cartId, error instanceof Error ? error.message : 'Checkout failed');
     }
     throw error;
   }
+}
+
+// Gift cards cover the whole order: no card processor is involved.
+async function handleGiftCardOrder(cart: any, sudoContext: any, attempt: any) {
+  const hold = await findGiftCardHold(sudoContext.prisma, cart.id);
+  if (!hold || hold.body.due !== 0) throw new Error('Gift card hold is missing');
+  await updateCheckoutAttempt(sudoContext.prisma, attempt.id, 'payment_confirmed', { paymentResult: { status: 'gift_card' } });
+  attempt.recoveryPoint = 'payment_confirmed';
+  return createOrderFromCartAtomically(cart, sudoContext);
 }
 
 // Handle orders that go to accounts (Openship customer token flow)

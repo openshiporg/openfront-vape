@@ -40,7 +40,7 @@ async function regulatedCartScope(context: any, cartId: string) {
   const sudo = context.sudo();
   const cart = await sudo.query.Cart.findOne({
     where: { id: cartId },
-    query: `id rawTotal region { id currency { code } }
+    query: `id grossTotal region { id currency { code } }
       shippingAddress { firstName lastName province country { iso2 } }
       shippingMethods { id price shippingOption { id data } }
       lineItems { quantity productVariant { id
@@ -150,7 +150,7 @@ function storeRateStore(context: any, scope: Scope): StoreRateTaxStore {
     },
     async taxable() {
       const shipping = scope.cart.shippingMethods.reduce((sum: number, method: any) => sum + (method.price || 0), 0);
-      return { amount: Math.max(0, scope.cart.rawTotal - shipping), currencyCode: String(scope.cart.region.currency.code).toUpperCase() };
+      return { amount: Math.max(0, scope.cart.grossTotal - shipping), currencyCode: String(scope.cart.region.currency.code).toUpperCase() };
     },
     async findQuote(reference) {
       return prisma.regulatedTaxQuote.findFirst({ where: { providerReference: reference } });

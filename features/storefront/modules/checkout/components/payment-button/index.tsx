@@ -18,6 +18,8 @@ interface PaymentButtonProps {
     billingAddress: any;
     email: string;
     shippingMethods: any[];
+    rawTotal?: number;
+    giftCards?: { id: string }[];
     paymentCollection?: {
       paymentSessions?: {
         id?: string;
@@ -53,6 +55,11 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   const paymentSession = cart.paymentCollection?.paymentSessions?.find(
     (s) => s.isSelected
   )
+
+  // Gift cards cover the whole order: no card payment session exists, so place it directly.
+  if ((cart.giftCards?.length ?? 0) > 0 && cart.rawTotal === 0) {
+    return <GiftCardPaymentButton notReady={notReady} data-testid={dataTestId} />
+  }
 
   switch (true) {
     case isStripe(paymentSession?.paymentProvider?.code):
@@ -256,6 +263,45 @@ const ManualTestPaymentButton = ({ notReady, cart, "data-testid": dataTestId }: 
         error={errorMessage}
         data-testid="cash-on-delivery-error-message"
       />
+    </>
+  )
+}
+
+const GiftCardPaymentButton = ({ notReady, "data-testid": dataTestId }: { notReady: boolean; "data-testid"?: string }) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const router = useRouter()
+
+  const handlePayment = async () => {
+    setSubmitting(true)
+    setErrorMessage(null)
+    try {
+      const result = await placeOrder()
+      if (result && typeof result === 'object' && 'success' in result && result.success && 'redirectTo' in result) {
+        router.push(result.redirectTo as string)
+      } else if (result && typeof result === 'object' && 'error' in result && typeof result.error === 'string') {
+        setErrorMessage(result.error)
+      }
+    } catch (err: any) {
+      setErrorMessage(checkoutErrorText(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        disabled={notReady || submitting}
+        onClick={handlePayment}
+        className={cn(vpPrimaryButton, "h-14 w-full text-[16px]")}
+        data-testid={dataTestId || "submit-order-button"}
+      >
+        {submitting && <RiLoader2Fill className="h-4 w-4 animate-spin" />}
+        Place order
+      </button>
+      <ErrorMessage error={errorMessage} data-testid="gift-card-error-message" />
     </>
   )
 }

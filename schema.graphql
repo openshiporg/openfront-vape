@@ -1014,6 +1014,7 @@ type Cart {
   subtotal: String
   total: String
   rawTotal: Int
+  grossTotal: Int
   rawSubtotal: String
   rawTotalBreakdown: String
   discount: String
@@ -12011,6 +12012,8 @@ type Mutation {
   deleteActiveUserAddress(where: AddressWhereUniqueInput!): Address
   addDiscountToActiveCart(cartId: ID!, code: String!): Cart
   removeDiscountFromActiveCart(cartId: ID!, code: String!): Cart
+  addGiftCardToActiveCart(cartId: ID!, code: String!): Cart
+  removeGiftCardFromActiveCart(cartId: ID!, code: String!): Cart
   createActiveCartPaymentSessions(cartId: ID!): Cart
   setActiveCartPaymentSession(cartId: ID!, providerId: ID!): Cart
   completeActiveCart(cartId: ID!, paymentSessionId: ID): JSON
@@ -12036,6 +12039,7 @@ type Mutation {
   setInvoicePaymentSession(invoiceId: ID!, providerId: ID!): Invoice
   completeInvoicePayment(paymentSessionId: ID!): InvoicePaymentResult!
   processReturnRefund(returnId: ID!, paymentId: ID!, idempotencyKey: String!): Refund
+  refundOrderPayment(orderId: ID!, paymentId: ID!, amount: Int!, reason: String!, idempotencyKey: String!): Refund
   stopRegulatedCommerce(profileId: ID!, reason: String!): JSON!
   exportComplianceInventory(profileId: ID!): JSON!
   generateComplianceReport(reportType: String!, jurisdictionId: ID!, merchantProfileId: ID!, periodStartsAt: String!, periodEndsAt: String!): ComplianceReportRun

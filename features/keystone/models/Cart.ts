@@ -1,3 +1,4 @@
+import { allocateGiftCards, GIFT_CARD_QUERY } from "../checkout/gift-card-tender";
 import type { CartPricingProjection, ProductEligibilityProjection, DiscountConditionProjection } from './commerce-projections';
 import type { KeystoneContext } from '@keystone-6/core/types';
 import type { Lists } from '.keystone/types';
@@ -447,6 +448,8 @@ export const Cart = list<Lists.Cart.TypeInfo>({
     }),
     giftCards: relationship({
       ref: "GiftCard.carts",
+      // Applied only through addGiftCardToActiveCart, which checks the card and rate-limits guesses.
+      access: { create: denyAll, update: denyAll },
       many: true,
     }),
     draftOrder: relationship({
@@ -622,6 +625,66 @@ export const Cart = list<Lists.Cart.TypeInfo>({
           }),
         }),
         rawTotal: virtual<Lists.Cart.TypeInfo>({
+          field: graphql.field({
+            type: graphql.Int,
+            async resolve(item: Lists.Cart.Item, args, context) {
+              const sudoContext = context.sudo();
+
+              const cart: CartPricingProjection | null = await sudoContext.query.Cart.findOne({
+                where: { id: item.id },
+                query: `
+                  region {
+                    taxRate
+                    currency {
+                      code
+                      noDivisionCurrency
+                    }
+                  }
+                  lineItems {
+                    id
+                    quantity
+                    productVariant {
+                      id
+                      product {
+                        id
+                        discountable
+                        productType { id }
+                        productCollections { id }
+                        productTags { id }
+                      }
+                    }
+                  }
+                  discounts {
+                    id
+                    discountRule {
+                      type
+                      value
+                      allocation
+                      discountConditions {
+                        id
+                        type
+                        operator
+                        products { id }
+                        productTypes { id }
+                        productCollections { id }
+                        productTags { id }
+                      }
+                    }
+                  }
+                  shippingMethods {
+                    price
+                  }
+                `,
+              }) as CartPricingProjection | null;
+              if (!cart) return null;
+
+              if (!cart) return 0;
+
+              return Math.round(await calculateCartTotal(cart, context));
+            },
+          }),
+        }),
+        grossTotal: virtual<Lists.Cart.TypeInfo>({
           field: graphql.field({
             type: graphql.Int,
             async resolve(item: Lists.Cart.Item, args, context) {
@@ -929,50 +992,27 @@ export const Cart = list<Lists.Cart.TypeInfo>({
           }),
         }),
         giftCardTotal: virtual<Lists.Cart.TypeInfo>({
+          // What the applied cards cover of the gross total (before regulated tax; activeCart adds that).
           field: graphql.field({
             type: graphql.String,
             async resolve(item: Lists.Cart.Item, args, context) {
-              const sudoContext = context.sudo();
-
-              const cart: CartPricingProjection | null = await sudoContext.query.Cart.findOne({
+              const cart: any = await context.sudo().query.Cart.findOne({
                 where: { id: item.id },
                 query: `
-                  giftCards {
-                    id
-                    balance
-                    value
-                  }
-                  region {
-                    currency {
-                      code
-                      noDivisionCurrency
-                    }
-                  }
+                  region { id taxRate currency { code noDivisionCurrency } }
+                  lineItems { id quantity productVariant { id product { id discountable productType { id } productCollections { id } productTags { id } } } }
+                  discounts { id discountRule { type value allocation discountConditions { id type operator products { id } productTypes { id } productCollections { id } productTags { id } } } }
+                  ${GIFT_CARD_QUERY}
+                  shippingMethods { price }
                 `,
-              }) as CartPricingProjection | null;
-              if (!cart) return null;
-
-              if (!cart?.giftCards?.length) {
-                return null;
-              }
-
-              const total = cart.giftCards.reduce((sum, card) => {
-                // Use the lower of balance or value
-                const usableAmount = Math.min(
-                  card.balance,
-                  card.value || card.balance
-                );
-                return sum + usableAmount;
-              }, 0);
-
+              });
+              if (!cart?.giftCards?.length) return null;
+              const gross = Math.round(await calculateCartTotal(cart, context));
+              const { applied } = allocateGiftCards(cart.giftCards, gross, cart.region?.id);
+              const total = applied.reduce((sum, card) => sum + card.amount, 0);
               if (total === 0) return null;
-
-              const currencyCode = cart.region?.currency?.code || "USD";
-              const divisor = cart.region?.currency?.noDivisionCurrency
-                ? 1
-                : 100;
-
-              return formatCurrency(total / divisor, currencyCode);
+              const divisor = cart.region?.currency?.noDivisionCurrency ? 1 : 100;
+              return formatCurrency(total / divisor, cart.region?.currency?.code || "USD");
             },
           }),
         }),

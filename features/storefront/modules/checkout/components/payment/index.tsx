@@ -23,6 +23,7 @@ interface PaymentProps {
   cart: {
     id: string;
     total: number;
+    rawTotal?: number;
     paymentCollection?: {
       paymentSessions?: Array<{
         id?: string;
@@ -79,7 +80,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
   // Check if we're in sandbox/test mode
 
   const paidByGiftcard =
-    cart?.giftCards && cart?.giftCards?.length > 0 && cart?.total === 0;
+    cart?.giftCards && cart?.giftCards?.length > 0 && cart?.rawTotal === 0;
 
   const paymentReady =
     (activeSession && cart?.shippingMethods.length !== 0) || paidByGiftcard;
@@ -153,6 +154,9 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
+      if (paidByGiftcard) {
+        return router.push(pathname + "?" + createQueryString("step", "review"), { scroll: false });
+      }
       const shouldInputCard = isStripe(selectedPaymentMethod) && !cardComplete;
 
       const hasExistingSelectedSession =

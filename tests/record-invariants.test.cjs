@@ -30,7 +30,11 @@ test('gift card balance stays within value; price tiers keep max >= min', () => 
   const { GiftCard } = require('../features/keystone/models/GiftCard.ts');
   const { MoneyAmount } = require('../features/keystone/models/MoneyAmount.ts');
   assert.equal(run(hook(GiftCard), { value: 1000, balance: 1500 }).length, 1);
-  assert.equal(run(hook(GiftCard), { balance: 400 }, { value: 1000, balance: 1000 }).length, 0);
+  // The balance is a ledger total: a raw edit or a partly-funded new card is refused.
+  assert.match(run(hook(GiftCard), { balance: 400 }, { value: 1000, balance: 1000 })[0], /can't be edited/);
+  assert.match(run(hook(GiftCard), { value: 1000, balance: 400 })[0], /full value/);
+  assert.equal(run(hook(GiftCard), { value: 1000, balance: 1000 }).length, 0);
+  assert.equal(run(hook(GiftCard), { isDisabled: true }, { value: 1000, balance: 400 }).length, 0);
   assert.equal(run(hook(MoneyAmount), { maxQuantity: 2 }, { minQuantity: 5 }).length, 1);
   assert.equal(run(hook(MoneyAmount), { minQuantity: 2, maxQuantity: 2 }).length, 0);
 });

@@ -12,7 +12,7 @@ const Review = ({ cart, compliance, stepIndex = 4 }: { cart: any; compliance: Ch
   const isOpen = searchParams.get("step") === "review"
 
   const paidByGiftcard =
-    cart?.giftCard && cart?.giftCard?.length > 0 && cart?.total === 0
+    cart?.giftCards?.length > 0 && cart?.rawTotal === 0
 
   const previousStepsCompleted =
     cart?.shippingAddress &&

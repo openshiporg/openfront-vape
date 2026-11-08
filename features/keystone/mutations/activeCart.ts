@@ -1,5 +1,6 @@
 import type { KeystoneContext } from "@keystone-6/core/types";
 import { assertCartAccess } from "../security/cart-access";
+import { applyGiftCardsToCart } from "../checkout/cart-amount-due";
 import { currentRegulatedTaxQuote, evaluateCartCompliance } from "../regulated/enforcement";
 
 async function activeCart(root: unknown, { cartId }: { cartId: string }, context: KeystoneContext<any>) {
@@ -37,6 +38,7 @@ async function activeCart(root: unknown, { cartId }: { cartId: string }, context
       rawTotal
       discount
       giftCardTotal
+      giftCards { id code balance isDisabled endsAt region { id } }
       tax
       shipping
       lineItems(orderBy:  {
@@ -170,6 +172,18 @@ async function activeCart(root: unknown, { cartId }: { cartId: string }, context
       cart.regulatedTax = "Calculated at checkout";
     }
     cart.regulatedCompliance = compliance.decision;
+  }
+
+  // Gift cards pay first; rawTotal/total become what is left for the card processor.
+  if (cart.giftCards?.length) {
+    const gross = cart.rawTotal;
+    applyGiftCardsToCart(cart);
+    const covered = gross - cart.rawTotal;
+    const divisor = cart.region?.currency?.noDivisionCurrency ? 1 : 100;
+    const currency = String(cart.region?.currency?.code || "USD").toUpperCase();
+    const format = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount / divisor);
+    cart.giftCardTotal = covered > 0 ? format(covered) : null;
+    cart.total = format(cart.rawTotal);
   }
 
   return cart;

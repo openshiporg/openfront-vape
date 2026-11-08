@@ -192,7 +192,8 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
   const commercialSnapshot = {
     currency: cart.region.currency.code,
     cartFingerprint,
-    acceptedTotal: cart.rawTotal,
+    // The order's total is the gross; gift cards are one of its tenders, recorded as a Payment.
+    acceptedTotal: cart.grossTotal ?? cart.rawTotal,
     tax: {
       rate: cart.region.taxRate || 0,
       regionId: cart.region.id,
@@ -375,7 +376,7 @@ async function commitOrderFromCart(cart: any, sudo: any): Promise<{ orderId: str
         displayId: order.displayId,
         email: order.email,
         status: order.status,
-        rawTotal: cart.rawTotal,
+        rawTotal: cart.grossTotal ?? cart.rawTotal,
         subtotal: webhookTotals?.subtotal ?? null,
         shipping: webhookTotals?.shipping ?? null,
         discount: webhookTotals?.discount ?? null,

@@ -4,6 +4,7 @@ import { createPayment } from "../utils/paymentProviderAdapter";
 import { cartIsPickup } from "../regulated/pickup";
 import { assertCartAccess } from "../security/cart-access";
 import { isPaymentProviderConfigured } from "../utils/paymentProviderConfig";
+import { applyGiftCardsToCart } from "../checkout/cart-amount-due";
 import { regulatedTaxAmountForCart, requireAllowedCartCompliance } from "../regulated/enforcement";
 import { shopperError } from "../lib/shopperError";
 import { cartNotFound } from "../security/cart-access";
@@ -23,6 +24,7 @@ async function initiatePaymentSession(
       id
       rawTotal
       metadata
+      giftCards { id code balance isDisabled endsAt region { id } }
       shippingAddress { id country { iso2 } }
       shippingMethods { shippingOption { data } }
       billingAddress { id }
@@ -58,7 +60,7 @@ async function initiatePaymentSession(
     throw cartNotFound();
   }
 
-  if (!cart.shippingAddress?.id || !cart.billingAddress?.id || cart.rawTotal <= 0) {
+  if (!cart.shippingAddress?.id || !cart.billingAddress?.id || cart.rawTotal < 0) {
     throw shopperError("A positive cart with billing and shipping addresses is required", "CART_INCOMPLETE");
   }
 
@@ -98,6 +100,11 @@ async function initiatePaymentSession(
   });
   if (compliance.regulated) {
     cart.rawTotal += await regulatedTaxAmountForCart(context, cartId, ["committed"]);
+  }
+  // Gift cards pay first: the session is for the remainder only.
+  applyGiftCardsToCart(cart);
+  if (cart.rawTotal <= 0) {
+    throw shopperError("Gift cards cover this order. Place the order without a card payment.", "GIFT_CARD_COVERS_TOTAL");
   }
   // First check if we have an existing payment collection
   if (!cart.paymentCollection) {

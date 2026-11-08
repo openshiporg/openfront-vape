@@ -217,14 +217,7 @@ export function GiftCardDetailsComponent({
                         </Td>
                         <Td priority={2} className="whitespace-nowrap text-muted-foreground">{formatDate(transaction.createdAt)}</Td>
                         <Td priority={2} align="right" className="text-muted-foreground">{transaction.order.total}</Td>
-                        <Td align="right">-{formatCurrency(transaction.amount)}</Td>
-                        <ActionsCell>
-                          <RowMenu label="Transaction actions">
-                            <DropdownMenuItem onClick={() => handleEditItem(transaction.id)}>
-                              Edit Transaction
-                            </DropdownMenuItem>
-                          </RowMenu>
-                        </ActionsCell>
+                        <Td align="right">{transaction.amount < 0 ? "-" : "+"}{formatCurrency(Math.abs(transaction.amount))}</Td>
                       </Tr>
                     )
                   ))}

@@ -16,9 +16,10 @@ export const GiftCardTransaction = list({
       query: ({ session }) =>
         permissions.canReadGiftCards({ session }) ||
         permissions.canManageGiftCards({ session }),
-      create: permissions.canManageGiftCards,
-      update: permissions.canManageGiftCards,
-      delete: permissions.canManageGiftCards,
+      // Ledger rows are written only by checkout and refunds.
+      create: () => false,
+      update: () => false,
+      delete: () => false,
     },
   },
   fields: {

@@ -115,7 +115,7 @@ export async function getOrder(orderId: string) {
         paymentDetails
         totalPaid
         formattedTotalPaid
-        payments { id status amount }
+        payments { id status amount amountRefunded currencyCode refunds { id amount note createdAt } }
         shippingMethods { id shippingOption { id name data } }
         lineItems {
           id

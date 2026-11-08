@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RefundOrderDialog, type RefundablePayment } from "../components/RefundOrderDialog";
 import {
   DataTable,
   Dot,
@@ -40,6 +41,7 @@ interface ExtendedOrder {
   tax?: string;
   total?: string;
   formattedTotalPaid?: string;
+  payments?: RefundablePayment[];
   paymentDetails?: Array<{
     status: string;
   }>;
@@ -335,6 +337,9 @@ export function OrderPageClient({
                   <span className="text-muted-foreground">Paid</span>
                   <span className="tabular-nums text-foreground">{order.formattedTotalPaid}</span>
                 </div>
+                {(order.payments || []).some((p) => p.status === "captured" && p.amount > 0) && (
+                  <div className="px-4 py-3"><RefundOrderDialog orderId={order.id} payments={order.payments || []} /></div>
+                )}
               </ListBand>
             </section>
 

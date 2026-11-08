@@ -795,17 +795,36 @@ export async function applyDiscount(code: string) {
 
 export async function applyGiftCard(code: string) {
   const cartId = await getCartId();
-
   if (!cartId) return "No cartId cookie found";
+  await addGiftCardToCart(cartId, code);
+  revalidateTag("cart");
+  revalidateTag("checkout");
+}
 
-  try {
-    await updateCart({ giftCards: [{ code }] }).then(() => {
-      revalidateTag("cart");
-      revalidateTag("checkout");
-    });
-  } catch (error) {
-    throw error;
-  }
+export async function addGiftCardToCart(cartId: string | null, code: string) {
+  if (!cartId) return null;
+  return openfrontClient.request(
+    gql`
+      mutation AddGiftCardToActiveCart($cartId: ID!, $code: String!) {
+        addGiftCardToActiveCart(cartId: $cartId, code: $code) { id giftCards { id code balance } }
+      }
+    `,
+    { cartId, code },
+    await getAuthHeaders()
+  );
+}
+
+export async function removeGiftCardFromCart(cartId: string | null, code: string) {
+  if (!cartId) return null;
+  return openfrontClient.request(
+    gql`
+      mutation RemoveGiftCardFromActiveCart($cartId: ID!, $code: String!) {
+        removeGiftCardFromActiveCart(cartId: $cartId, code: $code) { id giftCards { id code balance } }
+      }
+    `,
+    { cartId, code },
+    await getAuthHeaders()
+  );
 }
 
 function discountErrorMessage(error: any, fallback: string) {
@@ -836,15 +855,14 @@ export async function removeDiscount(code: string) {
 
 export async function removeGiftCard(code: string) {
   const cartId = await getCartId();
-
   if (!cartId) return "No cartId cookie found";
-
   try {
-    await Promise.resolve().then(() => {
-      revalidateTag("cart");
-    });
-  } catch (error) {
-    throw error;
+    await removeGiftCardFromCart(cartId, code);
+    revalidateTag("cart");
+    revalidateTag("checkout");
+    return null;
+  } catch (error: any) {
+    return discountErrorMessage(error, "Failed to remove gift card");
   }
 }
 
@@ -865,43 +883,20 @@ export async function submitDiscountForm(prevState: any, formData: FormData) {
     revalidateTag("cart");
     return null;
   } catch (error: any) {
+    // One box takes both kinds of code: a code that is not a discount may be a gift card.
+    if (error?.response?.errors?.[0]?.extensions?.code === "INVALID_DISCOUNT_CODE") {
+      try {
+        await addGiftCardToCart(cartId, code);
+        revalidateTag("cart");
+        revalidateTag("checkout");
+        return null;
+      } catch (giftError: any) {
+        const giftCode = giftError?.response?.errors?.[0]?.extensions?.code;
+        if (giftCode === "GIFT_CARD_UNAVAILABLE" || giftCode === "INVALID_GIFT_CARD_CODE") return "That code isn't valid";
+        return discountErrorMessage(giftError, "Failed to apply gift card");
+      }
+    }
     return discountErrorMessage(error, "Failed to apply discount code");
-  }
-}
-
-export async function submitGiftCard(code: string) {
-  const cartId = await getCartId();
-  if (!cartId) return "No cartId cookie found";
-
-  try {
-    await openfrontClient.request(
-      gql`
-        mutation UpdateActiveCart($cartId: ID!, $data: CartUpdateInput!) {
-          updateActiveCart(cartId: $cartId, data: $data) {
-            id
-            giftCards {
-              id
-              code
-              balance
-            }
-          }
-        }
-      `,
-      {
-        cartId,
-        data: {
-          giftCards: {
-            connect: [{ code }],
-          },
-        },
-      },
-      await getAuthHeaders()
-    );
-
-    revalidateTag("cart");
-  } catch (error) {
-    console.error("Error submitting gift card:", error instanceof Error ? error.message : String(error));
-    return error instanceof Error ? error.message : String(error);
   }
 }
 
