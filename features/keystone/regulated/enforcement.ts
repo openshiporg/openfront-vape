@@ -99,9 +99,11 @@ function destinationCode(address: any): string | null {
 // the payment approval is then any active approval for these categories and this jurisdiction.
 export function selectPaymentApproval(
   approvals: any[] | null | undefined,
-  opts: { paymentProviderId?: string | null; giftCardTender: boolean; code: string | null; categories: string[] },
+  opts: { paymentProviderId?: string | null; giftCardTender: boolean; accountTender?: boolean; code: string | null; categories: string[] },
 ) {
-  const giftCardOnly = !opts.paymentProviderId && opts.giftCardTender;
+  // Gift-card-only and business-account terms have no card processor: any active approval for these
+  // categories and this jurisdiction applies.
+  const giftCardOnly = !opts.paymentProviderId && (opts.giftCardTender || Boolean(opts.accountTender));
   return approvals?.find((approval: any) =>
     approval.purpose === "payment" && (giftCardOnly || approval.paymentProvider?.id === opts.paymentProviderId) &&
     Boolean(opts.code) && approval.coveredJurisdictionCodes?.includes(opts.code) &&
@@ -125,7 +127,7 @@ export async function evaluateCartCompliance({
   const cart = await sudo.query.Cart.findOne({
     where: { id: cartId },
     query: `
-      id user { id } giftCards { id } region { taxRate } shippingAddress { province country { iso2 } }
+      id user { id } giftCards { id } region { taxRate } shippingAddress { province country { iso2 } user { id } }
       lineItems { id quantity productVariant {
         id product { regulatedCommerceRequired regulatedExemptionReference regulatedExemptionDigest regulatedExemptionReviewedAt regulatedExemptionExpiresAt } regulatedClassification {
           id category flavor packageUnits status effectiveAt expiresAt marketingReviewStatus
@@ -197,8 +199,12 @@ export async function evaluateCartCompliance({
   );
   const effectivePaymentProviderId = paymentProviderId ||
     cart.paymentCollection?.paymentSessions?.find((session: any) => session.isSelected)?.paymentProvider?.id;
+  // Terms: no card processor, the cart owner has an active business account, and checkout would bill it.
+  const ownerId = cart.user?.id ?? cart.shippingAddress?.user?.id;
+  const accountTender = !effectivePaymentProviderId && !cart.giftCards?.length && purpose === "checkout" && Boolean(ownerId) &&
+    (await sudo.query.Account.count({ where: { user: { id: { equals: ownerId } }, accountType: { equals: "business" }, status: { equals: "active" } } })) > 0;
   const paymentApproval = selectPaymentApproval(merchant?.providerApprovals, {
-    paymentProviderId: effectivePaymentProviderId, giftCardTender: Boolean(cart.giftCards?.length), code, categories,
+    paymentProviderId: effectivePaymentProviderId, giftCardTender: Boolean(cart.giftCards?.length), accountTender, code, categories,
   });
   const carrierEvidence = carrierDecisions[0];
   const selectedShippingOption = cart.shippingMethods?.[0]?.shippingOption?.id;
