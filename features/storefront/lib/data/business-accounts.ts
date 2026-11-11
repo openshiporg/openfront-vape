@@ -61,7 +61,6 @@ const CREATE_BUSINESS_ACCOUNT_REQUEST_MUTATION = gql`
         monthlyOrderVolume: $monthlyOrderVolume
         requestedCreditLimit: $requestedCreditLimit
         businessDescription: $businessDescription
-        status: "pending"
       }
     ) {
       id

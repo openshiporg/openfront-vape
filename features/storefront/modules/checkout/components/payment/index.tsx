@@ -44,9 +44,13 @@ interface PaymentProps {
   stepIndex?: number;
   /** Set when delivery cannot be paid by card: the pickup option to switch to. */
   pickupOptionId?: string | null;
+  /** Set when the signed-in customer's approved business account can take this order on terms. */
+  accountTender?: { title: string; availableCredit: number; currency: string } | null;
 }
 
-const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId = null }: PaymentProps) => {
+const ACCOUNT_METHOD = "account_terms";
+
+const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId = null, accountTender = null }: PaymentProps) => {
   const activeSession = cart.paymentCollection?.paymentSessions?.find(
     (session) => session.isSelected
   );
@@ -83,8 +87,9 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
   // Check if we're in sandbox/test mode
 
 
+  const accountSelected = !!accountTender && (selectedPaymentMethod === ACCOUNT_METHOD || searchParams?.get("tender") === "account");
   const paymentReady =
-    (activeSession && cart?.shippingMethods.length !== 0) || paidByGiftcard;
+    (activeSession && cart?.shippingMethods.length !== 0) || paidByGiftcard || accountSelected;
 
   const useOptions = useMemo(() => {
     return {
@@ -125,7 +130,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
   };
 
   // Pre-payment check for the chosen method; re-runs when the method or the bag changes.
-  const selectedProviderId = availablePaymentMethods?.find((method) => method.code === selectedPaymentMethod)?.id;
+  const selectedProviderId = selectedPaymentMethod === ACCOUNT_METHOD ? undefined : availablePaymentMethods?.find((method) => method.code === selectedPaymentMethod)?.id;
   const hasShipping = (cart?.shippingMethods?.length ?? 0) > 0;
   const [compliance, setCompliance] = useState<CheckoutCompliance | null>(null);
   const [complianceLoading, setComplianceLoading] = useState(false);
@@ -157,6 +162,12 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
     try {
       if (paidByGiftcard) {
         return router.push(pathname + "?" + createQueryString("step", "review"), { scroll: false });
+      }
+      if (selectedPaymentMethod === ACCOUNT_METHOD) {
+        const params = new URLSearchParams(searchParams?.toString() || "");
+        params.set("step", "review");
+        params.set("tender", "account");
+        return router.push(pathname + "?" + params.toString(), { scroll: false });
       }
       const shouldInputCard = isStripePayment && !cardComplete;
 
@@ -195,7 +206,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
     setError(null);
   }, [isOpen]);
 
-  const methodTitle = paidByGiftcard ? "Gift card" : paymentInfoMap[selectedPaymentMethod]?.title || selectedPaymentMethod;
+  const methodTitle = paidByGiftcard ? "Gift card" : accountSelected ? "Pay on account (invoice)" : paymentInfoMap[selectedPaymentMethod]?.title || selectedPaymentMethod;
 
   return (
     <section className="flex flex-col gap-5 border-t border-vp-line pt-5" aria-label="Payment">
@@ -208,7 +219,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
         editTestId="edit-payment-button"
       />
       <div className={isOpen ? "flex flex-col gap-5 pb-2" : "hidden"}>
-        {!paidByGiftcard && availablePaymentMethods?.length > 0 && (
+        {!paidByGiftcard && (availablePaymentMethods?.length > 0 || !!accountTender) && (
           <>
             <RadioGroup
               value={selectedPaymentMethod}
@@ -216,7 +227,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
               aria-label="Payment method"
               className="vp-band flex flex-col gap-0.5 p-1"
             >
-              {availablePaymentMethods.map((method) => {
+              {[...(availablePaymentMethods ?? []), ...(accountTender ? [{ id: "account-terms", code: ACCOUNT_METHOD }] : [])].map((method) => {
                 const selected = selectedPaymentMethod === method.code;
                 return (
                   <div key={method.id} className="relative">
@@ -243,7 +254,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
                           )}
                         />
                         <span className="text-[15px] leading-[20px] font-medium text-vp-ink">
-                          {paymentInfoMap[method.code]?.title || method.code}
+                          {method.code === ACCOUNT_METHOD ? "Pay on account (invoice)" : paymentInfoMap[method.code]?.title || method.code}
                         </span>
                       </span>
                       <span className="flex flex-none items-center gap-3 text-vp-ink-2">
@@ -277,7 +288,13 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
           </>
         )}
 
-        {!paidByGiftcard && !(availablePaymentMethods?.length > 0) && (
+        {selectedPaymentMethod === ACCOUNT_METHOD && accountTender && (
+          <p className="text-[14px] leading-[20px] text-vp-ink-2" data-testid="account-tender-note">
+            Billed to {accountTender.title} on your invoice. Credit available: {(accountTender.availableCredit / 100).toLocaleString("en-US", { style: "currency", currency: accountTender.currency || "USD" })}.
+          </p>
+        )}
+
+        {!paidByGiftcard && !(availablePaymentMethods?.length > 0) && !accountTender && (
           <p role="status" className="text-[14px] leading-[20px] text-vp-ink-2" data-testid="no-payment-methods">
             {hasShipping
               ? "Card payment isn't available for delivery yet. Reserve online and pay in store when you collect."
@@ -285,7 +302,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
           </p>
         )}
 
-        {isOpen && !paidByGiftcard && !(availablePaymentMethods?.length > 0) && hasShipping && pickupOptionId && (
+        {isOpen && !paidByGiftcard && !(availablePaymentMethods?.length > 0) && !accountTender && hasShipping && pickupOptionId && (
           <div>
             <button
               type="button"
@@ -344,7 +361,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
       </div>
 
       <div className={isOpen ? "hidden" : "block"}>
-        {cart && paymentReady && activeSession ? (
+        {cart && paymentReady && (activeSession || accountSelected) ? (
           <div className="grid grid-cols-1 gap-4 pb-2 sm:grid-cols-3 sm:gap-6">
             <StepFact label="Method">
               <p data-testid="payment-method-summary">{methodTitle}</p>
@@ -355,7 +372,9 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
                   {paymentInfoMap[selectedPaymentMethod]?.icon || <CreditCard className="h-5 w-5" />}
                 </span>
                 <span>
-                  {isStripe(selectedPaymentMethod) && cardBrand
+                  {accountSelected
+                    ? "Billed on your invoice"
+                    : isStripe(selectedPaymentMethod) && cardBrand
                     ? cardBrand
                     : "Another step will appear"}
                 </span>

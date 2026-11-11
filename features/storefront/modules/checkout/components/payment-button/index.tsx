@@ -20,6 +20,7 @@ interface PaymentButtonProps {
     shippingMethods: any[];
     rawTotal?: number;
     giftCards?: { id: string }[];
+    onAccount?: boolean;
     paymentCollection?: {
       paymentSessions?: {
         id?: string;
@@ -56,6 +57,10 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     (s) => s.isSelected
   )
 
+  // Business account terms: no payment session exists, the server posts the order to the account.
+  if (cart.onAccount) {
+    return <GiftCardPaymentButton notReady={notReady} data-testid={dataTestId} />
+  }
   // Gift cards cover the whole order: no card payment session exists, so place it directly.
   if ((cart.giftCards?.length ?? 0) > 0 && cart.rawTotal === 0) {
     return <GiftCardPaymentButton notReady={notReady} data-testid={dataTestId} />

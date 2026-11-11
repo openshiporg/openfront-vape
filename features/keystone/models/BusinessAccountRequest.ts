@@ -89,6 +89,11 @@ export const BusinessAccountRequest = list<Lists.BusinessAccountRequest.TypeInfo
     // Status tracking
     status: select({
       access: reviewAccess,
+      hooks: {
+        // A customer's request always starts pending; only staff review changes it.
+        resolveInput: ({ operation, resolvedData, context }) =>
+          operation === 'create' && !permissions.canManageOrders({ session: context.session }) ? 'pending' : resolvedData.status,
+      },
       options: [
         { label: 'Pending', value: 'pending' },
         { label: 'Approved', value: 'approved' },

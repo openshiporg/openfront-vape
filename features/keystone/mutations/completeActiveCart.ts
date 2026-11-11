@@ -550,7 +550,9 @@ async function handleAccountOrder(cart: any, user: string, sudoContext: any, att
   }
   
   // Get cart currency for account matching
-  if (cart.user?.id !== user) throw new Error("Checkout could not be completed");
+  // A cart started before sign-in has no owner yet; its shipping address belongs to the signed-in shopper.
+  const cartOwnerId = cart.user?.id ?? cart.shippingAddress?.user?.id;
+  if (cartOwnerId !== user) throw new Error("Checkout could not be completed");
   const cartCurrency = cart.region?.currency?.code;
   if (!cartCurrency) {
     throw new Error('Cart region or currency not found');

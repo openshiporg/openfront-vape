@@ -14,10 +14,12 @@ const Review = ({ cart, compliance, stepIndex = 4 }: { cart: any; compliance: Ch
   const paidByGiftcard =
     cart?.giftCards?.length > 0 && cart?.rawTotal === 0
 
+  const accountTender = searchParams.get("tender") === "account"
+
   const previousStepsCompleted =
     cart?.shippingAddress &&
     cart?.shippingMethods?.length > 0 &&
-    (cart?.paymentCollection || paidByGiftcard)
+    (cart?.paymentCollection || paidByGiftcard || accountTender)
 
   const active = isOpen && previousStepsCompleted
 
@@ -40,7 +42,7 @@ const Review = ({ cart, compliance, stepIndex = 4 }: { cart: any; compliance: Ch
             By placing this order you accept the Terms of Use, Terms of Sale, Returns Policy and Privacy Policy.
           </p>
           <CompliancePanel compliance={compliance} />
-          <PaymentButton cart={cart} blocked={complianceBlocksOrder(compliance)} data-testid="submit-order-button" />
+          <PaymentButton cart={accountTender ? { ...cart, onAccount: true } : cart} blocked={complianceBlocksOrder(compliance)} data-testid="submit-order-button" />
         </div>
       )}
     </section>

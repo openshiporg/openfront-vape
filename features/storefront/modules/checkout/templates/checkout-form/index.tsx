@@ -7,6 +7,7 @@ import Review from "@/features/storefront/modules/checkout/components/review";
 import { listCartPaymentMethods } from "@/features/storefront/lib/data/payment";
 import { getCartShippingOptions } from "@/features/storefront/lib/data/shipping";
 import AgeCheck from "@/features/storefront/modules/checkout/components/age-check";
+import { getCustomerBusinessAccount } from "@/features/storefront/lib/data/business-accounts";
 import { getAgeCheckStatus, getCheckoutCompliance } from "@/features/storefront/lib/data/compliance";
 
 interface CheckoutFormProps {
@@ -88,6 +89,13 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
 
   const ageCheck = cart.shippingAddress ? await getAgeCheckStatus() : { required: false, done: true };
   const shift = ageCheck.required ? 1 : 0;
+  // An approved business account with enough available credit can take the order on terms.
+  const account = customer?.id ? await getCustomerBusinessAccount(customer.id).catch(() => null) : null;
+  const rawTotal = Number((cart as any).rawTotal ?? 0);
+  const accountTender = account && account.accountType === "business" && account.status === "active" &&
+    Number(account.availableCredit ?? 0) >= rawTotal && rawTotal > 0
+    ? { title: String(account.title || "Business account"), availableCredit: Number(account.availableCredit), currency: String(account.currency?.code || "") }
+    : null;
   const shippingName = [cart.shippingAddress?.firstName, cart.shippingAddress?.lastName].filter(Boolean).join(" ");
 
   return (
@@ -99,7 +107,7 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
           hasShippingMethod={(cart.shippingMethods?.length ?? 0) > 0} shippingName={shippingName}
           pickup={cart.shippingMethods?.[0]?.shippingOption?.data?.pickup === true} />
       )}
-      <Payment cart={cart} availablePaymentMethods={availablePaymentMethods} stepIndex={3 + shift} pickupOptionId={deliveryCardAvailable ? null : pickupOptionId} />
+      <Payment cart={cart} availablePaymentMethods={availablePaymentMethods} stepIndex={3 + shift} pickupOptionId={deliveryCardAvailable ? null : pickupOptionId} accountTender={accountTender} />
       <Review cart={cart} compliance={compliance} stepIndex={4 + shift} />
     </div>
   );
