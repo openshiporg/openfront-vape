@@ -1,3 +1,4 @@
+import { markOverdueInvoices } from "../lib/invoiceOverdue";
 import type { KeystoneContext } from "@keystone-6/core/types";
 async function getCustomerAccounts(root: unknown, { limit = 10, offset = 0 }: { limit?: number | null; offset?: number | null }, context: KeystoneContext<any>) {
   if (!context.session?.itemId) {
@@ -5,6 +6,7 @@ async function getCustomerAccounts(root: unknown, { limit = 10, offset = 0 }: { 
   }
 
   const sudoContext = context.sudo();
+  await markOverdueInvoices(sudoContext.prisma);
   
   const accounts = await sudoContext.query.Account.findMany({
     where: { 

@@ -5,5 +5,7 @@ export async function markOverdueInvoices(prisma: any, now = new Date()): Promis
     where: { status: "sent", dueDate: { lt: now } },
     data: { status: "overdue" },
   });
-  return result.count;
+  // Business accounts too: active, past the due date, with a balance still owing.
+  const accounts = await prisma.$executeRaw`UPDATE "Account" SET status = 'overdue' WHERE status = 'active' AND "dueDate" < ${now} AND COALESCE("totalAmount", 0) - COALESCE("paidAmount", 0) > 0`;
+  return result.count + Number(accounts);
 }

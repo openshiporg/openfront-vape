@@ -9,7 +9,7 @@ import { buildOrderByClause } from '../../../dashboard/lib/buildOrderByClause'
 import { buildWhereClause } from '../../../dashboard/lib/buildWhereClause'
 import { notFound } from 'next/navigation'
 import { InvoiceListPageClient } from './InvoiceListPageClient'
-import { getInvoices, getInvoiceStatusCounts } from '../actions'
+import { getInvoices, getInvoiceStatusCounts, refreshOverdueInvoices } from '../actions'
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -61,6 +61,8 @@ export async function InvoiceListPage({ searchParams }: PageProps) {
   const where = whereConditions.length > 0 ? { AND: whereConditions } : {}
 
   // Use Invoice actions with where clause
+  // Time-based state advances on read: past-due unpaid accounts turn overdue before the counts are taken.
+  await refreshOverdueInvoices().catch(() => null)
   const response = await getInvoices(
     where,
     pageSize,
