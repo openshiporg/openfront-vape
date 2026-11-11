@@ -33,7 +33,7 @@ test('assertTransition throws a clear error', () => {
   assert.throws(() => sm.assertTransition('Return', sm.RETURN_TRANSITIONS, 'received', 'canceled'), /Return cannot move from "received" to "canceled"/);
 });
 
-test('overdue sweep only moves sent invoices past their due date', async () => {
+test('overdue update only moves sent invoices past their due date', async () => {
   const ts = require('typescript');
   const m = { exports: {} };
   new Function('module', 'exports', ts.transpileModule(fs.readFileSync(path.join(root, 'features/keystone/lib/invoiceOverdue.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(m, m.exports);

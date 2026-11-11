@@ -7,7 +7,8 @@
 
 import React, { useState, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
+import { refreshOverdueInvoices } from '../actions'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PlatformEmptyState } from '../../components/PlatformEmptyState'
 import { Button } from '@/components/ui/button'
@@ -183,6 +184,16 @@ export function InvoiceListPageClient({
     )
     .map((row) => row.account)
 
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshNote, setRefreshNote] = useState<string | null>(null)
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    const result = await refreshOverdueInvoices()
+    setRefreshing(false)
+    setRefreshNote(result.success ? `${result.count} invoice${result.count === 1 ? '' : 's'} marked overdue.` : result.error)
+    if (result.success) router.refresh()
+  }
+
   const header = (
     <PageTitle
       title="Business Accounts"
@@ -201,6 +212,13 @@ export function InvoiceListPageClient({
 
   return (
     <PageContainer title="Business Accounts" header={header} breadcrumbs={breadcrumbs}>
+      <div className="flex items-center gap-3 px-4 pt-2 md:px-6">
+        <Button type="button" variant="outline" size="sm" disabled={refreshing} onClick={handleRefresh}>
+          <RefreshCw className={refreshing ? 'animate-spin' : undefined} />
+          Refresh overdue
+        </Button>
+        {refreshNote && <p role="status" className="text-sm text-muted-foreground">{refreshNote}</p>}
+      </div>
       {!error && queue.length > 0 && (
         <section className="px-4 pt-2 md:px-6" aria-labelledby="accounts-queue-title">
           <SectionTitle meta={queue.length}>

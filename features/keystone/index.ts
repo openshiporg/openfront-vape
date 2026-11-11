@@ -5,7 +5,6 @@ import { permissionsList } from "./models/fields";
 import "dotenv/config";
 import { extendGraphqlSchema } from "./mutations";
 import { models } from "./models";
-import { startInvoiceOverdueSweep } from "./lib/invoiceOverdue";
 import { sendPasswordResetEmail } from "./lib/mail";
 import Iron from "@hapi/iron";
 import * as cookie from "cookie";
@@ -480,9 +479,6 @@ export default withAuth(
         url: pooledDatabaseUrl(databaseURL),
         // Keystone returns failed queries as values; this makes them throw so transactions roll back.
         extendPrismaClient: throwKeystonePrismaErrors,
-        async onConnect(context) {
-          startInvoiceOverdueSweep(context);
-        },
       },
       lists: models,
       storage: {

@@ -1,6 +1,7 @@
 'use server';
 
 import { sessionContext } from '@/features/platform/lib/session-context';
+import { markOverdueInvoices } from '@/features/keystone/lib/invoiceOverdue';
 
 export type CustomerAddress = {
   id: string;
@@ -60,6 +61,7 @@ export async function getCustomer(id: string): Promise<CustomerResult> {
 
   let customer: CustomerDetail | null;
   try {
+    await markOverdueInvoices(context.sudo().prisma);
     customer = (await context.query.User.findOne({ where: { id }, query: CUSTOMER_QUERY })) as unknown as CustomerDetail | null;
   } catch (error) {
     console.error('Customer read failed', (error as any)?.name);

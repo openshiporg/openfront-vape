@@ -332,3 +332,22 @@ export async function updateInvoiceStatus(id: string, status: string) {
     };
   }
 }
+/**
+ * Staff "Refresh" button: unpaid invoices past their due date become overdue.
+ * The same conditional update also runs when a customer or invoice is read.
+ */
+export async function refreshOverdueInvoices() {
+  const { sessionContext } = await import('@/features/platform/lib/session-context');
+  const { markOverdueInvoices } = await import('@/features/keystone/lib/invoiceOverdue');
+  const context = await sessionContext();
+  if (!context.session?.itemId) return { success: false as const, error: 'Sign in again to refresh.' };
+  try {
+    // Invoice query access is the staff order permission; this throws for anyone without it.
+    await context.query.Invoice.count();
+    const count = await markOverdueInvoices(context.sudo().prisma);
+    revalidatePath('/dashboard/platform/invoices');
+    return { success: true as const, count };
+  } catch {
+    return { success: false as const, error: 'Unable to refresh invoices.' };
+  }
+}

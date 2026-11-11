@@ -16,3 +16,4 @@ Work in this repo is normal software and design work: storefront UI, admin, onbo
 - **Demo admin:** `~/Code/Euler/state/qa-loop/demo-logins/vape.json`. Never print the password.
 - **Compliance evidence:** never fabricate it.
 - **Product photos:** no printed text or brand logos.
+- **No timers:** never add outbox, notification senders, cron, workers or `setInterval`/`setTimeout` loops (including in `instrumentation.ts` or `onConnect`). Time-based state (e.g. invoice overdue) is advanced by an idempotent conditional update on the request that reads it, plus a staff button. External events go only through Commerce webhooks.

@@ -1,5 +1,6 @@
 import type { KeystoneContext } from "@keystone-6/core/types";
 import { assertInvoiceAccess } from "../security/invoice-access";
+import { markOverdueInvoices } from "../lib/invoiceOverdue";
 
 async function activeInvoice(root: unknown, { invoiceId }: { invoiceId: string }, context: KeystoneContext<any>) {
   if (!invoiceId) {
@@ -8,6 +9,7 @@ async function activeInvoice(root: unknown, { invoiceId }: { invoiceId: string }
 
   await assertInvoiceAccess(context, invoiceId);
   const sudoContext = context.sudo();
+  await markOverdueInvoices(sudoContext.prisma);
 
   // Get invoice with sudo
   const invoice = await sudoContext.query.Invoice.findOne({

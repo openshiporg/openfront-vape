@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { PageBreadcrumbs } from '@/features/dashboard/components/PageBreadcrumbs';
 import { OrderPageClient } from './OrderPageClient';
 import { getOrder } from '@/features/platform/orders/actions';
@@ -16,22 +17,9 @@ export async function OrderDetailPage({ params }: OrderPageParams) {
 
   const response = await getOrder(itemId);
 
-  if (!response.success) {
-    // Handle error case - Log and re-throw
-    console.error('Error fetching order:', response.error);
-    throw new Error(`Failed to fetch order ${itemId}: ${response.error}`);
-  }
-
-  const order = response.data?.order; // Extract order from data
-
-  if (!order) {
-    // Handle case where request succeeded but order wasn't found
-    // Using notFound() is generally preferred in Next.js pages
-    // You might need to import it: import { notFound } from "next/navigation";
-    // notFound();
-    // Or throw an error as before:
-    throw new Error(`Order not found: ${itemId}`);
-  }
+  // A missing or unreadable order is a 404, never a 500.
+  const order = response.success ? response.data?.order : null;
+  if (!order) notFound();
 
   // Extract UI configuration
   // Store pickup: every shipping method is the pickup option (see regulated/pickup.ts).
