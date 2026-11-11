@@ -126,7 +126,10 @@ export function BusinessAccountRequestDetailsComponent({
         businessAccountRequest.id,
         action,
         reviewNotes,
-        approvedCredit ? parseInt(approvedCredit) * 100 : undefined
+        // Approving without typing a limit grants the amount the customer asked for (the field's placeholder).
+        action === 'approved'
+          ? (approvedCredit ? Math.round(parseFloat(approvedCredit) * 100) : businessAccountRequest.requestedCreditLimit)
+          : undefined
       );
 
       if (result.success) {
