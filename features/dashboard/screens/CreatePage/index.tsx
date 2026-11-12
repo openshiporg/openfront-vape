@@ -19,7 +19,8 @@ export async function CreatePage({ params }: CreatePageParams) {
 
   const list = await getListByPath(listKey)
 
-  if (!list) {
+  // A list hidden for this role is a 404 on a direct URL too, not an empty page with a create form.
+  if (!list || list.isHidden) {
     notFound()
   }
 

@@ -200,7 +200,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
       <div className="deneb-pdp-actions flex flex-col" ref={actionsRef}>
         <div className="flex flex-col">
           <nav aria-label="Breadcrumb" className="deneb-pdp-crumbs flex flex-wrap items-center gap-x-2 text-[13px] text-[#3a3d42]">
-            <LocalizedClientLink href="/store" className="inline-flex min-h-10 items-center hover:text-vp-ink hover:underline underline-offset-4">
+            <LocalizedClientLink href="/store" className="inline-flex min-h-11 items-center hover:text-vp-ink hover:underline underline-offset-4">
               Shop all
             </LocalizedClientLink>
             {category?.title && (
@@ -208,7 +208,7 @@ export default function ProductActions({ product, region, disabled, onVariantCha
                 <span aria-hidden="true" className="text-vp-ink-3">/</span>
                 <LocalizedClientLink
                   href={category.handle ? `/categories/${category.handle}` : "/store"}
-                  className="inline-flex min-h-10 items-center hover:text-vp-ink hover:underline underline-offset-4"
+                  className="inline-flex min-h-11 items-center hover:text-vp-ink hover:underline underline-offset-4"
                 >
                   {category.title}
                 </LocalizedClientLink>

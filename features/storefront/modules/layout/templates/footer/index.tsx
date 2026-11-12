@@ -41,7 +41,7 @@ export default async function Footer({ branding }: { branding?: React.ReactNode 
     (c: any) => !c.parentCategory && !c.isInternal && c.isActive !== false
   )
 
-  const link = "inline-flex min-h-10 items-center text-[13px] text-white/85 underline-offset-4 hover:text-white hover:underline"
+  const link = "inline-flex min-h-11 items-center text-[13px] text-white/85 underline-offset-4 hover:text-white hover:underline"
 
   return (
     <>
@@ -83,12 +83,12 @@ export default async function Footer({ branding }: { branding?: React.ReactNode 
                   <span key={l} className="break-all">{l}</span>
                 ))}
                 {business.email && (
-                  <a href={`mailto:${business.email}`} className="break-all hover:text-white hover:underline">
+                  <a href={`mailto:${business.email}`} className="inline-flex min-h-11 items-center break-all hover:text-white hover:underline">
                     {business.email}
                   </a>
                 )}
                 {business.phone && (
-                  <a href={`tel:${business.phone.replace(/[^\d+]/g, "")}`} className="hover:text-white hover:underline">
+                  <a href={`tel:${business.phone.replace(/[^\d+]/g, "")}`} className="inline-flex min-h-11 items-center hover:text-white hover:underline">
                     {business.phone}
                   </a>
                 )}

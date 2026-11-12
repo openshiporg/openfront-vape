@@ -31,7 +31,8 @@ export async function ListPage({ params, searchParams }: PageProps) {
   // Get the list by path using our cached function
   const list = await getListByPath(listKeyParam);
 
-  if (!list) {
+  // A list hidden for this role is a 404 on a direct URL too, not an empty page with a create form.
+  if (!list || list.isHidden) {
     notFound()
   }
 

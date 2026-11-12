@@ -91,7 +91,7 @@ const Item = ({ item, region, type = "full" }: CartItemProps) => {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-[15px] leading-[20px] font-medium text-vp-ink">
-              <LocalizedClientLink href={`/products/${handle}`} className="hover:underline hover:underline-offset-2">
+              <LocalizedClientLink href={`/products/${handle}`} className="inline-flex min-h-11 items-center hover:underline hover:underline-offset-2">
                 {item.title}
               </LocalizedClientLink>
             </h3>

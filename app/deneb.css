@@ -124,7 +124,7 @@
     color: #0c1626;
   }
   .deneb-hero-actions { margin-top: 12px; display: flex; gap: 12px; align-items: flex-start; }
-  .deneb-btn-buy { height: 34px; min-width: 108px; padding: 0 22px; font-size: 15px; font-weight: 600; }
+  .deneb-btn-buy { height: 44px; min-width: 108px; padding: 0 22px; font-size: 15px; font-weight: 600; }
   .deneb-from { font-size: 12px; font-weight: 450; color: var(--deneb-ink-2); letter-spacing: 0; }
 
   @media (min-width: 1024px) {
@@ -147,7 +147,7 @@
     .deneb-hero-tagline { margin-top: 0; max-width: none; font-size: 48px; line-height: 1.02; font-weight: 700; letter-spacing: -0.04em; color: #0c1626; }
     .deneb-hero-price { margin-top: 10px; font-size: 24px; }
     .deneb-hero-actions { margin-top: 16px; gap: 13px; }
-    .deneb-btn-buy, .deneb-hero-actions .deneb-btn { height: 33px; min-width: 118px; padding: 0 26px; font-size: 13px; font-weight: 500; }
+    .deneb-btn-buy, .deneb-hero-actions .deneb-btn { height: 44px; min-width: 118px; padding: 0 26px; font-size: 13px; font-weight: 500; }
     .deneb-hero-actions .deneb-btn-outline { min-width: 147px; }
   }
 
@@ -360,7 +360,7 @@
   .deneb-option-label { font-size: 13px; font-weight: 600; color: #0b0c0e; }
   .deneb-option-values { display: flex; flex-wrap: wrap; gap: 8px 22px; }
   .deneb-choice {
-    min-height: 36px;
+    min-height: 44px;
     padding: 0 18px;
     border-radius: 5px;
     border: 1px solid #d6d9dd;
@@ -369,7 +369,7 @@
     color: #0b0c0e;
   }
   .deneb-choice[data-active="true"] { border: 1.5px solid #0b0c0e; font-weight: 600; }
-  .deneb-swatch-choice { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; font-size: 13px; color: #0b0c0e; }
+  .deneb-swatch-choice { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 13px; color: #0b0c0e; }
   .deneb-swatch-ring {
     display: inline-flex;
     width: 40px;

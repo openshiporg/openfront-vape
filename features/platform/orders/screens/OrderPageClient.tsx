@@ -234,7 +234,7 @@ export function OrderPageClient({
                   "min-h-9"
                 )}
               >
-                {needsFulfilment ? "Fulfill items" : "View fulfilment"}
+                {needsFulfilment ? "Fulfill items" : "View fulfillment"}
               </Link>
             )}
           </div>
@@ -244,7 +244,7 @@ export function OrderPageClient({
           {[
             ["Order", <StatusWord key="o" tone={orderStatusTone(order.status)}>{orderStatusLabel(order.status)}</StatusWord>],
             ["Payment", <StatusWord key="p" tone={pay.tone}>{pay.label}</StatusWord>],
-            ["Fulfilment", <StatusWord key="f" tone={ful.tone}>{ful.label}</StatusWord>],
+            ["Fulfillment", <StatusWord key="f" tone={ful.tone}>{ful.label}</StatusWord>],
             ["Paid", <span key="t" className="tabular-nums text-foreground">{order.formattedTotalPaid ?? "None"}</span>],
             ["Customer", <span key="c" className="block truncate text-foreground">{order.user?.name || order.email || "Guest"}</span>],
             isPickup
@@ -303,7 +303,7 @@ export function OrderPageClient({
                               </div>
                             </div>
                           </Td>
-                          <Td priority={2} className="font-mono text-[12px] text-muted-foreground">{item.sku || "None"}</Td>
+                          <Td priority={2} className="font-mono text-[12px] text-muted-foreground">{item.sku || "—"}</Td>
                           <Td align="right" priority={2} className="text-muted-foreground">{item.formattedUnitPrice}</Td>
                           <Td align="right">{item.quantity}</Td>
                           <Td align="right" className="font-medium text-foreground">{item.formattedTotal}</Td>
@@ -353,7 +353,7 @@ export function OrderPageClient({
 
             {fulfillments.length > 0 && (
               <section>
-                <SectionTitle meta={fulfillments.length}>Fulfilments</SectionTitle>
+                <SectionTitle meta={fulfillments.length}>Fulfillments</SectionTitle>
                 <ListBand>
                   {fulfillments.map((fulfillment, index) => (
                     <div key={fulfillment.id} className="px-4 py-3">

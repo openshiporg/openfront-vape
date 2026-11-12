@@ -50,6 +50,19 @@ const FulfillmentCard: React.FC<FulfillmentCardProps> = ({ order }) => {
   );
 
   if (!order.fulfillments || order.fulfillments.length === 0) {
+    if ((order as any).status === "canceled") {
+      return (
+        <section className="flex flex-col gap-4 border-t border-vp-line pt-5" aria-label="Fulfillment">
+          <Title />
+          <p className="vp-band flex items-baseline gap-2.5 px-4 py-4 text-[14px] leading-[20px] text-vp-ink">
+            <StatusDot tone="danger" />
+            <span>
+              Canceled <span className="text-vp-ink-3">· this order will not ship</span>
+            </span>
+          </p>
+        </section>
+      );
+    }
     return (
       <section className="flex flex-col gap-4 border-t border-vp-line pt-5" aria-label="Fulfillment">
         <Title />

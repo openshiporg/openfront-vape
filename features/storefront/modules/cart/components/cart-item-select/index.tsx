@@ -87,7 +87,7 @@ const CartItemSelect = forwardRef<HTMLInputElement, CartItemSelectProps>(
     return (
       <div
         className={cn(
-          "inline-flex h-11 items-center rounded-[4px] border border-vp-line bg-vp-surface",
+          "inline-flex h-12 items-center rounded-[4px] border border-vp-line bg-vp-surface",
           className
         )}
       >
@@ -110,7 +110,7 @@ const CartItemSelect = forwardRef<HTMLInputElement, CartItemSelectProps>(
           value={value ?? ""}
           onChange={handleInputChange}
           aria-label="Quantity"
-          className="h-full w-9 min-w-0 bg-transparent text-center font-vp-mono text-[15px] text-vp-ink outline-none [appearance:textfield] focus-visible:rounded-[4px] focus-visible:ring-2 focus-visible:ring-vp-accent [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="h-full w-11 min-w-0 bg-transparent text-center font-vp-mono text-[15px] text-vp-ink outline-none [appearance:textfield] focus-visible:rounded-[4px] focus-visible:ring-2 focus-visible:ring-vp-accent [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           {...props}
         />
         <button

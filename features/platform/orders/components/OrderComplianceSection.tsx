@@ -62,7 +62,7 @@ export async function OrderComplianceSection({ orderId }: { orderId: string }) {
               </span>
               <span className="mt-0.5 flex flex-wrap gap-x-4 pl-[1.125rem] text-xs text-muted-foreground">
                 {event.reasonCode && <span className={review && !reversed ? 'text-red-600 dark:text-red-400' : undefined}>{regulatedLabel(REASON_CODE_LABELS, event.reasonCode)}</span>}
-                <span>{event.resourceType}</span>
+                <span>{event.resourceType.replace(/^Regulated/, '').replace(/([a-z])([A-Z])/g, '$1 $2').trim()}</span>
                 {event.decisionId && (
                   <span className="inline-flex items-center gap-0.5 text-foreground">
                     Decision <ArrowUpRight className="size-3" />

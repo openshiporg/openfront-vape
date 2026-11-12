@@ -27,7 +27,8 @@ export const PLATFORM_PAGE_LIST: Record<string, string> = {
   analytics: 'orders',
   markets: 'regions',
   store: 'stores',
-  apps: 'o-auth-apps',
+  apps: 'oauth-apps',
+  system: 'stores',
 }
 
 /**

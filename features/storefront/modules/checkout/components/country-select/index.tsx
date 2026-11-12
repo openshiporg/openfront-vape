@@ -141,7 +141,7 @@ const CountrySelect = forwardRef<
         <SelectTrigger
           id={id}
           aria-label={placeholder}
-          className="h-12 w-full rounded-[4px] border-vp-line bg-vp-surface px-4 text-left text-[16px] text-vp-ink shadow-none transition-colors hover:border-vp-ink-3 focus:border-vp-accent focus:ring-2 focus:ring-vp-tint data-[placeholder]:text-vp-ink-3 sm:text-[15px] [&>span]:flex [&>span]:min-w-0 [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0"
+          className="h-12 w-full rounded-[4px] border-vp-line bg-vp-surface px-3 text-left text-[16px] text-vp-ink shadow-none transition-colors hover:border-vp-ink-3 focus:border-vp-accent focus:ring-2 focus:ring-vp-tint data-[placeholder]:text-vp-ink-3 sm:text-[15px] [&>span]:flex [&>span]:min-w-0 [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0"
         >
           <SelectValue placeholder={placeholder}>
             {selectedValue && (

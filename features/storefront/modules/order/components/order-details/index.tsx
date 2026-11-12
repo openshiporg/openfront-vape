@@ -42,6 +42,11 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
     return "Partially paid"
   })()
 
+  // The confirmation page shows the real state: a canceled or fully refunded order is not "Placed".
+  const payments: any[] = order.payments || []
+  const refundedInFull = payments.length > 0 && payments.every((row) => (row.amountRefunded || 0) >= row.amount)
+  const placedLabel = order.status === "canceled" ? "Canceled" : refundedInFull ? "Refunded" : "Placed"
+
   const createdAt = order.createdAt ? new Date(order.createdAt) : null
 
   return (
@@ -58,8 +63,8 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
           </span>
         ) : (
           <span className="inline-flex items-baseline gap-1.5 text-[14px] text-vp-ink-2">
-            <StatusDot tone="ok" />
-            Placed
+            <StatusDot tone={placedLabel === "Placed" ? "ok" : "danger"} />
+            {placedLabel}
           </span>
         )}
       </div>
@@ -67,7 +72,7 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
       <dl className="vp-band grid grid-cols-1 divide-y divide-vp-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         <Fact label="Date">
           <span className="font-vp-mono" data-testid="order-date">
-            {createdAt ? createdAt.toDateString() : ""}
+            {createdAt ? createdAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }) : ""}
           </span>
         </Fact>
         <Fact label="Confirmation sent to">

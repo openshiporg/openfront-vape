@@ -30,6 +30,7 @@ type ShippingMethodInfo = {
 };
 
 import { StoreRegion } from "@/features/storefront/types/storefront";
+import { formatPhone } from "@/features/storefront/lib/util/format-phone"
 
 type OrderWithShipping = {
   id: string;
@@ -73,7 +74,7 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
         <div className="flex min-w-0 flex-col gap-1" data-testid="shipping-contact-summary">
           <p className="text-[13px] leading-[18px] font-medium text-vp-ink-3">Contact</p>
           <div className="text-[14px] leading-[20px] text-vp-ink-2 [overflow-wrap:anywhere]">
-            {a?.phone && <p className="font-vp-mono text-[13px]">{a.phone}</p>}
+            {a?.phone && <p className="font-vp-mono text-[13px]">{formatPhone(a.phone)}</p>}
             <p>{order.email}</p>
           </div>
         </div>

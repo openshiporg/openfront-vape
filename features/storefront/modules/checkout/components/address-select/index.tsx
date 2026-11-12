@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import compareAddresses from "@/features/storefront/lib/util/compare-addresses";
 import { cn } from "@/lib/utils";
+import { formatPhone } from "@/features/storefront/lib/util/format-phone"
 
 type Address = {
   id: string;
@@ -125,7 +126,7 @@ const AddressSelect = ({
                </span>
                {selectedAddress.phone && (
                  <span className="text-xs text-vp-ink-2">
-                   {selectedAddress.phone}
+                   {formatPhone(selectedAddress.phone)}
                  </span>
                )}
              </span>
@@ -156,7 +157,7 @@ const AddressSelect = ({
                 </span>
                 {address.phone && (
                   <span className="text-xs text-vp-ink-2">
-                    {address.phone}
+                    {formatPhone(address.phone)}
                   </span>
                 )}
               </span>

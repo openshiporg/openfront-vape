@@ -11,6 +11,7 @@ import { RiLoader2Fill } from "@remixicon/react";
 import StepHeader, { StepFact } from "../step-header";
 import { vpPrimaryButton } from "@/features/storefront/modules/common/components/vp-classes";
 import { cn } from "@/lib/utils";
+import { formatPhone } from "@/features/storefront/lib/util/format-phone"
 
 const Addresses = ({
   cart,
@@ -184,7 +185,7 @@ const Addresses = ({
               </StepFact>
 
               <StepFact label="Contact" testId="shipping-contact-summary">
-                {address.phone && <p className="font-vp-mono text-[13px]">{address.phone}</p>}
+                {address.phone && <p className="font-vp-mono text-[13px]">{formatPhone(address.phone)}</p>}
                 <p>{cart.email}</p>
               </StepFact>
 
