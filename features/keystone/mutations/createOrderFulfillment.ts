@@ -71,10 +71,21 @@ async function createOrderFulfillment(
       purpose: "fulfillment",
     });
     if (compliance.regulated) {
-      if (!approvedShippingProviderId) {
-        throw new Error("Manual fulfillment is disabled for regulated orders; purchase through an approved carrier provider");
+      // Staff recording a store-arranged shipment: the store's own manual carrier is the provider, and
+      // the exact order-bound adult-signature evidence is still required for it.
+      let carrierProviderId = approvedShippingProviderId;
+      if (!carrierProviderId) {
+        const manualProviders = await sudo.query.ShippingProvider.findMany({
+          where: { createLabelFunction: { equals: "manual" }, isActive: { equals: true } },
+          take: 2,
+          query: "id",
+        });
+        if (manualProviders.length !== 1) {
+          throw new Error("Manual fulfillment is disabled for regulated orders; purchase through an approved carrier provider");
+        }
+        carrierProviderId = manualProviders[0].id;
       }
-      await requireApprovedCarrierProvider(context, orderIdentity.cart.id, orderId, approvedShippingProviderId);
+      await requireApprovedCarrierProvider(context, orderIdentity.cart.id, orderId, carrierProviderId);
     }
   }
   const fulfillmentWebhookEndpointIds = await subscribedWebhookEndpointIds(
