@@ -8,7 +8,6 @@ import { isManual } from "@/features/storefront/lib/constants"
 import SkeletonCardDetails from "@/features/storefront/modules/skeletons/components/skeleton-card-details"
 import { CardElement } from "@stripe/react-stripe-js"
 import { StripeCardElementOptions } from "@stripe/stripe-js"
-import PaymentTest from "../payment-test"
 import { StripeContext } from "../payment-wrapper/stripe-wrapper"
 
 type PaymentContainerProps = {
@@ -26,7 +25,6 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
   disabled = false,
   children,
 }) => {
-  const isDevelopment = process.env.NODE_ENV === "development"
 
   return (
     <div
@@ -50,17 +48,11 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
           <p className="text-[15px] leading-[20px] font-medium text-vp-ink">
             {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
           </p>
-          {isManual(paymentProviderId) && isDevelopment && (
-            <PaymentTest className="hidden sm:block" />
-          )}
         </div>
         <span className="flex-none text-vp-ink-2">
           {paymentInfoMap[paymentProviderId]?.icon}
         </span>
       </div>
-      {isManual(paymentProviderId) && isDevelopment && (
-        <PaymentTest className="sm:hidden" />
-      )}
       {children}
     </div>
   )

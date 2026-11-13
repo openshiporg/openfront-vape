@@ -1,179 +1,26 @@
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Manual carrier: the store arranges the carrier itself and records the tracking number by hand
+// (Fulfil order → manual fulfilment). It has no carrier API, so it never invents rates, labels,
+// tracking events or address checks; each operation says so instead.
+const unsupported = (what: string) => {
+  throw new Error(`The manual carrier does not provide ${what}. Record the carrier and tracking number when you fulfil the order.`);
+};
 
-export async function getRatesFunction({ provider, order }: { provider: any; order: any }) {
-  // Simulate API delay
-  await sleep(1000);
-
-  return [
-    {
-      id: "rate_usps_1",
-      providerId: provider.id,
-      service: "Priority Mail",
-      carrier: "USPS",
-      price: "7.99",
-      currency: "USD",
-      estimatedDays: 3,
-    },
-    {
-      id: "rate_usps_2",
-      providerId: provider.id,
-      service: "Priority Mail Express",
-      carrier: "USPS",
-      price: "26.99",
-      currency: "USD",
-      estimatedDays: 1,
-    },
-    {
-      id: "rate_ups_1",
-      providerId: provider.id,
-      service: "Ground",
-      carrier: "UPS",
-      price: "8.99",
-      currency: "USD",
-      estimatedDays: 4,
-    },
-    {
-      id: "rate_ups_2",
-      providerId: provider.id,
-      service: "2nd Day Air",
-      carrier: "UPS",
-      price: "19.99",
-      currency: "USD",
-      estimatedDays: 2,
-    },
-    {
-      id: "rate_fedex_1",
-      providerId: provider.id,
-      service: "Ground",
-      carrier: "FedEx",
-      price: "9.99",
-      currency: "USD",
-      estimatedDays: 4,
-    },
-    {
-      id: "rate_fedex_2",
-      providerId: provider.id,
-      service: "2Day",
-      carrier: "FedEx",
-      price: "21.99",
-      currency: "USD",
-      estimatedDays: 2,
-    },
-    {
-      id: "rate_dhl_1",
-      providerId: provider.id,
-      service: "Express Worldwide",
-      carrier: "DHL",
-      price: "29.99",
-      currency: "USD",
-      estimatedDays: 2,
-    },
-    {
-      id: "rate_dhl_2",
-      providerId: provider.id,
-      service: "Express Economy",
-      carrier: "DHL",
-      price: "18.99",
-      currency: "USD",
-      estimatedDays: 4,
-    }
-  ];
+export async function getRatesFunction(_input: { provider: any; order: any }) {
+  return [];
 }
 
-export async function createLabelFunction({ provider, order, rate }: { provider: any; order: any; rate: any }) {
-  await sleep(1500);
-
-  const carrierPrefix = rate.carrier || "UNKNOWN";
-  const trackingFormats = {
-    'USPS': '94001234567890123456',
-    'UPS': '1Z999AA1234567890',
-    'FedEx': '123456789012',
-    'DHL': '1234567890'
-  };
-
-  const baseTrackingUrls = {
-    'USPS': 'https://tools.usps.com/go/TrackConfirmAction?tLabels=',
-    'UPS': 'https://www.ups.com/track?tracknum=',
-    'FedEx': 'https://www.fedex.com/fedextrack/?trknbr=',
-    'DHL': 'https://www.dhl.com/en/express/tracking.html?AWB='
-  };
-
-  const carrier = rate.carrier as keyof typeof baseTrackingUrls;
-  const trackingNumber = trackingFormats[carrier] || (carrierPrefix + Math.random().toString(36).substring(2, 10).toUpperCase());
-  const trackingUrl = baseTrackingUrls[carrier] ? baseTrackingUrls[carrier] + trackingNumber : "https://example.com/track";
-
-  return {
-    status: "SUCCESS",
-    data: {
-      rate_id: rate.id,
-      created_at: new Date().toISOString(),
-    },
-    rate: rate,
-    trackingNumber,
-    trackingUrl,
-    labelUrl: `https://api.example.com/shipping/labels/${rate.carrier.toLowerCase()}/${trackingNumber}.pdf`,
-  };
+export async function createLabelFunction(_input: { provider: any; order: any; rate: any }) {
+  return unsupported("shipping labels");
 }
 
-export async function validateAddressFunction({ provider, address }: { provider: any; address: any }) {
-  await sleep(800);
-
-  return {
-    isValid: true,
-    suggestedAddress: null,
-    errors: []
-  };
+export async function validateAddressFunction(_input: { provider: any; address: any }) {
+  return unsupported("address validation");
 }
 
-export async function trackShipmentFunction({ provider, trackingNumber }: { provider: any; trackingNumber: string }) {
-  await sleep(700);
-
-  const carrierFromTracking = 
-    trackingNumber.startsWith('94') ? 'USPS' :
-    trackingNumber.startsWith('1Z') ? 'UPS' :
-    trackingNumber.length === 12 ? 'FedEx' : 'DHL';
-
-  const locations = {
-    'USPS': ['USPS Facility', 'Local Post Office', 'Regional Distribution Center'],
-    'UPS': ['UPS Hub', 'Local UPS Facility', 'UPS Distribution Center'],
-    'FedEx': ['FedEx Hub', 'Local FedEx Station', 'FedEx Sort Facility'],
-    'DHL': ['DHL Gateway', 'Local DHL Facility', 'DHL Service Center']
-  };
-
-  const carrierLocations = locations[carrierFromTracking];
-
-  return {
-    status: "in_transit",
-    estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-    trackingUrl: `https://example.com/track/${carrierFromTracking.toLowerCase()}/${trackingNumber}`,
-    events: [
-      {
-        status: "in_transit",
-        location: carrierLocations[0],
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-        message: "Package is in transit"
-      },
-      {
-        status: "picked_up",
-        location: carrierLocations[1],
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        message: "Package has been picked up"
-      },
-      {
-        status: "label_created",
-        location: carrierLocations[2],
-        timestamp: new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString(),
-        message: "Shipping label created"
-      }
-    ]
-  };
+export async function trackShipmentFunction(_input: { provider: any; trackingNumber: string }) {
+  return unsupported("tracking events");
 }
 
-export async function cancelLabelFunction({ provider, labelId }: { provider: any; labelId: string }) {
-  await sleep(500);
-
-  return {
-    success: true,
-    error: null
-  };
-} 
+export async function cancelLabelFunction(_input: { provider: any; labelId: string }) {
+  return unsupported("label cancellation");
+}

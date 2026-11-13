@@ -49,15 +49,15 @@ const getMinPrice = (product: any, region: any): number => {
  * @returns Sorted array of products
  */
 const sortProducts = (products: any[], sortBy: SortOptions): any[] => {
-  // Mock region for price calculation
-  const mockRegion = {
+  // USD region for price calculation
+  const usdRegion = {
     currency: { code: "usd" }
   };
 
   if (sortBy === SortOptions.PRICE_ASC) {
     return products.sort((a, b) => {
-      const aPrice = getMinPrice(a, mockRegion);
-      const bPrice = getMinPrice(b, mockRegion);
+      const aPrice = getMinPrice(a, usdRegion);
+      const bPrice = getMinPrice(b, usdRegion);
       
       return aPrice - bPrice;
     });
@@ -65,8 +65,8 @@ const sortProducts = (products: any[], sortBy: SortOptions): any[] => {
 
   if (sortBy === SortOptions.PRICE_DESC) {
     return products.sort((a, b) => {
-      const aPrice = getMinPrice(a, mockRegion);
-      const bPrice = getMinPrice(b, mockRegion);
+      const aPrice = getMinPrice(a, usdRegion);
+      const bPrice = getMinPrice(b, usdRegion);
       
       return bPrice - aPrice;
     });

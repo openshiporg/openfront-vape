@@ -345,21 +345,17 @@ export async function updateClaimStatusAction(
 
 export async function uploadClaimImageAction(file: File) {
   try {
-    // TODO: Implement actual file upload logic
-    // This would typically upload to your storage provider (S3, Cloudinary, etc.)
-    // For now, return a placeholder URL
-    
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    const mockUrl = `https://example.com/uploads/${file.name}?t=${Date.now()}`
-    
-    return {
-      success: true,
-      data: { url: mockUrl },
-      error: null
+    // Stored in the same S3 bucket as product photos; the claim then links to the stored URL.
+    const response = await keystoneClient(`
+      mutation UploadClaimImage($data: ClaimImageCreateInput!) {
+        claimImage: createClaimImage(data: $data) { id image { url } }
+      }
+    `, { data: { image: { upload: file } } })
+    const url = response.success ? response.data?.claimImage?.image?.url : null
+    if (!url) {
+      return { success: false, error: response.error || 'Failed to upload image', data: null }
     }
-
+    return { success: true, data: { url }, error: null }
   } catch (error) {
     return {
       success: false,

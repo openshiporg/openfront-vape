@@ -23,13 +23,8 @@ const NO_DIVISION_CURRENCIES = [
   "HTG", "VUV", "XAG", "XDR", "XAU"
 ];
 
-// Get PayPal API base URL based on sandbox/production mode
-const getPayPalBaseUrl = () => {
-  const isSandbox = process.env.NEXT_PUBLIC_PAYPAL_SANDBOX !== "false";
-  return isSandbox
-    ? "https://api-m.sandbox.paypal.com"
-    : "https://api-m.paypal.com";
-};
+// PayPal API base URL; PAYPAL_API_BASE overrides it when the account needs a different host.
+const getPayPalBaseUrl = () => process.env.PAYPAL_API_BASE || "https://api-m.paypal.com";
 
 // Format amount for PayPal API (handles no-division currencies)
 const formatPayPalAmount = (amount: number, currency: string): string => {

@@ -3,7 +3,7 @@ export interface PublicPaymentProviderConfig {
   publishableKey?: string;
   apiLoginId?: string;
   clientKey?: string;
-  env?: 'sandbox' | 'production';
+  env?: 'test' | 'production';
 }
 
 export function isPaymentProviderConfigured(code: string): boolean {
@@ -37,7 +37,7 @@ export function getPublicPaymentProviderConfig(
         '',
     };
   }
-  if (code.startsWith('pp_authorizenet')) return { provider: 'authorizenet', apiLoginId: process.env.AUTHORIZENET_API_LOGIN_ID, clientKey: process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY, env: process.env.AUTHORIZENET_ENV === 'production' ? 'production' : 'sandbox' };
+  if (code.startsWith('pp_authorizenet')) return { provider: 'authorizenet', apiLoginId: process.env.AUTHORIZENET_API_LOGIN_ID, clientKey: process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY, env: process.env.AUTHORIZENET_ENV === 'production' ? 'production' : 'test' };
   if (code.startsWith('pp_paypal')) {
     return {
       provider: 'paypal',

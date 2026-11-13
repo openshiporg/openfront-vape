@@ -84,9 +84,6 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
   const isAuthorizeNetPayment = !paidByGiftcard && isAuthorizeNet(selectedPaymentMethod);
   const stripeReady = useContext(StripeContext);
 
-  // Check if we're in sandbox/test mode
-
-
   const accountSelected = !!accountTender && (selectedPaymentMethod === ACCOUNT_METHOD || searchParams?.get("tender") === "account");
   const paymentReady =
     (activeSession && cart?.shippingMethods.length !== 0) || paidByGiftcard || accountSelected;
@@ -267,7 +264,7 @@ const Payment = ({ cart, availablePaymentMethods, stepIndex = 3, pickupOptionId 
                 );
               })}
             </RadioGroup>
-            {isAuthorizeNetPayment && <AuthorizeNetCardForm apiLoginId={process.env.NEXT_PUBLIC_AUTHORIZENET_API_LOGIN_ID || ""} clientKey={process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY || ""} env={process.env.NEXT_PUBLIC_AUTHORIZENET_ENV === "production" ? "production" : "sandbox"} onToken={async (opaqueData) => { try { const started = await startCheckoutPayment(selectedPaymentMethod); if (!started.ok) throw new Error(started.error); const latest = await import("@/features/storefront/lib/data/cart").then((module) => module.retrieveCart()); const session = latest?.paymentCollection?.paymentSessions?.find((item: any) => item.isSelected && isAuthorizeNet(item.paymentProvider?.code)); if (!session?.id) throw new Error("Payment session is missing; refresh checkout."); await authorizeCardPaymentSession(session.id, opaqueData); setCardComplete(true); setError(null); } catch (issue) { setCardComplete(false); setError(checkoutErrorText(issue)); } }} />}
+            {isAuthorizeNetPayment && <AuthorizeNetCardForm apiLoginId={process.env.NEXT_PUBLIC_AUTHORIZENET_API_LOGIN_ID || ""} clientKey={process.env.NEXT_PUBLIC_AUTHORIZENET_CLIENT_KEY || ""} env={process.env.NEXT_PUBLIC_AUTHORIZENET_ENV === "production" ? "production" : "test"} onToken={async (opaqueData) => { try { const started = await startCheckoutPayment(selectedPaymentMethod); if (!started.ok) throw new Error(started.error); const latest = await import("@/features/storefront/lib/data/cart").then((module) => module.retrieveCart()); const session = latest?.paymentCollection?.paymentSessions?.find((item: any) => item.isSelected && isAuthorizeNet(item.paymentProvider?.code)); if (!session?.id) throw new Error("Payment session is missing; refresh checkout."); await authorizeCardPaymentSession(session.id, opaqueData); setCardComplete(true); setError(null); } catch (issue) { setCardComplete(false); setError(checkoutErrorText(issue)); } }} />}
             {isStripePayment && stripeReady && (
               <div className="flex flex-col gap-2">
                 <p className="text-[13px] leading-[18px] font-medium text-vp-ink-2">
