@@ -75,7 +75,9 @@ export async function getOverview(): Promise<OverviewData | null> {
 
   const [orders, blocked, expiring, decisions] = await Promise.all([
     section('orders', async () => {
-      const rows: Array<{ id: string; fulfillmentStatus: OverviewOrder['fulfillmentStatus'] }> = await query.Order.findMany({
+      // The payments filter is applied server-side (roles that read orders may not read payments), then the
+      // rows are re-read under the caller's own access so nothing outside their order access is counted.
+      const candidates: Array<{ id: string }> = await (context as any).sudo().query.Order.findMany({
         where: {
           status: { equals: 'pending' },
           canceledAt: { equals: null },
@@ -83,8 +85,16 @@ export async function getOverview(): Promise<OverviewData | null> {
         },
         orderBy: [{ createdAt: 'desc' }],
         take: LIMIT,
-        query: 'id fulfillmentStatus',
+        query: 'id',
       });
+      const rows: Array<{ id: string; fulfillmentStatus: OverviewOrder['fulfillmentStatus'] }> = candidates.length
+        ? await query.Order.findMany({
+            where: { id: { in: candidates.map(order => order.id) } },
+            orderBy: [{ createdAt: 'desc' }],
+            take: LIMIT,
+            query: 'id fulfillmentStatus',
+          })
+        : [];
       const open = rows.filter(order => order.fulfillmentStatus?.status !== 'fulfilled');
       const ids = open.slice(0, 5).map(order => order.id);
       const latest: OverviewOrder[] = ids.length

@@ -221,9 +221,58 @@ const rawModels = {
   ComplianceReportRun,
 };
 
+// Filter/order paths must not leak what read access hides (count-filter extraction through relations).
+// - a field is filterable/orderable only where the session may read it (field access.read);
+// - a relationship is filterable/orderable only where the session may read the related list: never when that
+//   list is closed to it, and not into a row-scoped list when the list filtered from is wider than that scope;
+// - secrets and blobs are never filterable or orderable.
+type ReadMode = 'none' | 'scoped' | 'full';
+function listReadMode(config: any, args: any): ReadMode {
+  const access = config?.access;
+  if (typeof access === 'function') return access(args) ? 'full' : 'none';
+  const op = access?.operation?.query;
+  if (op !== undefined && !(typeof op === 'function' ? op(args) : op)) return 'none';
+  const filter = access?.filter?.query;
+  if (filter === undefined) return 'full';
+  const result = typeof filter === 'function' ? filter(args) : filter;
+  if (result === false) return 'none';
+  return result === true ? 'full' : 'scoped';
+}
+const NEVER_FILTERABLE = /^(customerToken|clientSecret|secret|token|accessToken|refreshToken|authorizationCode|credentials|credentialReference|providerData|data|sessionKey|registrationKey|subscriptionKey|secretKey|publishableKey)$/;
+function fieldReadable(access: any, args: any): boolean {
+  const read = typeof access === 'function' ? access : access?.read;
+  if (read === undefined) return true;
+  return typeof read === 'function' ? Boolean(read(args)) : Boolean(read);
+}
+function guardFilterPaths(listKey: string, config: any, all: Record<string, any>) {
+  if (!config?.fields) return config;
+  const fields = Object.fromEntries(Object.entries(config.fields).map(([fieldKey, fieldFunc]: [string, any]) => {
+    if (typeof fieldFunc !== 'function') return [fieldKey, fieldFunc];
+    return [fieldKey, (data: any) => {
+      const f = fieldFunc(data);
+      const never = NEVER_FILTERABLE.test(fieldKey);
+      const target = f.dbField?.kind === 'relation' ? all[f.dbField.list] : undefined;
+      const wrap = (own: unknown) => (args: any) => {
+        if (never) return false;
+        if (own === false || (typeof own === 'function' && !own(args))) return false;
+        if (!fieldReadable(f.access, args)) return false;
+        if (!target) return true;
+        const to = listReadMode(target, args);
+        if (to === 'none') return false;
+        return to === 'full' || listReadMode(config, args) !== 'full';
+      };
+      return { ...f, isFilterable: wrap(f.isFilterable), isOrderable: wrap(f.isOrderable) };
+    }];
+  }));
+  return { ...config, fields };
+}
+const guardedModels: Record<string, any> = Object.fromEntries(
+  Object.entries(rawModels).map(([key, config]) => [key, guardFilterPaths(key, config, rawModels)]),
+);
+
 // Sidebar visibility follows the role: a list whose query access denies the session is hidden from navigation
 // (Keystone evaluates ui.isHidden per session in admin meta). Explicit isHidden settings are kept.
-export const models = Object.fromEntries(Object.entries(rawModels).map(([key, config]: [string, any]) => {
+export const models = Object.fromEntries(Object.entries(guardedModels).map(([key, config]: [string, any]) => {
   const operationQuery = config?.access?.operation?.query;
   const filterQuery = config?.access?.filter?.query;
   if (typeof operationQuery !== 'function' && typeof filterQuery !== 'function') return [key, config];
