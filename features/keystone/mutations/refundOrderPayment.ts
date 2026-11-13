@@ -55,7 +55,8 @@ async function refundOrderPaymentOnly(
   context: any
 ) {
   if (!permissions.canManageReturns({ session: context.session }) || !permissions.canManagePayments({ session: context.session })) {
-    throw new Error("Access denied");
+    // A GraphQLError so staff read why, instead of Yoga's masked "Unexpected error.".
+    throw new GraphQLError("Your role cannot refund payments. Ask an administrator for the Manage Returns and Manage Payments permissions.", { extensions: { code: "FORBIDDEN" } });
   }
   if (!idempotencyKey?.trim()) throw new Error("Idempotency key is required");
   if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error("Refund amount must be positive minor units");

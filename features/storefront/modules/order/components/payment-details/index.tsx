@@ -1,3 +1,5 @@
+// Shopper's own zone with a zone label; the server renders in UTC.
+import { ViewerTime } from "@/features/dashboard/components/ViewerTime";
 import { paymentInfoMap } from "@/features/storefront/lib/constants";
 
 import { StoreOrder } from "@/features/storefront/types/storefront";
@@ -50,7 +52,7 @@ const PaymentDetails = ({ order }: { order: StoreOrder }) => {
                 {refunded > 0 && refunded < row.amount ? ` (${money(refunded)} refunded)` : ""}
                 {" on "}
                 <span className="font-vp-mono text-[13px]">
-                  {new Date(row.createdAt).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                  <ViewerTime value={row.createdAt} style="datetime" fallback="" />
                 </span>
               </p>
             </div>
