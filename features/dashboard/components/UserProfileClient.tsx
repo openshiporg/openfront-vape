@@ -40,9 +40,11 @@ interface User {
 
 interface UserProfileClientProps {
   user: User;
+  /** False when the Users list is hidden for this role: the profile link would be a 404. */
+  canOpenProfile?: boolean;
 }
 
-export function UserProfileClient({ user }: UserProfileClientProps) {
+export function UserProfileClient({ user, canOpenProfile = true }: UserProfileClientProps) {
   const { isMobile } = useSidebar();
 
   const initials = user.name
@@ -84,10 +86,10 @@ export function UserProfileClient({ user }: UserProfileClientProps) {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div
-                className="flex items-center gap-2 px-1 py-1.5 text-left text-sm cursor-pointer hover:bg-accent rounded-md"
-                onClick={() =>
+                className={`flex items-center gap-2 px-1 py-1.5 text-left text-sm rounded-md ${canOpenProfile ? "cursor-pointer hover:bg-accent" : ""}`}
+                onClick={canOpenProfile ? () =>
                   (window.location.href = `/dashboard/users/${user.id}`)
-                }
+                : undefined}
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src="" alt={user.name || user.email} />
@@ -103,7 +105,7 @@ export function UserProfileClient({ user }: UserProfileClientProps) {
                     {user.email}
                   </span>
                 </div>
-                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                {canOpenProfile && <ArrowUpRight className="h-4 w-4 text-muted-foreground" />}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

@@ -381,7 +381,7 @@ export function Sidebar({ adminMeta, user, onOpenDialog }: SidebarProps) {
         </div>
         
         {/* User Profile */}
-        {user && <UserProfileClient user={user} />}
+        {user && <UserProfileClient user={user} canOpenProfile={listsArray.some((list: any) => list.path === 'users' && !list.isHidden)} />}
       </SidebarFooter>
       
       <SidebarRail />

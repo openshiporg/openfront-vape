@@ -186,6 +186,8 @@ export const ApiKey = list({
   },
   
   ui: {
+    // Roles without key management get no API Keys link (the page was empty for them).
+    isHidden: (args) => !permissions.canManageKeys(args),
     labelField: "name",
     listView: {
       initialColumns: ["name", "tokenPreview", "scopes", "status", "lastUsedAt", "expiresAt"],

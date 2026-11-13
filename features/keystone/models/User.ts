@@ -63,6 +63,8 @@ export const User = list<Lists.User.TypeInfo>({
     // hide the backend UI from regular users
     hideCreate: (args) => !permissions.canManageUsers(args),
     hideDelete: (args) => !permissions.canManageUsers(args),
+    // Staff without user management only ever see their own record (listed as a guest): no Users link.
+    isHidden: (args) => !permissions.canManageUsers(args),
   },
   fields: {
     name: text({
