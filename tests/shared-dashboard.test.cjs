@@ -114,6 +114,8 @@ test('form errors show Keystone validation text, never Prisma, stack or GraphQL 
     { message: 'synthetic-password', extensions: { code: 'FORBIDDEN' } },
     { message: 'connect ECONNREFUSED postgres://user:pw@db', extensions: { code: 'INTERNAL_SERVER_ERROR' } },
   ]) assert.equal(of(leak), PUBLIC_REQUEST_ERROR);
+  assert.equal(of({ message: 'Your role cannot refund payments. Ask an administrator for the Manage Returns and Manage Payments permissions.', extensions: { code: 'REFUND_NOT_ALLOWED' } }),
+    'Your role cannot refund payments. Ask an administrator for the Manage Returns and Manage Payments permissions.');
   assert.equal(publicGraphQLErrorMessage(new Error('synthetic')), PUBLIC_REQUEST_ERROR);
 });
 
