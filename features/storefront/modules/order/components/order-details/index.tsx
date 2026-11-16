@@ -75,7 +75,7 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
             {createdAt ? createdAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }) : ""}
           </span>
         </Fact>
-        <Fact label="Confirmation sent to">
+        <Fact label="Confirmation for">
           <span data-testid="order-email">{order.email}</span>
         </Fact>
         {showStatus ? (
