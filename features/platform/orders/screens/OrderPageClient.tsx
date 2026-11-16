@@ -115,6 +115,7 @@ interface OrderPageClientProps {
   uiConfig?: Record<string, unknown>;
   compliance?: ReactNode;
   isPickup?: boolean;
+  canRefund?: boolean;
 }
 
 export function OrderPageClient({
@@ -122,6 +123,7 @@ export function OrderPageClient({
   listKey,
   compliance,
   isPickup = false,
+  canRefund = false,
 }: OrderPageClientProps) {
   const [showComments, setShowComments] = useState(false);
   const [editDrawerConfig, setEditDrawerConfig] = useState<{
@@ -345,7 +347,7 @@ export function OrderPageClient({
                   <span className="text-muted-foreground">Paid</span>
                   <span className="tabular-nums text-foreground">{order.formattedTotalPaid}</span>
                 </div>
-                {(order.payments || []).some((p) => p.status === "captured" && p.amount > 0) && (
+                {canRefund && (order.payments || []).some((p) => p.status === "captured" && p.amount > 0) && (
                   <div className="px-4 py-3"><RefundOrderDialog orderId={order.id} payments={order.payments || []} /></div>
                 )}
               </ListBand>

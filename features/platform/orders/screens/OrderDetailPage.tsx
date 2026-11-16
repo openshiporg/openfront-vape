@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { PageBreadcrumbs } from '@/features/dashboard/components/PageBreadcrumbs';
 import { OrderPageClient } from './OrderPageClient';
 import { getOrder } from '@/features/platform/orders/actions';
+import { keystoneClient } from '@/features/dashboard/lib/keystoneClient';
 import { OrderComplianceSection } from '../components/OrderComplianceSection';
 import { PickupOrderActions } from '../components/PickupOrderActions';
 
@@ -26,6 +27,11 @@ export async function OrderDetailPage({ params }: OrderPageParams) {
   const methods: any[] = order.shippingMethods || [];
   const isPickup = methods.length > 0 && methods.every((method: any) => method?.shippingOption?.data?.pickup === true);
 
+  // Display only: the refund mutation re-checks both permissions on the server.
+  const auth = await keystoneClient(`{ authenticatedItem { ... on User { role { canManageReturns canManagePayments } } } }`);
+  const role = auth.success ? auth.data?.authenticatedItem?.role : null;
+  const canRefund = !!(role?.canManageReturns && role?.canManagePayments);
+
   const uiConfig = {
     hideDelete: false,
   };
@@ -43,6 +49,7 @@ export async function OrderDetailPage({ params }: OrderPageParams) {
       <OrderPageClient
         order={order}
         isPickup={isPickup}
+        canRefund={canRefund}
         id={itemId}
         listKey="orders"
         fieldModes={{}}
