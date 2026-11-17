@@ -126,7 +126,9 @@ export async function refundChargeAfterFailure(cartId: string, paymentSessionId:
   let failure: string | undefined;
   try {
     const status = await deps.getPaymentStatus({ provider: claimed.provider, paymentId: claimed.paymentId });
-    const taken = CHARGE_TAKEN.includes(String(status?.status || '').toLowerCase());
+    const reported = String(status?.status || '').toLowerCase();
+    // An Authorize.net authorization is a hold on the card; its refund call voids it.
+    const taken = CHARGE_TAKEN.includes(reported) || (reported === 'authorized' && String(claimed.provider.code || '').startsWith('pp_authorizenet'));
     const amount = Number(status?.amount);
     const already = Number(status?.amountRefunded || 0);
     if (taken && Number.isInteger(amount) && amount > 0) {
@@ -460,6 +462,10 @@ async function completeActiveCartOnce(
   const allocation = cart.giftCardAllocation as GiftCardAllocation;
   const giftCardsApplied = allocation.applied.length > 0;
   const coveredByGiftCards = giftCardsApplied && allocation.due === 0;
+  // Account orders bill the order total, so a gift card on one would be billed twice or leave the rest unpaid.
+  if (giftCardsApplied && !coveredByGiftCards && !paymentSessionId) {
+    throw new Error('Gift cards can only be used with card checkout');
+  }
 
   let inventoryReserved = attempt.recoveryPoint !== 'started';
   let discountsReserved = [

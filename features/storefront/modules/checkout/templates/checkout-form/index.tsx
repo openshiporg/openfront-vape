@@ -93,7 +93,7 @@ export default async function CheckoutForm({ cart, customer }: CheckoutFormProps
   const account = customer?.id ? await getCustomerBusinessAccount(customer.id).catch(() => null) : null;
   const rawTotal = Number((cart as any).rawTotal ?? 0);
   const accountTender = account && account.accountType === "business" && account.status === "active" &&
-    Number(account.availableCredit ?? 0) >= rawTotal && rawTotal > 0
+    Number(account.availableCredit ?? 0) >= rawTotal && rawTotal > 0 && !((cart as any).giftCards?.length)
     ? { title: String(account.title || "Business account"), availableCredit: Number(account.availableCredit), currency: String(account.currency?.code || "") }
     : null;
   const shippingName = [cart.shippingAddress?.firstName, cart.shippingAddress?.lastName].filter(Boolean).join(" ");
