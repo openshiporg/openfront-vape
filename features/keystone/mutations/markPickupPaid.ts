@@ -17,7 +17,9 @@ export default async function markPickupPaid(_root: unknown, { orderId }: { orde
     if (!["pending", "requires_action"].includes(order.status)) throw new Error("Only open orders can be marked paid");
     const payment = order.payments.find((entry: any) => entry.status === "pending" && entry.metadata?.payAtPickup === true);
     if (!payment) throw new Error("This order has no unpaid pickup payment");
-    await tx.payment.update({ where: { id: payment.id }, data: { status: "captured", capturedAt: new Date() } });
+    // Conditional on still pending, so a second click at the same moment cannot write a second capture.
+    const marked = await tx.payment.updateMany({ where: { id: payment.id, status: "pending" }, data: { status: "captured", capturedAt: new Date() } });
+    if (marked.count !== 1) throw new Error("This order has no unpaid pickup payment");
     await tx.capture.create({
       data: { amount: payment.amount, paymentId: payment.id, metadata: { method: "pay_at_pickup" }, createdBy: context.session.itemId },
     });
