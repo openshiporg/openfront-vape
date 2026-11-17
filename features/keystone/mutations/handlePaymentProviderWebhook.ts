@@ -134,6 +134,19 @@ async function handlePaymentProviderWebhook(
   let checkoutAttemptId: string | undefined;
   let checkoutPaymentResult: any;
 
+  // Authorize.net events carry no metadata: the payload id is the transaction id the payment was taken under.
+  if (!cartId && !paymentId && String(provider.code || "").startsWith("pp_authorizenet") && resource.id) {
+    const matches = await sudo.prisma.payment.findMany({
+      where: { data: { path: ["paymentIntentId"], equals: String(resource.id) } },
+      select: { id: true, orderId: true },
+      take: 2,
+    });
+    if (matches.length === 1) {
+      paymentId = matches[0].id;
+      orderId ||= matches[0].orderId || undefined;
+    }
+  }
+
   if (cartId && (!paymentId || !orderId)) {
     const cart = await sudo.query.Cart.findOne({
       where: { id: cartId },
