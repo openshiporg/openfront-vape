@@ -158,7 +158,10 @@ export async function refundPaymentFunction({ paymentId, amount, currency, idemp
   if (!transaction) throw new Error(transactionError(details));
   const settled = transaction.transactionStatus === "settledSuccessfully";
   if (!settled) {
-    // Unsettled transactions cannot be refunded, only voided (full amount).
+    // Unsettled transactions cannot be refunded, only voided (full amount). A partial amount must wait for settlement.
+    if (amount != null && amount !== cents(transaction.authAmount)) {
+      return { status: "refused", error: "This card payment has not settled yet, so only the full amount can be refunded today. Refund part of it after settlement (usually the next day)." };
+    }
     const voided = await cancelPaymentFunction({ paymentId, idempotencyKey });
     return { ...voided, status: voided.status === "canceled" ? "refunded" : voided.status, amount: cents(transaction.authAmount), currency: "USD", method: "void" };
   }

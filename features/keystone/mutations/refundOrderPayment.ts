@@ -7,7 +7,7 @@ import { GIFT_CARD_TENDER, refundGiftCardTender } from "../checkout/gift-card-te
 import transitionOrderStatus from "./transitionOrderStatus";
 import { paymentProviderFor, providerPaymentReference, reconcileProviderRefunds } from "../checkout/provider-refund-reconcile";
 
-type RefundRuleCode = "REFUND_EXCEEDS_BALANCE" | "PAYMENT_NOT_CAPTURED" | "REFUND_KEY_REUSED" | "REFUND_IN_PROGRESS" | "PAYMENT_ALREADY_REFUNDED";
+type RefundRuleCode = "REFUND_REFUSED" | "REFUND_EXCEEDS_BALANCE" | "PAYMENT_NOT_CAPTURED" | "REFUND_KEY_REUSED" | "REFUND_IN_PROGRESS" | "PAYMENT_ALREADY_REFUNDED";
 function refundRuleError(message: string, code: RefundRuleCode) {
   return new GraphQLError(message, { extensions: { code } });
 }
@@ -77,7 +77,7 @@ async function refundOrderPaymentOnly(
   const payment = await sudo.query.Payment.findOne({
     where: { id: paymentId },
     query: `
-      id status amount amountRefunded currencyCode data order { id }
+      id status amount amountRefunded currencyCode data metadata order { id }
       refunds { id amount idempotencyKey }
       paymentCollection { paymentSessions { isSelected paymentProvider { id code refundPaymentFunction credentials } } }
     `,
@@ -98,10 +98,12 @@ async function refundOrderPaymentOnly(
     return sudo.db.Refund.findOne({ where: { id: refund.id } });
   }
 
-  const provider = paymentProviderFor(payment);
-  const providerReference = providerPaymentReference(payment);
+  // Paid at the counter and marked paid by staff: the money goes back at the counter, so no processor is called.
+  const counterTender = payment.metadata?.payAtPickup === true;
+  const provider = counterTender ? { id: "pay_at_pickup" } : paymentProviderFor(payment);
+  const providerReference = counterTender ? "pay_at_pickup" : providerPaymentReference(payment);
   if (!provider || !providerReference) throw new Error("Refund provider reference is missing");
-  if (provider.code?.includes("manual")) throw new Error("Manual tender refunds require operator verification");
+  if (!counterTender && provider.code?.includes("manual")) throw new Error("Manual tender refunds require operator verification");
 
   const { attempt, replay } = priorAttempt
     ? { attempt: priorAttempt, replay: true }
@@ -131,8 +133,18 @@ async function refundOrderPaymentOnly(
 
   let providerResult = attempt.responseBody?.providerResult;
   if (attempt.recoveryPoint !== "provider_refunded" || !providerResult) {
-    providerResult = await refundPayment({ provider, paymentId: providerReference, amount, currency: payment.currencyCode, idempotencyKey: businessKey });
+    providerResult = counterTender
+      ? { status: "refunded", amount, currency: payment.currencyCode, method: "counter" }
+      : await refundPayment({ provider, paymentId: providerReference, amount, currency: payment.currencyCode, idempotencyKey: businessKey });
     const status = String(providerResult.status || "").toLowerCase();
+    if (status === "refused") {
+      // The processor sent nothing back: release the reserved amount so the refund can be made later.
+      await sudo.prisma.$transaction([
+        sudo.prisma.payment.update({ where: { id: paymentId }, data: { amountRefunded: { decrement: amount } } }),
+        sudo.prisma.idempotencyKey.delete({ where: { id: attempt.id } }),
+      ]);
+      throw new GraphQLError(String(providerResult.error || "The processor refused this refund."), { extensions: { code: "REFUND_REFUSED" } });
+    }
     if (!["succeeded", "completed", "refunded"].includes(status)) throw new Error(`Provider refund is not complete: ${providerResult.status}`);
     if (Number(providerResult.amount) !== amount) throw new Error("Provider refund amount mismatch");
     if (providerResult.currency && String(providerResult.currency).toUpperCase() !== String(payment.currencyCode).toUpperCase()) {

@@ -159,6 +159,14 @@ async function processReturnRefund(
       idempotencyKey: businessKey,
     });
     const status = String(providerResult.status || "").toLowerCase();
+    if (status === "refused") {
+      // The processor sent nothing back: release the reserved amount so the return can be refunded later.
+      await sudo.prisma.$transaction([
+        sudo.prisma.payment.update({ where: { id: paymentId }, data: { amountRefunded: { decrement: returnRecord.refundAmount } } }),
+        sudo.prisma.idempotencyKey.delete({ where: { id: attempt.id } }),
+      ]);
+      throw new Error(String(providerResult.error || "The processor refused this refund."));
+    }
     if (!["succeeded", "completed", "refunded"].includes(status)) {
       throw new Error(`Provider refund is not complete: ${providerResult.status}`);
     }
