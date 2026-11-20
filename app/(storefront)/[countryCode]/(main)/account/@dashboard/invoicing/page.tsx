@@ -1,3 +1,5 @@
-import { AccountInvoicingPage } from "@/features/storefront/screens/AccountInvoicingPage";
+import { AccountInvoicingPage, metadata } from "@/features/storefront/screens/AccountInvoicingPage";
+
+export { metadata };
 
 export default AccountInvoicingPage;
